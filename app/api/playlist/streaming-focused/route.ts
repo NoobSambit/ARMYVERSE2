@@ -26,7 +26,13 @@ export async function POST(request: Request) {
     await connect()
     
     const body: StreamingFocusRequest = await request.json()
-    const { primaryTrackId, totalLength = 20, mode = 'auto', auto = {}, manual = {} } = body
+    const {
+      primaryTrackId,
+      totalLength = 20,
+      mode = 'auto',
+      auto = {} as StreamingFocusRequest['auto'],
+      manual = {} as StreamingFocusRequest['manual']
+    } = body
 
     if (!primaryTrackId) {
       return NextResponse.json({ error: 'Primary track is required' }, { status: 400 })
