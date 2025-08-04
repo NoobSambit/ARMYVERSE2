@@ -28,7 +28,7 @@ interface PlaylistFeature {
 export default function PlaylistHub() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  const handleAuthenticated = (userId: string) => {
+  const handleAuthenticated = () => {
     setIsAuthenticated(true)
   }
 

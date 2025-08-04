@@ -82,7 +82,6 @@ export async function POST(request: Request) {
     }
 
     const playlist: any[] = []
-    const usedIds = new Set()
 
     // Build playlist until desired length
     while (playlist.length < totalLength) {

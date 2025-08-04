@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Calendar, TrendingUp, Eye, Heart, Play, Music, RefreshCw, AlertCircle } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { Calendar, TrendingUp, Heart, Play, Music, RefreshCw, AlertCircle } from 'lucide-react'
 import UserProfile from '@/components/dashboard/UserProfile'
 import RecentTracks from '@/components/dashboard/RecentTracks'
 import TopArtists from '@/components/dashboard/TopArtists'
@@ -15,7 +15,6 @@ import {
   cacheDashboardData,
   SpotifyUser,
   DashboardOverview,
-  SpotifyTrack,
   SpotifyArtist,
   BTSAnalytics as BTSAnalyticsType,
   GenreAnalysis,
@@ -26,16 +25,16 @@ import {
 interface DashboardData {
   userProfile: SpotifyUser
   overview: DashboardOverview
-  recentTracks: SpotifyTrack[]
+  recentTracks: any[]
   topArtists: SpotifyArtist[]
-  topTracks: SpotifyTrack[]
+  topTracks: any[]
   userPlaylists: any[]
   audioFeatures: any[]
   btsAnalytics: BTSAnalyticsType
   genreAnalysis: GenreAnalysis[]
   moodAnalysis: MoodAnalysis[]
   listeningPatterns: ListeningPatterns
-  recommendations: SpotifyTrack[]
+  recommendations: any[]
 }
 
 export default function Stats() {
@@ -47,13 +46,7 @@ export default function Stats() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (isAuthenticated && userId) {
-      loadDashboardData()
-    }
-  }, [timeRange, isAuthenticated, userId])
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -84,7 +77,13 @@ export default function Stats() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    if (isAuthenticated && userId) {
+      loadDashboardData()
+    }
+  }, [timeRange, isAuthenticated, userId, loadDashboardData])
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -101,8 +100,6 @@ export default function Stats() {
       setRefreshing(false)
     }
   }
-
-
 
   const handleAuthenticated = (newUserId: string) => {
     setUserId(newUserId)
@@ -302,8 +299,8 @@ export default function Stats() {
                   dataKey="percentage"
                   label={({ genre, percentage }) => `${genre}: ${percentage}%`}
                 >
-                  {data.genreAnalysis.slice(0, 5).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`hsl(${index * 72}, 70%, 60%)`} />
+                  {data.genreAnalysis.slice(0, 5).map((entry, i) => (
+                    <Cell key={`cell-${i}`} fill={`hsl(${i * 72}, 70%, 60%)`} />
                   ))}
                 </Pie>
                 <Tooltip 
@@ -368,12 +365,12 @@ export default function Stats() {
             Recommended for You
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data.recommendations.slice(0, 8).map((track, index) => (
+            {data.recommendations.slice(0, 8).map((track, i) => (
               <motion.div
                 key={track.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 * index }}
+                transition={{ delay: 0.1 * i }}
                 whileHover={{ scale: 1.05 }}
                 className="group bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300"
               >
@@ -383,7 +380,7 @@ export default function Stats() {
                   className="w-full aspect-square rounded-lg object-cover mb-3 group-hover:scale-105 transition-transform duration-300"
                 />
                 <h4 className="text-white font-medium truncate">{track.name}</h4>
-                <p className="text-gray-400 text-sm truncate">{track.artists.map(a => a.name).join(', ')}</p>
+                <p className="text-gray-400 text-sm truncate">{track.artists.map((a: any) => a.name).join(', ')}</p>
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-purple-400 text-sm">{track.popularity}%</span>
                   <motion.button

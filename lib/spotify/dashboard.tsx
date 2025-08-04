@@ -94,8 +94,6 @@ export interface ListeningPatterns {
 }
 
 // Helper functions
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
 const calculateAccountAge = (createdAt: string): string => {
   const created = new Date(createdAt)
   const now = new Date()
@@ -115,14 +113,6 @@ const analyzeMood = (features: AudioFeatures): string => {
   if (valence > 0.7) return 'Happy'
   if (valence < 0.3) return 'Sad'
   return 'Neutral'
-}
-
-const generateColors = (count: number): string[] => {
-  const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
-  ]
-  return colors.slice(0, count)
 }
 
 // Spotify API functions
@@ -329,7 +319,7 @@ export const analyzeGenreDistribution = (artists: SpotifyArtist[]): GenreAnalysi
 }
 
 export const analyzeMoodDistribution = (tracks: SpotifyTrack[], audioFeatures: AudioFeatures[]): MoodAnalysis[] => {
-  const trackFeatures = tracks.map((track, index) => {
+  const trackFeatures = tracks.map((track) => {
     const features = audioFeatures.find(f => f.id === track.id)
     if (!features) return null
     
@@ -351,7 +341,7 @@ export const analyzeListeningPatterns = (recentTracks: SpotifyTrack[]): Listenin
   const now = new Date()
   const hourPatterns = Array.from({ length: 24 }, (_, i) => ({
     hour: i,
-    plays: recentTracks.filter(track => {
+    plays: recentTracks.filter(() => {
       // This is a simplified calculation - in reality, we'd need historical data
       return Math.random() > 0.7 // Simulate some tracks played at this hour
     }).length
