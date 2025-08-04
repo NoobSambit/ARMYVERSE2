@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     await user.save()
 
     // Return user without password
-    const { password: _, ...userWithoutPassword } = user.toObject()
+    const { password: passwordField, ...userWithoutPassword } = user.toObject()
 
     return NextResponse.json(userWithoutPassword, { status: 201 })
     

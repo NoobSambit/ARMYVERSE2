@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const clientId = process.env.SPOTIFY_CLIENT_ID
     const redirectUri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI
