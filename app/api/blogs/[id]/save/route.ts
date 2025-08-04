@@ -35,7 +35,7 @@ export async function POST(
       }
     } else {
       // Remove user from savedBy
-      blog.savedBy = blog.savedBy.filter(id => id !== userId)
+      blog.savedBy = blog.savedBy.filter((savedId: string) => savedId !== userId)
     }
     
     await blog.save()
