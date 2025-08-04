@@ -51,10 +51,10 @@ export async function POST(request: Request) {
     let manualPool: any[] = []
     let gapCountManual = 1
 
-    if (mode === 'auto') {
-      minGap = Math.max(1, Number(auto.minGap) || 2)
-      maxGap = Math.max(minGap, Number(auto.maxGap) || 3)
-      const fillMode = auto.fillMode || 'random'
+    if (mode === 'auto' && auto) {
+      minGap = Math.max(1, Number(auto!.minGap ?? 2))
+      maxGap = Math.max(minGap, Number(auto!.maxGap ?? 3))
+      const fillMode = auto!.fillMode ?? 'random'
 
       const query: any = { isBTSFamily: true, spotifyId: { $ne: primaryTrackId } }
 
@@ -74,8 +74,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'No candidate songs for gap found' }, { status: 400 })
       }
     } else if (mode === 'manual') {
-      gapCountManual = Math.max(1, Number(manual.gapCount) || 1)
-      const ids = Array.isArray(manual.gapSongIds) ? manual.gapSongIds : []
+      gapCountManual = Math.max(1, Number(manual?.gapCount ?? 1))
+      const ids = Array.isArray(manual?.gapSongIds) ? manual!.gapSongIds : []
       if (!ids.length) {
         return NextResponse.json({ error: 'gapSongIds required for manual mode' }, { status: 400 })
       }
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
         : gapCountManual
 
       for (let i = 0; i < gapSize && playlist.length < totalLength; i++) {
-        let pick
+        let pick: any
         if (mode === 'auto') {
           if (!fillerPool.length) break // shouldn't happen
           pick = randomPick(fillerPool)

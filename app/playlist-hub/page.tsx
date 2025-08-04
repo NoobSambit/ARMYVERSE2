@@ -185,7 +185,7 @@ export default function PlaylistHub() {
                       Link your account to save playlists and access your library
                     </p>
                   </div>
-                  <SpotifyAuth onAuthSuccess={() => handleAuthenticated('user-123')} />
+                  <SpotifyAuth onAuthSuccess={handleAuthenticated} />
                 </motion.div>
               ) : (
                 <motion.div
