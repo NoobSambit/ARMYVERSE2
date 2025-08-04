@@ -1,0 +1,16 @@
+{
+  "name": "ARMYVERSE",
+  "short_name": "ARMYVERSE",
+  "description": "BTS Music Discovery Platform",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ],
+  "theme_color": "#8b5cf6",
+  "background_color": "#1f2937",
+  "display": "standalone",
+  "start_url": "/"
+}

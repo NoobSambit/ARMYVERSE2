@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /api/*
+Disallow: /admin/*
+
+# Host
+Host: https://armyverse.vercel.app
+
+# Sitemaps
+Sitemap: https://armyverse.vercel.app/sitemap.xml
