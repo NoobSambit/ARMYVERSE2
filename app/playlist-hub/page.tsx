@@ -4,16 +4,11 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Sparkles, 
-  Music, 
   Search, 
   Plus, 
   Heart, 
   Brain, 
   Users, 
-  Star,
-  ArrowRight,
-  Play,
-  Zap,
   Palette,
   Target,
   TrendingUp,
@@ -32,11 +27,9 @@ interface PlaylistFeature {
 
 export default function PlaylistHub() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
 
   const handleAuthenticated = (userId: string) => {
     setIsAuthenticated(true)
-    setUserId(userId)
   }
 
   const aiFeatures: PlaylistFeature[] = [

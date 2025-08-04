@@ -10,8 +10,7 @@ import {
   User,
   Eye, 
   EyeOff,
-  Heart,
-  Sparkles
+  Heart
 } from 'lucide-react'
 import Link from 'next/link'
 

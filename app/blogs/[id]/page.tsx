@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { 
-  Heart, 
   MessageCircle, 
   Share2, 
   Bookmark,
@@ -13,7 +12,6 @@ import {
   Clock,
   User,
   Calendar,
-  Tag,
   Sparkles,
   Twitter,
   Instagram

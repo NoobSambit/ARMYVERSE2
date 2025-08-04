@@ -11,7 +11,6 @@ import {
   EyeOff,
   Plus,
   Bookmark,
-  Calendar,
   Clock,
   User,
   Sparkles,
@@ -60,7 +59,7 @@ const MOOD_EMOJIS = {
 }
 
 export default function UserBlogsDashboard() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const [blogs, setBlogs] = useState<Blog[]>([])
   const [savedBlogs, setSavedBlogs] = useState<Blog[]>([])
   const [loading, setLoading] = useState(true)

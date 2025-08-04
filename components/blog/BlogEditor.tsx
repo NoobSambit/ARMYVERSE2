@@ -87,7 +87,6 @@ export default function BlogEditor({
   const [coverImage, setCoverImage] = useState<string>('')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [newTag, setNewTag] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
   const [showImageUpload, setShowImageUpload] = useState(false)
 
   const editor = useEditor({
