@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
-import { Heart, Star, Play, ExternalLink } from 'lucide-react'
-import { BTSAnalytics as BTSAnalyticsType, SpotifyTrack } from '@/lib/spotify/dashboard'
+import { Heart, Star, Play, ExternalLink, Music } from 'lucide-react'
+import { BTSAnalytics as BTSAnalyticsType } from '@/lib/spotify/dashboard'
 
 interface BTSAnalyticsProps {
   btsAnalytics: BTSAnalyticsType
@@ -16,13 +16,13 @@ export default function BTSAnalytics({ btsAnalytics, loading = false }: BTSAnaly
 
 
 
-  const memberChartData = btsAnalytics.memberPreference.map((member, index) => ({
+  const memberChartData = btsAnalytics.memberPreference.map((member, i) => ({
     member: member.member,
     plays: member.plays,
-    color: `hsl(${index * 51}, 70%, 60%)`
+    color: `hsl(${i * 51}, 70%, 60%)`
   }))
 
-  const radarData = btsAnalytics.memberPreference.map((member, index) => ({
+  const radarData = btsAnalytics.memberPreference.map((member) => ({
     subject: member.member,
     A: member.plays,
     fullMark: Math.max(...btsAnalytics.memberPreference.map(m => m.plays))

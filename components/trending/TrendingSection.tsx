@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Play, TrendingUp, Star, Music, Eye } from 'lucide-react'
-import { fetchYouTubeTrending, fetchSpotifyTrending, fetchAllMembersSpotlight, fetchMembersYouTubeData, formatViewCount, formatPopularity } from '@/lib/trending/fetch'
+import { fetchYouTubeTrending, fetchSpotifyTrending, fetchAllMembersSpotlight, fetchMembersYouTubeData, formatViewCount } from '@/lib/trending/fetch'
 
 interface TrendingVideo {
   id: string

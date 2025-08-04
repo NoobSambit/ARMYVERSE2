@@ -14,7 +14,7 @@ export default function CreatePlaylist() {
   const [isConnected, setIsConnected] = useState(false)
   const [mode, setMode] = useState<'normal' | 'focus'>('normal')
   const [focusResult, setFocusResult] = useState<SongDoc[] | null>(null)
-  const { songs: allSongs, loading: songsLoading } = useAllSongs()
+  const { songs: allSongs } = useAllSongs()
 
   const filteredTracks = allSongs.filter(track =>
     track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

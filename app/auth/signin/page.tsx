@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
@@ -9,8 +9,7 @@ import {
   Lock, 
   Eye, 
   EyeOff,
-  Heart,
-  Sparkles
+  Heart
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -167,7 +166,7 @@ export default function SignInPage() {
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-gray-400">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/auth/signup" className="text-purple-400 hover:text-purple-300 transition-colors">
                 Sign up
               </Link>
