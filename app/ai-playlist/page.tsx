@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Sparkles, Music, Heart, ArrowRight, Loader2, TrendingUp, Info, Save, RefreshCw, X, Bookmark, User, Shuffle, Crown } from 'lucide-react'
+import { Sparkles, Music, Heart, ArrowRight, Loader2, Info, Save, RefreshCw, X, Bookmark, Shuffle } from 'lucide-react'
 import CompactPlaylistGrid from '@/components/playlist/CompactPlaylistGrid'
 import MoodPills from '@/components/ui/MoodPills'
 import InteractiveSlider from '@/components/ui/InteractiveSlider'
@@ -30,7 +30,17 @@ function AIPlaylistContent() {
   const [yearEra, setYearEra] = useState<string[]>([])
   const [playlistType, setPlaylistType] = useState('feel-based')
   const [showPreview, setShowPreview] = useState(false)
-  const [savedConfigs, setSavedConfigs] = useState<any[]>([])
+  const [savedConfigs, setSavedConfigs] = useState<Array<{
+    id: number
+    name: string
+    prompt: string
+    playlistName: string
+    selectedMoods: string[]
+    playlistLength: number
+    artistBias: string[]
+    yearEra: string[]
+    playlistType: string
+  }>>([])
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [configName, setConfigName] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -69,7 +79,15 @@ function AIPlaylistContent() {
     setConfigName('')
   }
 
-  const loadConfig = (config: any) => {
+  const loadConfig = (config: {
+    prompt: string
+    playlistName: string
+    selectedMoods: string[]
+    playlistLength: number
+    artistBias: string[]
+    yearEra: string[]
+    playlistType: string
+  }) => {
     setPrompt(config.prompt)
     setPlaylistName(config.playlistName || '')
     setSelectedMoods(config.selectedMoods)
@@ -309,10 +327,10 @@ function AIPlaylistContent() {
                   <div className="mt-2 p-3 bg-black/30 rounded-lg text-sm text-gray-300 backdrop-blur-sm">
                     <p className="font-medium mb-2">Example descriptions:</p>
                     <ul className="space-y-1 text-xs">
-                      <li>• "Songs for a rainy day drive"</li>
-                      <li>• "High-energy workout mix"</li>
-                      <li>• "Chill vibes for studying"</li>
-                      <li>• "Romantic evening playlist"</li>
+                      <li>• &ldquo;Songs for a rainy day drive&rdquo;</li>
+                      <li>• &ldquo;High-energy workout mix&rdquo;</li>
+                      <li>• &ldquo;Chill vibes for studying&rdquo;</li>
+                      <li>• &ldquo;Romantic evening playlist&rdquo;</li>
                     </ul>
                   </div>
                 )}
