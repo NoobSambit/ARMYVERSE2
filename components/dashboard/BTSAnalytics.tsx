@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
-import { Heart, Music, Star, TrendingUp, Play, ExternalLink } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
+import { Heart, Star, Play, ExternalLink } from 'lucide-react'
 import { BTSAnalytics as BTSAnalyticsType, SpotifyTrack } from '@/lib/spotify/dashboard'
 
 interface BTSAnalyticsProps {
@@ -14,11 +14,7 @@ interface BTSAnalyticsProps {
 export default function BTSAnalytics({ btsAnalytics, loading = false }: BTSAnalyticsProps) {
   const [viewMode, setViewMode] = useState<'overview' | 'members' | 'tracks'>('overview')
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num.toString()
-  }
+
 
   const memberChartData = btsAnalytics.memberPreference.map((member, index) => ({
     member: member.member,

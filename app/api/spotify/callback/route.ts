@@ -4,7 +4,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
-    const state = searchParams.get('state')
     const error = searchParams.get('error')
 
     if (error) {
@@ -33,7 +32,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/?error=token_exchange_failed', request.url))
     }
 
-    const tokenData = await tokenResponse.json()
+    await tokenResponse.json()
 
     // Redirect to dashboard with success
     return NextResponse.redirect(new URL('/stats?auth=success', request.url))

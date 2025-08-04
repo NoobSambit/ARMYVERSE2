@@ -4,19 +4,13 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   BookOpen, 
-  Calendar, 
   User, 
-  Tag, 
   ArrowRight, 
   Search,
-  Filter,
   Clock,
   Eye,
   Heart,
-  Share2,
-  Bookmark,
-  Plus,
-  Sparkles
+  Plus
 } from 'lucide-react'
 import Link from 'next/link'
 

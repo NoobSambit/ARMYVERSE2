@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { User, TrendingUp, Music, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 import { SpotifyArtist } from '@/lib/spotify/dashboard'
 
 interface TopArtistsProps {

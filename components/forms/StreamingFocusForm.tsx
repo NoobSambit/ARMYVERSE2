@@ -45,15 +45,7 @@ export default function StreamingFocusForm({ onGenerated }: Props) {
   const [manualSearch, setManualSearch] = useState('')
   const [manualPool, setManualPool] = useState<SongDoc[]>([])
 
-  /* derived lists */
-  const shuffled = useMemo(() => {
-    const arr = [...songs]
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[arr[i], arr[j]] = [arr[j], arr[i]]
-    }
-    return arr
-  }, [songs])
+
 
   const primaryOptions = useMemo(() => {
     const q = search.trim().toLowerCase()
