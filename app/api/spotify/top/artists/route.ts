@@ -5,7 +5,6 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const timeRange = searchParams.get('time_range') || 'short_term'
     const limit = parseInt(searchParams.get('limit') || '20')
     const userId = searchParams.get('userId')
     
