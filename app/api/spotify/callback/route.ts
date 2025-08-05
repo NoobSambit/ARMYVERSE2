@@ -29,15 +29,17 @@ export async function GET(request: NextRequest) {
     })
 
     if (!tokenResponse.ok) {
-      return NextResponse.redirect(new URL('/?error=token_exchange_failed', request.url))
+      console.error('Token exchange failed:', await tokenResponse.text())
+      return NextResponse.redirect(new URL('/stats?error=token_exchange_failed', request.url))
     }
 
-    await tokenResponse.json()
-
-    // Redirect to dashboard with success
-    return NextResponse.redirect(new URL('/stats?auth=success', request.url))
+    const tokenData = await tokenResponse.json()
+    
+    // Store token in session or pass it to frontend
+    // For now, we'll redirect with success and let the frontend handle the session
+    return NextResponse.redirect(new URL('/stats?auth=success&token=' + encodeURIComponent(JSON.stringify(tokenData)), request.url))
   } catch (error) {
     console.error('Spotify callback error:', error)
-    return NextResponse.redirect(new URL('/?error=callback_failed', request.url))
+    return NextResponse.redirect(new URL('/stats?error=callback_failed', request.url))
   }
 }

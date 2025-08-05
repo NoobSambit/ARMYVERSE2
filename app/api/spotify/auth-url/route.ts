@@ -15,7 +15,7 @@ export async function GET() {
 
     const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${Math.random().toString(36).substring(7)}`
 
-    return NextResponse.json({ authUrl })
+    return NextResponse.json({ url: authUrl })
   } catch (error) {
     console.error('Error generating auth URL:', error)
     return NextResponse.json(
