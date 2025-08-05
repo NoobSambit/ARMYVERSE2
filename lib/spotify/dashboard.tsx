@@ -1,6 +1,5 @@
 // Spotify Dashboard API utilities for ArmyVerse
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || 'b41dc354c04b4e1dad741ae54a61ea9c'
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || 'b8e4c73b374440dd8abadb4609ebd165'
+import { makeSpotifyRequest } from './utils'
 
 // Types
 export interface SpotifyUser {
@@ -122,7 +121,7 @@ export const getSpotifyToken = async (): Promise<string> => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)
+        'Authorization': 'Basic ' + btoa(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`)
       },
       body: 'grant_type=client_credentials'
     })
