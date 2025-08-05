@@ -38,12 +38,25 @@ export default function SpotifyAuth({ onAuthSuccess }: SpotifyAuthProps) {
   // Check if user is already authenticated (from URL params)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
+    const auth = urlParams.get('auth')
     const token = urlParams.get('token')
+    const error = urlParams.get('error')
     
-    if (token) {
-      // User just returned from Spotify auth
-      localStorage.setItem('spotify_token', token)
-      onAuthSuccess?.()
+    if (error) {
+      setError(`Authentication failed: ${error}`)
+      return
+    }
+    
+    if (auth === 'success' && token) {
+      try {
+        // User just returned from Spotify auth
+        const tokenData = JSON.parse(decodeURIComponent(token))
+        localStorage.setItem('spotify_token', JSON.stringify(tokenData))
+        onAuthSuccess?.()
+      } catch (err) {
+        console.error('Error parsing token:', err)
+        setError('Failed to process authentication response')
+      }
     }
   }, [onAuthSuccess])
 
