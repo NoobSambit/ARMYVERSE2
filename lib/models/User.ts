@@ -49,8 +49,8 @@ userSchema.pre('save', function(next) {
   next()
 })
 
-// Create indexes for better query performance
-userSchema.index({ email: 1 })
-userSchema.index({ googleId: 1 })
+// Remove duplicate index definitions since unique: true already creates indexes
+// userSchema.index({ email: 1 })  // Removed - duplicate of unique: true
+// userSchema.index({ googleId: 1 })  // Removed - duplicate of unique: true
 
 export const User = mongoose.models.User || mongoose.model('User', userSchema) 
