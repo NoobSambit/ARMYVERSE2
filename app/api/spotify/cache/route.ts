@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, data, timestamp } = body
+    const { userId, data } = body
     
     if (!userId || !data) {
       return NextResponse.json(

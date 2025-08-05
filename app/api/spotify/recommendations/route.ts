@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       tracks: mockRecommendations,
-      seeds: seedArtists ? seedArtists.split(',').map((artist, i) => ({
+      seeds: seedArtists ? seedArtists.split(',').map((artist) => ({
         id: artist,
         href: `https://api.spotify.com/v1/artists/${artist}`,
         type: 'artist',
