@@ -471,6 +471,10 @@ export const getCachedDashboardData = async (userId: string): Promise<any | null
     }
     
     const cached = await response.json()
+    if (!cached || typeof cached.timestamp !== 'number') {
+      // No cached data present
+      return null
+    }
     const cacheAge = Date.now() - cached.timestamp
     const maxAge = 24 * 60 * 60 * 1000 // 24 hours
     
