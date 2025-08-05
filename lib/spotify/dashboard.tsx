@@ -1,5 +1,4 @@
 // Spotify Dashboard API utilities for ArmyVerse
-import { makeSpotifyRequest } from './utils'
 
 // Types
 export interface SpotifyUser {
