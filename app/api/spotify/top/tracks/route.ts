@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch real top tracks from Spotify API
-    const response = await makeSpotifyRequest(`/me/top/tracks?limit=${limit}&time_range=${timeRange}`)
+    const userToken = request.headers.get('authorization')?.replace('Bearer ', '') || undefined;
+    const response = await makeSpotifyRequest(`/me/top/tracks?limit=${limit}&time_range=${timeRange}`, {}, userToken)
     
     if (!response.ok) {
       // If API call fails, return mock data as fallback

@@ -24,15 +24,16 @@ export async function getSpotifyToken(): Promise<string> {
   return data.access_token
 }
 
-export async function makeSpotifyRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
-  const token = await getSpotifyToken()
-  
+export async function makeSpotifyRequest(endpoint: string, options: RequestInit = {}, userToken?: string): Promise<Response> {
+  // If a user-scoped token is provided, prefer that. Otherwise fall back to client-credentials token
+  const token = userToken || await getSpotifyToken()
+
   return fetch(`https://api.spotify.com/v1${endpoint}`, {
     ...options,
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
-      ...options.headers
+      ...(options.headers || {})
     }
   })
 } 

@@ -1,5 +1,19 @@
 // Spotify Dashboard API utilities for ArmyVerse
 
+// Extract stored user access token (if the user completed OAuth)
+const getAuthHeaders = (): HeadersInit => {
+  if (typeof window === 'undefined') return {}
+  try {
+    const str = localStorage.getItem('spotify_token')
+    if (!str) return {}
+    const data = JSON.parse(str)
+    if (data?.access_token) {
+      return { Authorization: `Bearer ${data.access_token}` }
+    }
+  } catch {}
+  return {}
+}
+
 // Types
 export interface SpotifyUser {
   id: string
@@ -138,7 +152,7 @@ export const getSpotifyToken = async (): Promise<string> => {
 
 export const fetchUserProfile = async (userId: string): Promise<SpotifyUser> => {
   try {
-    const response = await fetch(`/api/spotify/user/${userId}`)
+    const response = await fetch(`/api/spotify/user/${userId}`, { headers: getAuthHeaders() })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch user profile: ${response.status}`)
@@ -153,7 +167,7 @@ export const fetchUserProfile = async (userId: string): Promise<SpotifyUser> => 
 
 export const fetchRecentTracks = async (userId: string, limit: number = 20): Promise<SpotifyTrack[]> => {
   try {
-    const response = await fetch(`/api/spotify/recent?limit=${limit}&userId=${userId}`)
+    const response = await fetch(`/api/spotify/recent?limit=${limit}&userId=${userId}`, { headers: getAuthHeaders() })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch recent tracks: ${response.status}`)
@@ -175,7 +189,8 @@ export const fetchTopContent = async (
 ): Promise<SpotifyArtist[] | SpotifyTrack[]> => {
   try {
     const response = await fetch(
-      `/api/spotify/top/${type}?time_range=${timeRange}&limit=${limit}&userId=${userId}`
+      `/api/spotify/top/${type}?time_range=${timeRange}&limit=${limit}&userId=${userId}`,
+      { headers: getAuthHeaders() }
     )
     
     if (!response.ok) {
@@ -192,7 +207,7 @@ export const fetchTopContent = async (
 export const fetchAudioFeatures = async (userId: string, trackIds: string[]): Promise<AudioFeatures[]> => {
   try {
     const ids = trackIds.join(',')
-    const response = await fetch(`/api/spotify/audio-features?ids=${ids}&userId=${userId}`)
+    const response = await fetch(`/api/spotify/audio-features?ids=${ids}&userId=${userId}`, { headers: getAuthHeaders() })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch audio features: ${response.status}`)
@@ -208,7 +223,7 @@ export const fetchAudioFeatures = async (userId: string, trackIds: string[]): Pr
 
 export const fetchUserPlaylists = async (userId: string, limit: number = 50): Promise<any[]> => {
   try {
-    const response = await fetch(`/api/spotify/playlists?limit=${limit}&userId=${userId}`)
+    const response = await fetch(`/api/spotify/playlists?limit=${limit}&userId=${userId}`, { headers: getAuthHeaders() })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch playlists: ${response.status}`)
@@ -229,7 +244,7 @@ export const fetchRecommendations = async (
 ): Promise<SpotifyTrack[]> => {
   try {
     const artists = seedArtists.slice(0, 5).join(',')
-    const response = await fetch(`/api/spotify/recommendations?seed_artists=${artists}&limit=${limit}&userId=${userId}`)
+    const response = await fetch(`/api/spotify/recommendations?seed_artists=${artists}&limit=${limit}&userId=${userId}`, { headers: getAuthHeaders() })
     
     if (!response.ok) {
       throw new Error(`Failed to fetch recommendations: ${response.status}`)

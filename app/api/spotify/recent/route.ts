@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch real recent tracks from Spotify API
-    const response = await makeSpotifyRequest(`/me/player/recently-played?limit=${limit}`)
+    const userToken = request.headers.get('authorization')?.replace('Bearer ', '') || undefined;
+    const response = await makeSpotifyRequest(`/me/player/recently-played?limit=${limit}`, {}, userToken)
     
     if (!response.ok) {
       // If API call fails, return mock data as fallback
