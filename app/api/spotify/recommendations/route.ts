@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch real recommendations from Spotify API
-    const response = await makeSpotifyRequest(`/recommendations?seed_artists=${seedArtists}&limit=${limit}`)
+    const userToken = request.headers.get('authorization')?.replace('Bearer ', '') || undefined;
+    const response = await makeSpotifyRequest(`/recommendations?seed_artists=${seedArtists}&limit=${limit}`, {}, userToken)
     
     if (!response.ok) {
       // If API call fails, return mock data as fallback

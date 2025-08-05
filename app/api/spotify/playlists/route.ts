@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch real playlists from Spotify API
-    const response = await makeSpotifyRequest(`/me/playlists?limit=${limit}`)
+    const userToken = request.headers.get('authorization')?.replace('Bearer ', '') || undefined;
+    const response = await makeSpotifyRequest(`/me/playlists?limit=${limit}`, {}, userToken)
     
     if (!response.ok) {
       // If API call fails, return mock data as fallback

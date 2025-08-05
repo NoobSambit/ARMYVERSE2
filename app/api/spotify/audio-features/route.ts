@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
     const trackIds = ids.split(',')
     
     // Fetch real audio features from Spotify API
-    const response = await makeSpotifyRequest(`/audio-features?ids=${ids}`)
+    const userToken = request.headers.get('authorization')?.replace('Bearer ', '') || undefined;
+    const response = await makeSpotifyRequest(`/audio-features?ids=${ids}`, {}, userToken)
     
     if (!response.ok) {
       // If API call fails, return mock data as fallback
