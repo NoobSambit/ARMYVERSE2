@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const clientId = process.env.SPOTIFY_CLIENT_ID

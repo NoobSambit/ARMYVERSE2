@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { Blog } from '@/lib/models/Blog'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     await connect()
