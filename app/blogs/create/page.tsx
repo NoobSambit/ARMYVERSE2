@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import BlogEditor from '@/components/blog/BlogEditor'
 
 interface BlogData {
@@ -16,18 +16,18 @@ interface BlogData {
 
 export default function CreateBlogPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { user, loading } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (status === 'loading') return
-    if (!session) {
+    if (loading) return
+    if (!user) {
       router.push('/auth/signin')
     }
-  }, [session, status, router])
+  }, [user, loading, router])
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
@@ -35,18 +35,18 @@ export default function CreateBlogPage() {
     )
   }
 
-  if (!session) {
+  if (!user) {
     return null // Will redirect
   }
 
   const handleSave = async (data: BlogData) => {
     setIsSaving(true)
     try {
-      // Get user data from session
+      // Get user data from Firebase auth
       const author = {
-        id: session.user?.id || session.user?.email || 'user123',
-        name: session.user?.name || 'ARMY Writer',
-        avatar: session.user?.image || null
+        id: user.uid || user.email || 'user123',
+        name: user.displayName || user.email || 'ARMY Writer',
+        avatar: user.photoURL || null
       }
 
       const response = await fetch('/api/blogs', {

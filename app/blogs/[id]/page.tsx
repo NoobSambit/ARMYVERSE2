@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
 import { 
   MessageCircle, 
@@ -59,7 +59,7 @@ const MOOD_EMOJIS = {
 
 export default function BlogViewPage() {
   const params = useParams()
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [blog, setBlog] = useState<Blog | null>(null)
   const [loading, setLoading] = useState(true)
   const [userReactions, setUserReactions] = useState<string[]>([])
@@ -68,8 +68,8 @@ export default function BlogViewPage() {
   const [submittingComment, setSubmittingComment] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
 
-  // Get user ID from session
-  const userId = session?.user?.id || session?.user?.email || 'user123'
+  // Get user ID from Firebase auth
+  const userId = user?.uid || user?.email || 'user123'
 
   useEffect(() => {
     fetchBlog()
@@ -152,7 +152,7 @@ export default function BlogViewPage() {
         },
         body: JSON.stringify({
           userId,
-          name: session?.user?.name || 'ARMY Commenter',
+          name: user?.displayName || user?.email || 'ARMY Commenter',
           content: newComment.trim()
         }),
       })
