@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
 import { 
   BookOpen, 
@@ -59,15 +59,15 @@ const MOOD_EMOJIS = {
 }
 
 export default function UserBlogsDashboard() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [blogs, setBlogs] = useState<Blog[]>([])
   const [savedBlogs, setSavedBlogs] = useState<Blog[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'published' | 'drafts' | 'saved'>('published')
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Get user ID from session
-  const userId = session?.user?.id || session?.user?.email || 'user123'
+  // Get user ID from Firebase auth
+  const userId = user?.uid || user?.email || 'user123'
 
   useEffect(() => {
     fetchUserBlogs()
