@@ -35,7 +35,25 @@ export default function ExportToSpotifyButton({
     }
 
     setIsExporting(true)
-    const token = localStorage.getItem('spotify_token')
+    
+    // Get Spotify token from localStorage and extract access_token
+    const spotifyTokenData = localStorage.getItem('spotify_token')
+    let token = null
+    
+    if (spotifyTokenData) {
+      try {
+        const tokenObj = JSON.parse(spotifyTokenData)
+        token = tokenObj.access_token
+      } catch (error) {
+        console.error('Error parsing Spotify token:', error)
+      }
+    }
+
+    if (!token) {
+      onExportError?.('Spotify access token not found. Please reconnect your account.')
+      setIsExporting(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/playlist/export', {
