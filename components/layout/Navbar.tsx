@@ -5,12 +5,21 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, User, LogOut } from 'lucide-react'
 import { navItems } from '@/components/layout/nav-data'
-import { useSession, signOut } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
+import { signOut } from '@/lib/firebase/auth'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { user, isAuthenticated } = useAuth()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
+  }
 
   const isActive = (path: string) => pathname === path
 
@@ -54,14 +63,14 @@ export default function Navbar() {
             
             {/* Auth Buttons */}
             <div className="ml-4 flex items-center space-x-2">
-              {session ? (
+              {isAuthenticated && user ? (
                 <div className="flex items-center space-x-2">
                   <div className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300">
                     <User className="w-4 h-4" />
-                    <span>{session.user?.name}</span>
+                    <span>{user.displayName || user.email}</span>
                   </div>
                   <button
-                    onClick={() => signOut()}
+                    onClick={handleSignOut}
                     className="px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex items-center space-x-2"
                   >
                     <LogOut className="w-4 h-4" />

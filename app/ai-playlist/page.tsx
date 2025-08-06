@@ -189,6 +189,24 @@ function AIPlaylistContent() {
       return
     }
 
+    // Get Spotify token from localStorage
+    const spotifyTokenData = localStorage.getItem('spotify_token')
+    let token = null
+    
+    if (spotifyTokenData) {
+      try {
+        const tokenObj = JSON.parse(spotifyTokenData)
+        token = tokenObj.access_token
+      } catch (error) {
+        console.error('Error parsing Spotify token:', error)
+      }
+    }
+
+    if (!token) {
+      showToast('error', 'Please connect your Spotify account first!')
+      return
+    }
+
     showToast('info', 'Exporting to Spotify...')
     
     try {
@@ -196,7 +214,7 @@ function AIPlaylistContent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_SPOTIFY_TOKEN', // This would come from auth
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: playlistName || `AI Generated BTS Playlist - ${prompt}`,
@@ -204,14 +222,17 @@ function AIPlaylistContent() {
         }),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        const data = await response.json()
         window.open(data.playlistUrl, '_blank')
         showToast('success', 'Playlist exported to Spotify!')
+      } else {
+        throw new Error(data.error || 'Failed to export playlist')
       }
     } catch (error) {
       console.error('Error exporting to Spotify:', error)
-      showToast('error', 'Failed to export to Spotify. Please try again.')
+      showToast('error', error instanceof Error ? error.message : 'Failed to export to Spotify. Please try again.')
     }
   }
 
