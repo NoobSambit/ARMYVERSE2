@@ -17,6 +17,7 @@ export default function CreatePlaylist() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
+  const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(null)
   const { songs: allSongs } = useAllSongs()
   const { isAuthenticated, isLoading, disconnect } = useSpotifyAuth()
 
@@ -35,13 +36,14 @@ export default function CreatePlaylist() {
     setPlaylistTracks(playlistTracks.filter(t => t.spotifyId !== spotifyId))
   }
 
-  const handleSaveToSpotify = async () => {
+  const handleSaveToSpotify = async (songsToSave?: SongDoc[]) => {
     if (!isAuthenticated) {
       setSaveError('Please connect your Spotify account first')
       return
     }
 
-    if (playlistTracks.length === 0) {
+    const tracks = songsToSave || playlistTracks
+    if (tracks.length === 0) {
       setSaveError('Please add some tracks to your playlist first')
       return
     }
@@ -76,7 +78,7 @@ export default function CreatePlaylist() {
         },
         body: JSON.stringify({
           name: playlistName,
-          songs: playlistTracks.map(track => ({
+          songs: tracks.map(track => ({
             title: track.name,
             artist: track.artist,
             spotifyId: track.spotifyId
@@ -91,6 +93,7 @@ export default function CreatePlaylist() {
       }
 
       setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
+      setSavedPlaylistUrl(data.playlistUrl)
       // Clear success message after 5 seconds
       setTimeout(() => setSaveSuccess(null), 5000)
     } catch (error) {
@@ -130,7 +133,75 @@ export default function CreatePlaylist() {
             {focusResult && (
               <div className="mb-10">
                 <h3 className="text-white text-2xl font-bold mb-4">Generated Playlist</h3>
+                
+                {/* Playlist Name Input */}
+                <div className="mb-6">
+                  <label className="block text-white font-medium mb-2">Playlist Name</label>
+                  <input
+                    type="text"
+                    value={playlistName}
+                    onChange={(e) => setPlaylistName(e.target.value)}
+                    className="w-full px-4 py-3 bg-black/80 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                    placeholder="Enter playlist name"
+                    aria-label="Playlist name"
+                  />
+                </div>
+
                 <CompactPlaylistGrid songs={focusResult} primaryId={focusResult[0]?.spotifyId} />
+
+                {/* Export to Spotify Section */}
+                <div className="mt-6 space-y-4">
+                  {/* Error/Success Messages */}
+                  {saveError && (
+                    <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 flex items-center space-x-3">
+                      <AlertCircle className="w-5 h-5 text-red-400" />
+                      <span className="text-red-300">{saveError}</span>
+                    </div>
+                  )}
+                  
+                  {saveSuccess && (
+                    <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 flex items-center space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      <span className="text-green-300">{saveSuccess}</span>
+                    </div>
+                  )}
+
+                  <div className="flex space-x-4">
+                    <button 
+                      onClick={() => handleSaveToSpotify(focusResult)}
+                      disabled={!isAuthenticated || isSaving}
+                      className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-colors ${
+                        !isAuthenticated
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          : isSaving
+                          ? 'bg-purple-600 text-white cursor-wait'
+                          : 'bg-purple-600 hover:bg-purple-700 text-white'
+                      }`}
+                    >
+                      {isSaving ? (
+                        <div className="flex items-center justify-center">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Saving...
+                        </div>
+                      ) : (
+                        'Save to Spotify'
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
+                      disabled={!savedPlaylistUrl}
+                      className={`px-4 py-3 rounded-xl transition-colors ${
+                        savedPlaylistUrl
+                          ? 'bg-black/50 border border-gray-700 text-white hover:border-purple-400'
+                          : 'bg-gray-600 border border-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                      title="Open in Spotify"
+                      aria-label="Open playlist in Spotify"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </>
@@ -303,7 +374,7 @@ export default function CreatePlaylist() {
 
                   <div className="flex space-x-4">
                     <button 
-                      onClick={handleSaveToSpotify}
+                      onClick={() => handleSaveToSpotify()}
                       disabled={!isAuthenticated || isSaving}
                       className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-colors ${
                         !isAuthenticated
@@ -323,7 +394,13 @@ export default function CreatePlaylist() {
                       )}
                     </button>
                     <button 
-                      className="px-4 py-3 bg-black/50 border border-gray-700 text-white rounded-xl hover:border-purple-400 transition-colors"
+                      onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
+                      disabled={!savedPlaylistUrl}
+                      className={`px-4 py-3 rounded-xl transition-colors ${
+                        savedPlaylistUrl
+                          ? 'bg-black/50 border border-gray-700 text-white hover:border-purple-400'
+                          : 'bg-gray-600 border border-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
                       title="Open in Spotify"
                       aria-label="Open playlist in Spotify"
                     >
