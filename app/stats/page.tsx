@@ -9,6 +9,7 @@ import RecentTracks from '@/components/dashboard/RecentTracks'
 import TopArtists from '@/components/dashboard/TopArtists'
 import BTSAnalytics from '@/components/dashboard/BTSAnalytics'
 import SpotifyAuth from '@/components/auth/SpotifyAuth'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 import { 
   fetchDashboardData, 
   getCachedDashboardData, 
@@ -43,8 +44,8 @@ export default function Stats() {
   const [error, setError] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState('short_term')
   const [refreshing, setRefreshing] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const { isAuthenticated, isLoading } = useSpotifyAuth()
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -103,7 +104,7 @@ export default function Stats() {
 
   const handleAuthenticated = (newUserId: string) => {
     setUserId(newUserId)
-    setIsAuthenticated(true)
+    // The useSpotifyAuth hook will automatically handle the authentication status
   }
 
   // Show authentication screen if not authenticated

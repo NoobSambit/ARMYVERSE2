@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import SpotifyAuth from '@/components/auth/SpotifyAuth'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 interface PlaylistFeature {
   icon: React.ReactNode
@@ -26,10 +27,11 @@ interface PlaylistFeature {
 }
 
 export default function PlaylistHub() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isAuthenticated, isLoading } = useSpotifyAuth()
 
   const handleAuthenticated = () => {
-    setIsAuthenticated(true)
+    // This will be called when user successfully authenticates
+    // The useSpotifyAuth hook will automatically update the status
   }
 
   const aiFeatures: PlaylistFeature[] = [
