@@ -54,18 +54,23 @@ export async function POST(req: Request) {
     // 3. Search and add tracks
     const trackUris = []
     for (const song of songs) {
-      const query = `track:${song.title} artist:${song.artist}`
-      const searchResponse = await fetch(
-        `${SPOTIFY_API_BASE}/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      )
+      // Use the spotifyId if available, otherwise search
+      if (song.spotifyId) {
+        trackUris.push(`spotify:track:${song.spotifyId}`)
+      } else {
+        const query = `track:${song.title} artist:${song.artist}`
+        const searchResponse = await fetch(
+          `${SPOTIFY_API_BASE}/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        )
 
-      if (searchResponse.ok) {
-        const searchData = await searchResponse.json()
-        if (searchData.tracks.items.length > 0) {
-          trackUris.push(searchData.tracks.items[0].uri)
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json()
+          if (searchData.tracks.items.length > 0) {
+            trackUris.push(searchData.tracks.items[0].uri)
+          }
         }
       }
     }

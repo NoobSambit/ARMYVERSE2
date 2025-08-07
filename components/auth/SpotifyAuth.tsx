@@ -51,7 +51,12 @@ export default function SpotifyAuth({ onAuthSuccess }: SpotifyAuthProps) {
       try {
         // User just returned from Spotify auth
         const tokenData = JSON.parse(decodeURIComponent(token))
-        localStorage.setItem('spotify_token', JSON.stringify(tokenData))
+        // Add timestamp for token expiration tracking
+        const tokenWithTimestamp = {
+          ...tokenData,
+          timestamp: Date.now()
+        }
+        localStorage.setItem('spotify_token', JSON.stringify(tokenWithTimestamp))
         onAuthSuccess?.()
       } catch (err) {
         console.error('Error parsing token:', err)

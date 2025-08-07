@@ -1,20 +1,25 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Search, Plus, Trash2, Music, ExternalLink } from 'lucide-react'
+import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import StreamingFocusForm from '@/components/forms/StreamingFocusForm'
 import CompactPlaylistGrid from '@/components/playlist/CompactPlaylistGrid'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
+import SpotifyAuth from '@/components/auth/SpotifyAuth'
 
 export default function CreatePlaylist() {
   const [searchQuery, setSearchQuery] = useState('')
   const [playlistName, setPlaylistName] = useState('My BTS Playlist')
   const [playlistTracks, setPlaylistTracks] = useState<SongDoc[]>([])
-  const [isConnected, setIsConnected] = useState(false)
   const [mode, setMode] = useState<'normal' | 'focus'>('normal')
   const [focusResult, setFocusResult] = useState<SongDoc[] | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const { songs: allSongs } = useAllSongs()
+  const { isAuthenticated, isLoading, disconnect } = useSpotifyAuth()
 
   const filteredTracks = allSongs.filter(track =>
     track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -29,6 +34,77 @@ export default function CreatePlaylist() {
 
   const removeFromPlaylist = (spotifyId: string) => {
     setPlaylistTracks(playlistTracks.filter(t => t.spotifyId !== spotifyId))
+  }
+
+  const handleSaveToSpotify = async () => {
+    if (!isAuthenticated) {
+      setSaveError('Please connect your Spotify account first')
+      return
+    }
+
+    if (playlistTracks.length === 0) {
+      setSaveError('Please add some tracks to your playlist first')
+      return
+    }
+
+    setIsSaving(true)
+    setSaveError(null)
+    setSaveSuccess(null)
+
+    try {
+      // Get Spotify token from localStorage
+      const spotifyTokenData = localStorage.getItem('spotify_token')
+      let token = null
+      
+      if (spotifyTokenData) {
+        try {
+          const tokenObj = JSON.parse(spotifyTokenData)
+          token = tokenObj.access_token
+        } catch (error) {
+          console.error('Error parsing Spotify token:', error)
+        }
+      }
+
+      if (!token) {
+        throw new Error('Spotify access token not found. Please reconnect your account.')
+      }
+
+      const response = await fetch('/api/playlist/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: playlistName,
+          songs: playlistTracks.map(track => ({
+            title: track.name,
+            artist: track.artist,
+            spotifyId: track.spotifyId
+          }))
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save playlist to Spotify')
+      }
+
+      setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
+      // Clear success message after 5 seconds
+      setTimeout(() => setSaveSuccess(null), 5000)
+    } catch (error) {
+      console.error('Error saving playlist:', error)
+      setSaveError(error instanceof Error ? error.message : 'Failed to save playlist')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleAuthenticated = () => {
+    // This will be called when user successfully authenticates
+    // The useSpotifyAuth hook will automatically update the status
   }
 
   return (
@@ -66,24 +142,45 @@ export default function CreatePlaylist() {
 
         {/* connection banner visible in both modes */}
         <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-green-500/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className={`w-3 h-3 rounded-full mr-3 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-              <span className="text-white font-medium">
-                Spotify Status: {isConnected ? 'Connected' : 'Not Connected'}
-              </span>
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin mr-3"></div>
+              <span className="text-white font-medium">Checking Spotify connection...</span>
             </div>
-            <button
-              onClick={() => setIsConnected(!isConnected)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                isConnected
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
-                  : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-              }`}
-            >
-              {isConnected ? 'Disconnect' : 'Connect to Spotify'}
-            </button>
-          </div>
+          ) : isAuthenticated ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full mr-3 bg-green-400"></div>
+                <span className="text-white font-medium">
+                  Spotify Status: Connected
+                </span>
+              </div>
+              <button
+                onClick={disconnect}
+                className="px-4 py-2 rounded-lg font-medium transition-all duration-300 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full mr-3 bg-red-400"></div>
+                <span className="text-white font-medium">
+                  Spotify Status: Not Connected
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  // Redirect to Spotify auth
+                  window.location.href = '/stats'
+                }}
+                className="px-4 py-2 rounded-lg font-medium transition-all duration-300 bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30"
+              >
+                Connect to Spotify
+              </button>
+            </div>
+          )}
         </div>
 
         {/* MANUAL CREATOR WORKFLOW */}
@@ -192,17 +289,51 @@ export default function CreatePlaylist() {
               </div>
 
               {playlistTracks.length > 0 && (
-                <div className="mt-6 flex space-x-4">
-                  <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors">
-                    Save to Spotify
-                  </button>
-                  <button 
-                    className="px-4 py-3 bg-black/50 border border-gray-700 text-white rounded-xl hover:border-purple-400 transition-colors"
-                    title="Open in Spotify"
-                    aria-label="Open playlist in Spotify"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                  </button>
+                <div className="mt-6 space-y-4">
+                  {/* Error/Success Messages */}
+                  {saveError && (
+                    <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 flex items-center space-x-3">
+                      <AlertCircle className="w-5 h-5 text-red-400" />
+                      <span className="text-red-300">{saveError}</span>
+                    </div>
+                  )}
+                  
+                  {saveSuccess && (
+                    <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 flex items-center space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      <span className="text-green-300">{saveSuccess}</span>
+                    </div>
+                  )}
+
+                  <div className="flex space-x-4">
+                    <button 
+                      onClick={handleSaveToSpotify}
+                      disabled={!isAuthenticated || isSaving}
+                      className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-colors ${
+                        !isAuthenticated
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          : isSaving
+                          ? 'bg-purple-600 text-white cursor-wait'
+                          : 'bg-purple-600 hover:bg-purple-700 text-white'
+                      }`}
+                    >
+                      {isSaving ? (
+                        <div className="flex items-center justify-center">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Saving...
+                        </div>
+                      ) : (
+                        'Save to Spotify'
+                      )}
+                    </button>
+                    <button 
+                      className="px-4 py-3 bg-black/50 border border-gray-700 text-white rounded-xl hover:border-purple-400 transition-colors"
+                      title="Open in Spotify"
+                      aria-label="Open playlist in Spotify"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
