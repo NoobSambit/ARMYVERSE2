@@ -62,13 +62,76 @@ npm run dev
 ### Playlist Management
 - `POST /api/playlist/ai-playlist-enhanced` - Generate AI playlists
 - `POST /api/playlist/export` - Export playlists to Spotify
-- `GET /api/playlist/generate` - Generate playlists
-- `GET /api/playlist/test` - Test playlist endpoints
+- `GET /api/playlist/export` - Debug Spotify token (for troubleshooting)
 
 ### Spotify Integration
-- `GET /api/spotify/auth-url` - Get Spotify OAuth URL
-- `GET /api/spotify/callback` - Handle OAuth callback
-- `POST /api/spotify/dashboard` - Get user dashboard data
+- `GET /api/spotify/auth-url` - Get Spotify authorization URL
+- `GET /api/spotify/callback` - Handle Spotify OAuth callback
+- `GET /api/spotify/user/[userId]` - Get user profile
+- `GET /api/spotify/top/artists` - Get top artists
+- `GET /api/spotify/top/tracks` - Get top tracks
+- `GET /api/spotify/recent` - Get recently played tracks
+- `GET /api/spotify/recommendations` - Get personalized recommendations
+
+## Troubleshooting
+
+### Spotify Export Issues
+
+If you're experiencing issues with exporting playlists to Spotify, here are some common solutions:
+
+#### 1. Token Validation
+- Click the debug button (🐛) next to the export button to test your Spotify token
+- This will show you if your token is valid and what permissions you have
+
+#### 2. Common Error Messages
+
+**"Spotify token expired or invalid"**
+- Solution: Reconnect your Spotify account by going to `/stats` and clicking "Connect with Spotify"
+
+**"Insufficient permissions"**
+- Solution: Ensure your Spotify account has playlist creation permissions
+- The app requires these scopes: `playlist-modify-public`, `playlist-modify-private`
+
+**"Failed to export playlist"**
+- Check the browser console for detailed error messages
+- Try the debug button to validate your token
+- Ensure you have a stable internet connection
+
+#### 3. Environment Configuration
+
+For production deployment, ensure these environment variables are set in Vercel:
+
+```bash
+SPOTIFY_CLIENT_ID="your-spotify-client-id"
+SPOTIFY_CLIENT_SECRET="your-spotify-client-secret"
+NEXT_PUBLIC_SPOTIFY_REDIRECT_URI="https://armyverse.vercel.app/api/spotify/callback"
+NEXT_PUBLIC_SPOTIFY_SCOPES="user-read-private user-read-email user-top-read user-read-recently-played playlist-read-private playlist-modify-public playlist-modify-private"
+NEXTAUTH_URL="https://armyverse.vercel.app"
+```
+
+#### 4. Spotify App Configuration
+
+In your Spotify Developer Dashboard, ensure these redirect URIs are added:
+- `https://armyverse.vercel.app/api/spotify/callback` (Production)
+- `http://localhost:3000/api/spotify/callback` (Development)
+
+#### 5. Debug Steps
+
+1. **Test Token**: Use the debug button to check if your token is valid
+2. **Check Console**: Open browser developer tools and check for error messages
+3. **Reconnect**: If issues persist, disconnect and reconnect your Spotify account
+4. **Check Permissions**: Ensure your Spotify account allows playlist creation
+
+### Recent Improvements
+
+The export functionality has been enhanced with:
+- Better error handling and user feedback
+- Automatic token refresh capability
+- Detailed logging for debugging
+- Token validation endpoint
+- Improved permission checking
+
+If you continue to experience issues, please check the browser console for detailed error messages and try the debug functionality.
 
 ### Trending Content
 - `GET /api/trending/youtube` - Get trending YouTube videos
