@@ -7,7 +7,6 @@ import StreamingFocusForm from '@/components/forms/StreamingFocusForm'
 import CompactPlaylistGrid from '@/components/playlist/CompactPlaylistGrid'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
-import SpotifyAuth from '@/components/auth/SpotifyAuth'
 
 export default function CreatePlaylist() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -102,10 +101,7 @@ export default function CreatePlaylist() {
     }
   }
 
-  const handleAuthenticated = () => {
-    // This will be called when user successfully authenticates
-    // The useSpotifyAuth hook will automatically update the status
-  }
+
 
   return (
     <div className="min-h-screen py-8 px-6 bg-black">
