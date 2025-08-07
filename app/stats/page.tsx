@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { Calendar, TrendingUp, Heart, Play, Music, RefreshCw, AlertCircle } from 'lucide-react'
 import UserProfile from '@/components/dashboard/UserProfile'
@@ -15,8 +16,10 @@ import {
   getCachedDashboardData, 
   cacheDashboardData,
   SpotifyUser,
-  DashboardOverview,
+  SpotifyTrack,
   SpotifyArtist,
+  AudioFeatures,
+  DashboardOverview,
   BTSAnalytics as BTSAnalyticsType,
   GenreAnalysis,
   MoodAnalysis,
@@ -26,16 +29,16 @@ import {
 interface DashboardData {
   userProfile: SpotifyUser
   overview: DashboardOverview
-  recentTracks: any[]
+  recentTracks: SpotifyTrack[]
   topArtists: SpotifyArtist[]
-  topTracks: any[]
-  userPlaylists: any[]
-  audioFeatures: any[]
+  topTracks: SpotifyTrack[]
+  userPlaylists: SpotifyTrack[]
+  audioFeatures: AudioFeatures[]
   btsAnalytics: BTSAnalyticsType
   genreAnalysis: GenreAnalysis[]
   moodAnalysis: MoodAnalysis[]
   listeningPatterns: ListeningPatterns
-  recommendations: any[]
+  recommendations: SpotifyTrack[]
 }
 
 export default function Stats() {
@@ -45,7 +48,7 @@ export default function Stats() {
   const [timeRange, setTimeRange] = useState('short_term')
   const [refreshing, setRefreshing] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
-  const { isAuthenticated, isLoading } = useSpotifyAuth()
+  const { isAuthenticated } = useSpotifyAuth()
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -375,13 +378,15 @@ export default function Stats() {
                 whileHover={{ scale: 1.05 }}
                 className="group bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300"
               >
-                <img
+                <Image
                   src={track.album.images[0]?.url || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'}
                   alt={track.album.name}
+                  width={150}
+                  height={150}
                   className="w-full aspect-square rounded-lg object-cover mb-3 group-hover:scale-105 transition-transform duration-300"
                 />
                 <h4 className="text-white font-medium truncate">{track.name}</h4>
-                <p className="text-gray-400 text-sm truncate">{track.artists.map((a: any) => a.name).join(', ')}</p>
+                <p className="text-gray-400 text-sm truncate">{track.artists.map((a) => a.name).join(', ')}</p>
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-purple-400 text-sm">{track.popularity}%</span>
                   <motion.button

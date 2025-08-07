@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { motion } from 'framer-motion'
 import { 
   Sparkles, 
@@ -27,7 +27,7 @@ interface PlaylistFeature {
 }
 
 export default function PlaylistHub() {
-  const { isAuthenticated, isLoading } = useSpotifyAuth()
+  const { isAuthenticated } = useSpotifyAuth()
 
   const handleAuthenticated = () => {
     // This will be called when user successfully authenticates
