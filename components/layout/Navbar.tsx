@@ -7,6 +7,7 @@ import { Menu, X, User, LogOut } from 'lucide-react'
 import { navItems } from '@/components/layout/nav-data'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from '@/lib/firebase/auth'
+import ProfileCard from '@/components/profile/ProfileCard'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -65,10 +66,12 @@ export default function Navbar() {
             <div className="ml-4 flex items-center space-x-2">
               {isAuthenticated && user ? (
                 <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300">
-                    <User className="w-4 h-4" />
-                    <span>{user.displayName || user.email}</span>
-                  </div>
+                  <ProfileCard trigger={
+                    <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg">
+                      <User className="w-4 h-4" />
+                      <span>{user.displayName || user.email}</span>
+                    </button>
+                  } />
                   <button
                     onClick={handleSignOut}
                     className="px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex items-center space-x-2"
@@ -119,7 +122,7 @@ export default function Navbar() {
                 href={path}
                 onClick={() => setIsOpen(false)}
                 aria-current={isActive(path) ? 'page' : undefined}
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 flex items-center space-x-2 relative
+                className={`flex px-3 py-2 rounded-md text-base font-medium transition-all duration-300 items-center space-x-2 relative
                   ${isActive(path)
                     ? 'text-purple-400 bg-purple-500/10'
                     : 'text-gray-300 hover:text-white hover:bg-white/10'
