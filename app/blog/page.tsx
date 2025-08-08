@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { 
   BookOpen, 
@@ -73,11 +74,7 @@ export default function Blog() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
 
-  useEffect(() => {
-    fetchBlogs()
-  }, [selectedMood, selectedTags, searchQuery, sortBy, page])
-
-  const fetchBlogs = async () => {
+  const fetchBlogs = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -96,6 +93,63 @@ export default function Blog() {
       }
 
       const data = await response.json()
+      if ((!data.blogs || data.blogs.length === 0) && !searchQuery && !selectedMood && selectedTags.length === 0) {
+        const fallback = await fetch(`/api/blogs?page=1&limit=12&status=all&sortBy=${sortBy}`)
+        if (fallback.ok) {
+          const f = await fallback.json()
+          if (page === 1) setBlogs(f.blogs)
+          else setBlogs(prev => [...prev, ...f.blogs])
+          setHasMore(f.pagination?.hasNext ?? false)
+          return
+        }
+      }
+
+      if (page === 1) setBlogs(data.blogs)
+      else setBlogs(prev => [...prev, ...data.blogs])
+      setHasMore(data.pagination.hasNext)
+    } catch (error) {
+      console.error('Error fetching blogs:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [page, sortBy, searchQuery, selectedMood, selectedTags])
+
+  useEffect(() => {
+    fetchBlogs()
+  }, [fetchBlogs])
+
+  // remove duplicate legacy function
+  /* const fetchBlogsLegacy = async () => {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '12',
+        status: 'published'
+      })
+
+      if (searchQuery) params.append('search', searchQuery)
+      if (selectedMood) params.append('mood', selectedMood)
+      if (selectedTags.length > 0) params.append('tags', selectedTags.join(','))
+      if (sortBy) params.append('sortBy', sortBy)
+
+      const response = await fetch(`/api/blogs?${params}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch blogs')
+      }
+
+      const data = await response.json()
+      // Ensure we include both published and any legacy drafts the user might have
+      // The API defaults to published, but if none are returned and filters are empty, try 'all'
+      if ((!data.blogs || data.blogs.length === 0) && !searchQuery && !selectedMood && selectedTags.length === 0) {
+        const fallback = await fetch(`/api/blogs?page=1&limit=12&status=all&sortBy=${sortBy}`)
+        if (fallback.ok) {
+          const f = await fallback.json()
+          if (page === 1) setBlogs(f.blogs)
+          else setBlogs(prev => [...prev, ...f.blogs])
+          setHasMore(f.pagination?.hasNext ?? false)
+          return
+        }
+      }
       
       if (page === 1) {
         setBlogs(data.blogs)
@@ -109,7 +163,7 @@ export default function Blog() {
     } finally {
       setLoading(false)
     }
-  }
+  } */
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
@@ -277,9 +331,11 @@ export default function Blog() {
                   {/* Cover Image */}
                   {blog.coverImage && (
                     <div className="mb-4">
-                      <img
+                      <Image
                         src={blog.coverImage}
                         alt={blog.title}
+                        width={800}
+                        height={480}
                         className="w-full h-48 object-cover rounded-lg"
                       />
                     </div>
