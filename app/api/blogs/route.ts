@@ -21,7 +21,10 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
     
     // Build query
-    const query: any = { status }
+    const query: any = {}
+    if (status && status !== 'all') {
+      query.status = status
+    }
     
     if (search) {
       query.$text = { $search: search }
