@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Camera, X, Sparkles } from 'lucide-react'
-import { auth } from '@/lib/firebase/config'
 import { writeProfile, readProfile } from '@/lib/firebase/profile'
+import { useAuth } from '@/contexts/AuthContext'
+import Image from 'next/image'
 
 interface ProfileCardProps {
   trigger: React.ReactNode
@@ -19,9 +20,10 @@ interface ProfileData {
 }
 
 export default function ProfileCard({ trigger }: ProfileCardProps) {
-  const user = auth.currentUser
+  const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<ProfileData>({
     displayName: user?.displayName || '',
     photoURL: user?.photoURL || '',
@@ -49,13 +51,20 @@ export default function ProfileCard({ trigger }: ProfileCardProps) {
   }
 
   const saveProfile = async () => {
-    if (!user) return
+    if (!user) {
+      setError('You must be signed in to save your profile.')
+      return
+    }
+    setError(null)
     setSaving(true)
     try {
       await writeProfile(user.uid, data)
-      // Optionally reflect display name/photo to Firebase Auth profile
-      // Auth profile update is optional; Navbar reads Firestore profile for display
       setOpen(false)
+    } catch (e: unknown) {
+      // Surface Firestore permission errors clearly
+      const message = e instanceof Error ? e.message : 'Failed to save profile.'
+      setError(message)
+      console.error('Save profile error:', e)
     } finally {
       setSaving(false)
     }
@@ -73,10 +82,15 @@ export default function ProfileCard({ trigger }: ProfileCardProps) {
             <Dialog.Title className="text-xl font-semibold text-white">Your Profile</Dialog.Title>
             <Dialog.Close className="text-gray-400 hover:text-gray-200"><X className="w-5 h-5" /></Dialog.Close>
           </div>
+          <Dialog.Description className="sr-only">
+            Edit your ARMY profile details including display name, avatar and preferences.
+          </Dialog.Description>
 
           <div className="flex items-start gap-4">
             <div className="relative">
-              <img src={data.photoURL || '/avatar-placeholder.png'} alt="avatar" className="w-20 h-20 rounded-full object-cover border-4 border-purple-500/30" />
+              <span className="block w-20 h-20 rounded-full overflow-hidden border-4 border-purple-500/30">
+                <Image src={data.photoURL || '/avatar-placeholder.png'} alt="avatar" width={80} height={80} className="w-20 h-20 object-cover" />
+              </span>
               <label htmlFor="avatar-upload" className="absolute -bottom-2 -right-2 bg-purple-600 text-white p-2 rounded-full cursor-pointer shadow" title="Upload profile photo">
                 <Camera className="w-4 h-4" />
               </label>
@@ -106,7 +120,10 @@ export default function ProfileCard({ trigger }: ProfileCardProps) {
 
           <div className="mt-6 flex items-center justify-between">
             <div className="text-xs text-gray-400 flex items-center gap-1"><Sparkles className="w-4 h-4 text-purple-400" /> Make it yours with ARMY vibes</div>
-            <button onClick={saveProfile} disabled={saving} className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50">{saving ? 'Saving…' : 'Save'}</button>
+            <div className="flex items-center gap-3">
+              {error && <span className="text-xs text-red-400">{error}</span>}
+              <button onClick={saveProfile} disabled={saving} className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50">{saving ? 'Saving…' : 'Save'}</button>
+            </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
