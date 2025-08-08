@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import BlogEditor from '@/components/blog/BlogEditor'
@@ -11,6 +11,7 @@ interface BlogData {
   tags: string[]
   mood: string
   coverImage?: string
+  coverAlt?: string
   status: 'draft' | 'published'
 }
 
@@ -18,6 +19,9 @@ export default function CreateBlogPage() {
   const router = useRouter()
   const { user, loading } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
+  const draftKey = useMemo(() => (user ? `blog_draft_${user.uid || user.email}` : 'blog_draft_anon'), [user])
+  const versionsKey = useMemo(() => `${draftKey}_versions`, [draftKey])
+  const [initialData, setInitialData] = useState<Partial<BlogData> | undefined>(undefined)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -26,6 +30,20 @@ export default function CreateBlogPage() {
       router.push('/auth/signin')
     }
   }, [user, loading, router])
+
+  // Restore draft on mount
+  useEffect(() => {
+    if (!user) return
+    try {
+      const raw = localStorage.getItem(draftKey)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setInitialData(parsed)
+      }
+    } catch (e) {
+      console.warn('Failed to restore draft', e)
+    }
+  }, [user, draftKey])
 
   if (loading) {
     return (
@@ -68,6 +86,12 @@ export default function CreateBlogPage() {
       
       // Redirect to the blog view page
       router.push(`/blogs/${savedBlog._id}`)
+
+      // Clear draft after successful save
+      try {
+        localStorage.removeItem(draftKey)
+        localStorage.removeItem(versionsKey)
+      } catch {}
     } catch (error) {
       console.error('Error saving blog:', error)
       alert('Failed to save blog. Please try again.')
@@ -77,12 +101,28 @@ export default function CreateBlogPage() {
   }
 
   const handleAutoSave = async (data: BlogData) => {
-    // Auto-save functionality - could save to localStorage or make API call
-    console.log('Auto-saving:', data)
+    try {
+      // Save lightweight draft
+      localStorage.setItem(draftKey, JSON.stringify(data))
+      // Append to version history (keep last 20)
+      const versionsRaw = localStorage.getItem(versionsKey)
+      const versions = versionsRaw ? JSON.parse(versionsRaw) as Array<{ ts: number; data: BlogData }> : []
+      const last = versions[versions.length - 1]
+      const now = Date.now()
+      // Save at most every 60s into history
+      if (!last || now - last.ts > 60000) {
+        const next = [...versions, { ts: now, data }]
+        const trimmed = next.slice(-20)
+        localStorage.setItem(versionsKey, JSON.stringify(trimmed))
+      }
+    } catch (e) {
+      console.warn('Autosave failed', e)
+    }
   }
 
   return (
     <BlogEditor
+      initialData={initialData}
       onSave={handleSave}
       onAutoSave={handleAutoSave}
       isSaving={isSaving}
