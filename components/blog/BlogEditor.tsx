@@ -103,6 +103,7 @@ export default function BlogEditor({
   const [history, setHistory] = useState<Array<{ ts: number; data: BlogData }>>([])
   const [showAIAssist, setShowAIAssist] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
+  const [isTagInputFocused, setIsTagInputFocused] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -361,10 +362,10 @@ export default function BlogEditor({
     <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] p-6">
       <div className="max-w-6xl mx-auto">
         {/* Sticky Action Bar */}
-        <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 mb-6 border border-purple-500/20 sticky top-0 z-30">
-          <div className="flex items-center justify-between">
+        <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 mb-6 border border-purple-500/20">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <h1 className="text-xl font-semibold text-white">✍️ Create Blog Post</h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setShowTemplates(v => !v)}
                 className="px-3 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600"
@@ -444,7 +445,7 @@ export default function BlogEditor({
 
             {/* Editor Toolbar */}
             <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 mb-6 border border-purple-500/20">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto md:flex-wrap whitespace-nowrap">
             {/* Text Formatting */}
                 <div className="flex items-center space-x-1">
                <button
@@ -628,7 +629,7 @@ export default function BlogEditor({
             <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20">
               <EditorContent 
                 editor={editor} 
-                className="prose prose-invert prose-purple max-w-none min-h-[600px] focus:outline-none"
+                className="prose prose-invert prose-purple max-w-none min-h-[600px] focus:outline-none text-white caret-purple-400 selection:bg-purple-600/40"
               />
             </div>
           </div>
@@ -727,7 +728,18 @@ export default function BlogEditor({
                   placeholder="Add tag..."
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addTag();
+                    }
+                    if (e.key === 'Escape') {
+                      setIsTagInputFocused(false)
+                      ;(e.target as HTMLInputElement).blur()
+                    }
+                  }}
+                  onFocus={() => setIsTagInputFocused(true)}
+                  onBlur={() => setTimeout(() => setIsTagInputFocused(false), 150)}
                   className="flex-1 px-3 py-2 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
                 />
                 <button
@@ -738,7 +750,7 @@ export default function BlogEditor({
                 >
                   <Plus className="w-4 h-4" />
                 </button>
-                {filteredTagSuggestions.length > 0 && (
+                {isTagInputFocused && newTag && filteredTagSuggestions.length > 0 && (
                   <div className="absolute left-0 top-11 z-20 w-full bg-black/90 border border-gray-700 rounded-lg shadow-lg">
                     {filteredTagSuggestions.map(s => (
                       <button
@@ -747,6 +759,7 @@ export default function BlogEditor({
                           setTags(prev => [...prev, s])
                           setNewTag('')
                           setIsDirty(true)
+                          setIsTagInputFocused(false)
                         }}
                         className="block w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700"
                       >
