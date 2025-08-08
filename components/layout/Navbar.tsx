@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, User, LogOut } from 'lucide-react'
@@ -8,11 +8,32 @@ import { navItems } from '@/components/layout/nav-data'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from '@/lib/firebase/auth'
 import ProfileCard from '@/components/profile/ProfileCard'
+import { onSnapshot } from 'firebase/firestore'
+import { getProfileRef } from '@/lib/firebase/profile'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const { user, isAuthenticated } = useAuth()
+  const [profileName, setProfileName] = useState<string | null>(null)
+
+  // Live subscribe to the user's profile doc so Navbar reflects updates instantly
+  useEffect(() => {
+    if (!user) {
+      setProfileName(null)
+      return
+    }
+    const ref = getProfileRef(user.uid)
+    const unsubscribe = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data() as { displayName?: string }
+        setProfileName(data.displayName ?? null)
+      } else {
+        setProfileName(null)
+      }
+    })
+    return () => unsubscribe()
+  }, [user])
 
   const handleSignOut = async () => {
     try {
@@ -69,7 +90,7 @@ export default function Navbar() {
                   <ProfileCard trigger={
                     <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg">
                       <User className="w-4 h-4" />
-                      <span>{user.displayName || user.email}</span>
+                      <span>{profileName || user.displayName || user.email}</span>
                     </button>
                   } />
                   <button
