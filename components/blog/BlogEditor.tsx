@@ -38,7 +38,6 @@ import {
   CheckSquare,
   Save,
   Eye,
-  EyeOff,
   Sparkles,
   Upload,
   X,
@@ -102,6 +101,8 @@ export default function BlogEditor({
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
   const [showHistory, setShowHistory] = useState(false)
   const [history, setHistory] = useState<Array<{ ts: number; data: BlogData }>>([])
+  const [showAIAssist, setShowAIAssist] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -143,6 +144,8 @@ export default function BlogEditor({
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
+      // Track dirty state when content changes
+      setIsDirty(true)
       if (onAutoSave) {
         const data = {
           title,
@@ -155,6 +158,7 @@ export default function BlogEditor({
         }
         onAutoSave(data)
         setLastSavedAt(Date.now())
+        setIsDirty(false)
       }
     },
   })
@@ -188,11 +192,23 @@ export default function BlogEditor({
         }
         onAutoSave(data)
         setLastSavedAt(Date.now())
+        setIsDirty(false)
       }
     }, 30000) // 30 seconds
 
     return () => clearInterval(interval)
   }, [editor, title, tags, mood, coverImage, coverAlt, status, onAutoSave])
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!isDirty) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
 
   const uploadImage = async (file: File) => {
     setIsUploading(true)
@@ -232,14 +248,16 @@ export default function BlogEditor({
   }
 
   const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
+    if (newTag.trim() && !tags.includes(newTag.trim()) && tags.length < 8) {
       setTags([...tags, newTag.trim()])
       setNewTag('')
+      setIsDirty(true)
     }
   }
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove))
+    setIsDirty(true)
   }
 
   const handleSave = () => {
@@ -255,6 +273,7 @@ export default function BlogEditor({
       status
     }
     onSave(data)
+    setIsDirty(false)
   }
 
   const toggleBold = () => editor?.chain().focus().toggleBold().run()
@@ -287,6 +306,36 @@ export default function BlogEditor({
     return Math.max(1, Math.ceil(words / 200))
   }, [editor])
 
+  const seoScore = useMemo(() => {
+    // Very lightweight heuristic scoring 0-100
+    let score = 0
+    const text = editor?.getText() || ''
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length
+    const titleLen = title.trim().length
+    const hasCover = Boolean(coverImage)
+    const hasAlt = Boolean(coverAlt && coverAlt.trim().length > 0)
+    const tagCount = tags.length
+
+    if (titleLen >= 45 && titleLen <= 60) score += 20
+    else if (titleLen >= 30 && titleLen <= 70) score += 12
+
+    if (wordCount >= 600) score += 20
+    else if (wordCount >= 300) score += 12
+
+    if (hasCover) score += 12
+    if (hasAlt) score += 8
+    if (tagCount >= 3 && tagCount <= 8) score += 12
+
+    // Basic link presence
+    const hasLink = /https?:\/\//i.test(editor?.getHTML() || '')
+    if (hasLink) score += 8
+
+    // Slug present
+    if (titleLen > 0) score += 8
+
+    return Math.min(100, score)
+  }, [title, editor, coverImage, coverAlt, tags])
+
   const filteredTagSuggestions = useMemo(() => {
     const query = newTag.toLowerCase()
     return SUGGESTED_TAGS.filter(t =>
@@ -311,255 +360,93 @@ export default function BlogEditor({
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-purple-500/20 sticky top-0 z-30">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold text-white">✍️ Create Blog Post</h1>
-            <div className="flex items-center space-x-4">
+        {/* Sticky Action Bar */}
+        <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 mb-6 border border-purple-500/20 sticky top-0 z-30">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-white">✍️ Create Blog Post</h1>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowTemplates(v => !v)}
-                className="px-4 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600"
+                className="px-3 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600"
                 title="Insert template"
               >
                 Templates
               </button>
               <button
                 onClick={() => setShowHistory(v => !v)}
-                className="px-4 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600"
+                className="px-3 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600"
                 title="View version history"
               >
                 History
               </button>
               <button
-                onClick={() => setShowPreview(v => !v)}
-                className={`flex items-center px-4 py-2 rounded-lg transition-all ${showPreview ? 'bg-purple-500 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'}`}
-                title={showPreview ? 'Hide preview' : 'Show live preview'}
-                aria-label="Toggle preview"
-              >
-                {showPreview ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
-                {showPreview ? 'Preview' : 'Preview'}
-              </button>
-              <button
                 onClick={() => setShowSEO(v => !v)}
-                className={`px-4 py-2 rounded-lg ${showSEO ? 'bg-purple-500 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'}`}
+                className={`px-3 py-2 rounded-lg ${showSEO ? 'bg-purple-500 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'}`}
                 title="Open SEO preview"
               >
-                SEO
+                SEO <span className="ml-2 inline-flex items-center justify-center w-7 h-5 rounded bg-gray-800 text-xs text-purple-300 border border-purple-500/30">{seoScore}</span>
               </button>
-                             <button
-                 onClick={() => setStatus(status === 'draft' ? 'published' : 'draft')}
-                 className={`flex items-center px-4 py-2 rounded-lg transition-all ${
-                   status === 'published' 
-                     ? 'bg-green-500 text-white' 
-                     : 'bg-gray-600 text-gray-300'
-                 }`}
-                 title={status === 'published' ? 'Switch to draft' : 'Publish blog'}
-                 aria-label={status === 'published' ? 'Switch to draft' : 'Publish blog'}
-               >
-                 {status === 'published' ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
-                 {status === 'published' ? 'Published' : 'Draft'}
-               </button>
-                             <button
-                 onClick={handleSave}
-                 disabled={isSaving}
-                 className="flex items-center px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all disabled:opacity-50"
-                 title="Save blog post"
-                 aria-label="Save blog post"
-               >
-                 <Save className="w-4 h-4 mr-2" />
-                 {isSaving ? 'Saving...' : 'Save'}
-               </button>
-            </div>
-          </div>
-
-          {/* Title Input */}
-          <input
-            type="text"
-            placeholder="Enter your blog title..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full text-2xl font-bold bg-transparent border-none outline-none text-white placeholder-gray-400 mb-2"
-          />
-          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-            <div>
-              {lastSavedAt ? `Autosaved ${new Date(lastSavedAt).toLocaleTimeString()}` : 'Not saved yet'}
-            </div>
-            <div className="hidden md:block">Slug: <span className="text-purple-300">/{slug}</span> • {readingTime} min read</div>
-          </div>
-
-          {/* Cover Image */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Cover Image
-            </label>
-            <div className="flex items-center space-x-4">
-              {coverImage ? (
-                <div className="relative">
-                  <NextImage 
-                    src={coverImage}
-                    alt={coverAlt || 'Cover image'}
-                    width={256}
-                    height={160}
-                    className="w-32 h-20 object-cover rounded-lg"
-                  />
-                  <button
-                    onClick={() => setCoverImage('')}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                    aria-label="Remove cover image"
-                    title="Remove cover image"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowImageUpload(true)}
-                  className="w-32 h-20 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-gray-400 hover:border-purple-400 hover:text-purple-400 transition-all"
-                  aria-label="Upload cover image"
-                  title="Upload cover image"
-                >
-                  <Upload className="w-6 h-6" />
-                </button>
-              )}
-              {showImageUpload && (
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const url = await uploadImage(file)
-                      if (url) setCoverImage(url)
-                      setShowImageUpload(false)
-                    }
-                  }}
-                  className="hidden"
-                  aria-label="Select cover image file"
-                  title="Select cover image file"
-                />
-              )}
-              {coverImage && (
-                <input
-                  type="text"
-                  placeholder="Describe the cover (alt text)"
-                  value={coverAlt}
-                  onChange={(e) => setCoverAlt(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Tags and Mood */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Tags */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Tags
-              </label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="flex items-center px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm"
-                  >
-                    {tag}
-                    <button
-                      onClick={() => removeTag(tag)}
-                      className="ml-2 text-purple-400 hover:text-purple-300"
-                      aria-label={`Remove tag ${tag}`}
-                      title={`Remove tag ${tag}`}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="relative flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="Add tag..."
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
-                  className="flex-1 px-3 py-2 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
-                />
-                <button
-                  onClick={addTag}
-                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all"
-                  aria-label="Add tag"
-                  title="Add tag"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-                {filteredTagSuggestions.length > 0 && (
-                  <div className="absolute left-0 top-11 z-20 w-64 bg-black/90 border border-gray-700 rounded-lg shadow-lg">
-                    {filteredTagSuggestions.map(s => (
-                      <button
-                        key={s}
-                        onClick={() => {
-                          setTags(prev => [...prev, s])
-                          setNewTag('')
-                        }}
-                        className="block w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="mt-2">
-                <p className="text-xs text-gray-400 mb-1">Suggested tags:</p>
-                <div className="flex flex-wrap gap-1">
-                  {SUGGESTED_TAGS.map(tag => (
-                    <button
-                      key={tag}
-                      onClick={() => {
-                        if (!tags.includes(tag)) {
-                          setTags([...tags, tag])
-                        }
-                      }}
-                      disabled={tags.includes(tag)}
-                      className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Mood */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Mood
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {MOODS.map(moodOption => (
-                  <button
-                    key={moodOption.value}
-                    onClick={() => setMood(moodOption.value)}
-                    className={`flex items-center px-3 py-2 rounded-lg transition-all ${
-                      mood === moodOption.value
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-black/50 text-gray-300 hover:bg-gray-700'
-                    }`}
-                  >
-                    <span className="mr-2">{moodOption.emoji}</span>
-                    {moodOption.label.split(' ')[1]}
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={() => setShowPreview(true)}
+                className="flex items-center px-3 py-2 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600"
+                title="Open live preview"
+                aria-label="Open preview"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </button>
+              <button
+                onClick={() => setStatus(status === 'draft' ? 'published' : 'draft')}
+                className={`flex items-center px-3 py-2 rounded-lg transition-all ${
+                  status === 'published' 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-gray-600 text-gray-300'
+                }`}
+                title={status === 'published' ? 'Switch to draft' : 'Publish blog'}
+                aria-label={status === 'published' ? 'Switch to draft' : 'Publish blog'}
+              >
+                {status === 'published' ? 'Published' : 'Draft'}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center px-5 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all disabled:opacity-50"
+                title="Save blog post"
+                aria-label="Save blog post"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Editor Toolbar */}
-        <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 mb-6 border border-purple-500/20">
-          <div className="flex flex-wrap items-center gap-2">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
+          {/* Left: Title + Toolbar + Editor */}
+          <div>
+            {/* Title */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 mb-4 border border-purple-500/20">
+              <input
+                type="text"
+                placeholder="Enter your blog title..."
+                value={title}
+                onChange={(e) => { setTitle(e.target.value); setIsDirty(true) }}
+                className="w-full text-4xl font-extrabold bg-transparent border-none outline-none text-white placeholder-gray-400 mb-2"
+              />
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <div>
+                  {isDirty ? 'Unsaved changes' : (lastSavedAt ? `Saved ${new Date(lastSavedAt).toLocaleTimeString()}` : 'Not saved yet')}
+                </div>
+                <div className="hidden md:block">Slug: <span className="text-purple-300">/{slug}</span> • {readingTime} min read</div>
+              </div>
+            </div>
+
+            {/* Editor Toolbar */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 mb-6 border border-purple-500/20">
+              <div className="flex flex-wrap items-center gap-2">
             {/* Text Formatting */}
-                         <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1">
                <button
                  onClick={toggleBold}
                  className={`p-2 rounded hover:bg-gray-700 ${editor.isActive('bold') ? 'bg-purple-500 text-white' : 'text-gray-300'}`}
@@ -730,38 +617,227 @@ export default function BlogEditor({
             <div className="w-px h-6 bg-gray-600" />
 
             {/* AI Assist */}
-            <button className="flex items-center px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all" title="AI writing assist">
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Assist
-            </button>
-          </div>
-        </div>
-
-        {/* Editor + Preview */}
-        <div className={`grid gap-6 ${showPreview ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
-          <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20">
-            <EditorContent 
-              editor={editor} 
-              className="prose prose-invert prose-purple max-w-none min-h-[600px] focus:outline-none"
-            />
-          </div>
-          {showPreview && (
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20">
-              <div className="space-y-4">
-                {coverImage && (
-                  <NextImage src={coverImage} alt={coverAlt || 'Cover image'} width={1200} height={480} className="w-full h-48 object-cover rounded-xl" />
-                )}
-                <h1 className="text-3xl font-bold text-white">{title || 'Untitled post'}</h1>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map(t => (
-                    <span key={t} className="px-2 py-1 text-xs bg-purple-500/20 text-purple-300 rounded-full">{t}</span>
-                  ))}
-                </div>
-                <div className="text-xs text-gray-400">/{slug} • {readingTime} min read • Mood: {mood}</div>
-                <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
+                <button onClick={() => setShowAIAssist(true)} className="flex items-center px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all" title="AI writing assist">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Assist
+                </button>
               </div>
             </div>
-          )}
+
+            {/* Editor */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20">
+              <EditorContent 
+                editor={editor} 
+                className="prose prose-invert prose-purple max-w-none min-h-[600px] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Right: Sidebar */}
+          <aside className="space-y-4">
+            {/* Cover Image */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 border border-purple-500/20">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-300">Cover Image</label>
+                <span className="text-[10px] text-gray-400">16:9 • ≥ 1200×675</span>
+              </div>
+              {coverImage ? (
+                <div className="relative mb-3">
+                  <NextImage 
+                    src={coverImage}
+                    alt={coverAlt || 'Cover image'}
+                    width={600}
+                    height={338}
+                    className="w-full h-40 object-cover rounded-lg"
+                  />
+                  <button
+                    onClick={() => { setCoverImage(''); setIsDirty(true) }}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                    aria-label="Remove cover image"
+                    title="Remove cover image"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowImageUpload(true)}
+                  className="w-full h-40 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-gray-400 hover:border-purple-400 hover:text-purple-400 transition-all mb-3"
+                  aria-label="Upload cover image"
+                  title="Upload cover image"
+                >
+                  <Upload className="w-6 h-6" />
+                </button>
+              )}
+              {showImageUpload && (
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const url = await uploadImage(file)
+                      if (url) { setCoverImage(url); setIsDirty(true) }
+                      setShowImageUpload(false)
+                    }
+                  }}
+                  className="hidden"
+                  aria-label="Select cover image file"
+                  title="Select cover image file"
+                />
+              )}
+              {coverImage && (
+                <input
+                  type="text"
+                  placeholder="Describe the cover (alt text)"
+                  value={coverAlt}
+                  onChange={(e) => { setCoverAlt(e.target.value); setIsDirty(true) }}
+                  className="w-full px-3 py-2 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                />
+              )}
+            </div>
+
+            {/* Tags */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 border border-purple-500/20">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-300">Tags</label>
+                <span className="text-[10px] text-gray-400">{tags.length}/8</span>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="flex items-center px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs"
+                  >
+                    {tag}
+                    <button
+                      onClick={() => removeTag(tag)}
+                      className="ml-2 text-purple-400 hover:text-purple-300"
+                      aria-label={`Remove tag ${tag}`}
+                      title={`Remove tag ${tag}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="relative flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Add tag..."
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                  className="flex-1 px-3 py-2 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                />
+                <button
+                  onClick={addTag}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all"
+                  aria-label="Add tag"
+                  title="Add tag"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                {filteredTagSuggestions.length > 0 && (
+                  <div className="absolute left-0 top-11 z-20 w-full bg-black/90 border border-gray-700 rounded-lg shadow-lg">
+                    {filteredTagSuggestions.map(s => (
+                      <button
+                        key={s}
+                        onClick={() => {
+                          setTags(prev => [...prev, s])
+                          setNewTag('')
+                          setIsDirty(true)
+                        }}
+                        className="block w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="mt-2">
+                <p className="text-xs text-gray-400 mb-1">Suggested tags:</p>
+                <div className="flex flex-wrap gap-1">
+                  {SUGGESTED_TAGS.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        if (!tags.includes(tag) && tags.length < 8) {
+                          setTags([...tags, tag])
+                          setIsDirty(true)
+                        }
+                      }}
+                      disabled={tags.includes(tag) || tags.length >= 8}
+                      className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Mood */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 border border-purple-500/20">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Mood</label>
+              <div className="grid grid-cols-2 gap-2">
+                {MOODS.map(moodOption => (
+                  <button
+                    key={moodOption.value}
+                    onClick={() => { setMood(moodOption.value); setIsDirty(true) }}
+                    className={`flex items-center justify-center px-3 py-2 rounded-lg transition-all ${
+                      mood === moodOption.value
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-black/50 text-gray-300 hover:bg-gray-700'
+                    }`}
+                    title={`Set mood to ${moodOption.label}`}
+                  >
+                    <span className="mr-2">{moodOption.emoji}</span>
+                    {moodOption.label.split(' ')[1]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SEO Snippet */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 border border-purple-500/20">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-white">SEO Snippet</p>
+                <span className="text-xs text-purple-300">Score {seoScore}</span>
+              </div>
+              <div className="text-[10px] text-gray-400 mb-1">URL preview</div>
+              <div className="text-purple-300 text-xs">armyverse.app/blogs/{slug || 'untitled'}</div>
+              <div className="mt-2 space-y-1">
+                <div className="text-sm text-white font-semibold line-clamp-2">{title || 'Add an SEO-friendly title'}</div>
+                <div className="text-xs text-gray-300 line-clamp-3">{(editor?.getText() || '').slice(0, 160) || 'Your description will appear here.'}</div>
+              </div>
+              <button onClick={() => setShowSEO(true)} className="mt-3 w-full px-3 py-2 text-xs bg-gray-700 text-gray-200 rounded hover:bg-gray-600">Open detailed checks</button>
+            </div>
+
+            {/* Publish Controls */}
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 border border-purple-500/20">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-white">Publish</p>
+                <span className="text-xs text-gray-400">Status</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  onClick={() => setStatus(status === 'draft' ? 'published' : 'draft')}
+                  className={`flex-1 px-3 py-2 rounded-lg ${status === 'published' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-200'}`}
+                >
+                  {status === 'published' ? 'Published' : 'Draft'}
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex-1 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all disabled:opacity-50"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </aside>
         </div>
 
         {/* Templates dropdown */}
@@ -836,6 +912,65 @@ export default function BlogEditor({
               ) : (
                 <div className="w-full h-40 bg-gray-800 flex items-center justify-center text-gray-400">OG image preview</div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Live Preview Overlay */}
+        {showPreview && (
+          <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
+            <div className="relative w-full max-w-4xl bg-black/90 border border-purple-500/30 rounded-2xl p-6 overflow-auto max-h-[90vh]">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-200"
+                aria-label="Close preview"
+                title="Close preview"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="space-y-4">
+                {coverImage && (
+                  <NextImage src={coverImage} alt={coverAlt || 'Cover image'} width={1200} height={480} className="w-full h-48 object-cover rounded-xl" />
+                )}
+                <h1 className="text-3xl font-bold text-white">{title || 'Untitled post'}</h1>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map(t => (
+                    <span key={t} className="px-2 py-1 text-xs bg-purple-500/20 text-purple-300 rounded-full">{t}</span>
+                  ))}
+                </div>
+                <div className="text-xs text-gray-400">/{slug} • {readingTime} min read • Mood: {mood}</div>
+                <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: editor.getHTML() }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Assist Docked Panel */}
+        {showAIAssist && (
+          <div className="fixed right-6 top-24 z-40 w-96 bg-black/95 border border-gray-700 rounded-xl shadow-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-white font-medium">AI Assist</p>
+              <button onClick={() => setShowAIAssist(false)} className="text-gray-400 hover:text-gray-200" aria-label="Close AI panel">Close</button>
+            </div>
+            <div className="space-y-2 text-sm">
+              <button
+                onClick={() => {
+                  editor?.chain().focus().insertContent('<p>Summarize the above in 3 bullets…</p>').run()
+                  setShowAIAssist(false)
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 text-gray-200"
+              >
+                Insert summary prompt
+              </button>
+              <button
+                onClick={() => {
+                  editor?.chain().focus().insertContent('<h2>Key Takeaways</h2><ul><li>—</li><li>—</li><li>—</li></ul>').run()
+                  setShowAIAssist(false)
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-700 text-gray-200"
+              >
+                Outline: Key Takeaways
+              </button>
             </div>
           </div>
         )}
