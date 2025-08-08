@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     await connect()
     
     const body = await request.json()
-    const { title, content, tags, mood, coverImage, author } = body
+    const { title, content, tags, mood, coverImage, author, status } = body
     
     if (!title || !content || !author) {
       return NextResponse.json(
@@ -107,7 +107,8 @@ export async function POST(request: NextRequest) {
       mood: mood || 'fun',
       coverImage,
       author,
-      status: 'draft'
+      // Respect requested status; default to draft if not provided or invalid
+      status: status === 'published' ? 'published' : 'draft'
     })
     
     await blog.save()
