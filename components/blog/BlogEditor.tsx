@@ -93,7 +93,7 @@ export default function BlogEditor({
   const [coverAlt, setCoverAlt] = useState<string>('')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [newTag, setNewTag] = useState('')
-  const [showImageUpload, setShowImageUpload] = useState(false)
+  // Cover upload handled directly by input; no extra toggle state needed
   const [, setIsUploading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
@@ -661,31 +661,22 @@ export default function BlogEditor({
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setShowImageUpload(true)}
-                  className="w-full h-40 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-gray-400 hover:border-purple-400 hover:text-purple-400 transition-all mb-3"
-                  aria-label="Upload cover image"
-                  title="Upload cover image"
-                >
+                <label className="w-full h-40 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-gray-400 hover:border-purple-400 hover:text-purple-400 transition-all mb-3 cursor-pointer" title="Upload cover image">
                   <Upload className="w-6 h-6" />
-                </button>
-              )}
-              {showImageUpload && (
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const url = await uploadImage(file)
-                      if (url) { setCoverImage(url); setIsDirty(true) }
-                      setShowImageUpload(false)
-                    }
-                  }}
-                  className="hidden"
-                  aria-label="Select cover image file"
-                  title="Select cover image file"
-                />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const url = await uploadImage(file)
+                        if (url) { setCoverImage(url); setIsDirty(true) }
+                      }
+                    }}
+                    className="hidden"
+                    aria-label="Select cover image file"
+                  />
+                </label>
               )}
               {coverImage && (
                 <input
