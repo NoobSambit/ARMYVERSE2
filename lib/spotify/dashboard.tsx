@@ -264,7 +264,10 @@ export const fetchRecommendations = async (
 
 export const analyzeBTSContent = (tracks: SpotifyTrack[]): BTSAnalytics => {
   const btsTracks = tracks.filter(track => 
-    track.artists.some(artist => artist.name === 'BTS')
+    track.artists.some(artist => {
+      const name = artist.name.toLowerCase()
+      return name === 'bts' || name.includes('bts')
+    })
   )
   
   const soloTracks = tracks.filter(track => {
@@ -412,8 +415,9 @@ export const fetchDashboardData = async (userId: string): Promise<any> => {
     const trackIds = topTracks.map(track => track.id)
     const audioFeatures = await fetchAudioFeatures(userId, trackIds)
     
-    // Analyze data
-    const btsAnalytics = analyzeBTSContent(topTracks)
+    // Analyze data (use both recent and top tracks for better BTS coverage)
+    const combinedTracks = [...recentTracks, ...topTracks]
+    const btsAnalytics = analyzeBTSContent(combinedTracks)
     const genreAnalysis = analyzeGenreDistribution(topArtists)
     const moodAnalysis = analyzeMoodDistribution(topTracks, audioFeatures)
     const listeningPatterns = analyzeListeningPatterns(recentTracks)
@@ -427,7 +431,7 @@ export const fetchDashboardData = async (userId: string): Promise<any> => {
       currentStreak: 0, // Note: Spotify API doesn't provide streak data
       totalListeningTime: recentTracks.reduce((sum, track) => sum + track.duration_ms, 0),
       btsPlays: btsAnalytics.totalBTSPlays,
-      btsPercentage: Math.round((btsAnalytics.totalBTSPlays / topTracks.length) * 100)
+      btsPercentage: combinedTracks.length > 0 ? Math.round((btsAnalytics.totalBTSPlays / combinedTracks.length) * 100) : 0
     }
     
     // Get recommendations

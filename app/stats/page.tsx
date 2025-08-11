@@ -265,7 +265,17 @@ export default function Stats() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <TopArtists artists={data.topArtists} />
+            {(() => {
+              const counts: Record<string, number> = {}
+              // Count occurrences of each artist from recent tracks
+              for (const t of data.recentTracks) {
+                for (const a of t.artists) {
+                  if (!a.id) continue
+                  counts[a.id] = (counts[a.id] || 0) + 1
+                }
+              }
+              return <TopArtists artists={data.topArtists} playCounts={counts} />
+            })()}
           </motion.div>
         </div>
 
@@ -379,7 +389,7 @@ export default function Stats() {
                 className="group bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300"
               >
                 <Image
-                  src={track.album.images[0]?.url || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'}
+                  src={track.album.images[0]?.url || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=300&auto=format&fit=crop'}
                   alt={track.album.name}
                   width={150}
                   height={150}
