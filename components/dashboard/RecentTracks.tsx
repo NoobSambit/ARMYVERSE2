@@ -53,7 +53,7 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-black/40 backdrop-blur-lg rounded-3xl p-6 border border-purple-500/30"
+      className="bg-black/40 backdrop-blur-lg rounded-3xl p-4 sm:p-6 border border-purple-500/30"
     >
       <div className="flex items-center justify-between mb-6">
         <motion.h3
@@ -74,7 +74,9 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
         </motion.button>
       </div>
 
-      <div className="space-y-3">
+      {/* When expanded, constrain height and allow scrolling within the card */}
+      <div className={`${expanded ? 'max-h-80 sm:max-h-96 overflow-y-auto pr-1' : ''} space-y-3`}
+      >
         <AnimatePresence>
           {displayedTracks.map((track, index) => (
             <motion.div
@@ -84,14 +86,14 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
               exit={{ opacity: 0, x: 20 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.02 }}
-              className="group flex items-center space-x-4 p-3 rounded-xl hover:bg-white/5 transition-all duration-300"
+              className="group flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-xl hover:bg-white/5 transition-all duration-300"
             >
               {/* Album Art */}
               <div className="relative">
                 <img
                   src={track.album.images[0]?.url || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=60&h=60'}
                   alt={track.album.name}
-                  className="w-12 h-12 rounded-lg object-cover"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover"
                 />
                 <motion.div
                   whileHover={{ scale: 1.1 }}
@@ -107,7 +109,7 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.1 + 0.2 }}
-                  className="text-white font-medium truncate"
+                  className="text-white font-medium truncate text-sm sm:text-base"
                 >
                   {track.name}
                 </motion.p>
@@ -115,15 +117,15 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.1 + 0.3 }}
-                  className="text-gray-400 text-sm truncate"
+                  className="text-gray-400 text-xs sm:text-sm truncate"
                 >
                   {track.artists.map(artist => artist.name).join(', ')}
                 </motion.p>
               </div>
 
               {/* Duration & Actions */}
-              <div className="flex items-center space-x-3">
-                <div className="text-gray-400 text-sm flex items-center space-x-1">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="text-gray-400 text-xs sm:text-sm flex items-center space-x-1">
                   <Clock className="w-3 h-3" />
                   <span>{formatDuration(track.duration_ms)}</span>
                 </div>
@@ -154,7 +156,7 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setExpanded(true)}
-            className="w-full py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl border border-purple-500/30 text-purple-300 hover:text-white transition-colors"
+            className="w-full py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl border border-purple-500/30 text-purple-300 hover:text-white transition-colors text-sm"
           >
             Show {tracks.length - 5} More Tracks
           </motion.button>
