@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Clock, Music, ExternalLink } from 'lucide-react'
 import { SpotifyTrack } from '@/lib/spotify/dashboard'
@@ -11,8 +11,6 @@ interface RecentTracksProps {
 }
 
 export default function RecentTracks({ tracks, loading = false }: RecentTracksProps) {
-  const [expanded, setExpanded] = useState(false)
-  const displayedTracks = expanded ? tracks : tracks.slice(0, 5)
 
   const formatDuration = (ms: number): string => {
     const minutes = Math.floor(ms / 60000)
@@ -64,21 +62,12 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
           <Music className="w-5 h-5 text-purple-400" />
           <span>Recent Tracks</span>
         </motion.h3>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setExpanded(!expanded)}
-          className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
-        >
-          {expanded ? 'Show Less' : `Show All (${tracks.length})`}
-        </motion.button>
       </div>
 
-      {/* When expanded, constrain height and allow scrolling within the card */}
-      <div className={`${expanded ? 'max-h-80 sm:max-h-96 overflow-y-auto pr-1' : ''} space-y-3`}
-      >
+      {/* Constrain height and allow scrolling within the card */}
+      <div className="max-h-80 sm:max-h-96 overflow-y-auto pr-1 space-y-3">
         <AnimatePresence>
-          {displayedTracks.map((track, index) => (
+          {tracks.map((track, index) => (
             <motion.div
               key={track.id}
               initial={{ opacity: 0, x: -20 }}
@@ -108,7 +97,7 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.1 + 0.2 }}
+                  transition={{ delay: index * 0.03 + 0.1 }}
                   className="text-white font-medium truncate text-sm sm:text-base"
                 >
                   {track.name}
@@ -116,7 +105,7 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.1 + 0.3 }}
+                  transition={{ delay: index * 0.03 + 0.15 }}
                   className="text-gray-400 text-xs sm:text-sm truncate"
                 >
                   {track.artists.map(artist => artist.name).join(', ')}
@@ -143,25 +132,6 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
           ))}
         </AnimatePresence>
       </div>
-
-      {/* Show More Button */}
-      {!expanded && tracks.length > 5 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-4 pt-4 border-t border-gray-700/50"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setExpanded(true)}
-            className="w-full py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl border border-purple-500/30 text-purple-300 hover:text-white transition-colors text-sm"
-          >
-            Show {tracks.length - 5} More Tracks
-          </motion.button>
-        </motion.div>
-      )}
 
       {/* Empty State */}
       {tracks.length === 0 && (

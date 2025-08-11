@@ -15,9 +15,6 @@ interface TopArtistsProps {
 
 export default function TopArtists({ artists, loading = false, playCounts = {} }: TopArtistsProps) {
   const [viewMode, setViewMode] = useState<'list' | 'chart'>('list')
-  const [expanded, setExpanded] = useState(false)
-  const topFive = artists.slice(0, 5)
-  const restArtists = artists.slice(5)
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
@@ -105,16 +102,7 @@ export default function TopArtists({ artists, loading = false, playCounts = {} }
           </div>
 
           {/* View More Button for list mode */}
-          {viewMode === 'list' && restArtists.length > 0 && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setExpanded(true)}
-              className="text-purple-400 hover:text-purple-300 transition-colors text-sm"
-            >
-              View More
-            </motion.button>
-          )}
+          {/* No show more/less. The list below is scrollable. */}
         </div>
       </div>
 
@@ -128,7 +116,9 @@ export default function TopArtists({ artists, loading = false, playCounts = {} }
             exit={{ opacity: 0, y: -20 }}
             className="space-y-3"
           >
-            {topFive.map((artist, index) => (
+            {/* Entire list scrolls inside fixed-height area */}
+            <div className="max-h-80 sm:max-h-96 overflow-y-auto pr-1 space-y-3">
+            {artists.map((artist, index) => (
               <motion.div
                 key={artist.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -203,43 +193,7 @@ export default function TopArtists({ artists, loading = false, playCounts = {} }
                 </motion.button>
               </motion.div>
             ))}
-
-            {/* Expanded card with scroll for remaining artists */}
-            <AnimatePresence>
-              {expanded && restArtists.length > 0 && (
-                <motion.div
-                  key="expanded-list"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mt-2 rounded-xl border border-purple-500/30 bg-black/30"
-                >
-                  <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-gray-700/50">
-                    <p className="text-sm text-gray-300">More artists</p>
-                    <button onClick={() => setExpanded(false)} className="text-xs text-purple-300 hover:text-white">Close</button>
-                  </div>
-                  <div className="max-h-80 sm:max-h-96 overflow-y-auto p-2 sm:p-3 space-y-2">
-                    {restArtists.map((artist, idx) => (
-                      <div key={artist.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/5">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                          {idx + 6}
-                        </div>
-                        <img src={artist.images[0]?.url || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=60&auto=format&fit=crop'} alt={artist.name} className="w-8 h-8 rounded-full object-cover" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white truncate text-sm">{artist.name}</p>
-                          <p className="text-gray-400 truncate text-xs">{artist.genres.slice(0,2).join(', ')}</p>
-                        </div>
-                        <div className="flex items-center space-x-3 text-xs">
-                          <span className="text-purple-400">{artist.popularity}%</span>
-                          <span className="text-pink-400">{formatNumber(artist.followers.total)}</span>
-                          <span className="text-green-400">{playCounts[artist.id] ?? 0}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            </div>
           </motion.div>
         ) : (
           <motion.div
