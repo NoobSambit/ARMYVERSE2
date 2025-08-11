@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       // If API call fails, return mock data as fallback
       console.warn('Failed to fetch recommendations from Spotify API, using mock data')
+      const fallbackImage = 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=300&auto=format&fit=crop'
       const mockRecommendations = Array.from({ length: Math.min(limit, 10) }, (_, i) => ({
         id: `rec-track-${i + 1}`,
         name: `Recommended Track ${i + 1}`,
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
           name: `Recommended Album ${i + 1}`,
           images: [
             {
-              url: 'https://via.placeholder.com/300',
+              url: fallbackImage,
               height: 300,
               width: 300
             }

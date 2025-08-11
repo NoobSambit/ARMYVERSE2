@@ -263,40 +263,55 @@ export const fetchRecommendations = async (
 // They are not direct Spotify API features but calculated from real Spotify data
 
 export const analyzeBTSContent = (tracks: SpotifyTrack[]): BTSAnalytics => {
-  const btsTracks = tracks.filter(track => 
-    track.artists.some(artist => {
-      const name = artist.name.toLowerCase()
-      return name === 'bts' || name.includes('bts')
-    })
-  )
-  
-  const soloTracks = tracks.filter(track => {
-    const artistNames = track.artists.map(artist => artist.name.toLowerCase())
-    const btsMembers = ['jimin', 'jungkook', 'v', 'rm', 'suga', 'j-hope', 'jin']
-    return btsMembers.some(member => artistNames.some(name => name.includes(member)))
-  })
-  
-  const memberPlays = {
-    'Jimin': soloTracks.filter(track => track.artists.some(artist => artist.name.toLowerCase().includes('jimin'))).length,
-    'Jungkook': soloTracks.filter(track => track.artists.some(artist => artist.name.toLowerCase().includes('jungkook'))).length,
-    'V': soloTracks.filter(track => track.artists.some(artist => artist.name.toLowerCase().includes('v') || artist.name.toLowerCase().includes('taehyung'))).length,
-    'RM': soloTracks.filter(track => track.artists.some(artist => artist.name.toLowerCase().includes('rm') || artist.name.toLowerCase().includes('namjoon'))).length,
-    'Suga': soloTracks.filter(track => track.artists.some(artist => artist.name.toLowerCase().includes('suga') || artist.name.toLowerCase().includes('agust d'))).length,
-    'J-Hope': soloTracks.filter(track => track.artists.some(artist => artist.name.toLowerCase().includes('j-hope') || artist.name.toLowerCase().includes('hobi'))).length,
-    'Jin': soloTracks.filter(track => track.artists.some(artist => artist.name.toLowerCase().includes('jin') || artist.name.toLowerCase().includes('seokjin'))).length,
+  // Normalize helper to compare artist names robustly
+  const normalize = (name: string): string => name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
+
+  const isBTSGroup = (artistName: string) => normalize(artistName) === 'bts' || normalize(artistName).includes('bts ')
+
+  const memberAliases: Record<string, string[]> = {
+    'Jimin': ['jimin'],
+    'Jungkook': ['jungkook', 'jung kook'],
+    'V': ['v', 'kim taehyung', 'taehyung'],
+    'RM': ['rm', 'kim namjoon', 'namjoon'],
+    'Suga': ['suga', 'agust d', 'agustd', 'min yoongi', 'yoongi'],
+    'J-Hope': ['jhope', 'j hope', 'j-hope', 'jung hoseok', 'hoseok'],
+    'Jin': ['jin', 'kim seokjin', 'seokjin']
   }
-  
-  const albumPlays = btsTracks.reduce((acc, track) => {
+
+  const isMemberAlias = (artistName: string, aliases: string[]): boolean => {
+    const n = normalize(artistName)
+    // Match equality primarily to avoid false positives like 'Vishal'
+    if (aliases.some(a => n === normalize(a))) return true
+    // Also allow contains for multi-word aliases like 'kim namjoon'
+    return aliases.some(a => n.includes(normalize(a)))
+  }
+
+  const btsTracks = tracks.filter(track => track.artists.some(a => isBTSGroup(a.name)))
+  const soloTracks = tracks.filter(track => track.artists.some(a => Object.values(memberAliases).some(aliases => isMemberAlias(a.name, aliases))))
+
+  const memberPlays: Record<string, number> = {}
+  Object.keys(memberAliases).forEach(member => { memberPlays[member] = 0 })
+  soloTracks.forEach(track => {
+    track.artists.forEach(a => {
+      for (const [member, aliases] of Object.entries(memberAliases)) {
+        if (isMemberAlias(a.name, aliases)) {
+          memberPlays[member] += 1
+          break
+        }
+      }
+    })
+  })
+
+  const albumPlays = btsTracks.reduce((acc: Record<string, number>, track) => {
     const album = track.album.name
     acc[album] = (acc[album] || 0) + 1
     return acc
-  }, {} as Record<string, number>)
-  
-  const favoriteAlbum = Object.entries(albumPlays)
-    .sort(([,a], [,b]) => b - a)[0]?.[0] || 'Unknown'
-  
+  }, {})
+
+  const favoriteAlbum = Object.entries(albumPlays).sort(([, a], [, b]) => b - a)[0]?.[0] || 'Unknown'
+
   return {
-    totalBTSPlays: btsTracks.length,
+    totalBTSPlays: btsTracks.length + soloTracks.length,
     favoriteBTSAlbum: favoriteAlbum,
     memberPreference: Object.entries(memberPlays)
       .map(([member, plays]) => ({ member, plays }))
@@ -415,9 +430,8 @@ export const fetchDashboardData = async (userId: string): Promise<any> => {
     const trackIds = topTracks.map(track => track.id)
     const audioFeatures = await fetchAudioFeatures(userId, trackIds)
     
-    // Analyze data (use both recent and top tracks for better BTS coverage)
-    const combinedTracks = [...recentTracks, ...topTracks]
-    const btsAnalytics = analyzeBTSContent(combinedTracks)
+    // Analyze BTS based solely on actual recent plays to avoid false positives
+    const btsAnalytics = analyzeBTSContent(recentTracks)
     const genreAnalysis = analyzeGenreDistribution(topArtists)
     const moodAnalysis = analyzeMoodDistribution(topTracks, audioFeatures)
     const listeningPatterns = analyzeListeningPatterns(recentTracks)
@@ -431,7 +445,7 @@ export const fetchDashboardData = async (userId: string): Promise<any> => {
       currentStreak: 0, // Note: Spotify API doesn't provide streak data
       totalListeningTime: recentTracks.reduce((sum, track) => sum + track.duration_ms, 0),
       btsPlays: btsAnalytics.totalBTSPlays,
-      btsPercentage: combinedTracks.length > 0 ? Math.round((btsAnalytics.totalBTSPlays / combinedTracks.length) * 100) : 0
+      btsPercentage: recentTracks.length > 0 ? Math.round((btsAnalytics.totalBTSPlays / recentTracks.length) * 100) : 0
     }
     
     // Get recommendations
