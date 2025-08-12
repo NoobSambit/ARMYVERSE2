@@ -4,7 +4,7 @@ import ValueProps from '@/components/sections/ValueProps'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen page-gradient">
       {/* Hero Section */}
       <Hero />
 

@@ -194,3 +194,11 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary-dark);
 }
+
+/* Page-wide purple gradient background helper */
+.page-gradient {
+  background:
+    radial-gradient(1200px 600px at 50% -100px, rgba(139, 92, 246, 0.2), transparent 60%),
+    radial-gradient(900px 500px at 100% 0, rgba(236, 72, 153, 0.15), transparent 60%),
+    #000000;
+}
