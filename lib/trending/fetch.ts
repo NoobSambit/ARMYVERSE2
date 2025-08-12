@@ -1,7 +1,5 @@
 // Trending API utilities for ArmyVerse BTS app
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || ''
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || ''
-const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || ''
 
 // Helper function to add delays between API calls
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -46,6 +44,17 @@ export interface MemberSpotlight {
   }
 }
 
+// Minimal shape for YouTube search items we actually use
+type YouTubeSearchItem = {
+  id: { videoId: string }
+  snippet: {
+    title: string
+    thumbnails: { high?: { url: string }; medium?: { url: string } }
+    channelTitle: string
+    publishedAt: string
+  }
+}
+
 // YouTube trending via server endpoint with caching to minimize quota
 export const fetchYouTubeTrending = async (): Promise<TrendingVideo[]> => {
   try {
@@ -59,7 +68,7 @@ export const fetchYouTubeTrending = async (): Promise<TrendingVideo[]> => {
 
     if (!items.length) return getFallbackYouTubeData()
 
-    const trendingVideos: TrendingVideo[] = items.map((item: any, index: number) => ({
+    const trendingVideos: TrendingVideo[] = items.map((item: YouTubeSearchItem, index: number) => ({
       id: item.id.videoId,
       title: item.snippet.title,
       thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
@@ -94,52 +103,6 @@ export const fetchSpotifyTrending = async (): Promise<TrendingTrack[]> => {
 // Get all solo members with their top tracks - Future-proof approach
 export const fetchAllMembersSpotlight = async (): Promise<MemberSpotlight[]> => {
   try {
-    // BTS members with their Spotify artist IDs and alternative names
-    const membersData = [
-      { 
-        name: 'Jimin', 
-        spotifyArtistIds: ['1oSPZhvZMIrWW5I41kPkkY'],
-        alternativeNames: ['박지민', 'Park Jimin'],
-        keywords: ['jimin solo', 'jimin face', 'jimin like crazy']
-      },
-      { 
-        name: 'Jungkook', 
-        spotifyArtistIds: ['6HaGTQPmzraVmaVxvz6EUc'],
-        alternativeNames: ['전정국', 'Jeon Jungkook'],
-        keywords: ['jungkook solo', 'jungkook seven', 'jungkook golden']
-      },
-      { 
-        name: 'V', 
-        spotifyArtistIds: ['3JsHnjpbhX4SnySpvpa9DK'],
-        alternativeNames: ['김태형', 'Kim Taehyung', 'Taehyung'],
-        keywords: ['v layover', 'kim taehyung', 'v solo']
-      },
-      { 
-        name: 'RM', 
-        spotifyArtistIds: ['2auC28zjQyVTsiZKNgPRGs'],
-        alternativeNames: ['김남준', 'Kim Namjoon', 'Namjoon'],
-        keywords: ['rm indigo', 'namjoon solo', 'rm wildflower']
-      },
-      { 
-        name: 'Suga', 
-        spotifyArtistIds: ['5RmQ8k4l3HZ8JoPb4mNsML'],
-        alternativeNames: ['민윤기', 'Min Yoongi', 'Agust D', 'SUGA'],
-        keywords: ['agust d', 'suga d-day', 'min yoongi']
-      },
-      { 
-        name: 'J-Hope', 
-        spotifyArtistIds: ['0b1sIQumIAsNbqAoIClSpy'],
-        alternativeNames: ['정호석', 'Jung Hoseok', 'Hobi'],
-        keywords: ['j-hope jack', 'hobi solo', 'jhope more']
-      },
-      { 
-        name: 'Jin', 
-        spotifyArtistIds: ['5vV3bFXnN6D6N3Nj4xRvaV'],
-        alternativeNames: ['김석진', 'Kim Seokjin', 'Seokjin'],
-        keywords: ['jin astronaut', 'seokjin solo', 'jin epiphany']
-      }
-    ]
-    
     const res = await fetch('/api/trending/spotify', { cache: 'no-store' })
     if (!res.ok) return []
     const data = await res.json()
@@ -474,11 +437,6 @@ const getFallbackMemberYouTubeData = (): MemberSpotlight[] => {
 }
 
 // Helper functions
-const formatDuration = (ms: number): string => {
-  const minutes = Math.floor(ms / 60000)
-  const seconds = Math.floor((ms % 60000) / 1000)
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
 
 const getMilestoneBadges = (count: number): Array<{ type: string; text: string; color: string }> => {
   const badges: Array<{ type: string; text: string; color: string }> = []

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Play, TrendingUp, Star, Music, Eye } from 'lucide-react'
 import { fetchYouTubeTrending, fetchSpotifyTrending, fetchAllMembersSpotlight, fetchMembersYouTubeData, formatViewCount } from '@/lib/trending/fetch'
 
@@ -52,7 +52,7 @@ export default function TrendingSection() {
   const [spotifyMembers, setSpotifyMembers] = useState<MemberSpotlight[]>([])
   const [youtubeMembers, setYoutubeMembers] = useState<MemberSpotlight[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // intentionally no error state to avoid hard-failing UI on quota issues
 
   useEffect(() => {
     fetchTrendingData()
@@ -60,7 +60,6 @@ export default function TrendingSection() {
 
   const fetchTrendingData = async () => {
     setLoading(true)
-    setError(null)
     
     try {
       const [spotifyData, youtubeData, spotifyMembersData, youtubeMembersData] = await Promise.all([
@@ -156,7 +155,11 @@ export default function TrendingSection() {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          {(activeTab === 'spotify' ? spotifyTracks : youtubeVideos).map((item, index) => (
+          {(
+            (activeTab === 'spotify'
+              ? (spotifyTracks as Array<TrendingTrack | TrendingVideo>)
+              : (youtubeVideos as Array<TrendingTrack | TrendingVideo>))
+          ).map((item, index) => (
             <div key={item.id} className="group relative">
               <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 hover:bg-gray-800/50 transition-all duration-300 border border-gray-700/50 hover:border-purple-500/50">
                 {/* Badges */}

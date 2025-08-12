@@ -1,7 +1,6 @@
 'use client'
 
-import { Music, BrainCircuit, BarChart3, Sparkles } from 'lucide-react'
-import React from 'react'
+import { Music, BrainCircuit, BarChart3 } from 'lucide-react'
 
 export default function ValueProps() {
   const cards = [
