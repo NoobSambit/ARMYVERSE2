@@ -10,7 +10,7 @@ export default function Hero() {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-purple-950">
+    <section className="relative overflow-hidden py-16 sm:py-24">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-4 -left-4 w-72 h-72 bg-purple-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
@@ -23,7 +23,7 @@ export default function Hero() {
         <div className="mb-8">
           <div className="flex items-center justify-center mb-4">
             <Heart className="w-8 h-8 text-purple-400 mr-3 animate-pulse" />
-            <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
               ARMYVERSE
             </h1>
             <Heart className="w-8 h-8 text-purple-400 ml-3 animate-pulse" />

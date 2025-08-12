@@ -112,9 +112,9 @@ export default function TrendingSection() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-white mb-4">🌟 BTS Universe</h1>
-        <p className="text-gray-300">Discover the hottest BTS content across platforms</p>
+      <div className="text-center mb-4 sm:mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">Trending Now</h2>
+        <p className="text-gray-300 text-sm">Across Spotify and YouTube</p>
       </div>
 
       {/* Tab Navigation */}
@@ -149,11 +149,11 @@ export default function TrendingSection() {
 
 
       {/* Top 5 Trending Songs */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+      <div className="mb-10 sm:mb-12">
+        <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center">
           <TrendingUp className="mr-2" />
           Top 5 Trending {activeTab === 'spotify' ? 'Songs' : 'Videos'}
-        </h2>
+        </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {(activeTab === 'spotify' ? spotifyTracks : youtubeVideos).map((item, index) => (
@@ -231,11 +231,11 @@ export default function TrendingSection() {
 
       {/* Member Spotlight */}
       {(memberTab === 'spotify' ? spotifyMembers : youtubeMembers).length > 0 && (
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+        <div className="mb-10 sm:mb-12">
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center">
             <Star className="mr-2" />
             Member Spotlight
-          </h2>
+          </h3>
           
           {/* Member Tab Navigation */}
           <div className="flex justify-center mb-6">
