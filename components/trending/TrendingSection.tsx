@@ -64,19 +64,18 @@ export default function TrendingSection() {
     
     try {
       const [spotifyData, youtubeData, spotifyMembersData, youtubeMembersData] = await Promise.all([
-        fetchSpotifyTrending(),
-        fetchYouTubeTrending(),
-        fetchAllMembersSpotlight(),
-        fetchMembersYouTubeData()
+        fetchSpotifyTrending().catch(() => []),
+        fetchYouTubeTrending().catch(() => []),
+        fetchAllMembersSpotlight().catch(() => []),
+        fetchMembersYouTubeData().catch(() => [])
       ])
-      
+
       setSpotifyTracks(spotifyData)
       setYoutubeVideos(youtubeData)
       setSpotifyMembers(spotifyMembersData)
       setYoutubeMembers(youtubeMembersData)
-    } catch (err) {
-      setError('Failed to load trending data. Please try again later.')
-      console.error('Error fetching trending data:', err)
+    } catch {
+      // swallow to avoid blocking UI
     } finally {
       setLoading(false)
     }
@@ -108,22 +107,7 @@ export default function TrendingSection() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="max-w-7xl mx-auto text-center">
-        <h1 className="text-4xl font-bold text-white mb-4">🌟 BTS Universe</h1>
-        <div className="bg-red-900/20 border border-red-500 rounded-xl p-6">
-          <p className="text-red-300">{error}</p>
-          <button 
-            onClick={fetchTrendingData}
-            className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // Never hard fail: render what we have
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -135,7 +119,7 @@ export default function TrendingSection() {
 
       {/* Tab Navigation */}
       <div className="flex justify-center mb-8">
-        <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50">
+        <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50 overflow-x-auto">
           <button
             onClick={() => setActiveTab('spotify')}
             className={`px-6 py-3 rounded-lg transition-all ${
@@ -154,9 +138,10 @@ export default function TrendingSection() {
                 ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
                 : 'text-gray-300 hover:text-white'
             }`}
+            disabled={youtubeVideos.length === 0}
           >
             <Eye className="inline mr-2" size={20} />
-            YouTube
+            YouTube {youtubeVideos.length === 0 ? '(quota)' : ''}
           </button>
         </div>
       </div>
@@ -273,9 +258,10 @@ export default function TrendingSection() {
                     ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
                     : 'text-gray-300 hover:text-white'
                 }`}
+                disabled={youtubeMembers.length === 0}
               >
                 <Eye className="inline mr-1" size={16} />
-                YouTube
+                YouTube {youtubeMembers.length === 0 ? '(quota)' : ''}
               </button>
             </div>
           </div>

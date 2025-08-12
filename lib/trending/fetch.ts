@@ -81,77 +81,19 @@ export const fetchYouTubeTrending = async (): Promise<TrendingVideo[]> => {
 // Spotify API - Get trending BTS tracks
 export const fetchSpotifyTrending = async (): Promise<TrendingTrack[]> => {
   try {
-    // First get access token
-    const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')
-      },
-      body: 'grant_type=client_credentials'
-    })
-    
-    const tokenData = await tokenResponse.json()
-    
-    if (!tokenData.access_token) {
-      throw new Error('Failed to get Spotify access token')
-    }
-    
-    // Search for BTS tracks
-    const searchResponse = await fetch(
-      'https://api.spotify.com/v1/search?q=BTS&type=track&limit=20&market=US',
-      {
-        headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`
-        }
-      }
-    )
-    
-    const searchData = await searchResponse.json()
-    
-    // Filter and sort by popularity
-    const trendingTracks: TrendingTrack[] = searchData.tracks.items
-      .filter((track: any) => track.artists.some((artist: any) => artist.name === 'BTS'))
-      .slice(0, 5)
-      .map((track: any) => ({
-        id: track.id,
-        name: track.name,
-        artist: track.artists.map((a: any) => a.name).join(', '),
-        album: track.album.name,
-        albumArt: track.album.images[0]?.url,
-        popularity: track.popularity,
-        duration: formatDuration(track.duration_ms),
-        spotifyUrl: track.external_urls.spotify,
-        releaseDate: track.album.release_date,
-        estimatedStreams: track.popularity,
-        badges: getMilestoneBadges(track.popularity)
-      }))
-    
-    return trendingTracks
+    const res = await fetch('/api/trending/spotify', { cache: 'no-store' })
+    if (!res.ok) return []
+    const data = await res.json()
+    return (data.tracks || []) as TrendingTrack[]
   } catch (error) {
     console.error('Error fetching Spotify trending:', error)
-    throw error
+    return []
   }
 }
 
 // Get all solo members with their top tracks - Future-proof approach
 export const fetchAllMembersSpotlight = async (): Promise<MemberSpotlight[]> => {
   try {
-    const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')
-      },
-      body: 'grant_type=client_credentials'
-    })
-    
-    const tokenData = await tokenResponse.json()
-    
-    if (!tokenData.access_token) {
-      throw new Error('Failed to get Spotify access token')
-    }
-    
     // BTS members with their Spotify artist IDs and alternative names
     const membersData = [
       { 
@@ -198,120 +140,10 @@ export const fetchAllMembersSpotlight = async (): Promise<MemberSpotlight[]> => 
       }
     ]
     
-    const memberSpotlights: MemberSpotlight[] = []
-    
-    for (const member of membersData) {
-      try {
-        let bestTrack = null
-        let highestPopularity = 0
-        
-        // Method 1: Try artist ID search (most reliable)
-        for (const artistId of member.spotifyArtistIds) {
-          try {
-            const response = await fetch(
-              `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`,
-              {
-                headers: {
-                  'Authorization': `Bearer ${tokenData.access_token}`
-                }
-              }
-            )
-            
-            if (response.ok) {
-              const data = await response.json()
-              if (data.tracks && data.tracks.length > 0) {
-                const topTrack = data.tracks[0]
-                if (topTrack.popularity > highestPopularity) {
-                  highestPopularity = topTrack.popularity
-                  bestTrack = topTrack
-                }
-              }
-            }
-          } catch (error) {
-            console.log(`Artist ID search failed for ${member.name}:`, error)
-          }
-        }
-        
-        // Method 2: Fallback to keyword search if artist ID fails
-        if (!bestTrack) {
-          for (const keyword of member.keywords) {
-            try {
-              const response = await fetch(
-                `https://api.spotify.com/v1/search?q=${encodeURIComponent(keyword)}&type=track&limit=10&market=US`,
-                {
-                  headers: {
-                    'Authorization': `Bearer ${tokenData.access_token}`
-                  }
-                }
-              )
-              
-              const data = await response.json()
-              
-              if (data.tracks && data.tracks.items) {
-                // Look for tracks by the specific member (not BTS group)
-                const memberTracks = data.tracks.items.filter((track: any) => {
-                  const artistNames = track.artists.map((artist: any) => artist.name.toLowerCase())
-                  const memberNameLower = member.name.toLowerCase()
-                  
-                  // Check if member name is in artist names and it's not a BTS group song
-                  return artistNames.some((name: string) => 
-                    name.includes(memberNameLower) || 
-                    member.alternativeNames.some(altName => name.includes(altName.toLowerCase()))
-                  ) && !artistNames.includes('bts') && !artistNames.includes('방탄소년단')
-                })
-                
-                if (memberTracks.length > 0) {
-                  const topTrack = memberTracks[0]
-                  if (topTrack.popularity > highestPopularity) {
-                    highestPopularity = topTrack.popularity
-                    bestTrack = topTrack
-                  }
-                }
-              }
-            } catch (error) {
-              console.log(`Keyword search failed for ${member.name} with ${keyword}:`, error)
-            }
-          }
-        }
-        
-        // Add the best track found or create placeholder
-        if (bestTrack) {
-          memberSpotlights.push({
-            member: member.name,
-            track: {
-              id: bestTrack.id,
-              name: bestTrack.name,
-              artist: bestTrack.artists.map((a: any) => a.name).join(', '),
-              album: bestTrack.album.name,
-              albumArt: bestTrack.album.images[0]?.url,
-              popularity: bestTrack.popularity,
-              spotifyUrl: bestTrack.external_urls.spotify,
-              estimatedStreams: bestTrack.popularity
-            }
-          })
-        } else {
-          // Fallback: create a placeholder entry so all 7 members appear
-          memberSpotlights.push({
-            member: member.name,
-            track: {
-              id: `placeholder-${member.name}`,
-              name: `${member.name} Solo Work`,
-              artist: member.name,
-              album: 'Solo',
-              albumArt: 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=300&h=300',
-              popularity: 50,
-              spotifyUrl: 'https://open.spotify.com/artist/3Nrfpe0tUJi4K4DXYWgMUX',
-              estimatedStreams: 50
-            }
-          })
-        }
-      } catch (error) {
-        console.error(`Error fetching data for ${member.name}:`, error)
-      }
-    }
-    
-    // Sort by popularity and ensure we have all 7 members
-    return memberSpotlights.sort((a, b) => b.track.popularity - a.track.popularity)
+    const res = await fetch('/api/trending/spotify', { cache: 'no-store' })
+    if (!res.ok) return []
+    const data = await res.json()
+    return (data.members || []) as MemberSpotlight[]
   } catch (error) {
     console.error('Error fetching member spotlights:', error)
     return []
