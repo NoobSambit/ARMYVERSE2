@@ -23,7 +23,7 @@ export default function ValueProps() {
   ]
 
   return (
-    <div className="bg-black/40 backdrop-blur-lg rounded-2xl border border-purple-500/20 px-4 py-8 sm:px-6">
+    <div className="bg-black/30 backdrop-blur-lg rounded-2xl border border-purple-500/20 px-4 py-8 sm:px-6">
       <div className="text-center max-w-3xl mx-auto mb-8">
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">What is ARMYVERSE?</h2>
         <p className="text-gray-300 text-sm sm:text-base">Your one-stop hub to explore BTS trends, craft AI-powered playlists, and track your listening analytics — made with love for ARMY.</p>
