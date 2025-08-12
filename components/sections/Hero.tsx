@@ -59,10 +59,17 @@ export default function Hero() {
             className="group bg-black/50 hover:bg-black/70 text-white font-semibold py-4 px-8 rounded-full shadow-lg border-2 border-purple-400/30 hover:border-purple-300/50 transform transition-all duration-300 hover:scale-105"
           >
             <span className="flex items-center">
-              <Sparkles className="w-5 h-5 mr-2 group-hover:animate-spin" />
-              Create Playlists
+            <Sparkles className="w-5 h-5 mr-2 group-hover:animate-spin" />
+            Create Playlists
             </span>
           </button>
+        </div>
+
+        {/* Quick features chips for instant clarity */}
+        <div className="flex flex-wrap gap-2 justify-center text-xs sm:text-sm text-purple-200/90">
+          <span className="px-3 py-1 rounded-full bg-purple-600/20 border border-purple-500/20">BTS + Solo Trends</span>
+          <span className="px-3 py-1 rounded-full bg-purple-600/20 border border-purple-500/20">AI Playlist Generator</span>
+          <span className="px-3 py-1 rounded-full bg-purple-600/20 border border-purple-500/20">Spotify Analytics</span>
         </div>
       </div>
 

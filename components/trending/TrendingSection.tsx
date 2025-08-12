@@ -254,7 +254,7 @@ export default function TrendingSection() {
           
           {/* Member Tab Navigation */}
           <div className="flex justify-center mb-6">
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50">
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50 overflow-x-auto">
               <button
                 onClick={() => setMemberTab('spotify')}
                 className={`px-4 py-2 rounded-lg transition-all text-sm ${

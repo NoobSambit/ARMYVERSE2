@@ -46,76 +46,30 @@ export interface MemberSpotlight {
   }
 }
 
-// YouTube API v3 - Single request to get top 5 trending BTS videos
+// YouTube trending via server endpoint with caching to minimize quota
 export const fetchYouTubeTrending = async (): Promise<TrendingVideo[]> => {
   try {
-    console.debug('🎬 Fetching YouTube trending data...')
-    console.debug('🔑 YouTube API Key:', YOUTUBE_API_KEY ? 'Present' : 'Missing')
-    
-    const response = await fetch(
-      `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=BTS&maxResults=5&order=viewCount&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}`
-    )
-    
-    if (!response.ok) {
-      console.error('❌ YouTube API error:', response.status, response.statusText)
-      if (response.status === 403) {
-        console.error('🚫 YouTube API 403: Check API key, quota, or restrictions')
-        // Return fallback data for 403 errors
-        return getFallbackYouTubeData()
-      }
-      throw new Error(`YouTube API error: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    console.debug('✅ YouTube search response received')
-    
-    if (!data.items || data.items.length === 0) {
-      console.warn('⚠️ No YouTube items found, using fallback')
+    const res = await fetch('/api/trending/youtube', { cache: 'no-store' })
+    if (!res.ok) {
       return getFallbackYouTubeData()
     }
-    
-    // Get video statistics for each video
-    const videoIds = data.items.map((item: { id: { videoId: string } }) => item.id.videoId).join(',')
-    
-    // Add delay to prevent rate limiting
-    await sleep(1000)
-    
-    const statsResponse = await fetch(
-      `https://youtube.googleapis.com/youtube/v3/videos?part=statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`
-    )
-    
-    if (!statsResponse.ok) {
-      console.error('❌ YouTube stats API error:', statsResponse.status)
-      // Use search data without detailed stats
-      return data.items.map((item: { id: { videoId: string }, snippet: any }, index: number) => ({
-        id: item.id.videoId,
-        title: item.snippet.title,
-        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
-        channelTitle: item.snippet.channelTitle,
-        publishedAt: item.snippet.publishedAt,
-        viewCount: 1000000 * (5 - index), // Estimated based on order
-        likeCount: 50000 * (5 - index),
-        videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-        badges: []
-      }))
-    }
-    
-    const statsData = await statsResponse.json()
-    
-    // Combine snippet and statistics data
-    const trendingVideos: TrendingVideo[] = data.items.map((item: any, index: number) => ({
+    const payload = await res.json()
+    const items = payload.search?.items || []
+    const stats = payload.stats?.items || []
+
+    if (!items.length) return getFallbackYouTubeData()
+
+    const trendingVideos: TrendingVideo[] = items.map((item: any, index: number) => ({
       id: item.id.videoId,
       title: item.snippet.title,
       thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
       channelTitle: item.snippet.channelTitle,
       publishedAt: item.snippet.publishedAt,
-      viewCount: parseInt(statsData.items[index]?.statistics.viewCount || '0'),
-      likeCount: parseInt(statsData.items[index]?.statistics.likeCount || '0'),
+      viewCount: parseInt(stats[index]?.statistics?.viewCount || '0'),
+      likeCount: parseInt(stats[index]?.statistics?.likeCount || '0'),
       videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-      badges: getMilestoneBadges(parseInt(statsData.items[index]?.statistics.viewCount || '0'))
+      badges: getMilestoneBadges(parseInt(stats[index]?.statistics?.viewCount || '0'))
     }))
-    
-    console.debug('✅ YouTube trending data processed successfully')
     return trendingVideos
   } catch (error) {
     console.error('❌ Error fetching YouTube trending:', error)
