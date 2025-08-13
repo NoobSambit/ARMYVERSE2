@@ -114,6 +114,7 @@ export default function CreatePlaylist() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
             Create Playlist
           </h1>
+          <p className="text-gray-400 mb-4">Prefer AI-assisted playlists? <a className="text-purple-400 hover:text-purple-300 underline decoration-purple-500/60 hover:decoration-purple-400 transition-colors" href="/ai-playlist">Try AI Playlist</a></p>
           <div className="inline-flex bg-black/50 rounded-xl overflow-hidden border border-purple-500/40">
             <button
               onClick={() => setMode('normal')}

@@ -99,20 +99,12 @@ export default function Navbar() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-2">
-                  <Link
-                    href="/auth/signin"
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-[#FF9AD5] to-[#A274FF] text-white hover:opacity-90 transition-all duration-300"
-                  >
-                    Sign Up
-                  </Link>
-                </div>
+                <Link
+                  href="/auth/signup"
+                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-[#FF9AD5] to-[#A274FF] text-white hover:opacity-90 transition-all duration-300"
+                >
+                  Sign Up
+                </Link>
               )}
             </div>
           </div>
@@ -150,6 +142,25 @@ export default function Navbar() {
                 <span>{label}</span>
               </Link>
             ))}
+            <div className="px-3 py-2">
+              {isAuthenticated && user ? (
+                <button
+                  onClick={handleSignOut}
+                  className="w-full px-3 py-2 rounded-lg text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex items-center justify-center space-x-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              ) : (
+                <Link
+                  href="/auth/signup"
+                  onClick={() => setIsOpen(false)}
+                  className="block w-full text-center px-4 py-2 rounded-lg text-base font-medium bg-gradient-to-r from-[#FF9AD5] to-[#A274FF] text-white hover:opacity-90 transition-all duration-300"
+                >
+                  Sign Up
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       )}

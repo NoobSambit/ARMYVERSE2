@@ -15,7 +15,12 @@ import {
 import Link from 'next/link'
 import { signUpWithEmail, signInWithGoogle, signInWithTwitter, AuthError } from '@/lib/firebase/auth'
 
-export default function SignUpForm() {
+interface SignUpFormProps {
+  embedded?: boolean
+  hideHeader?: boolean
+}
+
+export default function SignUpForm({ embedded = false, hideHeader = false }: SignUpFormProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -83,26 +88,28 @@ export default function SignUpForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] flex items-center justify-center p-4">
+    <div className={embedded ? 'w-full' : 'min-h-screen bg-transparent flex items-center justify-center p-4'}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Heart className="w-8 h-8 text-purple-400 mr-3" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-              Join ARMYVERSE
-            </h1>
-            <Heart className="w-8 h-8 text-purple-400 ml-3" />
+        {!hideHeader && (
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <Heart className="w-8 h-8 text-purple-400 mr-3" />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                Join ARMYVERSE
+              </h1>
+              <Heart className="w-8 h-8 text-purple-400 ml-3" />
+            </div>
+            <p className="text-gray-300">Create your account to get started</p>
           </div>
-          <p className="text-gray-300">Create your account to get started</p>
-        </div>
+        )}
 
         {/* Sign Up Form */}
-        <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+        <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
           <form onSubmit={handleSignUp} className="space-y-6">
             {/* Name Field */}
             <div>
@@ -116,7 +123,7 @@ export default function SignUpForm() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
                   placeholder="Enter your full name"
                   required
                   disabled={isLoading}
@@ -136,7 +143,7 @@ export default function SignUpForm() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
                   placeholder="Enter your email"
                   required
                   disabled={isLoading}
@@ -156,7 +163,7 @@ export default function SignUpForm() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
                   placeholder="Enter your password"
                   required
                   disabled={isLoading}
@@ -184,7 +191,7 @@ export default function SignUpForm() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                  className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
                   placeholder="Confirm your password"
                   required
                   disabled={isLoading}
@@ -211,7 +218,7 @@ export default function SignUpForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-white rounded-xl hover:shadow-[0_0_24px_rgba(236,72,153,0.35)] hover:scale-[1.01] transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{isLoading ? 'Creating account...' : 'Create Account'}</span>
@@ -220,9 +227,9 @@ export default function SignUpForm() {
 
           {/* Divider */}
           <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-gray-600"></div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
             <span className="px-4 text-gray-400 text-sm">or continue with</span>
-            <div className="flex-1 border-t border-gray-600"></div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
           </div>
 
           {/* Social Sign In Buttons */}
@@ -231,7 +238,7 @@ export default function SignUpForm() {
             <button
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="w-full py-3 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-white/10 border border-white/15 text-white rounded-xl hover:bg-white/15 hover:border-white/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -246,7 +253,7 @@ export default function SignUpForm() {
             <button
               onClick={handleTwitterSignIn}
               disabled={isLoading}
-              className="w-full py-3 bg-[#1DA1F2] text-white rounded-lg hover:bg-[#1a91da] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-[#1DA1F2]/20 border border-[#1DA1F2]/30 text-white rounded-xl hover:bg-[#1DA1F2]/30 hover:border-[#1DA1F2]/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
@@ -259,7 +266,7 @@ export default function SignUpForm() {
           <div className="mt-6 text-center">
             <p className="text-gray-400">
               Already have an account?{' '}
-              <Link href="/auth/signin" className="text-purple-400 hover:text-purple-300 transition-colors">
+              <Link href="/auth/signin" className="text-purple-400 hover:text-purple-300 transition-colors hover:drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]">
                 Sign in
               </Link>
             </p>
