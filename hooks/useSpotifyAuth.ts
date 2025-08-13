@@ -53,6 +53,8 @@ export function useSpotifyAuth() {
     }
 
     window.addEventListener('storage', handleStorageChange)
+    // Also listen for our custom signal from the same tab when token is set
+    window.addEventListener('spotify_token_set', checkAuthStatus)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 

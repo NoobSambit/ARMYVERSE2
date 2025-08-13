@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FaSpotify, FaLock } from 'react-icons/fa'
 import { CheckCircle } from 'lucide-react'
 
@@ -10,6 +10,31 @@ interface SpotifyConnectCardProps {
 
 export default function SpotifyConnectCard({ onAuthSuccess }: SpotifyConnectCardProps) {
   const [isLoading, setIsLoading] = useState(false)
+
+  // Handle callback from Spotify (store token from URL and mark as authenticated)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const auth = urlParams.get('auth')
+    const token = urlParams.get('token')
+    const error = urlParams.get('error')
+
+    if (error) {
+      return
+    }
+
+    if (auth === 'success' && token) {
+      try {
+        const tokenData = JSON.parse(decodeURIComponent(token))
+        const tokenWithTimestamp = { ...tokenData, timestamp: Date.now() }
+        localStorage.setItem('spotify_token', JSON.stringify(tokenWithTimestamp))
+        // fire a custom event so same-tab listeners can react immediately
+        window.dispatchEvent(new Event('spotify_token_set'))
+        onAuthSuccess?.()
+      } catch {
+        // ignore parse error, fallback to manual reconnect
+      }
+    }
+  }, [onAuthSuccess])
 
   const handleConnect = async () => {
     try {
