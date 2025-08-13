@@ -9,7 +9,6 @@ import UserProfile from '@/components/dashboard/UserProfile'
 import RecentTracks from '@/components/dashboard/RecentTracks'
 import TopArtists from '@/components/dashboard/TopArtists'
 import BTSAnalytics from '@/components/dashboard/BTSAnalytics'
-import SpotifyAuth from '@/components/auth/SpotifyAuth'
 import SpotifyConnectCard from '@/components/auth/SpotifyConnectCard'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 import { 
