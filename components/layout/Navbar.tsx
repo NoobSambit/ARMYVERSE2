@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, User, LogOut } from 'lucide-react'
@@ -10,12 +11,14 @@ import { signOut } from '@/lib/firebase/auth'
 import ProfileCard from '@/components/profile/ProfileCard'
 import { onSnapshot } from 'firebase/firestore'
 import { getProfileRef } from '@/lib/firebase/profile'
+ 
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const { user, isAuthenticated } = useAuth()
   const [profileName, setProfileName] = useState<string | null>(null)
+  
 
   // Live subscribe to the user's profile doc so Navbar reflects updates instantly
   useEffect(() => {
@@ -45,16 +48,18 @@ export default function Navbar() {
 
   const isActive = (path: string) => pathname === path
 
+  
+
   return (
-    <nav className="bg-[#1a082a]/90 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
+    <nav className={`sticky top-0 z-50 backdrop-blur-md bg-gradient-to-b from-[#1a082a]/90 to-[#0b0310]/80 border-b border-[#3b1a52]/60`} aria-label="Primary Navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className={`flex items-center justify-between h-16`}>
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform duration-300">
-              {React.createElement(navItems[0].icon, { className: "w-6 h-6 text-white" })}
+            <div className="relative w-[2.4rem] h-[2.4rem] lg:w-12 lg:h-12 rounded">
+              <Image src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png" alt="ARMYVERSE" fill sizes="(max-width:1024px) 40px, 48px" className="object-contain rounded" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-purple-500 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] bg-clip-text text-transparent select-none">
               ARMYVERSE
             </span>
           </Link>
@@ -66,20 +71,12 @@ export default function Navbar() {
                 key={path}
                 href={path}
                 aria-current={isActive(path) ? 'page' : undefined}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-2 relative
-                  ${isActive(path)
-                    ? 'text-purple-400 bg-purple-500/10'
-                    : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  }`}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-300 flex items-center space-x-2 relative ${
+                  isActive(path) ? 'text-[#C084FC]' : 'text-gray-300 hover:text-white'
+                }`}
               >
                 <Icon className="w-4 h-4" />
                 <span>{label}</span>
-                {isActive(path) && (
-                  <span
-                    className="absolute left-0 right-0 -bottom-1 h-1 rounded-b bg-gradient-to-r from-purple-500 to-purple-600"
-                    aria-hidden="true"
-                  />
-                )}
               </Link>
             ))}
             
@@ -111,7 +108,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/auth/signup"
-                    className="px-4 py-2 rounded-lg text-sm font-medium bg-purple-500 text-white hover:bg-purple-600 transition-all duration-300"
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-[#FF9AD5] to-[#A274FF] text-white hover:opacity-90 transition-all duration-300"
                   >
                     Sign Up
                   </Link>
@@ -135,7 +132,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden bg-[#1a082a]/95 backdrop-blur-md border-t border-purple-500/20">
+        <div className="md:hidden bg-[#0b0310]/95 backdrop-blur-md border-t border-white/10">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navItems.map(({ path, label, icon: Icon }) => (
               <Link
@@ -145,23 +142,20 @@ export default function Navbar() {
                 aria-current={isActive(path) ? 'page' : undefined}
                 className={`flex px-3 py-2 rounded-md text-base font-medium transition-all duration-300 items-center space-x-2 relative
                   ${isActive(path)
-                    ? 'text-purple-400 bg-purple-500/10'
+                    ? 'text-[#C084FC] bg-white/10'
                     : 'text-gray-300 hover:text-white hover:bg-white/10'
                   }`}
               >
                 <Icon className="w-4 h-4" />
                 <span>{label}</span>
-                {isActive(path) && (
-                  <span
-                    className="absolute left-0 right-0 -bottom-1 h-1 rounded-b bg-gradient-to-r from-purple-500 to-purple-600"
-                    aria-hidden="true"
-                  />
-                )}
               </Link>
             ))}
           </div>
         </div>
       )}
+
+      {/* Static subtle bottom border only */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-[#3b1a52] via-[#4a1f66] to-[#3b1a52]" />
     </nav>
   )
 }

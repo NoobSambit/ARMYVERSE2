@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { Heart, TrendingUp, Sparkles } from 'lucide-react'
+import Image from 'next/image'
+import { TrendingUp, Sparkles } from 'lucide-react'
 
 export default function Hero() {
   const scrollToSection = (sectionId: string) => {
@@ -10,81 +11,59 @@ export default function Hero() {
   }
 
   return (
-    <section className="relative overflow-hidden py-16 sm:py-24">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-4 -left-4 w-72 h-72 bg-purple-600/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
-        <div className="absolute -top-4 -right-4 w-72 h-72 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-700/20 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+    <section className="relative overflow-hidden pt-10 sm:pt-14 pb-12 sm:pb-24">
+      {/* Background gradient accents */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute -top-24 right-[-10%] w-[40rem] h-[40rem] bg-[#A274FF]/20 blur-[120px] rounded-full" />
+        <div className="absolute -bottom-24 left-[-10%] w-[36rem] h-[36rem] bg-[#FF9AD5]/20 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative z-10 text-center px-6 max-w-6xl mx-auto">
-        {/* Logo/Title Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Heart className="w-8 h-8 text-purple-400 mr-3 animate-pulse" />
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
-              ARMYVERSE
-            </h1>
-            <Heart className="w-8 h-8 text-purple-400 ml-3 animate-pulse" />
-          </div>
-          <div className="flex items-center justify-center space-x-2 mb-6">
-            <Sparkles className="w-5 h-5 text-purple-400" />
-            <p className="text-xl md:text-2xl text-white font-medium">
-              Where Streaming Meets Passion
-            </p>
-            <Sparkles className="w-5 h-5 text-purple-400" />
+      <div className="relative z-10 mx-auto max-w-6xl px-4">
+        {/* Centered logo */}
+        <div className="flex items-center justify-center">
+          <div className="relative w-[84%] sm:w-[72%] md:w-[66%] lg:w-[54%] aspect-square">
+            <Image
+              src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png"
+              alt="ARMYVERSE logo"
+              fill
+              priority
+              sizes="(max-width: 640px) 70vw, (max-width: 1024px) 55vw, 45vw"
+              className="object-contain opacity-90 drop-shadow-[0_0_30px_rgba(162,116,255,0.35)]"
+            />
           </div>
         </div>
 
-        {/* Subtitle */}
-        <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-          Discover trending BTS content, create AI-powered playlists, and dive deep into analytics. 
-          Your ultimate destination for all things Bangtan! 💜
-        </p>
+        {/* Overlay card with headline and CTAs */}
+        <div className="relative z-20 mx-auto -mt-24 sm:-mt-28 md:-mt-32 lg:-mt-40 max-w-3xl rounded-3xl bg-black/30 backdrop-blur-md border border-white/10 shadow-xl p-6 sm:p-8 text-center">
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-white">ARMYVERSE</h1>
+          <p className="mt-2 text-base sm:text-lg text-white/80">Where Streaming Meets Passion</p>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-          <button 
-            onClick={() => scrollToSection('trending')}
-            className="group bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold py-4 px-8 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
-          >
-            <span className="flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 group-hover:animate-bounce" />
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => scrollToSection('trending')}
+              className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-[#FF9AD5] to-[#A274FF] text-white shadow-lg hover:scale-105 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C084FC]"
+              aria-label="Explore Trending"
+            >
+              <TrendingUp className="w-5 h-5 mr-2" />
               Explore Trending
-            </span>
-          </button>
-          <button 
-            onClick={() => scrollToSection('ai-generator')}
-            className="group bg-black/50 hover:bg-black/70 text-white font-semibold py-4 px-8 rounded-full shadow-lg border-2 border-purple-400/30 hover:border-purple-300/50 transform transition-all duration-300 hover:scale-105"
-          >
-            <span className="flex items-center">
-            <Sparkles className="w-5 h-5 mr-2 group-hover:animate-spin" />
-            Create Playlists
-            </span>
-          </button>
-        </div>
+            </button>
+            <a
+              href="/create-playlist"
+              className="inline-flex items-center px-6 py-3 rounded-full border border-white/20 text-white/90 hover:text-white bg-white/0 hover:bg-white/10 transition-colors"
+              aria-label="Create Playlists"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Create Playlists
+            </a>
+          </div>
 
-        {/* Quick features chips for instant clarity */}
-        <div className="flex flex-wrap gap-2 justify-center text-xs sm:text-sm text-purple-200/90">
-          <span className="px-3 py-1 rounded-full bg-purple-600/20 border border-purple-500/20">BTS + Solo Trends</span>
-          <span className="px-3 py-1 rounded-full bg-purple-600/20 border border-purple-500/20">AI Playlist Generator</span>
-          <span className="px-3 py-1 rounded-full bg-purple-600/20 border border-purple-500/20">Spotify Analytics</span>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm">
+            <span className="px-3 py-1 rounded-full bg-white/6 border border-white/10 text-white/80">BTS + Solo Trends</span>
+            <span className="px-3 py-1 rounded-full bg-white/6 border border-white/10 text-white/80">AI Playlist</span>
+            <span className="px-3 py-1 rounded-full bg-white/6 border border-white/10 text-white/80">Spotify Analytics</span>
+          </div>
         </div>
       </div>
-
-      {/* Custom CSS for animations */}
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob { animation: blob 7s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
-      `}</style>
     </section>
   )
 }

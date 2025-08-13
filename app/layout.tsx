@@ -2,14 +2,15 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
+import MobileQuickActions from '@/components/layout/MobileQuickActions'
 import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'ArmyVerse - Dark BTS Dashboard',
-  description: 'Dark-themed BTS fan dashboard with trending analytics, AI playlist generation, and Spotify integration.',
-  keywords: ['BTS', 'ARMY', 'K-pop', 'music', 'playlist', 'Spotify', 'dashboard'],
+  title: 'ARMYVERSE — BTS Trends, AI Playlists & Spotify Stats',
+  description: 'Explore live BTS trends across Spotify and YouTube, create AI-powered playlists, and track your Spotify listening stats. Made for ARMY.',
+  keywords: ['ARMYVERSE', 'BTS', 'ARMY', 'K-pop', 'music', 'playlist', 'AI playlists', 'Spotify', 'YouTube', 'trending', 'analytics'],
   authors: [{ name: 'ArmyVerse Team' }],
   creator: 'ArmyVerse',
   publisher: 'ArmyVerse',
@@ -23,16 +24,16 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'ArmyVerse - Dark BTS Dashboard',
-    description: 'Dark-themed BTS fan dashboard with trending analytics, AI playlist generation, and Spotify integration.',
+    title: 'ARMYVERSE — BTS Trends, AI Playlists & Spotify Stats',
+    description: 'Explore live BTS trends across Spotify and YouTube, create AI-powered playlists, and track your Spotify listening stats. Made for ARMY.',
     url: '/',
-    siteName: 'ArmyVerse',
+    siteName: 'ARMYVERSE',
     images: [
       {
-        url: '/og-image.jpg',
+        url: 'https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png',
         width: 1200,
         height: 630,
-        alt: 'ArmyVerse - BTS Fan Dashboard',
+        alt: 'ARMYVERSE',
       },
     ],
     locale: 'en_US',
@@ -40,9 +41,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ArmyVerse - Dark BTS Dashboard',
-    description: 'Dark-themed BTS fan dashboard with trending analytics, AI playlist generation, and Spotify integration.',
-    images: ['/og-image.jpg'],
+    title: 'ARMYVERSE — BTS Trends, AI Playlists & Spotify Stats',
+    description: 'Explore live BTS trends across Spotify and YouTube, create AI-powered playlists, and track your Spotify listening stats. Made for ARMY.',
+    images: ['https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png'],
   },
   robots: {
     index: true,
@@ -74,6 +75,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           {children}
+          <MobileQuickActions />
         </AuthProvider>
       </body>
     </html>

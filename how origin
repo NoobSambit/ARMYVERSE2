@@ -1,0 +1,20 @@
+008108b 2025-08-08 22:22:04 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  (HEAD -> main, origin/main) feat(blogs): allow status=all in list API; fallback fetch on UI; fix hooks and optimize images
+af0c9ad 2025-08-08 22:10:42 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  fix(blogs): honor status from editor when creating (publish shows in list)
+59e7836 2025-08-08 22:03:37 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  fix(blog): cover upload now opens file picker; ensure TipTap content readable (prose-invert); add @tailwindcss/typography plugin
+1e3e1d7 2025-08-08 21:44:10 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  feat(navbar): reflect live profile displayName via Firestore onSnapshot; fix Next Image 400 by allowing Google/Storage domains
+2e0f888 2025-08-08 21:21:32 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  fix(profile): use AuthContext user, add error handling and Dialog.Description; address a11y warning
+8c11f5d 2025-08-08 21:13:25 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  fix(firebase): stabilize Firestore Listen/Write (auto long-polling), add env validation; export storage; install firebase SDK
+5d5233b 2025-08-08 20:50:59 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Profile: add ProfileCard (display name, avatar upload, ARMY fields) and integrate into Navbar; add Firestore profile storage; minor mobile/menu polish
+98c13af 2025-08-08 20:15:38 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  UX: fix tag suggestions popover behavior, visible text on dark inputs, remove sticky header overlap, make toolbar horizontally scrollable; mobile-friendly wrappers
+7f8c128 2025-08-08 19:14:06 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Editor: two-pane layout with sticky action bar, sidebar (cover/tags/mood/SEO/publish), preview modal, AI Assist dock, SEO score, and unsaved-change guard
+6fcb054 2025-08-08 09:43:22 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Blog editor UX: live preview, autosave + local version history, sticky publish bar, tag type-ahead, templates, SEO preview, image alt prompts; allow Cloudinary images
+4c07292 2025-08-07 20:46:14 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Fix dashboard components - keep Spotify stats, remove Firebase auth dashboard
+f097804 2025-08-07 20:43:15 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Remove dashboard page and related components
+2405dac 2025-08-07 20:31:06 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Add missing auth pages to fix 404 error on signup/signin
+b29046a 2025-08-07 19:51:47 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Fix Spotify export issues with enhanced error handling and debugging
+6fd96a1 2025-08-07 13:32:09 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  feat: add playlist name input and export to Spotify functionality for streaming focus mode
+845ae4e 2025-08-07 13:22:35 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  fix: resolve linting errors and improve type safety
+117e5a4 2025-08-07 13:18:17 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  feat: implement dynamic Spotify authentication and working Save to Spotify functionality
+62c7952 2025-08-06 23:20:18 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Fix blog pages authentication for Firebase
+e5735dc 2025-08-06 23:15:46 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Add Firebase dependency to package.json
+d78e50c 2025-08-06 23:13:10 +0530 | NoobSambit <your-email@example.com> | NoobSambit <your-email@example.com>  Implement Firebase authentication system
