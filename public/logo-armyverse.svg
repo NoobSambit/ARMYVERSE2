@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ARMYVERSE logo">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF9AD5"/>
+      <stop offset="60%" stop-color="#A274FF"/>
+      <stop offset="100%" stop-color="#C084FC"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="72" fill="#0b0310"/>
+  <g transform="translate(86,86)">
+    <path d="M60 260 L110 60 L160 260 Z" fill="url(#g)"/>
+    <path d="M210 260 L260 60 L310 260 Z" fill="url(#g)" opacity="0.8"/>
+    <circle cx="185" cy="300" r="8" fill="#C084FC"/>
+  </g>
+  <text x="50%" y="470" text-anchor="middle" fill="#ffffff" font-size="40" font-family="'Poppins', 'Inter', system-ui, sans-serif">ARMYVERSE</text>
+</svg>
+

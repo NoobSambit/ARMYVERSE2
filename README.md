@@ -57,6 +57,23 @@ npm install
 npm run dev
 ```
 
+### Home page redesign notes
+
+- The landing uses a deep purple → near-black gradient and glassmorphism cards.
+- Central hero shows `public/logo-armyverse.svg` with an overlaid translucent card containing the headline and CTAs.
+- Trending section displays side-by-side Top 5 for Spotify and YouTube, plus a Member Spotlight carousel.
+- All play/open buttons are deep links; no cross-domain audio playback is attempted.
+- Basic accessibility: semantic headings, `aria-label`s on buttons/links, focus-visible styles.
+
+### Swapping to real APIs
+
+- Trending pulls from `/api/trending/spotify` and `/api/trending/youtube`. Update those API handlers as needed. A fallback is used when quotas fail.
+- Spotify OAuth: use the Connect button (floating on pages) or visit `/stats`. Ensure env vars and redirect URIs are set as documented above.
+
+### Structured data (optional)
+
+Add JSON-LD to `app/page.tsx` via a `<script type="application/ld+json">` block to describe featured playlists and blog posts if desired.
+
 ## API Endpoints
 
 ### Playlist Management

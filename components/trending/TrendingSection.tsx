@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Play, TrendingUp, Star, Music, Eye } from 'lucide-react'
+import Image from 'next/image'
+import { Play, TrendingUp, Star, Music, Eye, ExternalLink } from 'lucide-react'
 import { fetchYouTubeTrending, fetchSpotifyTrending, fetchAllMembersSpotlight, fetchMembersYouTubeData, formatViewCount } from '@/lib/trending/fetch'
+import SongCard from './SongCard'
+import MemberCarousel from './MemberCarousel'
 
 interface TrendingVideo {
   id: string
@@ -51,40 +54,50 @@ export default function TrendingSection() {
   const [youtubeVideos, setYoutubeVideos] = useState<TrendingVideo[]>([])
   const [spotifyMembers, setSpotifyMembers] = useState<MemberSpotlight[]>([])
   const [youtubeMembers, setYoutubeMembers] = useState<MemberSpotlight[]>([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [spotifyLoaded, setSpotifyLoaded] = useState(false)
+  const [youtubeLoaded, setYouTubeLoaded] = useState(false)
   // intentionally no error state to avoid hard-failing UI on quota issues
 
   useEffect(() => {
-    fetchTrendingData()
-  }, [])
+    // Fetch Spotify first; when it resolves, render immediately if it has data
+    fetchSpotifyTrending()
+      .then((data) => {
+        setSpotifyTracks(data)
+        setSpotifyLoaded(true)
+        if (initialLoading && data.length > 0) {
+          setActiveTab('spotify')
+          setInitialLoading(false)
+        }
+      })
+      .catch(() => {
+        setSpotifyLoaded(true)
+      })
 
-  const fetchTrendingData = async () => {
-    setLoading(true)
-    
-    try {
-      const [spotifyData, youtubeData, spotifyMembersData, youtubeMembersData] = await Promise.all([
-        fetchSpotifyTrending().catch(() => []),
-        fetchYouTubeTrending().catch(() => []),
-        fetchAllMembersSpotlight().catch(() => []),
-        fetchMembersYouTubeData().catch(() => [])
-      ])
+    // Fetch YouTube in parallel; do not block initial render
+    fetchYouTubeTrending()
+      .then((data) => {
+        setYoutubeVideos(data)
+        setYouTubeLoaded(true)
+        if (initialLoading && data.length > 0) {
+          setActiveTab('youtube')
+          setInitialLoading(false)
+        }
+      })
+      .catch(() => {
+        setYouTubeLoaded(true)
+      })
 
-      setSpotifyTracks(spotifyData)
-      setYoutubeVideos(youtubeData)
-      setSpotifyMembers(spotifyMembersData)
-      setYoutubeMembers(youtubeMembersData)
-    } catch {
-      // swallow to avoid blocking UI
-    } finally {
-      setLoading(false)
-    }
-  }
+    // Member spotlight (background)
+    fetchAllMembersSpotlight().then(setSpotifyMembers).catch(() => setSpotifyMembers([]))
+    fetchMembersYouTubeData().then(setYoutubeMembers).catch(() => setYoutubeMembers([]))
+  }, [initialLoading])
 
   const handlePlayClick = (url: string) => {
     window.open(url, '_blank')
   }
 
-  if (loading) {
+  if (initialLoading && !spotifyLoaded && !youtubeLoaded) {
     return (
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
@@ -106,7 +119,7 @@ export default function TrendingSection() {
     )
   }
 
-  // Never hard fail: render what we have
+  // Render progressively with whichever is available first
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -116,119 +129,74 @@ export default function TrendingSection() {
         <p className="text-gray-300 text-sm">Across Spotify and YouTube</p>
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation (visual emphasis only) */}
       <div className="flex justify-center mb-8">
-        <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50 overflow-x-auto">
+        <div className="bg-white/6 backdrop-blur-md rounded-xl p-1 border border-white/10 overflow-x-auto">
           <button
             onClick={() => setActiveTab('spotify')}
-            className={`px-6 py-3 rounded-lg transition-all ${
-              activeTab === 'spotify'
-                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                : 'text-gray-300 hover:text-white'
-            }`}
+            className={`px-6 py-3 rounded-lg transition-all ${activeTab === 'spotify' ? 'bg-green-500/80 text-white shadow-lg' : 'text-white/80 hover:text-white'}`}
           >
-            <Music className="inline mr-2" size={20} />
-            Spotify
+            <Music className="inline mr-2" size={20} /> Spotify
           </button>
           <button
             onClick={() => setActiveTab('youtube')}
-            className={`px-6 py-3 rounded-lg transition-all ${
-              activeTab === 'youtube'
-                ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
-                : 'text-gray-300 hover:text-white'
-            }`}
+            className={`px-6 py-3 rounded-lg transition-all ${activeTab === 'youtube' ? 'bg-pink-500/80 text-white shadow-lg' : 'text-white/80 hover:text-white'}`}
             disabled={youtubeVideos.length === 0}
           >
-            <Eye className="inline mr-2" size={20} />
-            YouTube {youtubeVideos.length === 0 ? '(quota)' : ''}
+            <Eye className="inline mr-2" size={20} /> YouTube {youtubeVideos.length === 0 ? '(quota)' : ''}
           </button>
         </div>
       </div>
 
 
 
-      {/* Top 5 Trending Songs */}
+      {/* Side-by-side Top 5 (Spotify vs YouTube) */}
       <div className="mb-10 sm:mb-12">
-        <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center">
-          <TrendingUp className="mr-2" />
-          Top 5 Trending {activeTab === 'spotify' ? 'Songs' : 'Videos'}
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          {(
-            (activeTab === 'spotify'
-              ? (spotifyTracks as Array<TrendingTrack | TrendingVideo>)
-              : (youtubeVideos as Array<TrendingTrack | TrendingVideo>))
-          ).map((item, index) => (
-            <div key={item.id} className="group relative">
-              <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 hover:bg-gray-800/50 transition-all duration-300 border border-gray-700/50 hover:border-purple-500/50">
-                {/* Badges */}
-                {item.badges.length > 0 && (
-                  <div className="absolute top-2 right-2 z-10">
-                    {item.badges.map((badge, badgeIndex) => (
-                      <span
-                        key={badgeIndex}
-                        className={`inline-block px-2 py-1 text-xs font-bold rounded-full ${badge.color} text-white shadow-lg`}
-                      >
-                        {badge.text}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Rank Badge */}
-                <div className="absolute top-2 left-2 z-10">
-                  <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
-                    #{index + 1}
-                  </div>
-                </div>
-
-                {/* Thumbnail - Square aspect ratio for consistent display */}
-                <div className="relative mb-4">
-                  <div className="aspect-square w-full rounded-lg overflow-hidden">
-                  <img
-                    src={activeTab === 'spotify' ? (item as TrendingTrack).albumArt : (item as TrendingVideo).thumbnail}
-                    alt={activeTab === 'spotify' ? (item as TrendingTrack).name : (item as TrendingVideo).title}
-                      className="w-full h-full object-cover"
-                  />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all"></div>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-white text-sm line-clamp-2">
-                    {activeTab === 'spotify' ? (item as TrendingTrack).name : (item as TrendingVideo).title}
-                  </h3>
-                  <p className="text-gray-400 text-xs">
-                    {activeTab === 'spotify' 
-                      ? (item as TrendingTrack).artist 
-                      : (item as TrendingVideo).channelTitle
-                    }
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-purple-300 text-xs">
-                      {activeTab === 'spotify' 
-                        ? `${(item as TrendingTrack).popularity}% popularity`
-                        : `${formatViewCount((item as TrendingVideo).viewCount)} views`
-                      }
-                    </span>
-                    <button
-                      onClick={() => handlePlayClick(
-                        activeTab === 'spotify' 
-                          ? (item as TrendingTrack).spotifyUrl 
-                          : (item as TrendingVideo).videoUrl
-                      )}
-                      className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-full transition-colors flex items-center"
-                    >
-                      <Play size={12} className="mr-1" />
-                      Play
-                    </button>
-                  </div>
-                </div>
-              </div>
+        <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center"><TrendingUp className="mr-2" /> Top 5 Trending</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Spotify Column */}
+          <section aria-labelledby="spot-col">
+            <div className={`flex items-center justify-between mb-3 ${activeTab === 'spotify' ? 'opacity-100' : 'opacity-80'}`}>
+              <h4 id="spot-col" className="text-white font-semibold inline-flex items-center"><Music className="w-4 h-4 mr-2 text-green-400"/> Spotify</h4>
             </div>
-          ))}
+            <div className="space-y-3">
+              {spotifyTracks.slice(0,5).map((t, i) => (
+                <SongCard
+                  key={t.id}
+                  id={t.id}
+                  title={t.name}
+                  artist={t.artist}
+                  thumbnailUrl={t.albumArt}
+                  duration={t.duration}
+                  popularityOrViews={`${t.popularity}% popularity`}
+                  platform="spotify"
+                  openUrl={t.spotifyUrl}
+                  rank={i+1}
+                />
+              ))}
+            </div>
+          </section>
+          {/* YouTube Column */}
+          <section aria-labelledby="yt-col">
+            <div className={`flex items-center justify-between mb-3 ${activeTab === 'youtube' ? 'opacity-100' : 'opacity-80'}`}>
+              <h4 id="yt-col" className="text-white font-semibold inline-flex items-center"><Eye className="w-4 h-4 mr-2 text-pink-400"/> YouTube</h4>
+            </div>
+            <div className="space-y-3">
+              {youtubeVideos.slice(0,5).map((v, i) => (
+                <SongCard
+                  key={v.id}
+                  id={v.id}
+                  title={v.title}
+                  artist={v.channelTitle}
+                  thumbnailUrl={v.thumbnail}
+                  popularityOrViews={`${formatViewCount(v.viewCount)} views`}
+                  platform="youtube"
+                  openUrl={v.videoUrl}
+                  rank={i+1}
+                />
+              ))}
+            </div>
+          </section>
         </div>
       </div>
 
@@ -242,13 +210,13 @@ export default function TrendingSection() {
           
           {/* Member Tab Navigation */}
           <div className="flex justify-center mb-6">
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-1 border border-gray-700/50 overflow-x-auto">
+            <div className="bg-white/6 backdrop-blur-md rounded-xl p-1 border border-white/10 overflow-x-auto">
               <button
                 onClick={() => setMemberTab('spotify')}
                 className={`px-4 py-2 rounded-lg transition-all text-sm ${
                   memberTab === 'spotify'
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                    : 'text-gray-300 hover:text-white'
+                    ? 'bg-green-500/80 text-white shadow-lg'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 <Music className="inline mr-1" size={16} />
@@ -258,8 +226,8 @@ export default function TrendingSection() {
                 onClick={() => setMemberTab('youtube')}
                 className={`px-4 py-2 rounded-lg transition-all text-sm ${
                   memberTab === 'youtube'
-                    ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
-                    : 'text-gray-300 hover:text-white'
+                    ? 'bg-pink-500/80 text-white shadow-lg'
+                    : 'text-white/80 hover:text-white'
                 }`}
                 disabled={youtubeMembers.length === 0}
               >
@@ -269,60 +237,7 @@ export default function TrendingSection() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {(memberTab === 'spotify' ? spotifyMembers : youtubeMembers).map((member) => (
-              <div key={member.member} className="group relative">
-                <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 hover:bg-gray-800/50 transition-all duration-300 border border-gray-700/50 hover:border-purple-500/50">
-                  {/* Member Name Badge */}
-                  <div className="absolute top-2 left-2 z-10">
-                    <div className="px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full">
-                      <span className="text-white text-xs font-bold">{member.member}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Fire Badge */}
-                  <div className="absolute top-2 right-2 z-10">
-                    <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm">🔥</span>
-                    </div>
-                  </div>
-
-                  {/* Thumbnail - Square aspect ratio for consistent display */}
-                  <div className="relative mb-4">
-                    <div className="aspect-square w-full rounded-lg overflow-hidden">
-                    <img
-                      src={member.track.albumArt}
-                      alt={member.track.name}
-                        className="w-full h-full object-cover"
-                    />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all"></div>
-                    </div>
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-white text-sm line-clamp-2">{member.track.name}</h3>
-                    <p className="text-gray-400 text-xs">{member.track.artist}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-purple-300 text-xs">
-                        {memberTab === 'spotify' 
-                          ? `${member.track.popularity}% popularity`
-                          : `${formatViewCount(member.track.estimatedStreams)} views`
-                        }
-                      </span>
-                      <button
-                        onClick={() => handlePlayClick(member.track.spotifyUrl)}
-                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-full transition-colors flex items-center"
-                      >
-                        <Play size={12} className="mr-1" />
-                        Play
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <MemberCarousel items={(memberTab === 'spotify' ? spotifyMembers : youtubeMembers) as any} />
         </div>
       )}
     </div>
