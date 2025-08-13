@@ -3,7 +3,6 @@ import TrendingSection from '@/components/trending/TrendingSection'
 import ValueProps from '@/components/sections/ValueProps'
 import Footer from '@/components/layout/Footer'
 import FloatingConnect from '@/components/auth/FloatingConnect'
-import type { Metadata } from 'next'
 import StreamingCTA from '@/components/sections/StreamingCTA'
 
 export default function Home() {

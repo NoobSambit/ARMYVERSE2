@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import { Play, TrendingUp, Star, Music, Eye, ExternalLink } from 'lucide-react'
+import { TrendingUp, Star, Music, Eye } from 'lucide-react'
 import { fetchYouTubeTrending, fetchSpotifyTrending, fetchAllMembersSpotlight, fetchMembersYouTubeData, formatViewCount } from '@/lib/trending/fetch'
 import SongCard from './SongCard'
-import MemberCarousel from './MemberCarousel'
+import MemberCarousel, { type MemberItem } from './MemberCarousel'
 
 interface TrendingVideo {
   id: string
@@ -93,9 +92,7 @@ export default function TrendingSection() {
     fetchMembersYouTubeData().then(setYoutubeMembers).catch(() => setYoutubeMembers([]))
   }, [initialLoading])
 
-  const handlePlayClick = (url: string) => {
-    window.open(url, '_blank')
-  }
+  
 
   if (initialLoading && !spotifyLoaded && !youtubeLoaded) {
     return (
@@ -237,7 +234,7 @@ export default function TrendingSection() {
             </div>
           </div>
           
-          <MemberCarousel items={(memberTab === 'spotify' ? spotifyMembers : youtubeMembers) as any} />
+          <MemberCarousel items={(memberTab === 'spotify' ? (spotifyMembers as MemberItem[]) : (youtubeMembers as MemberItem[]))} />
         </div>
       )}
     </div>
