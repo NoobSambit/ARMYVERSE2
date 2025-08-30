@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Sparkles, Music, Heart, ArrowRight, Loader2, Info, Save, RefreshCw, X, Bookmark, Shuffle, Users, Clock, Zap } from 'lucide-react'
+import { Sparkles, Music, Heart, Loader2, Info, Save, RefreshCw, X, Bookmark, Shuffle, Users, Clock, Zap } from 'lucide-react'
 import CompactPlaylistGrid from '@/components/playlist/CompactPlaylistGrid'
 import MoodPills from '@/components/ui/MoodPills'
 import InteractiveSlider from '@/components/ui/InteractiveSlider'
@@ -43,7 +43,6 @@ function AIPlaylistContent() {
   }>>([])
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [configName, setConfigName] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
 
   // Load saved configurations from localStorage
   useEffect(() => {
