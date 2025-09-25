@@ -51,7 +51,6 @@ import {
   History,
   Search,
   Settings,
-  Calendar,
   Globe,
   Lock,
   Users
