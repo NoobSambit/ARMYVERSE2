@@ -13,8 +13,16 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '12')
     const search = searchParams.get('search') || ''
-    const tags = searchParams.get('tags')?.split(',') || []
-    const mood = searchParams.get('mood') || ''
+    const tags = searchParams.get('tags')?.split(',').filter(Boolean) || []
+    const moods = searchParams.get('moods')?.split(',').filter(Boolean) || []
+    const authors = searchParams.get('authors')?.split(',').filter(Boolean) || []
+    const languages = searchParams.get('languages')?.split(',').filter(Boolean) || []
+    const types = searchParams.get('types')?.split(',').filter(Boolean) || []
+    const savedBy = searchParams.get('savedBy') || ''
+    const before = searchParams.get('before')
+    const after = searchParams.get('after')
+    const minRead = parseInt(searchParams.get('minRead') || '0')
+    const maxRead = parseInt(searchParams.get('maxRead') || '0')
     const sortBy = searchParams.get('sortBy') || 'newest'
     const status = searchParams.get('status') || 'published'
     
@@ -29,13 +37,41 @@ export async function GET(request: NextRequest) {
     if (search) {
       query.$text = { $search: search }
     }
-    
+
     if (tags.length > 0) {
       query.tags = { $in: tags }
     }
-    
-    if (mood) {
-      query.mood = mood
+
+    if (moods.length > 0) {
+      query.mood = { $in: moods }
+    }
+
+    if (authors.length > 0) {
+      query['author.name'] = { $in: authors }
+    }
+
+    if (languages.length > 0) {
+      query.language = { $in: languages }
+    }
+
+    if (types.length > 0) {
+      query.type = { $in: types }
+    }
+
+    if (savedBy) {
+      query.savedBy = { $in: [savedBy] }
+    }
+
+    if (before || after) {
+      query.createdAt = {}
+      if (after) query.createdAt.$gte = new Date(after)
+      if (before) query.createdAt.$lte = new Date(before)
+    }
+
+    if (minRead || maxRead) {
+      query.readTime = {}
+      if (minRead) query.readTime.$gte = minRead
+      if (maxRead) query.readTime.$lte = maxRead
     }
     
     // Build sort
@@ -53,12 +89,28 @@ export async function GET(request: NextRequest) {
       case 'mostViewed':
         sort = { views: -1 }
         break
+      case 'trending7d':
+        // Approximate: recent first, then views and reactions
+        sort = { createdAt: -1, views: -1, 'reactions.loved': -1 }
+        break
+      case 'relevance':
+        // MongoDB will use textScore when $text is present
+        if (search) {
+          sort = { score: { $meta: 'textScore' } }
+        } else {
+          sort = { createdAt: -1 }
+        }
+        break
       default:
         sort = { createdAt: -1 }
     }
     
+    const cursor = Blog.find(query)
+    if (sortBy === 'relevance' && search) {
+      cursor.select({ score: { $meta: 'textScore' } })
+    }
     const [blogs, total] = await Promise.all([
-      Blog.find(query)
+      cursor
         .sort(sort)
         .skip(skip)
         .limit(limit)

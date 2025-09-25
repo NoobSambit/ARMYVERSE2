@@ -1,7 +1,7 @@
 # ArmyVerse - BTS Fan Platform
 
 A comprehensive platform for BTS fans to discover music, create playlists, and explore trending content.
-https://armyverse.vercel.app/
+
 ## Features
 
 - **AI-Powered Playlist Generation**: Create personalized BTS playlists using advanced AI
@@ -380,3 +380,32 @@ This project is configured for Vercel deployment with:
 ## License
 
 MIT License - see LICENSE file for details
+
+## Blog Listing: Filters URL Contract and Components
+
+- URL parameters (shareable):
+  - `q`: free-text search
+  - `tags`: CSV of tags
+  - `moods`: CSV of moods
+  - `authors`: CSV of author names
+  - `languages`: CSV of languages
+  - `types`: CSV of post types
+  - `savedBy`: user id (for saved posts facet)
+  - `before` / `after`: ISO dates for createdAt range
+  - `minRead` / `maxRead`: reading time bounds (minutes)
+  - `sort`: `relevance` | `newest` | `trending7d` | `mostViewed` | `mostReacted` | `oldest`
+  - `page`: 1-based pagination index
+  - `view`: `grid` (default) | `list`
+
+- API (`/api/blogs`) maps from page URL to backend params using `buildApiParams` in `hooks/useBlogFilters.ts`.
+
+- Components:
+  - `components/blog/FeaturedPosts.tsx` – 1 primary + 3 secondary trending posts.
+  - `components/blog/FilterBar.tsx` – sticky search, sort, tags, view toggle; URL synced.
+  - `components/blog/PostGrid.tsx` – grid/list rendering of posts.
+  - `components/blog/PostCard.tsx` – standard card with author, readTime, stats.
+
+- Hooks/Utils:
+  - `useBlogFilters()` – URL ↔ state sync for filters; returns `{ state, set, clearAll }`.
+  - `buildApiParams(state)` – converts state to `/api/blogs` params.
+  - `readingTimeFromHtml`, `trendingScore` – utilities for content metrics.

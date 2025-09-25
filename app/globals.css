@@ -208,8 +208,61 @@
 
 /* Page-wide purple gradient background helper */
 .page-gradient {
+  /* Deep purple-black with soft magenta hint */
   background:
-    radial-gradient(1200px 600px at 50% -100px, rgba(139, 92, 246, 0.2), transparent 60%),
-    radial-gradient(900px 500px at 100% 0, rgba(236, 72, 153, 0.15), transparent 60%),
-    #000000;
+    radial-gradient(800px 600px at 50% -120px, rgba(139, 92, 246, 0.28), transparent 60%),
+    radial-gradient(600px 320px at 85% 10%, rgba(217, 70, 239, 0.12), transparent 60%),
+    linear-gradient(180deg, #0B0211 0%, #090712 60%);
+  background-attachment: fixed;
+}
+
+/* Glass panel helper */
+.glass-panel {
+	@apply bg-[#0F0B16]/80 backdrop-blur-md border border-[#A78BFA1A] rounded-xl;
+}
+
+/* Soft pill button and pulse */
+.btn-pill {
+	@apply rounded-full px-6 py-3 text-white border border-white/10 shadow-[0_1px_0_0_#FFFFFF08,0_12px_24px_-12px_#8B5CF633];
+	background: linear-gradient(135deg,#8B5CF6 0%,#D946EF 100%);
+}
+
+/* Premium pill buttons */
+.btn-pill-primary {
+	@apply inline-flex items-center justify-center h-11 rounded-full px-5 gap-2 text-white border border-white/10;
+	background: linear-gradient(135deg,#8B5CF6 0%,#D946EF 100%);
+	box-shadow: 0 8px 24px -10px rgba(139,92,246,.45);
+	transition: all 150ms;
+}
+.btn-pill-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.btn-pill-primary:active { transform: translateY(0) scale(.99); }
+.btn-pill-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.6); }
+
+.btn-pill-secondary {
+	@apply inline-flex items-center justify-center h-11 rounded-full px-4 gap-2 text-white border border-white/10 bg-white/5;
+	transition: all 150ms;
+}
+.btn-pill-secondary:hover { background-color: color-mix(in oklab, white 7%, transparent); transform: translateY(-1px); }
+.btn-pill-secondary:active { transform: translateY(0) scale(.99); }
+.btn-pill-secondary:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.6); }
+
+/* Segmented control */
+.segmented {
+	@apply relative inline-flex items-center rounded-full border border-white/10 bg-white/5 p-1;
+}
+.segmented-thumb {
+	@apply absolute top-1 bottom-1 rounded-full bg-white/10;
+	box-shadow: 0 8px 24px -12px rgba(139,92,246,.35);
+	transition: transform 150ms ease, width 150ms ease, left 150ms ease;
+}
+.segmented-item { @apply relative z-10 inline-flex items-center justify-center h-8 rounded-full text-white/80 flex-1; }
+.segmented-item[aria-selected="true"] { @apply text-white; }
+
+.pulse-once {
+	animation: pulse-once 500ms ease-out 1;
+}
+
+@keyframes pulse-once {
+	0% { box-shadow: 0 0 0 0 rgba(139,92,246,0.3) }
+	100% { box-shadow: 0 0 0 24px rgba(139,92,246,0) }
 }
