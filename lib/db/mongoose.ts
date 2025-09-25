@@ -25,8 +25,14 @@ export async function connect() {
   
   try {
     mongoose.set('strictQuery', true)
-    
-    const conn = await mongoose.connect(mongoURI)
+    // Prefer IPv4 to avoid some SRV/DNS/IPv6 resolution issues in certain environments
+    const conn = await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 5000,
+      family: 4,
+      // KeepAlive to maintain connection and detect network issues
+      // @ts-ignore - options are forwarded to the underlying driver
+      heartbeatFrequencyMS: 5000
+    } as any)
     
     global._mongooseConn = conn.connection
     console.debug('✅ MongoDB connected successfully')
@@ -35,6 +41,10 @@ export async function connect() {
   } catch (error) {
     console.error('❌ MongoDB connection error:', error)
     console.error('💡 Make sure your MONGODB_URI is correct and contains valid options')
+    // Provide actionable hint for common SRV DNS refusal (e.g., ECONNREFUSED querySrv)
+    if (typeof mongoURI === 'string' && mongoURI.startsWith('mongodb+srv://')) {
+      console.error('🛠️ Tip: If SRV DNS fails, try switching to a standard mongodb:// URI with explicit host:port and replica set options, or ensure your network/DNS allows _mongodb._tcp lookups.')
+    }
     throw error
   }
 }
