@@ -134,9 +134,14 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Error fetching blogs:', error)
+    const isDbError = typeof (error as any)?.message === 'string' && (
+      (error as any).name?.includes('Mongo') ||
+      (error as any).message.includes('ECONNREFUSED') ||
+      (error as any).message.includes('server selection')
+    )
     return NextResponse.json(
-      { error: 'Failed to fetch blogs' },
-      { status: 500 }
+      { error: isDbError ? 'Database unavailable' : 'Failed to fetch blogs' },
+      { status: isDbError ? 503 : 500 }
     )
   }
 }

@@ -156,7 +156,7 @@ export default function Blog() {
               </h1>
               <p className="mt-2 text-[#B6B3C7]">In-depth writing on BTS, music, and the ARMY community.</p>
             </div>
-            <Link href="/blogs/create" className="btn-pill-primary self-start md:self-auto">
+            <Link href="/blogs/create" className="btn-glass-primary self-start md:self-auto">
               <span className="inline-flex items-center gap-2"><Plus className="w-5 h-5" />Start writing</span>
             </Link>
           </div>
@@ -188,7 +188,7 @@ export default function Blog() {
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="btn-pill-secondary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-glass-secondary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 onMouseDown={(e) => (e.currentTarget.classList.add('pulse-once'))}
                 onAnimationEnd={(e) => (e.currentTarget.classList.remove('pulse-once'))}
               >
