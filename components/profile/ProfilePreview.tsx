@@ -6,27 +6,30 @@ import { MapPin, Calendar, Music, Globe, Twitter, Instagram, Youtube, ExternalLi
 import { motion } from 'framer-motion'
 import { getPublicProfile, isFieldVisible } from '@/lib/utils/profile'
 
-interface ProfilePreviewProps {
-  profile: any
+interface PublicProfileShape {
+  displayName?: string
+  handle?: string
+  pronouns?: string
+  bio?: string
+  avatarUrl?: string
+  bannerUrl?: string
+  bias?: string[]
+  biasWrecker?: string
+  favoriteEra?: string
+  armySinceYear?: number
+  topSong?: { name: string; artist: string } | null
+  topAlbum?: { name: string; artist: string } | null
+  location?: string
+  socials?: Record<string, unknown>
+  stats?: { totalPlaylists?: number; totalLikes?: number; totalSaves?: number }
+  privacy?: unknown
 }
 
-const BTS_ERAS = [
-  '2 Cool 4 Skool',
-  'O!RUL8,2?',
-  'Skool Luv Affair',
-  'Dark & Wild',
-  'The Most Beautiful Moment in Life',
-  'Wings',
-  'Love Yourself',
-  'Map of the Soul',
-  'BE',
-  'Proof',
-  'Take Two'
-]
+interface ProfilePreviewProps {
+  profile: PublicProfileShape
+}
 
-const BTS_MEMBERS = [
-  'RM', 'Jin', 'SUGA', 'j-hope', 'Jimin', 'V', 'Jungkook'
-]
+// Removed unused constants
 
 export default function ProfilePreview({ profile }: ProfilePreviewProps) {
   const publicProfile = getPublicProfile(profile)

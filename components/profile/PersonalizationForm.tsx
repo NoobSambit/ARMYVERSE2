@@ -2,13 +2,22 @@
 
 import React, { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Palette, Monitor, Image, Layout, Zap, Award } from 'lucide-react'
+import { Palette, Monitor, Image as ImageIcon, Layout, Zap, Award } from 'lucide-react'
 
+interface PersonalizationShape {
+  accentColor?: string
+  themeIntensity?: number
+  backgroundStyle?: 'gradient' | 'noise' | 'bts-motif' | 'clean'
+  density?: 'comfortable' | 'compact'
+  reduceMotion?: boolean
+  badgeStyle?: 'minimal' | 'collectible'
+}
+interface ProfilePersonalization { personalization?: PersonalizationShape }
 interface PersonalizationFormProps {
-  profile: any
+  profile: ProfilePersonalization
   onUpdate: (updates: any) => void
-  loading: boolean
-  error: string | null
+  loading?: boolean
+  error?: string | null
 }
 
 const ACCENT_COLORS = [
@@ -39,10 +48,12 @@ const BADGE_STYLES = [
   { id: 'collectible', name: 'Collectible', description: 'Detailed, collectible-style badges' }
 ]
 
-export default function PersonalizationForm({ profile, onUpdate, loading, error }: PersonalizationFormProps) {
+type PersonalizationFieldValue = string | number | boolean
+
+export default function PersonalizationForm({ profile, onUpdate, error }: PersonalizationFormProps) {
   const [customColor, setCustomColor] = useState('')
 
-  const handleInputChange = useCallback((field: string, value: any) => {
+  const handleInputChange = useCallback((field: string, value: PersonalizationFieldValue) => {
     onUpdate({
       personalization: {
         ...profile.personalization,
@@ -159,7 +170,7 @@ export default function PersonalizationForm({ profile, onUpdate, loading, error 
       {/* Background Style */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Image className="w-5 h-5 text-purple-400" />
+          <ImageIcon className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-semibold text-white">Background Style</h3>
         </div>
         

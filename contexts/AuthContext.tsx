@@ -7,11 +7,13 @@ import { auth } from '@/lib/firebase/config'
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
+  loading: true,
 })
 
 export const useAuth = () => {
@@ -39,9 +41,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => unsubscribe()
   }, [])
 
-  const value = {
+  const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
+    loading,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

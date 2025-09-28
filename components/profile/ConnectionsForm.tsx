@@ -6,11 +6,21 @@ import { Music, Twitter, Instagram, Youtube, Globe, Link, Eye, EyeOff, Check, X,
 import { formatSocialUrl, extractSocialHandle, validateUrl } from '@/lib/utils/profile'
 import { track } from '@/lib/utils/analytics'
 
+type SocialVisibility = Record<string, boolean>
+type ProfileSocials = {
+  twitter?: string
+  instagram?: string
+  youtube?: string
+  website?: string
+  visibility?: SocialVisibility
+  [key: string]: string | SocialVisibility | undefined
+}
+interface ProfileShape { socials?: ProfileSocials }
 interface ConnectionsFormProps {
-  profile: any
+  profile: ProfileShape
   onUpdate: (updates: any) => void
-  loading: boolean
-  error: string | null
+  loading?: boolean
+  error?: string | null
 }
 
 const SOCIAL_PLATFORMS = [
@@ -44,7 +54,7 @@ const SOCIAL_PLATFORMS = [
   }
 ]
 
-export default function ConnectionsForm({ profile, onUpdate, loading, error }: ConnectionsFormProps) {
+export default function ConnectionsForm({ profile, onUpdate, error }: ConnectionsFormProps) {
   const [spotifyStatus, setSpotifyStatus] = useState<{
     connected: boolean
     loading: boolean
@@ -85,7 +95,7 @@ export default function ConnectionsForm({ profile, onUpdate, loading, error }: C
     checkSpotifyStatus()
   }, [])
 
-  const handleInputChange = useCallback((field: string, value: any) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     onUpdate({
       socials: {
         ...profile.socials,
@@ -259,7 +269,8 @@ export default function ConnectionsForm({ profile, onUpdate, loading, error }: C
         <div className="space-y-6">
           {SOCIAL_PLATFORMS.map((platform) => {
             const Icon = platform.icon
-            const currentUrl = profile.socials?.[platform.id] || ''
+            const socialValue = profile.socials?.[platform.id]
+            const currentUrl = typeof socialValue === 'string' ? socialValue : ''
             const isVisible = profile.socials?.visibility?.[platform.id] ?? true
             const hasError = urlErrors[platform.id]
             
@@ -357,7 +368,7 @@ export default function ConnectionsForm({ profile, onUpdate, loading, error }: C
             <span className="text-gray-300">Spotify</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${Object.values(profile.socials || {}).some((url: any) => url && typeof url === 'string') ? 'bg-green-500' : 'bg-gray-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${Object.entries(profile.socials || {}).some(([, v]) => typeof v === 'string' && !!v) ? 'bg-green-500' : 'bg-gray-500'}`} />
             <span className="text-gray-300">Social Links</span>
           </div>
         </div>

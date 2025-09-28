@@ -2,13 +2,15 @@
 
 import React, { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Shield, Eye, EyeOff, Users, Lock, AlertTriangle, Download, Trash2, UserX, Check } from 'lucide-react'
+import { Shield, Eye, Users, Lock, AlertTriangle, Download, Trash2, UserX, Check } from 'lucide-react'
 import { track } from '@/lib/utils/analytics'
+
+type FieldVisibilityKey = 'bias' | 'socials' | 'stats'
 
 interface PrivacyFormProps {
   profile: any
   onUpdate: (updates: any) => void
-  loading: boolean
+  loading?: boolean
   error: string | null
 }
 
@@ -33,7 +35,7 @@ const VISIBILITY_OPTIONS = [
   }
 ]
 
-const FIELD_VISIBILITY_OPTIONS = [
+const FIELD_VISIBILITY_OPTIONS: Array<{ id: FieldVisibilityKey; name: string; description: string }> = [
   {
     id: 'bias',
     name: 'Bias & Era',
@@ -51,12 +53,12 @@ const FIELD_VISIBILITY_OPTIONS = [
   }
 ]
 
-export default function PrivacyForm({ profile, onUpdate, loading, error }: PrivacyFormProps) {
+export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [exporting, setExporting] = useState(false)
 
-  const handleInputChange = useCallback((field: string, value: any) => {
+  const handleInputChange = useCallback((field: string, value: string | boolean | string[]) => {
     onUpdate({
       privacy: {
         ...profile.privacy,
@@ -65,7 +67,7 @@ export default function PrivacyForm({ profile, onUpdate, loading, error }: Priva
     })
   }, [onUpdate, profile.privacy])
 
-  const handleFieldVisibilityChange = useCallback((field: string, visible: boolean) => {
+  const handleFieldVisibilityChange = useCallback((field: FieldVisibilityKey, visible: boolean) => {
     onUpdate({
       privacy: {
         ...profile.privacy,
@@ -303,18 +305,18 @@ export default function PrivacyForm({ profile, onUpdate, loading, error }: Priva
         
         <div className="p-4 bg-black/20 rounded-lg">
           <p className="text-gray-400 text-sm mb-3">
-            Manage users you've blocked from interacting with you
+            Manage users you&apos;ve blocked from interacting with you
           </p>
           
           {profile.privacy?.blockedUserIds && profile.privacy.blockedUserIds.length > 0 ? (
             <div className="space-y-2">
-              {profile.privacy.blockedUserIds.map((userId: string, index: number) => (
+              {profile.privacy.blockedUserIds.map((userId: string) => (
                 <div key={userId} className="flex items-center justify-between p-2 bg-gray-800 rounded">
                   <span className="text-gray-300 text-sm">{userId}</span>
                   <button
                     type="button"
                     onClick={() => {
-                      const newBlocked = profile.privacy.blockedUserIds.filter((id: string) => id !== userId)
+                      const newBlocked = (profile.privacy?.blockedUserIds || []).filter((id: string) => id !== userId)
                       handleInputChange('blockedUserIds', newBlocked)
                     }}
                     className="text-red-400 hover:text-red-300 text-sm"
@@ -380,7 +382,7 @@ export default function PrivacyForm({ profile, onUpdate, loading, error }: Priva
                 <div className="space-y-3">
                   <div>
                     <label htmlFor="deleteConfirm" className="block text-sm font-medium text-gray-300 mb-2">
-                      Type "DELETE" to confirm
+                      Type &quot;DELETE&quot; to confirm
                     </label>
                     <input
                       id="deleteConfirm"

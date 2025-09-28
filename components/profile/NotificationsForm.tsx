@@ -2,13 +2,26 @@
 
 import React, { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Bell, Mail, Clock, MessageSquare, Heart, Bookmark, Music, BarChart3, Zap } from 'lucide-react'
+import { Bell, Mail, Clock, MessageSquare, Music, BarChart3, Zap } from 'lucide-react'
 
+interface NotificationsChannels { inApp?: boolean; email?: boolean }
+interface NotificationsQuiet { start?: string; end?: string; timezone?: string }
+interface NotificationsBlog { comments?: boolean; reactions?: boolean; saves?: boolean }
+interface NotificationsPlaylists { exports?: boolean; likes?: boolean }
+interface NotificationsSpotify { weeklyRecap?: boolean; recommendations?: boolean }
+interface NotificationsShape {
+  channels?: NotificationsChannels
+  quietHours?: NotificationsQuiet
+  blog?: NotificationsBlog
+  playlists?: NotificationsPlaylists
+  spotify?: NotificationsSpotify
+}
+interface ProfileNotifications { notifications?: NotificationsShape }
 interface NotificationsFormProps {
-  profile: any
+  profile: ProfileNotifications
   onUpdate: (updates: any) => void
-  loading: boolean
-  error: string | null
+  loading?: boolean
+  error?: string | null
 }
 
 const NOTIFICATION_CATEGORIES = [
@@ -60,17 +73,8 @@ const TIMEZONES = [
   'Australia/Sydney'
 ]
 
-export default function NotificationsForm({ profile, onUpdate, loading, error }: NotificationsFormProps) {
+export default function NotificationsForm({ profile, onUpdate, error }: NotificationsFormProps) {
   const [quietHoursEnabled, setQuietHoursEnabled] = useState(false)
-
-  const handleInputChange = useCallback((field: string, value: any) => {
-    onUpdate({
-      notifications: {
-        ...profile.notifications,
-        [field]: value
-      }
-    })
-  }, [onUpdate, profile.notifications])
 
   const handleChannelChange = useCallback((channel: string, enabled: boolean) => {
     onUpdate({
@@ -84,7 +88,7 @@ export default function NotificationsForm({ profile, onUpdate, loading, error }:
     })
   }, [onUpdate, profile.notifications])
 
-  const handleCategoryChange = useCallback((category: string, field: string, enabled: boolean) => {
+  const handleCategoryChange = useCallback((category: 'blog' | 'playlists' | 'spotify', field: string, enabled: boolean) => {
     onUpdate({
       notifications: {
         ...profile.notifications,
@@ -108,24 +112,7 @@ export default function NotificationsForm({ profile, onUpdate, loading, error }:
     })
   }, [onUpdate, profile.notifications])
 
-  const formatTime = (time: string) => {
-    if (!time) return ''
-    const [hours, minutes] = time.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
-
-  const parseTime = (time: string) => {
-    if (!time) return ''
-    const [timePart, ampm] = time.split(' ')
-    const [hours, minutes] = timePart.split(':')
-    let hour = parseInt(hours)
-    if (ampm === 'PM' && hour !== 12) hour += 12
-    if (ampm === 'AM' && hour === 12) hour = 0
-    return `${hour.toString().padStart(2, '0')}:${minutes}`
-  }
+  
 
   return (
     <div className="space-y-8">
@@ -315,7 +302,8 @@ export default function NotificationsForm({ profile, onUpdate, loading, error }:
                 
                 <div className="space-y-3 ml-8">
                   {category.fields.map((field) => {
-                    const isEnabled = profile.notifications?.[category.id]?.[field.id] ?? true
+                    const catKey = category.id as 'blog' | 'playlists' | 'spotify'
+                    const isEnabled = (profile.notifications?.[catKey] as Record<string, boolean> | undefined)?.[field.id] ?? true
                     
                     return (
                       <div
@@ -328,7 +316,7 @@ export default function NotificationsForm({ profile, onUpdate, loading, error }:
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleCategoryChange(category.id, field.id, !isEnabled)}
+                          onClick={() => handleCategoryChange(catKey, field.id, !isEnabled)}
                           className={`relative w-10 h-5 rounded-full transition-colors ${
                             isEnabled ? 'bg-purple-600' : 'bg-gray-700'
                           }`}
@@ -366,9 +354,10 @@ export default function NotificationsForm({ profile, onUpdate, loading, error }:
             <span className="text-gray-300">Quiet Hours</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${Object.values(profile.notifications || {}).some((cat: any) => 
-              typeof cat === 'object' && Object.values(cat).some((field: any) => field === true)
-            ) ? 'bg-green-500' : 'bg-gray-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${(['blog','playlists','spotify'] as Array<'blog'|'playlists'|'spotify'>).some((k) => {
+              const cat = profile.notifications?.[k] as Record<string, boolean> | undefined
+              return !!cat && Object.values(cat).some((v) => v === true)
+            }) ? 'bg-green-500' : 'bg-gray-500'}`} />
             <span className="text-gray-300">Active Types</span>
           </div>
         </div>

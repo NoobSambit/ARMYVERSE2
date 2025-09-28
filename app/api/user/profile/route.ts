@@ -4,7 +4,6 @@ import { connect } from '@/lib/db/mongoose'
 import { z } from 'zod'
 import { getAuth } from 'firebase-admin/auth'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
 
 // Initialize Firebase Admin SDK
 if (!getApps().length) {
@@ -24,7 +23,7 @@ if (!getApps().length) {
 }
 
 const auth = getAuth()
-const db = getFirestore()
+// const db = getFirestore()
 
 // Validation schemas - Clean and consistent approach
 const profileUpdateSchema = z.object({
@@ -127,57 +126,7 @@ async function verifyFirebaseToken(request: NextRequest) {
   }
 }
 
-// Helper function to migrate profile from Firestore to MongoDB
-async function migrateProfileFromFirestore(user: any) {
-  try {
-    const firestoreProfile = await db.collection('profiles').doc(user.uid).get()
-    
-    if (!firestoreProfile.exists) {
-      return null
-    }
-    
-    const firestoreData = firestoreProfile.data()
-    
-    // Map Firestore fields to MongoDB schema
-    const mongoProfile = {
-      displayName: firestoreData?.displayName || user.displayName || '',
-      avatarUrl: firestoreData?.photoURL || user.photoURL || '',
-      bio: firestoreData?.bio || '',
-      bias: firestoreData?.bias ? [firestoreData.bias] : [],
-      biasWrecker: firestoreData?.biasWrecker || '',
-      favoriteEra: firestoreData?.era || '',
-      armySinceYear: firestoreData?.armySinceYear || null,
-      location: firestoreData?.location || '',
-      socials: {
-        twitter: firestoreData?.twitter || '',
-        instagram: firestoreData?.instagram || '',
-        youtube: firestoreData?.youtube || '',
-        website: firestoreData?.website || '',
-        visibility: {
-          twitter: true,
-          instagram: true,
-          youtube: true,
-          website: true
-        }
-      }
-    }
-    
-    // Create user in MongoDB
-    const newUser = new User({
-      name: user.displayName || user.email?.split('@')[0] || 'User',
-      email: user.email!,
-      profile: mongoProfile
-    })
-    
-    await newUser.save()
-    console.log(`Migrated profile for user ${user.email} from Firestore to MongoDB`)
-    
-    return newUser
-  } catch (error) {
-    console.error('Profile migration error:', error)
-    return null
-  }
-}
+// Note: Firestore→Mongo migration helper was removed to avoid unused code during build.
 
 // GET /api/user/profile
 export async function GET(request: NextRequest) {
@@ -243,8 +192,8 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper function to sanitize and validate request body
-function sanitizeRequestBody(body: any) {
-  const sanitized: any = {}
+function sanitizeRequestBody(body: Record<string, unknown>) {
+  const sanitized: Record<string, unknown> = {}
   
   Object.entries(body).forEach(([key, value]) => {
     // Skip null/undefined values
@@ -264,7 +213,7 @@ function sanitizeRequestBody(body: any) {
     }
     
     // Keep valid values
-    sanitized[key] = value
+    sanitized[key] = value as unknown
   })
   
   return sanitized
@@ -305,7 +254,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Find user - use upsert for efficiency
-    const updateFields: any = {}
+    const updateFields: Record<string, unknown> = {}
     
     // Build update fields dynamically
     Object.keys(validatedData).forEach(key => {
@@ -313,7 +262,7 @@ export async function PUT(request: NextRequest) {
       if (value !== undefined) {
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
           // Handle nested objects
-          const objValue = value as Record<string, any>
+          const objValue = value as Record<string, unknown>
           Object.keys(objValue).forEach(nestedKey => {
             updateFields[`profile.${key}.${nestedKey}`] = objValue[nestedKey]
           })

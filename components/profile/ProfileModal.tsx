@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Tabs from '@radix-ui/react-tabs'
-import { X, Save, Eye, EyeOff, Copy, ExternalLink } from 'lucide-react'
+import { X, Save, Eye, EyeOff, Copy } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { track } from '@/lib/utils/analytics'
 import { getDefaultProfile } from '@/lib/utils/profile'
-import { auth } from '@/lib/firebase/config'
+// import { auth } from '@/lib/firebase/config'
 import ProfileForm from './ProfileForm'
 import PersonalizationForm from './PersonalizationForm'
 import ConnectionsForm from './ConnectionsForm'
@@ -94,7 +94,7 @@ interface ProfileData {
       recommendations: boolean
     }
   }
-  stats: {
+  stats?: {
     totalPlaylists: number
     totalLikes: number
     totalSaves: number
@@ -119,7 +119,6 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
   const [showPreview, setShowPreview] = useState(true)
   const [isDirty, setIsDirty] = useState(false)
   const [profile, setProfile] = useState<ProfileData>(getDefaultProfile())
-  const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(null)
   
   const saveTimeoutRef = useRef<NodeJS.Timeout>()
   const formRef = useRef<HTMLFormElement>(null)
@@ -149,7 +148,6 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       console.log('Merged Profile:', mergedProfile)
       
       setProfile(mergedProfile)
-      setOriginalProfile(mergedProfile)
     } catch (err) {
       console.error('Failed to load profile:', err)
       setError('Failed to load profile data')
@@ -186,7 +184,6 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       const mergedProfile = savedProfile || profile
       
       setProfile(mergedProfile)
-      setOriginalProfile(mergedProfile)
       setIsDirty(false)
       
       await track('profile_saved', { tab: activeTab })
@@ -302,7 +299,6 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
   // Reset state when modal closes
   useEffect(() => {
     if (!open) {
-      setOriginalProfile(null)
       setIsDirty(false)
       setError(null)
     }

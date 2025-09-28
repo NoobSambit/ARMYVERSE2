@@ -3,16 +3,43 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Check, X, AlertCircle, Copy, ExternalLink, Search, Music } from 'lucide-react'
-import { validateHandle, validateDisplayName, validateBio, slugifyHandle } from '@/lib/utils/profile'
+import { slugifyHandle } from '@/lib/utils/profile'
 import { track } from '@/lib/utils/analytics'
 import AvatarUploader from './AvatarUploader'
 import BannerUploader from './BannerUploader'
 
+interface TopSong { id: string; name: string; artist: string }
+type Socials = {
+  twitter?: string
+  instagram?: string
+  youtube?: string
+  website?: string
+  visibility?: Record<string, boolean>
+  [key: string]: string | Record<string, boolean> | undefined
+}
+
+interface ProfileData {
+  handle?: string
+  displayName?: string
+  avatarUrl?: string
+  bannerUrl?: string
+  pronouns?: string
+  bio?: string
+  bias?: string[]
+  biasWrecker?: string
+  favoriteEra?: string
+  armySinceYear?: number | null
+  topSong?: TopSong | null
+  location?: string
+  language?: string
+  socials?: Socials
+}
+
 interface ProfileFormProps {
-  profile: any
+  profile: ProfileData
   onUpdate: (updates: any) => void
-  loading: boolean
-  error: string | null
+  loading?: boolean
+  error?: string | null
 }
 
 const BTS_ERAS = [
@@ -41,8 +68,8 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
   const [handleCheck, setHandleCheck] = useState<{ checking: boolean; available?: boolean; error?: string }>({ checking: false })
   const [showMore, setShowMore] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [searching, setSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string; artists: Array<{ name: string }> }>>([])
+  const [, setSearching] = useState(false)
   
   const handleCheckTimeoutRef = useRef<NodeJS.Timeout>()
 
@@ -78,7 +105,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
   }, [])
 
   // Handle input changes
-  const handleInputChange = useCallback((field: string, value: any) => {
+  const handleInputChange = useCallback((field: keyof ProfileData | string, value: any) => {
     const updates = { [field]: value }
     
     // Special handling for handle
@@ -184,7 +211,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
               Profile Picture
             </label>
             <AvatarUploader
-              currentUrl={profile.avatarUrl}
+              currentUrl={profile.avatarUrl ?? ''}
               onUpload={(url: string) => handleInputChange('avatarUrl', url)}
               loading={loading}
             />
@@ -195,7 +222,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
               Banner Image
             </label>
             <BannerUploader
-              currentUrl={profile.bannerUrl}
+              currentUrl={profile.bannerUrl ?? ''}
               onUpload={(url: string) => handleInputChange('bannerUrl', url)}
               loading={loading}
             />
@@ -210,14 +237,14 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
           <input
             id="displayName"
             type="text"
-            value={profile.displayName || ''}
+            value={profile.displayName ?? ''}
             onChange={(e) => handleInputChange('displayName', e.target.value)}
             className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
             placeholder="How should ARMY see you?"
             maxLength={40}
           />
           <p className="text-xs text-gray-500 mt-1">
-            {(profile.displayName || '').length}/40 characters
+            {(profile.displayName ?? '').length}/40 characters
           </p>
         </div>
 
