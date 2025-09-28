@@ -9,7 +9,7 @@ export async function GET(
   try {
     await connect()
     
-    const blog = await Blog.findById(params.id).lean()
+    const blog = await Blog.findOne({ _id: params.id, isDeleted: { $ne: true } }).lean()
     
     if (!blog) {
       return NextResponse.json(
@@ -18,7 +18,7 @@ export async function GET(
       )
     }
     
-    // Increment view count
+    // Increment view count only if visible
     await Blog.findByIdAndUpdate(params.id, { $inc: { views: 1 } })
     
     return NextResponse.json(blog)
@@ -40,7 +40,7 @@ export async function PUT(
     await connect()
     
     const body = await request.json()
-    const { title, content, tags, mood, coverImage, status } = body
+    const { title, content, tags, mood, coverImage, status, visibility } = body
     
     const updateData: any = {}
     if (title) updateData.title = title
@@ -49,6 +49,8 @@ export async function PUT(
     if (mood) updateData.mood = mood
     if (coverImage !== undefined) updateData.coverImage = coverImage
     if (status) updateData.status = status
+    if (visibility) updateData.visibility = visibility
+    updateData.updatedAt = new Date()
     
     const blog = await Blog.findByIdAndUpdate(
       params.id,
@@ -81,7 +83,7 @@ export async function DELETE(
   try {
     await connect()
     
-    const blog = await Blog.findByIdAndDelete(params.id)
+    const blog = await Blog.findByIdAndUpdate(params.id, { isDeleted: true, deletedAt: new Date() }, { new: true })
     
     if (!blog) {
       return NextResponse.json(
@@ -90,7 +92,7 @@ export async function DELETE(
       )
     }
     
-    return NextResponse.json({ message: 'Blog deleted successfully' })
+    return NextResponse.json({ message: 'Blog moved to trash' })
     
   } catch (error) {
     console.error('Error deleting blog:', error)

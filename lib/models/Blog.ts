@@ -26,6 +26,25 @@ const blogSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  visibility: {
+    type: String,
+    enum: ['public', 'unlisted', 'private'],
+    default: 'public'
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  collections: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Collection',
+    index: true
+  }],
   content: {
     type: String,
     required: true
@@ -118,5 +137,6 @@ blogSchema.index({ mood: 1 })
 blogSchema.index({ 'author.id': 1 })
 blogSchema.index({ savedBy: 1 })
 blogSchema.index({ title: 'text', tags: 'text' })
+blogSchema.index({ visibility: 1 })
 
 export const Blog = mongoose.models.Blog || mongoose.model('Blog', blogSchema) 

@@ -55,6 +55,8 @@ import {
   Lock,
   Users
 } from 'lucide-react'
+import { BLOG_TEMPLATES, fillVariables } from '../../lib/blog/templates'
+import type { BlogTemplate } from '../../lib/blog/templates'
 
 interface BlogEditorProps {
   initialContent?: string
@@ -118,6 +120,9 @@ export default function BlogEditor({
   const [showAIAssist, setShowAIAssist] = useState(false)
   const [isDirty, setIsDirty] = useState(false)
   const [isTagInputFocused, setIsTagInputFocused] = useState(false)
+  const [templateSearch, setTemplateSearch] = useState('')
+  const [selectedTemplate, setSelectedTemplate] = useState<BlogTemplate | null>(null)
+  const [templateVars, setTemplateVars] = useState<Record<string, string>>({})
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -516,33 +521,48 @@ export default function BlogEditor({
                 <Eye className="w-4 h-4" />
                 Preview
               </button>
+              {/* Explicit actions */}
               <button
-                onClick={() => setStatus(status === 'draft' ? 'published' : 'draft')}
-                className={`btn-glass-secondary ${status === 'published' ? 'neon-glow-pink' : ''}`}
-                title={status === 'published' ? 'Switch to draft' : 'Publish blog'}
-                aria-label={status === 'published' ? 'Switch to draft' : 'Publish blog'}
+                onClick={() => {
+                  const data: BlogData = {
+                    title,
+                    content: editor.getHTML(),
+                    tags,
+                    mood,
+                    coverImage,
+                    coverAlt,
+                    status: 'draft',
+                    visibility
+                  }
+                  onSave(data)
+                }}
+                className="btn-glass-secondary"
+                title="Save as draft"
+                aria-label="Save as draft"
               >
-                {status === 'published' ? (
-                  <>
-                    <Globe className="w-4 h-4" />
-                    Published
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-4 h-4" />
-                    Draft
-                  </>
-                )}
+                Draft
               </button>
               <button
-                onClick={handleSave}
+                onClick={() => {
+                  const data: BlogData = {
+                    title,
+                    content: editor.getHTML(),
+                    tags,
+                    mood,
+                    coverImage,
+                    coverAlt,
+                    status: 'published',
+                    visibility
+                  }
+                  onSave(data)
+                }}
                 disabled={isSaving}
                 className="btn-glass-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Save blog post"
-                aria-label="Save blog post"
+                title={status === 'published' ? 'Update published post' : 'Publish now'}
+                aria-label={status === 'published' ? 'Update post' : 'Publish post'}
               >
                 <Save className="w-4 h-4" />
-                {isSaving ? 'Saving...' : 'Save'}
+                {status === 'published' ? 'Update' : 'Publish'}
               </button>
             </div>
           </div>
@@ -1140,56 +1160,52 @@ export default function BlogEditor({
                   <X className="w-4 h-4" />
                 </button>
               </div>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  value={templateSearch}
+                  onChange={(e) => setTemplateSearch(e.target.value)}
+                  placeholder="Search templates..."
+                  className="input-glass w-full"
+                  aria-label="Search templates"
+                />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  { 
-                    key: 'news', 
-                    label: 'News Recap', 
-                    description: 'Perfect for breaking news and updates',
-                    content: `<h2>What happened</h2><p>—</p><h2>Why it matters</h2><p>—</p><h2>Official sources</h2><ul><li></li></ul>`,
-                    icon: '📰'
-                  },
-                  { 
-                    key: 'review', 
-                    label: 'Track Review', 
-                    description: 'Analyze and review BTS tracks',
-                    content: `<h2>First impressions</h2><p>—</p><h2>Lyrics that hit</h2><blockquote>—</blockquote><h2>Final thoughts</h2><p>—</p>`,
-                    icon: '🎵'
-                  },
-                  { 
-                    key: 'concert', 
-                    label: 'Concert Diary', 
-                    description: 'Share your concert experience',
-                    content: `<h2>Venue & vibe</h2><p>—</p><h2>Setlist highlights</h2><ul><li></li></ul><h2>Personal moment</h2><p>—</p>`,
-                    icon: '🎤'
-                  },
-                  { 
-                    key: 'theory', 
-                    label: 'Fan Theory', 
-                    description: 'Share your theories and analysis',
-                    content: `<h2>The theory</h2><p>—</p><h2>Evidence</h2><ul><li></li></ul><h2>What do you think?</h2><p>—</p>`,
-                    icon: '💭'
-                  },
-                  { 
-                    key: 'guide', 
-                    label: 'How-to Guide', 
-                    description: 'Helpful guides for ARMY',
-                    content: `<h2>What you'll need</h2><ul><li></li></ul><h2>Step by step</h2><ol><li></li></ol><h2>Tips & tricks</h2><p>—</p>`,
-                    icon: '📖'
-                  },
-                  { 
-                    key: 'opinion', 
-                    label: 'Opinion Piece', 
-                    description: 'Share your thoughts and opinions',
-                    content: `<h2>My take</h2><p>—</p><h2>Why I think this</h2><p>—</p><h2>What's your view?</h2><p>—</p>`,
-                    icon: '💬'
-                  }
-                ].map(t => (
+                {BLOG_TEMPLATES
+                  .filter(t => {
+                    const q = templateSearch.toLowerCase()
+                    if (!q) return true
+                    return t.label.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
+                  })
+                  .map(t => (
                   <button
-                    key={t.key}
+                    key={t.id}
                     onClick={() => {
-                      editor?.chain().focus().insertContent(t.content).run()
-                      setShowTemplates(false)
+                      setSelectedTemplate(t)
+                      if (t.fields && t.fields.length > 0) {
+                        const initVars: Record<string, string> = {}
+                        t.fields.forEach(f => { initVars[f.name] = '' })
+                        setTemplateVars(initVars)
+                      } else {
+                        const content = t.content
+                        const hasContent = (editor.getText() || '').trim().length > 0
+                        if (hasContent) {
+                          const choice = window.prompt('Replace current content? Type R for Replace, A for Append, or Cancel')
+                          if (choice?.toLowerCase() === 'r') {
+                            editor.commands.setContent(content)
+                          } else if (choice?.toLowerCase() === 'a') {
+                            editor.chain().focus().setHorizontalRule().insertContent(content).run()
+                          } else {
+                            return
+                          }
+                        } else {
+                          editor.commands.setContent(content)
+                        }
+                        if (t.defaults?.mood) setMood(t.defaults.mood)
+                        if (t.defaults?.tags?.length) setTags(prev => Array.from(new Set([...(prev || []), ...t.defaults!.tags!])))
+                        localStorage.setItem('lastUsedTemplateId', t.id)
+                        setShowTemplates(false)
+                      }
                     }}
                     className="container-glass container-glass-hover rounded-xl p-4 text-left group"
                     aria-label={`Insert ${t.label} template`}
@@ -1197,6 +1213,7 @@ export default function BlogEditor({
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-2xl">{t.icon}</span>
                       <h3 className="font-semibold text-white">{t.label}</h3>
+                      <span className="ml-auto text-xs text-white/40">v{t.version}</span>
                     </div>
                     <p className="text-sm text-white/60 mb-3">{t.description}</p>
                     <div className="btn-glass-secondary w-full opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1206,6 +1223,62 @@ export default function BlogEditor({
                   </button>
                 ))}
               </div>
+
+              {selectedTemplate && selectedTemplate.fields && selectedTemplate.fields.length > 0 && (
+                <div className="mt-6 container-glass rounded-xl p-4">
+                  <h3 className="text-white font-medium mb-3">Fill Template Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedTemplate.fields.map(f => (
+                      <div key={f.name} className="flex flex-col gap-1">
+                        <label className="text-xs text-white/70">{f.label}{f.required ? ' *' : ''}</label>
+                        <input
+                          type="text"
+                          value={templateVars[f.name] ?? ''}
+                          onChange={(e) => setTemplateVars(v => ({ ...v, [f.name]: e.target.value }))}
+                          placeholder={f.placeholder || ''}
+                          className="input-glass"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button className="btn-glass-ghost" onClick={() => { setSelectedTemplate(null); setTemplateVars({}) }}>Cancel</button>
+                    <button
+                      className="btn-glass-primary"
+                      onClick={() => {
+                        if (!selectedTemplate) return
+                        const missing = (selectedTemplate.fields || []).filter(f => f.required && !(templateVars[f.name] || '').trim())
+                        if (missing.length > 0) {
+                          alert(`Please fill: ${missing.map(m => m.label).join(', ')}`)
+                          return
+                        }
+                        const content = fillVariables(selectedTemplate.content, templateVars)
+                        const hasContent = (editor.getText() || '').trim().length > 0
+                        if (hasContent) {
+                          const choice = window.prompt('Replace current content? Type R for Replace, A for Append, or Cancel')
+                          if (choice?.toLowerCase() === 'r') {
+                            editor.commands.setContent(content)
+                          } else if (choice?.toLowerCase() === 'a') {
+                            editor.chain().focus().setHorizontalRule().insertContent(content).run()
+                          } else {
+                            return
+                          }
+                        } else {
+                          editor.commands.setContent(content)
+                        }
+                        if (selectedTemplate.defaults?.mood) setMood(selectedTemplate.defaults.mood)
+                        if (selectedTemplate.defaults?.tags?.length) setTags(prev => Array.from(new Set([...(prev || []), ...selectedTemplate.defaults!.tags!])))
+                        localStorage.setItem('lastUsedTemplateId', selectedTemplate.id)
+                        setShowTemplates(false)
+                        setSelectedTemplate(null)
+                        setTemplateVars({})
+                      }}
+                    >
+                      Insert
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

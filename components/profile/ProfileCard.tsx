@@ -89,7 +89,7 @@ export default function ProfileCard({ trigger }: ProfileCardProps) {
           <div className="flex items-start gap-4">
             <div className="relative">
               <span className="block w-20 h-20 rounded-full overflow-hidden border-4 border-purple-500/30">
-                <Image src={data.photoURL || '/avatar-placeholder.png'} alt="avatar" width={80} height={80} className="w-20 h-20 object-cover" />
+                <Image src={data.photoURL || '/avatar-placeholder.svg'} alt="avatar" width={80} height={80} className="w-20 h-20 object-cover" />
               </span>
               <label htmlFor="avatar-upload" className="absolute -bottom-2 -right-2 bg-purple-600 text-white p-2 rounded-full cursor-pointer shadow" title="Upload profile photo">
                 <Camera className="w-4 h-4" />

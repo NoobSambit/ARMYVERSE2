@@ -8,9 +8,7 @@ import { Menu, X, User, LogOut } from 'lucide-react'
 import { navItems } from '@/components/layout/nav-data'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from '@/lib/firebase/auth'
-import ProfileCard from '@/components/profile/ProfileCard'
-import { onSnapshot } from 'firebase/firestore'
-import { getProfileRef } from '@/lib/firebase/profile'
+import ProfileModal from '@/components/profile/ProfileModal'
  
 
 export default function Navbar() {
@@ -20,22 +18,48 @@ export default function Navbar() {
   const [profileName, setProfileName] = useState<string | null>(null)
   
 
-  // Live subscribe to the user's profile doc so Navbar reflects updates instantly
+  // Load profile name with immediate seed to prevent flicker
   useEffect(() => {
     if (!user) {
       setProfileName(null)
       return
     }
-    const ref = getProfileRef(user.uid)
-    const unsubscribe = onSnapshot(ref, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data() as { displayName?: string }
-        setProfileName(data.displayName ?? null)
+
+    // 1) Seed from cache or Firebase displayName immediately
+    try {
+      const cached = localStorage.getItem('av_profile_name')
+      if (cached) {
+        setProfileName(cached)
       } else {
-        setProfileName(null)
+        setProfileName(user.displayName || user.email || null)
       }
-    })
-    return () => unsubscribe()
+    } catch {
+      setProfileName(user.displayName || user.email || null)
+    }
+
+    // 2) Fetch authoritative name from backend and cache it
+    let cancelled = false
+    const loadProfileName = async () => {
+      try {
+        const token = await user.getIdToken()
+        const response = await fetch('/api/user/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (response.ok) {
+          const { profile } = await response.json()
+          const name = profile?.displayName || user.displayName || user.email || null
+          if (!cancelled) {
+            setProfileName(name)
+            try { if (name) localStorage.setItem('av_profile_name', name) } catch {}
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load profile name:', err)
+      }
+    }
+    loadProfileName()
+
+    return () => { cancelled = true }
   }, [user])
 
   const handleSignOut = async () => {
@@ -84,7 +108,7 @@ export default function Navbar() {
             <div className="ml-4 flex items-center space-x-2">
               {isAuthenticated && user ? (
                 <div className="flex items-center space-x-2">
-                  <ProfileCard trigger={
+                  <ProfileModal trigger={
                     <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg">
                       <User className="w-4 h-4" />
                       <span>{profileName || user.displayName || user.email}</span>

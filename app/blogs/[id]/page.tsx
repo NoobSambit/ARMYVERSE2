@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
 import { 
@@ -59,6 +59,7 @@ const MOOD_EMOJIS = {
 
 export default function BlogViewPage() {
   const params = useParams()
+  const router = useRouter()
   const { user } = useAuth()
   const [blog, setBlog] = useState<Blog | null>(null)
   const [loading, setLoading] = useState(true)
@@ -274,7 +275,7 @@ export default function BlogViewPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {/* Reactions */}
-              <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2">
                 <button
                   onClick={() => handleReaction('moved')}
                   className={`flex items-center px-3 py-2 rounded-lg transition-all ${
@@ -348,6 +349,14 @@ export default function BlogViewPage() {
                       <Instagram className="w-4 h-4 mr-2" />
                       Instagram Story
                     </button>
+                    {user && user.uid === blog.author.id && (
+                      <button
+                        onClick={() => router.push(`/blogs/${blog._id}/edit`)}
+                        className="flex items-center w-full px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-all"
+                      >
+                        Edit
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
