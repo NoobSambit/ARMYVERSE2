@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { Collection } from '@/lib/models/Collection'
-import { Blog } from '@/lib/models/Blog'
 
 export const dynamic = 'force-dynamic'
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useSearchParams, useParams } from 'next/navigation'
-import Link from 'next/link'
+// import Link from 'next/link'
 import PostCard from '@/components/blog/PostCard'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -14,7 +14,19 @@ interface CollectionData {
   coverImage?: string
   visibility: 'public' | 'unlisted' | 'private'
   owner: { id: string; name: string; avatar?: string | null }
-  posts: any[]
+  posts: Array<{
+    _id: string
+    title: string
+    content?: string
+    coverImage?: string | null
+    mood: string
+    tags: string[]
+    createdAt: string
+    readTime?: number
+    views?: number
+    reactions?: { moved?: number; loved?: number; surprised?: number }
+    author?: { id?: string; name?: string; avatar?: string | null }
+  }>
 }
 
 export default function CollectionDetailPage() {
@@ -35,7 +47,7 @@ export default function CollectionDetailPage() {
   const [saving, setSaving] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerLoading, setPickerLoading] = useState(false)
-  const [pickerItems, setPickerItems] = useState<any[]>([])
+  const [pickerItems, setPickerItems] = useState<Array<{ _id: string; title: string; createdAt: string; author?: { name?: string } }>>([])
   const [pickerQuery, setPickerQuery] = useState('')
 
   useEffect(() => {
@@ -116,7 +128,7 @@ export default function CollectionDetailPage() {
             <div className="mt-6">
               {data.posts?.length ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {data.posts.map((p: any) => (
+                  {data.posts.map((p) => (
                     <div key={p._id} className="relative group">
                       {isOwner && (
                         <button className="absolute right-2 top-2 z-10 px-2 py-1 text-xs rounded-lg bg-black/50 border border-white/10 text-white hover:bg-white/10" onClick={async () => {
@@ -195,7 +207,7 @@ export default function CollectionDetailPage() {
                       </div>
                     ))}
                     {!pickerItems.length && !pickerLoading && (
-                      <div className="text-gray-400">No results. Try searching or click "My posts".</div>
+                      <div className="text-gray-400">No results. Try searching or click &quot;My posts&quot;.</div>
                     )}
                   </div>
                 </div>

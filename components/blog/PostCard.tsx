@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Clock, Eye, Heart, User, MoreVertical, RotateCcw, PlusCircle, Upload, CircleSlash } from 'lucide-react'
 import { track } from '@/lib/utils/analytics'
 import { useAuth } from '@/contexts/AuthContext'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export interface PostCardProps {
 	post: {
