@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { verifyFirebaseToken } from '@/lib/auth/verify'
-import { UserGameState } from '@/lib/models/UserGameState'
+import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
 
 export const runtime = 'nodejs'
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const user = await verifyFirebaseToken(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connect()
-    const state = await UserGameState.findOne({ userId: user.uid }).lean()
+    const state = await UserGameState.findOne({ userId: user.uid }).lean() as IUserGameState | null
     return NextResponse.json({
       totalXp: state?.xp || 0,
       dust: state?.dust || 0,

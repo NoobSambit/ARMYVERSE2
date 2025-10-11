@@ -1,6 +1,16 @@
 import mongoose from 'mongoose'
 
-const leaderboardEntrySchema = new mongoose.Schema({
+export interface ILeaderboardEntry {
+  _id: mongoose.Types.ObjectId
+  periodKey: string
+  userId: string
+  score: number
+  displayName: string
+  avatarUrl: string
+  updatedAt: Date
+}
+
+const leaderboardEntrySchema = new mongoose.Schema<ILeaderboardEntry>({
   periodKey: { type: String, required: true },
   userId: { type: String, required: true },
   score: { type: Number, default: 0 },
@@ -12,6 +22,6 @@ const leaderboardEntrySchema = new mongoose.Schema({
 leaderboardEntrySchema.index({ periodKey: 1, userId: 1 }, { unique: true })
 leaderboardEntrySchema.index({ periodKey: 1, score: -1 })
 
-export const LeaderboardEntry = mongoose.models.LeaderboardEntry || mongoose.model('LeaderboardEntry', leaderboardEntrySchema)
+export const LeaderboardEntry = mongoose.models.LeaderboardEntry || mongoose.model<ILeaderboardEntry>('LeaderboardEntry', leaderboardEntrySchema)
 
 

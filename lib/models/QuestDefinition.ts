@@ -1,6 +1,22 @@
 import mongoose from 'mongoose'
 
-const questDefinitionSchema = new mongoose.Schema({
+export interface IQuestDefinition {
+  _id: mongoose.Types.ObjectId
+  code: string
+  title: string
+  period: 'daily' | 'weekly'
+  goalType: string
+  goalValue: number
+  reward: {
+    dust: number
+    ticket?: {
+      rarityMin: 'rare' | 'epic' | 'legendary'
+    }
+  }
+  active: boolean
+}
+
+const questDefinitionSchema = new mongoose.Schema<IQuestDefinition>({
   code: { type: String, required: true, unique: true },
   title: { type: String, required: true },
   period: { type: String, enum: ['daily', 'weekly'], required: true },
@@ -17,6 +33,6 @@ const questDefinitionSchema = new mongoose.Schema({
 
 questDefinitionSchema.index({ code: 1 }, { unique: true })
 
-export const QuestDefinition = mongoose.models.QuestDefinition || mongoose.model('QuestDefinition', questDefinitionSchema)
+export const QuestDefinition = mongoose.models.QuestDefinition || mongoose.model<IQuestDefinition>('QuestDefinition', questDefinitionSchema)
 
 

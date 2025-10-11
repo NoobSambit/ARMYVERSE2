@@ -4,9 +4,34 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/client/api'
 
+type InventoryItem = {
+  card?: {
+    member: string
+    era: string
+    rarity: string
+  }
+}
+
+type GameStats = {
+  total?: number
+  latest?: InventoryItem | null
+  totalXp?: number
+}
+
+type PoolInfo = {
+  name?: string
+  set?: string
+  weights?: {
+    common: number
+    rare: number
+    epic: number
+    legendary: number
+  }
+}
+
 export default function GameHub() {
-  const [stats, setStats] = useState<{ total?: number; latest?: any; totalXp?: number } | null>(null)
-  const [pool, setPool] = useState<any | null>(null)
+  const [stats, setStats] = useState<GameStats | null>(null)
+  const [pool, setPool] = useState<PoolInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -25,8 +50,8 @@ export default function GameHub() {
           const pools = await apiFetch('/api/game/pools')
           if (active) setPool(pools.active || null)
         } catch {}
-      } catch (e: any) {
-        setError(e?.message || 'Failed to load')
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to load')
       }
     })()
     return () => { active = false }
@@ -38,7 +63,7 @@ export default function GameHub() {
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-fuchsia-400 to-rose-400 bg-clip-text text-transparent mb-2">
           Welcome back to Boraverse
         </h1>
-        <p className="text-white/70">Ready for your next quiz? Let's collect some photocards!</p>
+        <p className="text-white/70">Ready for your next quiz? Let&apos;s collect some photocards!</p>
       </div>
 
       {/* Quick Stats */}
@@ -46,7 +71,7 @@ export default function GameHub() {
         <div className="rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-6">
           <div className="text-white/60 text-sm mb-1">Total Cards</div>
           <div className="text-2xl font-bold text-white">
-            {stats ? '—' : 'Loading...'}
+            {stats && typeof stats.total === 'number' ? stats.total : 'Loading...'}
           </div>
         </div>
         <div className="rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-6">

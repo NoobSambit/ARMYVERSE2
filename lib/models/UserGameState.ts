@@ -1,6 +1,26 @@
 import mongoose from 'mongoose'
 
-const userGameStateSchema = new mongoose.Schema({
+export interface IUserGameState {
+  _id: mongoose.Types.ObjectId
+  userId: string
+  pity: {
+    sinceEpic: number
+    sinceLegendary: number
+  }
+  streak: {
+    dailyCount: number
+    lastPlayAt: Date | null
+  }
+  dust: number
+  xp: number
+  level: number
+  limits: {
+    quizStartsToday: number
+    dateKey: string
+  }
+}
+
+const userGameStateSchema = new mongoose.Schema<IUserGameState>({
   userId: { type: String, required: true, unique: true },
   pity: {
     sinceEpic: { type: Number, default: 0 },
@@ -21,6 +41,6 @@ const userGameStateSchema = new mongoose.Schema({
 
 // Note: userId field already has unique: true above, so no need for explicit index
 
-export const UserGameState = mongoose.models.UserGameState || mongoose.model('UserGameState', userGameStateSchema)
+export const UserGameState = mongoose.models.UserGameState || mongoose.model<IUserGameState>('UserGameState', userGameStateSchema)
 
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { verifyFirebaseToken } from '@/lib/auth/verify'
-import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
+import { LeaderboardEntry, ILeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 
 export const runtime = 'nodejs'
 
@@ -26,14 +26,14 @@ export async function GET(request: NextRequest) {
     const cursor = searchParams.get('cursor')
     const periodKey = weeklyKey()
 
-    const query: any = { periodKey }
+    const query: { periodKey: string; _id?: { $lt: string } } = { periodKey }
     if (cursor) query._id = { $lt: cursor }
 
-    const rows = await LeaderboardEntry.find(query).sort({ score: -1, _id: -1 }).limit(limit).lean()
+    const rows = await LeaderboardEntry.find(query).sort({ score: -1, _id: -1 }).limit(limit).lean() as unknown as ILeaderboardEntry[]
     const nextCursor = rows.length === limit ? String(rows[rows.length - 1]._id) : undefined
 
     // user rank
-    const my = await LeaderboardEntry.findOne({ periodKey, userId: user.uid }).lean()
+    const my = await LeaderboardEntry.findOne({ periodKey, userId: user.uid }).lean() as ILeaderboardEntry | null
     let myRank: number | null = null
     if (my) {
       myRank = await LeaderboardEntry.countDocuments({ periodKey, score: { $gt: my.score } }) + 1

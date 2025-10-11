@@ -1,6 +1,19 @@
 import mongoose from 'mongoose'
 
-const photocardSchema = new mongoose.Schema({
+export interface IPhotocard {
+  _id: mongoose.Types.ObjectId
+  member: string
+  era: string
+  set: string
+  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  publicId: string
+  attributes?: string[]
+  isLimited?: boolean
+  craftCostDust?: number | null
+  createdAt?: Date
+}
+
+const photocardSchema = new mongoose.Schema<IPhotocard>({
   member: { type: String, required: true, trim: true },
   era: { type: String, required: true, trim: true },
   set: { type: String, required: true, trim: true, index: true },
@@ -14,6 +27,6 @@ const photocardSchema = new mongoose.Schema({
 
 photocardSchema.index({ set: 1, rarity: 1 })
 
-export const Photocard = mongoose.models.Photocard || mongoose.model('Photocard', photocardSchema)
+export const Photocard = mongoose.models.Photocard || mongoose.model<IPhotocard>('Photocard', photocardSchema)
 
 

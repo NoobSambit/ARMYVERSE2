@@ -35,7 +35,7 @@ export default function QuestionCard({ question, choices, selectedIndex, onSelec
         {choices.map((c, i) => (
           <button
             key={i}
-            ref={(el) => (refs.current[i] = el)}
+            ref={(el) => { refs.current[i] = el }}
             onClick={() => onSelect(i)}
             aria-selected={selectedIndex === i}
             className={`text-left px-4 py-3 rounded-xl border transition ease-out duration-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/60 

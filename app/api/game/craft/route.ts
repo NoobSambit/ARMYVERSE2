@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
 import { verifyFirebaseToken } from '@/lib/auth/verify'
-import { Photocard } from '@/lib/models/Photocard'
+import { Photocard, IPhotocard } from '@/lib/models/Photocard'
 import { InventoryItem } from '@/lib/models/InventoryItem'
-import { UserGameState } from '@/lib/models/UserGameState'
+import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
 import { rollRarityAndCardV2 } from '@/lib/game/dropTable'
 import { InventoryGrantAudit } from '@/lib/models/InventoryGrantAudit'
 import { url as cloudinaryUrl } from '@/lib/cloudinary'
@@ -21,7 +21,7 @@ const Schema = z.object({
   targetRarity: z.enum(['rare', 'epic', 'legendary']).optional()
 }).refine((d) => d.cardId || d.targetRarity, { message: 'cardId or targetRarity is required' })
 
-const DEFAULT_COSTS: any = { common: 20, rare: 60, epic: 200, legendary: 800 }
+const DEFAULT_COSTS: Record<string, number> = { common: 20, rare: 60, epic: 200, legendary: 800 }
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,12 +36,12 @@ export async function POST(request: NextRequest) {
     const state = await UserGameState.findOne({ userId: user.uid })
     if (!state) await UserGameState.create({ userId: user.uid })
 
-    let granted: any = null
-    let rarity: any = null
+    let granted: IPhotocard | null = null
+    let rarity: string | null = null
     let dustSpent = 0
 
     if (input.data.cardId) {
-      const card = await Photocard.findById(input.data.cardId).lean()
+      const card = await Photocard.findById(input.data.cardId).lean() as IPhotocard | null
       if (!card) return NextResponse.json({ error: 'Card not found' }, { status: 400 })
       const cost = card.craftCostDust ?? DEFAULT_COSTS[card.rarity]
       const st = await UserGameState.findOne({ userId: user.uid })
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (!granted) return NextResponse.json({ error: 'No grant available' }, { status: 500 })
 
     const imageUrl = cloudinaryUrl(granted.publicId)
-    const balances = await UserGameState.findOne({ userId: user.uid }).lean()
+    const balances = await UserGameState.findOne({ userId: user.uid }).lean() as IUserGameState | null
     const inventoryCount = await InventoryItem.countDocuments({ userId: user.uid })
 
     return NextResponse.json({

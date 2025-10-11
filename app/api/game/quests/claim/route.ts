@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
 import { verifyFirebaseToken } from '@/lib/auth/verify'
-import { QuestDefinition } from '@/lib/models/QuestDefinition'
+import { QuestDefinition, IQuestDefinition } from '@/lib/models/QuestDefinition'
 import { UserQuestProgress } from '@/lib/models/UserQuestProgress'
 import { dailyKey, weeklyKey } from '@/lib/game/quests'
-import { UserGameState } from '@/lib/models/UserGameState'
+import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
 import { rollRarityAndCardV2 } from '@/lib/game/dropTable'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { url as cloudinaryUrl } from '@/lib/cloudinary'
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const input = Schema.safeParse(body)
     if (!input.success) return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
 
-    const def = await QuestDefinition.findOne({ code: input.data.code }).lean()
+    const def = await QuestDefinition.findOne({ code: input.data.code }).lean() as IQuestDefinition | null
     if (!def) return NextResponse.json({ error: 'Quest not found' }, { status: 400 })
 
     const key = def.period === 'daily' ? dailyKey() : weeklyKey()
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     prog.completed = true
     await prog.save()
 
-    const state = await UserGameState.findOne({ userId: user.uid }).lean()
+    const state = await UserGameState.findOne({ userId: user.uid }).lean() as IUserGameState | null
 
     return NextResponse.json({ reward, balances: { dust: state?.dust || 0 } })
   } catch (error) {
