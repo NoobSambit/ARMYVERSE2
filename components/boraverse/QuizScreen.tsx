@@ -8,6 +8,29 @@ import ResultModal from './ResultModal'
 
 type Question = { id: string; question: string; choices: string[] }
 
+type Reward = {
+  cardId: string
+  rarity: 'common'|'rare'|'epic'|'legendary' | null | undefined
+  member: string
+  era: string
+  set: string
+  publicId: string
+  imageUrl: string
+} | null
+
+type Review = {
+  items: Array<{
+    id: string
+    question: string
+    choices: string[]
+    difficulty: 'easy'|'medium'|'hard'
+    userAnswerIndex: number
+    correctIndex: number
+    xpAward: number
+  }>
+  summary: { xp: number; correctCount: number }
+}
+
 interface QuizScreenProps {
   demoMode?: boolean
   onExit?: () => void
@@ -21,9 +44,9 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
   const [questions, setQuestions] = useState<Question[]>([])
   const [answers, setAnswers] = useState<number[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [expiresAt, setExpiresAt] = useState<string | null>(null)
+  const [, setExpiresAt] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [result, setResult] = useState<{ xp: number; correctCount: number; reward: any; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: any } | null>(null)
+  const [result, setResult] = useState<{ xp: number; correctCount: number; reward: Reward | null; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: Review | null } | null>(null)
   const [mode, setMode] = useState<'ranked'|'demo'|'unknown'>('unknown')
 
   // Ref to prevent race conditions and double triggers
@@ -50,8 +73,8 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
         setMode('ranked')
         setLoading(false)
       }
-    } catch (e: any) {
-      setError(e?.message || 'Failed to start')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to start')
       setLoading(false)
     }
   }, [demoMode])
@@ -105,8 +128,8 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
         const res = await apiFetch('/api/game/quiz/complete', { method: 'POST', body: JSON.stringify(payload) })
         setResult({ xp: res.xp, correctCount: res.correctCount, reward: res.reward || null, rarityWeightsUsed: res.rarityWeightsUsed || null, pityApplied: !!res.pityApplied, reason: res.reason || null, review: res.review })
       }
-    } catch (e: any) {
-      setError(e?.message || 'Failed to complete')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to complete')
     } finally {
       setIsSubmitting(false)
     }

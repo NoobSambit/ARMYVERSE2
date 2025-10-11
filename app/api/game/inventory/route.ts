@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
 import { verifyFirebaseToken } from '@/lib/auth/verify'
 import { InventoryItem } from '@/lib/models/InventoryItem'

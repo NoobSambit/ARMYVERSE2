@@ -1,4 +1,3 @@
-import mongoose from 'mongoose'
 import { Question } from '@/lib/models/Question'
 
 type Difficulty = 'easy' | 'medium' | 'hard'

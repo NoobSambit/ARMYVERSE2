@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       count: input.data.count || 10
     })
 
-    const questionIds = questions.map((q: any) => q._id)
+    // const questionIds = questions.map((q: any) => q._id) // Not currently used
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 20 * 60 * 1000) // 20 minutes
     const sessionSeed = Math.random().toString(36).slice(2)

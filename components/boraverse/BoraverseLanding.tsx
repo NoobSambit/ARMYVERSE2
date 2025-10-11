@@ -2,11 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Play, Trophy, Sparkles, Users, Gift, TrendingUp, CheckCircle, ArrowRight } from 'lucide-react'
-import { demoFetch } from '@/lib/client/api'
+import { Play, Trophy, Sparkles, Gift, TrendingUp, CheckCircle, ArrowRight } from 'lucide-react'
 import QuizScreen from './QuizScreen'
-import { url as cloudinaryUrl } from '@/lib/cloudinary'
 
 interface PreviewCard {
   publicId: string
@@ -32,7 +29,6 @@ const rarityGlows = {
 
 export default function BoraverseLanding() {
   const [demoMode, setDemoMode] = useState(false)
-  const [previewCards, setPreviewCards] = useState<PreviewCard[]>([])
 
   // Mock preview cards for the preview strip
   const mockPreviewCards: PreviewCard[] = [

@@ -3,21 +3,27 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/client/api'
 
+type Quest = {
+  code: string
+  title: string
+  period: string
+  progress: number
+  goalValue: number
+  completed: boolean
+  claimed: boolean
+}
+
 export default function QuestsView() {
-  const [quests, setQuests] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [quests, setQuests] = useState<Quest[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
-    setLoading(true)
     setError(null)
     try {
       const res = await apiFetch('/api/game/quests')
       setQuests(res.quests || [])
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load')
-    } finally {
-      setLoading(false)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load')
     }
   }
 

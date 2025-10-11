@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import RarityPill from './RarityPill'
 import { useMemo, useState } from 'react'
 import { apiFetch } from '@/lib/client/api'
@@ -16,12 +17,22 @@ type Reward = {
 } | null
 
 export default function ResultModal({ open, onClose, xp, correctCount, reward, rarityWeightsUsed, pityApplied, reason, review, demoMode = false }: { open: boolean; onClose: () => void; xp: number; correctCount: number; reward: Reward; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: { items: Array<{ id: string; question: string; choices: string[]; difficulty: 'easy'|'medium'|'hard'; userAnswerIndex: number; correctIndex: number; xpAward: number }>; summary: { xp: number; correctCount: number } } | null; demoMode?: boolean }) {
-  if (!open) return null
-  const ring = reward?.rarity === 'legendary' ? 'shadow-[0_0_40px_rgba(251,191,36,0.35)]' : reward?.rarity === 'epic' ? 'shadow-[0_0_40px_rgba(232,121,249,0.35)]' : ''
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [filter, setFilter] = useState<'all'|'correct'|'wrong'>('all')
+
+  const filteredItems = useMemo(() => {
+    if (!review) return []
+    const items = review.items || []
+    if (filter === 'all') return items
+    if (filter === 'correct') return items.filter(it => it.userAnswerIndex >= 0 && it.userAnswerIndex === it.correctIndex)
+    return items.filter(it => it.userAnswerIndex !== it.correctIndex)
+  }, [review, filter])
+
+  if (!open) return null
+
+  const ring = reward?.rarity === 'legendary' ? 'shadow-[0_0_40px_rgba(251,191,36,0.35)]' : reward?.rarity === 'epic' ? 'shadow-[0_0_40px_rgba(232,121,249,0.35)]' : ''
   const doShare = async () => {
     if (!reward) return
     try {
@@ -35,12 +46,7 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
       setSharing(false)
     }
   }
-  const filteredItems = useMemo(() => {
-    const items = review?.items || []
-    if (filter === 'all') return items
-    if (filter === 'correct') return items.filter(it => it.userAnswerIndex >= 0 && it.userAnswerIndex === it.correctIndex)
-    return items.filter(it => it.userAnswerIndex !== it.correctIndex)
-  }, [review, filter])
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
       <div className={`w-full max-w-lg rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-6 ${ring} max-h-[90vh] overflow-y-auto`}>
@@ -57,7 +63,7 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
         {reward && (
           <div className="mt-4 flex flex-col items-center">
             <div className="relative">
-              <img src={reward.imageUrl} alt={`${reward.member} ${reward.era}`} className="w-48 h-64 object-cover rounded-xl" />
+              <Image src={reward.imageUrl} alt={`${reward.member} ${reward.era}`} width={192} height={256} className="w-48 h-64 object-cover rounded-xl" />
               {(reward.rarity === 'legendary' || reward.rarity === 'epic') && (
                 <div className="pointer-events-none absolute -inset-2 rounded-2xl animate-pulse" style={{ boxShadow: reward.rarity === 'legendary' ? '0 0 50px rgba(251,191,36,0.35)' : '0 0 50px rgba(232,121,249,0.35)' }} />
               )}
@@ -115,7 +121,6 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
                 </div>
                 <div className="space-y-3 max-h-80 overflow-auto pr-1">
                   {filteredItems.map((it, idx) => {
-                    const isCorrect = it.userAnswerIndex >= 0 && it.userAnswerIndex === it.correctIndex
                     return (
                       <div key={it.id} className="rounded-xl border border-[#3b1a52]/60 p-3 bg-white/5">
                         <div className="flex items-start justify-between gap-3">

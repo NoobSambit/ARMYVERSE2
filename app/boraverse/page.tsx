@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
 import BoraverseLanding from '@/components/boraverse/BoraverseLanding'
 import GameHub from '@/components/boraverse/GameHub'
 
 export default function Page() {
   const { user } = useAuth()
-  const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
