@@ -4,6 +4,7 @@ import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import MobileQuickActions from '@/components/layout/MobileQuickActions'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { ToastProvider } from '@/components/ui/Toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -72,11 +73,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} page-gradient`}>
-        <AuthProvider>
-          <Navbar />
-          {children}
-          <MobileQuickActions />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Navbar />
+            {children}
+            <MobileQuickActions />
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   )

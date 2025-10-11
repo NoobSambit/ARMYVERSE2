@@ -1,0 +1,49 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { connect } from '@/lib/db/mongoose'
+import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
+
+export const runtime = 'nodejs'
+
+function weeklyKey(date = new Date()) {
+  const tmp = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  const dayNum = tmp.getUTCDay() || 7
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1))
+  const weekNo = Math.ceil((((tmp.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+  return `weekly-${tmp.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`
+}
+
+/** GET /api/game/leaderboard?cursor=&limit= */
+export async function GET(request: NextRequest) {
+  try {
+    const user = await verifyFirebaseToken(request)
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    await connect()
+
+    const { searchParams } = new URL(request.url)
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)))
+    const cursor = searchParams.get('cursor')
+    const periodKey = weeklyKey()
+
+    const query: any = { periodKey }
+    if (cursor) query._id = { $lt: cursor }
+
+    const rows = await LeaderboardEntry.find(query).sort({ score: -1, _id: -1 }).limit(limit).lean()
+    const nextCursor = rows.length === limit ? String(rows[rows.length - 1]._id) : undefined
+
+    // user rank
+    const my = await LeaderboardEntry.findOne({ periodKey, userId: user.uid }).lean()
+    let myRank: number | null = null
+    if (my) {
+      myRank = await LeaderboardEntry.countDocuments({ periodKey, score: { $gt: my.score } }) + 1
+    }
+
+    return NextResponse.json({ periodKey, entries: rows, nextCursor, me: my ? { score: my.score, rank: myRank } : null })
+  } catch (error) {
+    console.error('Leaderboard GET error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+

@@ -9,7 +9,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
-    "postbuild": "next-sitemap"
+    "postbuild": "next-sitemap",
+    "import:questions": "node scripts/import-questions.js --file /home/hairyfairy/Documents/ARMYVERSE/data/questions.json"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

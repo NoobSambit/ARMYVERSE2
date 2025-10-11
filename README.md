@@ -1,5 +1,53 @@
 # ArmyVerse - BTS Fan Platform
 
+### Importing quiz questions
+
+CLI script to import questions (JSON array or NDJSON) into MongoDB.
+
+- Run with env var: `MONGODB_URI="<your-uri>" npm run import:questions`
+- Or: `MONGODB_URI="<your-uri>" node scripts/import-questions.js --file /home/hairyfairy/Documents/ARMYVERSE/data/questions.json --db armyverse --collection questions --batch 1000`
+- NDJSON supported: one JSON object per line; blanks ignored.
+- Upserts by `hash` (auto-generated if missing) and creates unique index on `hash`.
+- Flags: `--db`, `--collection`, `--batch`, `--dry-run`.
+
+## Game (Phase 2)
+
+New systems on top of Phase 1:
+- Crafting: spend dust to craft a card or buy a ticket roll with a rarity floor.
+- Mastery: member/era XP with milestone claims that grant themed pulls.
+- Quests: daily/weekly tasks with dust or ticket rewards; claim via API.
+- Seasonal Pools: active `DropPool` with weights and featured boosts.
+- Share: generate a Cloudinary share URL with overlay text.
+- Leaderboard: weekly best-run scores with pagination.
+
+Endpoints:
+- POST `/api/game/craft` { cardId? | targetRarity? }
+- GET `/api/game/mastery` and POST `/api/game/mastery/claim` { kind, key }
+- GET `/api/game/quests` and POST `/api/game/quests/claim` { code }
+- GET `/api/game/leaderboard?limit=&cursor=`
+- POST `/api/game/share` { inventoryItemId }
+- Updates: quiz start enforces daily ranked limit; complete awards XP, dust on dupes, mastery, quests, leaderboard.
+
+Dev seeding: minimal `DropPool` and `QuestDefinition` can be added in development (see server logs).
+
+## Game (Phase 1)
+
+Simple quiz-to-photocard game built on existing stack (Next.js App Router, Mongo via Mongoose, Firebase Admin auth, Cloudinary images). No new infra required.
+
+- Endpoints:
+  - POST `/api/game/quiz/start` → start a quiz session.
+  - POST `/api/game/quiz/complete` → complete a session, score answers, grant a card.
+  - GET `/api/game/inventory` → list user inventory with pagination.
+  - GET `/api/game/pools` → active card pool overview.
+
+- Auth: `Authorization: Bearer <Firebase ID token>` required on all.
+- Start payload example: `{ "locale": "en", "count": 10 }`
+- Complete payload example: `{ "sessionId": "664f...abc", "answers": [0,2,1,1,3,0,2,1,0,3] }`
+- Inventory item example:
+  `{ "id": "66a1...def", "card": { "member": "Jimin", "era": "BE", "set": "BE Era", "rarity": "rare", "publicId": "armyverse/cards/be_jimin_01", "imageUrl": "https://..." }, "acquiredAt": "2025-10-10T10:10:10.000Z" }`
+
+Notes: Sessions expire after 20 minutes (TTL). Scoring is 1 point per correct. Drop rates: common 70, rare 22, epic 7, legendary 1 with pity (≥epic every 15, legendary at 50).
+
 A comprehensive platform for BTS fans to discover music, create playlists, and explore trending content.
 
 ## Features
