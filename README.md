@@ -58,6 +58,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, and e
 - **Trending Content**: Discover the hottest BTS content across platforms
 - **Dashboard Analytics**: View your listening habits and BTS-specific insights
 - **BTS Blog Platform**: Write, share, and discover BTS-themed blog posts with rich text editing, reactions, and community features
+ - **Spotify Analytics Snapshots**: Daily snapshot of songs/albums totals, global daily positions, all-time artist ranks, and monthly listeners with a dashboard at `/spotify`
 
 ## Complete Project Structure
 
@@ -248,6 +249,7 @@ ARMYVERSE/
 - **API Routes**: RESTful API endpoints for data management
 - **Dynamic Routes**: `[id]` folders for dynamic content rendering
 - **Layout**: Root layout with metadata, providers, and global styling
+ - **Spotify Analytics**: `/spotify` page renders daily snapshots (songs/albums by artist with expandable details, global ranks)
 
 ### `/components` - Reusable UI Components
 - **Auth Components**: Complete authentication flow with Firebase and Spotify
@@ -314,6 +316,15 @@ ARMYVERSE/
 ### Health & Monitoring
 - `GET /api/health` - Application health check
 
+### Spotify Analytics Snapshots
+- `POST /api/spotify/kworb/cron` - Write the daily snapshot (requires `Authorization: Bearer <CRON_SECRET>`; scheduled daily in production)
+- `GET /api/spotify/kworb/latest` - Read the latest snapshot (served from DB; cached)
+- Page: `/spotify` - Overview cards and 4 sections:
+  - Songs by artist (group + members): totals (streams/daily/tracks) and expandable track list
+  - Albums by artist: totals (streams/daily/albums) and expandable album list
+  - Global Daily Top 200 positions (group + members)
+  - Global ranks: most-streamed artists (all-time) and monthly listeners
+
 ## Getting Started
 
 ### Prerequisites
@@ -364,6 +375,10 @@ FIREBASE_PROJECT_ID="your-project-id"
 FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
 FIREBASE_MESSAGING_SENDER_ID="your-sender-id"
 FIREBASE_APP_ID="your-app-id"
+
+# Spotify analytics (snapshots)
+CRON_SECRET="your-long-random"
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 ```
 
 ### Installation

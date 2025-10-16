@@ -6,5 +6,8 @@
   },
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "crons": [
+    { "path": "/api/spotify/kworb/cron", "schedule": "30 1 * * *" }
+  ]
 }
