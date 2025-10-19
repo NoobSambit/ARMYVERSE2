@@ -1,6 +1,5 @@
-import Hero from '@/components/sections/Hero'
+import HeroV2 from '@/components/sections/HeroV2'
 import TrendingSection from '@/components/trending/TrendingSection'
-import ValueProps from '@/components/sections/ValueProps'
 import Footer from '@/components/layout/Footer'
 import FloatingConnect from '@/components/auth/FloatingConnect'
 import StreamingCTA from '@/components/sections/StreamingCTA'
@@ -30,20 +29,14 @@ export default async function Home() {
   } catch {}
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a082a] via-[#2b1240] to-[#0b0310]">
+    <div className="min-h-screen page-gradient">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      {/* Hero Section */}
-      <Hero />
-
-      {/* Value Proposition / What We Do */}
-      <section id="value" className="py-12 sm:py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <ValueProps />
-        </div>
-      </section>
+      {/* Enhanced Hero Section with Features */}
+      <HeroV2 />
 
       {/* Spotify Analytics (Kworb) quick status */}
-      <section id="spotify-kworb" className="py-12 sm:py-16 px-4">
+      <section id="spotify-kworb" className="py-12 sm:py-16 px-4 relative">
+        <div className="absolute inset-0 -z-10 section-gradients"></div>
         <div className="max-w-7xl mx-auto">
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
@@ -60,12 +53,14 @@ export default async function Home() {
       </section>
 
       {/* Trending Section */}
-      <section id="trending" className="py-12 sm:py-16 px-4">
+      <section id="trending" className="py-12 sm:py-16 px-4 relative">
+        <div className="absolute inset-0 -z-10 section-gradients"></div>
         <TrendingSection />
       </section>
 
       {/* CTA banner */}
-      <div className="py-8 sm:py-10">
+      <div className="py-8 sm:py-10 relative">
+        <div className="absolute inset-0 -z-10 section-gradients"></div>
         <StreamingCTA />
       </div>
 
