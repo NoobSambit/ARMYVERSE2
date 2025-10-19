@@ -6,18 +6,14 @@ import { TrendingUp, Sparkles, Gamepad2, BarChart3, BookOpen, Music } from 'luci
 import FeatureShowcase from './FeatureShowcase'
 
 export default function HeroV2() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [cursorSpotlight, setCursorSpotlight] = useState({ x: 0, y: 0 })
   const heroRef = useRef<HTMLDivElement>(null)
 
-  // Subtle parallax effect on logo + cursor spotlight
+  // Cursor spotlight effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!heroRef.current) return
       const rect = heroRef.current.getBoundingClientRect()
-      const x = (e.clientX - rect.left - rect.width / 2) / rect.width
-      const y = (e.clientY - rect.top - rect.height / 2) / rect.height
-      setMousePosition({ x: x * 3, y: y * 3 })
       
       // Cursor spotlight position
       setCursorSpotlight({ 
