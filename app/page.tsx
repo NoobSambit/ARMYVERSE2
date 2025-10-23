@@ -1,5 +1,5 @@
 import HeroV2 from '@/components/sections/HeroV2'
-import TrendingSection from '@/components/trending/TrendingSection'
+import NewTrendingSection from '@/components/trending/NewTrendingSection'
 import Footer from '@/components/layout/Footer'
 import FloatingConnect from '@/components/auth/FloatingConnect'
 import StreamingCTA from '@/components/sections/StreamingCTA'
@@ -55,7 +55,7 @@ export default async function Home() {
       {/* Trending Section */}
       <section id="trending" className="py-12 sm:py-16 px-4 relative">
         <div className="absolute inset-0 -z-10 section-gradients"></div>
-        <TrendingSection />
+        <NewTrendingSection />
       </section>
 
       {/* CTA banner */}

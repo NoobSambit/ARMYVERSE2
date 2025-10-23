@@ -5,6 +5,7 @@ export type StreamRow = {
   totalStreams: number
   dailyGain?: number
   url?: string
+  albumArt?: string
 }
 
 export type RankRow = {

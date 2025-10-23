@@ -9,6 +9,31 @@ const fetchHTML = async (url: string) => {
 }
 const num = (s?: string) => (s ? Number(s.replace(/[^0-9.-]/g, '')) || 0 : 0)
 
+// Extract Spotify track ID from kworb URL or spotify URL
+const extractSpotifyTrackId = (url?: string): string | undefined => {
+  if (!url) return undefined
+  // kworb.net/spotify/track/TRACK_ID.html
+  const kworbMatch = url.match(/\/track\/([a-zA-Z0-9]+)/)
+  if (kworbMatch) return kworbMatch[1]
+  // open.spotify.com/track/TRACK_ID
+  const spotifyMatch = url.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/)
+  if (spotifyMatch) return spotifyMatch[1]
+  return undefined
+}
+
+// Get album art URL for a Spotify track using oEmbed API (no auth required)
+const getSpotifyAlbumArt = async (trackId: string): Promise<string | undefined> => {
+  try {
+    const oEmbedUrl = `https://open.spotify.com/oembed?url=spotify:track:${trackId}`
+    const res = await fetch(oEmbedUrl, { cache: 'no-store' })
+    if (!res.ok) return undefined
+    const data = await res.json()
+    return data.thumbnail_url || undefined
+  } catch {
+    return undefined
+  }
+}
+
 async function fetchArtistSongsPage(pageUrl: string, artistLabel: string): Promise<ArtistSongsGroup> {
   const html = await fetchHTML(pageUrl)
   const $ = cheerio.load(html)
@@ -79,6 +104,8 @@ async function fetchArtistSongsPage(pageUrl: string, artistLabel: string): Promi
   if (idxStreams < 0) idxStreams = Math.max(headerCells.length - 2, 0)
   if (idxDaily < 0) idxDaily = Math.max(headerCells.length - 1, 1)
 
+  const songPromises: Promise<StreamRow>[] = []
+  
   detailTable.find('tr').slice(1).each((_, tr) => {
     const t = $(tr).find('td')
     if (t.length < 3) return
@@ -89,8 +116,24 @@ async function fetchArtistSongsPage(pageUrl: string, artistLabel: string): Promi
     const url = link ? (link.startsWith('http') ? link : 'https://kworb.net/spotify/' + link) : undefined
     const totalStreams = num(t.eq(idxStreams).text())
     const dailyGain = num(t.eq(idxDaily).text())
-    if (totalStreams) songs.push({ name, totalStreams, dailyGain, url })
+    
+    if (totalStreams) {
+      // Extract Spotify track ID and fetch album art
+      const trackId = extractSpotifyTrackId(url)
+      const songPromise = (async () => {
+        let albumArt: string | undefined
+        if (trackId) {
+          albumArt = await getSpotifyAlbumArt(trackId)
+        }
+        return { name, totalStreams, dailyGain, url, albumArt } as StreamRow
+      })()
+      songPromises.push(songPromise)
+    }
   })
+  
+  // Wait for all album art fetches to complete
+  const resolvedSongs = await Promise.all(songPromises)
+  songs.push(...resolvedSongs)
 
   // fallback totals from parsed songs if header failed
   if (!totals.streams && songs.length) {

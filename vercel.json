@@ -8,6 +8,7 @@
     "NODE_ENV": "production"
   },
   "crons": [
-    { "path": "/api/spotify/kworb/cron", "schedule": "30 1 * * *" }
+    { "path": "/api/spotify/kworb/cron", "schedule": "30 1 * * *" },
+    { "path": "/api/youtube/kworb/cron", "schedule": "35 1 * * *" }
   ]
 }
