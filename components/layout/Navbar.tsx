@@ -125,7 +125,7 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/auth/signup"
-                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-[#FF9AD5] to-[#A274FF] text-white hover:opacity-90 transition-all duration-300"
+                  className="btn-glass-primary text-sm font-medium"
                 >
                   Sign Up
                 </Link>
@@ -179,7 +179,7 @@ export default function Navbar() {
                 <Link
                   href="/auth/signup"
                   onClick={() => setIsOpen(false)}
-                  className="block w-full text-center px-4 py-2 rounded-lg text-base font-medium bg-gradient-to-r from-[#FF9AD5] to-[#A274FF] text-white hover:opacity-90 transition-all duration-300"
+                  className="btn-glass-primary text-base font-medium w-full justify-center"
                 >
                   Sign Up
                 </Link>

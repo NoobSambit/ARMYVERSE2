@@ -107,25 +107,49 @@ export default function CreatePlaylist() {
 
 
   return (
-    <div className="min-h-screen py-8 px-6 bg-black">
-      <div className="max-w-7xl mx-auto">
-        {/* header + tabs */}
-        <div className="text-center mb-6">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
-            Create Playlist
-          </h1>
-          <p className="text-gray-400 mb-4">Prefer AI-assisted playlists? <a className="text-purple-400 hover:text-purple-300 underline decoration-purple-500/60 hover:decoration-purple-400 transition-colors" href="/ai-playlist">Try AI Playlist</a></p>
-          <div className="inline-flex bg-black/50 rounded-xl overflow-hidden border border-purple-500/40">
-            <button
-              onClick={() => setMode('normal')}
-              className={`px-5 py-2 font-medium ${mode === 'normal' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}
-            >Normal</button>
-            <button
-              onClick={() => setMode('focus')}
-              className={`px-5 py-2 font-medium ${mode === 'focus' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white'}`}
-            >Streaming Focus</button>
+    <div className="min-h-screen page-gradient relative overflow-hidden">
+      {/* Aurora Background Effects */}
+      <div className="aurora-container absolute inset-0 pointer-events-none">
+        <div className="aurora-glow aurora-glow-1" />
+        <div className="aurora-glow aurora-glow-2" />
+        <div className="aurora-glow aurora-glow-3" />
+      </div>
+
+      <div className="relative z-10 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* header + tabs */}
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-[#FF9AD5] via-[#C084FC] to-[#A274FF] bg-clip-text text-transparent">Create Playlist</span>
+            </h1>
+            <p className="text-gray-300 mb-6 text-lg">Prefer AI-assisted playlists? <a className="text-[#C084FC] hover:text-[#A274FF] underline decoration-[#C084FC]/60 hover:decoration-[#A274FF] transition-colors font-medium" href="/ai-playlist">Try AI Playlist</a></p>
+            
+            {/* Segmented Control */}
+            <div className="segmented">
+              <div 
+                className="segmented-thumb" 
+                style={{
+                  width: '50%',
+                  left: mode === 'normal' ? '0.25rem' : '50%',
+                  transform: mode === 'normal' ? 'translateX(0)' : 'translateX(-0.25rem)'
+                }}
+              />
+              <button
+                onClick={() => setMode('normal')}
+                aria-selected={mode === 'normal'}
+                className="segmented-item px-8"
+              >
+                Normal
+              </button>
+              <button
+                onClick={() => setMode('focus')}
+                aria-selected={mode === 'focus'}
+                className="segmented-item px-8"
+              >
+                Streaming Focus
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* STREAMING FOCUS WORKFLOW */}
         {mode === 'focus' && (
@@ -142,7 +166,7 @@ export default function CreatePlaylist() {
                     type="text"
                     value={playlistName}
                     onChange={(e) => setPlaylistName(e.target.value)}
-                    className="w-full px-4 py-3 bg-black/80 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                    className="input-glass"
                     placeholder="Enter playlist name"
                     aria-label="Playlist name"
                   />
@@ -171,12 +195,10 @@ export default function CreatePlaylist() {
                     <button 
                       onClick={() => handleSaveToSpotify(focusResult)}
                       disabled={!isAuthenticated || isSaving}
-                      className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-colors ${
+                      className={`flex-1 ${
                         !isAuthenticated
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : isSaving
-                          ? 'bg-purple-600 text-white cursor-wait'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white'
+                          ? 'btn-glass-secondary opacity-50 cursor-not-allowed'
+                          : 'btn-glass-primary'
                       }`}
                     >
                       {isSaving ? (
@@ -208,54 +230,53 @@ export default function CreatePlaylist() {
           </>
         )}
 
-        {/* connection banner visible in both modes */}
-        <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-green-500/20">
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin mr-3"></div>
-              <span className="text-white font-medium">Checking Spotify connection...</span>
-            </div>
-          ) : isAuthenticated ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full mr-3 bg-green-400"></div>
-                <span className="text-white font-medium">
-                  Spotify Status: Connected
-                </span>
+          {/* Spotify Connection Banner */}
+          <div className="container-glass rounded-2xl p-6 mb-10">
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-[#C084FC] border-t-transparent rounded-full animate-spin mr-3"></div>
+                <span className="text-white font-medium">Checking Spotify connection...</span>
               </div>
-              <button
-                onClick={disconnect}
-                className="px-4 py-2 rounded-lg font-medium transition-all duration-300 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
-              >
-                Disconnect
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full mr-3 bg-red-400"></div>
-                <span className="text-white font-medium">
-                  Spotify Status: Not Connected
-                </span>
+            ) : isAuthenticated ? (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full mr-3 bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.6)]"></div>
+                  <span className="text-white font-medium text-lg">
+                    Spotify Connected
+                  </span>
+                </div>
+                <button
+                  onClick={disconnect}
+                  className="btn-glass-secondary text-red-400 hover:text-red-300"
+                >
+                  Disconnect
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  // Redirect to Spotify auth
-                  window.location.href = '/stats'
-                }}
-                className="px-4 py-2 rounded-lg font-medium transition-all duration-300 bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30"
-              >
-                Connect to Spotify
-              </button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full mr-3 bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.6)]"></div>
+                  <span className="text-white font-medium text-lg">
+                    Spotify Not Connected
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    window.location.href = '/stats'
+                  }}
+                  className="btn-glass-primary"
+                >
+                  Connect to Spotify
+                </button>
+              </div>
+            )}
+          </div>
 
-        {/* MANUAL CREATOR WORKFLOW */}
-        {mode === 'normal' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* search */}
-            <div className="bg-black/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20">
+          {/* MANUAL CREATOR WORKFLOW */}
+          {mode === 'normal' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* search */}
+              <div className="container-glass rounded-3xl p-6 md:p-8">
               <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                 <Search className="w-6 h-6 mr-3 text-purple-400" />
                 Search BTS Songs
@@ -268,15 +289,15 @@ export default function CreatePlaylist() {
                   placeholder="Search for BTS songs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-black/80 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
+                  className="input-glass pl-10"
                 />
               </div>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-hide">
                 {filteredTracks.map((track) => (
                   <div
                     key={track.spotifyId}
-                    className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-gray-700 hover:border-purple-400 transition-colors"
+                    className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 hover:border-[#C084FC]/50 transition-all"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
@@ -295,7 +316,7 @@ export default function CreatePlaylist() {
                     </div>
                     <button
                       onClick={() => addToPlaylist(track)}
-                      className="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
+                      className="btn-toolbar is-active"
                       title="Add to playlist"
                     >
                       <Plus className="w-4 h-4" />
@@ -305,30 +326,30 @@ export default function CreatePlaylist() {
               </div>
             </div>
 
-            {/* playlist */}
-            <div className="bg-black/50 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/20">
+              {/* playlist */}
+              <div className="container-glass rounded-3xl p-6 md:p-8">
               <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                 <Music className="w-6 h-6 mr-3 text-purple-400" />
                 Your Playlist
               </h2>
 
-                              <div className="mb-6">
-                  <label className="block text-white font-medium mb-2">Playlist Name</label>
-                  <input
-                    type="text"
-                    value={playlistName}
-                    onChange={(e) => setPlaylistName(e.target.value)}
-                    className="w-full px-4 py-3 bg-black/80 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none"
-                    placeholder="Enter playlist name"
-                    aria-label="Playlist name"
-                  />
-                </div>
+              <div className="mb-6">
+                <label className="block text-white font-medium mb-2">Playlist Name</label>
+                <input
+                  type="text"
+                  value={playlistName}
+                  onChange={(e) => setPlaylistName(e.target.value)}
+                  className="input-glass"
+                  placeholder="Enter playlist name"
+                  aria-label="Playlist name"
+                />
+              </div>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-hide">
                 {playlistTracks.map((track) => (
                   <div
                     key={track.spotifyId}
-                    className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-gray-700"
+                    className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
@@ -347,7 +368,7 @@ export default function CreatePlaylist() {
                     </div>
                     <button
                       onClick={() => removeFromPlaylist(track.spotifyId)}
-                      className="p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors"
+                      className="btn-toolbar hover:text-red-400"
                       title="Remove from playlist"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -377,12 +398,10 @@ export default function CreatePlaylist() {
                     <button 
                       onClick={() => handleSaveToSpotify()}
                       disabled={!isAuthenticated || isSaving}
-                      className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-colors ${
+                      className={`flex-1 ${
                         !isAuthenticated
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : isSaving
-                          ? 'bg-purple-600 text-white cursor-wait'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white'
+                          ? 'btn-glass-secondary opacity-50 cursor-not-allowed'
+                          : 'btn-glass-primary'
                       }`}
                     >
                       {isSaving ? (
@@ -397,11 +416,7 @@ export default function CreatePlaylist() {
                     <button 
                       onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
                       disabled={!savedPlaylistUrl}
-                      className={`px-4 py-3 rounded-xl transition-colors ${
-                        savedPlaylistUrl
-                          ? 'bg-black/50 border border-gray-700 text-white hover:border-purple-400'
-                          : 'bg-gray-600 border border-gray-600 text-gray-400 cursor-not-allowed'
-                      }`}
+                      className={savedPlaylistUrl ? 'btn-glass-secondary' : 'btn-glass-secondary opacity-50 cursor-not-allowed'}+
                       title="Open in Spotify"
                       aria-label="Open playlist in Spotify"
                     >
@@ -411,8 +426,9 @@ export default function CreatePlaylist() {
                 </div>
               )}
             </div>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
