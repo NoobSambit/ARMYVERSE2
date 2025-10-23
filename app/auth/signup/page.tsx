@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import SignUpForm from '@/components/auth/SignUpForm'
 
 export default function SignUpPage() {
@@ -21,14 +22,17 @@ export default function SignUpPage() {
             <div className="self-center w-full">
               {/* BTS Image */}
               <div className="mb-6 rounded-xl overflow-hidden border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
-                <img 
+                <Image
                   src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1761222091/1000_gjhkhd.webp"
                   alt="BTS"
+                  width={1000}
+                  height={667}
                   className="w-full h-auto object-cover"
                   onError={(e) => {
                     // Fallback if image fails to load
-                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.style.display = 'none'
                   }}
+                  priority
                 />
               </div>
 
@@ -51,7 +55,7 @@ export default function SignUpPage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)] flex-shrink-0" />
-                  <p className="text-white/90 text-sm">Track trends and discover what's hot on Spotify and YouTube</p>
+                  <p className="text-white/90 text-sm">Track trends and discover what’s hot on Spotify and YouTube</p>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)] flex-shrink-0" />
