@@ -19,26 +19,59 @@ export default function SignUpPage() {
           {/* Right: Benefits */}
           <div className="bg-black/30 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-purple-500/20 flex">
             <div className="self-center w-full">
+              {/* BTS Image */}
+              <div className="mb-6 rounded-xl overflow-hidden border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
+                <img 
+                  src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1761222091/1000_gjhkhd.webp"
+                  alt="BTS"
+                  className="w-full h-auto object-cover"
+                  onError={(e) => {
+                    // Fallback if image fails to load
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+
               <div className="text-center lg:text-left mb-6">
                 <h2 className="text-2xl md:text-3xl font-bold text-white">Why join ARMYVERSE?</h2>
                 <p className="text-gray-300 mt-1">Unlock tools built for ARMY — no clutter, just vibes.</p>
               </div>
-              <ul className="space-y-4">
+              <ul className="space-y-3.5">
                 <li className="flex items-start gap-3">
-                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.8)]" />
-                  <p className="text-white/90">Create and manage custom BTS playlists with ease</p>
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Create and manage custom BTS playlists with ease</p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.8)]" />
-                  <p className="text-white/90">AI-assisted recommendations and mood-based curation</p>
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">AI-powered playlist generation with mood-based curation using Google Gemini</p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
-                  <p className="text-white/90">Connect Spotify to see BTS listening insights</p>
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Connect Spotify to see BTS listening insights and analytics</p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]" />
-                  <p className="text-white/90">Track trends and discover what’s hot right now</p>
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Track trends and discover what's hot on Spotify and YouTube</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Write and share BTS-themed blogs with rich text editing and community reactions</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Play BTS trivia quizzes and collect exclusive photocard rewards</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Level up member mastery, complete quests, and climb the leaderboard</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Daily Spotify analytics snapshots with global rankings and streaming stats</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-block w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_10px_rgba(167,139,250,0.8)] flex-shrink-0" />
+                  <p className="text-white/90 text-sm">Craft rare cards, unlock seasonal pools, and share your collection</p>
                 </li>
               </ul>
 
