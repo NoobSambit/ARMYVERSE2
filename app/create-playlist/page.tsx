@@ -416,7 +416,7 @@ export default function CreatePlaylist() {
                     <button 
                       onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
                       disabled={!savedPlaylistUrl}
-                      className={savedPlaylistUrl ? 'btn-glass-secondary' : 'btn-glass-secondary opacity-50 cursor-not-allowed'}+
+                      className={savedPlaylistUrl ? 'btn-glass-secondary' : 'btn-glass-secondary opacity-50 cursor-not-allowed'}
                       title="Open in Spotify"
                       aria-label="Open playlist in Spotify"
                     >
