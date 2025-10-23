@@ -143,19 +143,40 @@ export default function ExportToSpotifyButton({
 
       if (!response.ok) {
         // Handle specific error cases
-        if (response.status === 401) {
-          onExportError?.('Spotify token expired or invalid. Please reconnect your account.')
-          return
-        }
-        
-        if (response.status === 403) {
-          onExportError?.('Insufficient permissions. Please ensure your Spotify account has playlist creation permissions.')
+        if (response.status === 401 || response.status === 403) {
+          // Clear invalid token from localStorage
+          localStorage.removeItem('spotify_token')
+          // Dispatch event to trigger auth state refresh
+          window.dispatchEvent(new Event('spotify_token_set'))
+          
+          if (response.status === 401) {
+            onExportError?.('Spotify token expired or invalid. Please reconnect your account.')
+          } else {
+            onExportError?.('Insufficient permissions. Please ensure your Spotify account has playlist creation permissions.')
+          }
           return
         }
         
         throw new Error(data.error || data.details || 'Failed to export playlist')
       }
 
+      // If backend refreshed the token, update localStorage
+      if (data.refreshedToken) {
+        const spotifyTokenData = localStorage.getItem('spotify_token')
+        if (spotifyTokenData) {
+          try {
+            const tokenObj = JSON.parse(spotifyTokenData)
+            tokenObj.access_token = data.refreshedToken
+            tokenObj.timestamp = Date.now()
+            localStorage.setItem('spotify_token', JSON.stringify(tokenObj))
+            // Dispatch event to notify other components
+            window.dispatchEvent(new Event('spotify_token_set'))
+          } catch (error) {
+            console.error('Error updating refreshed token:', error)
+          }
+        }
+      }
+      
       // Show success message with details
       const successMessage = `Successfully exported ${data.tracksAdded} out of ${data.totalSongs} tracks to Spotify!`
       console.log(successMessage)

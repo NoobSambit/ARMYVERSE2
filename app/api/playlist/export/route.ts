@@ -235,12 +235,17 @@ export async function POST(req: Request) {
       }
     }
 
-    const result = {
+    const result: any = {
       success: true,
       playlistUrl: playlist.external_urls.spotify,
       tracksAdded: trackUris.length,
       totalSongs: songs.length,
       searchErrors: searchErrors.length > 0 ? searchErrors : undefined
+    }
+    
+    // Include refreshed token if it was refreshed during this request
+    if (body.refreshToken && token !== authHeader?.replace('Bearer ', '')) {
+      result.refreshedToken = token
     }
 
     console.log('Export completed successfully:', result)

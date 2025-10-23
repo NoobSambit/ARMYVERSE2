@@ -7,7 +7,7 @@ export function useSpotifyAuth() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
       try {
         const spotifyTokenData = localStorage.getItem('spotify_token')
         if (spotifyTokenData) {
@@ -18,15 +18,36 @@ export function useSpotifyAuth() {
             if (tokenObj.expires_in && tokenObj.timestamp) {
               const now = Date.now()
               const expirationTime = tokenObj.timestamp + (tokenObj.expires_in * 1000)
-              if (now < expirationTime) {
-                setIsAuthenticated(true)
-              } else {
+              if (now >= expirationTime) {
                 // Token expired, remove it
                 localStorage.removeItem('spotify_token')
                 setIsAuthenticated(false)
+                setIsLoading(false)
+                return
               }
-            } else {
-              // No expiration info, assume valid
+            }
+            
+            // Token exists and not expired locally, validate with backend
+            try {
+              const validationResponse = await fetch('/api/spotify/validate', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${tokenObj.access_token}`
+                }
+              })
+              
+              if (!validationResponse.ok) {
+                // Token invalid on backend, remove it
+                localStorage.removeItem('spotify_token')
+                setIsAuthenticated(false)
+              } else {
+                // Token valid
+                setIsAuthenticated(true)
+              }
+            } catch (validationError) {
+              console.error('Error validating token with backend:', validationError)
+              // On network error, assume token is valid to avoid blocking user
+              // They'll get proper error handling when they try to use it
               setIsAuthenticated(true)
             }
           } else {
@@ -55,7 +76,10 @@ export function useSpotifyAuth() {
     window.addEventListener('storage', handleStorageChange)
     // Also listen for our custom signal from the same tab when token is set
     window.addEventListener('spotify_token_set', checkAuthStatus)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('spotify_token_set', checkAuthStatus)
+    }
   }, [])
 
   const disconnect = () => {
