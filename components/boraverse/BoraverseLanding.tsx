@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { 
-  Play, Trophy, Sparkles, Gift, TrendingUp, CheckCircle, ArrowRight, 
+  Play, Trophy, Sparkles, TrendingUp, CheckCircle, ArrowRight, 
   Zap, Star, Award, Target, Users, Crown, Gem, Heart, ChevronRight,
-  Gamepad2, Swords, BarChart3, Clock
+  Gamepad2, Swords, BarChart3
 } from 'lucide-react'
 import QuizScreen from './QuizScreen'
 
@@ -121,11 +121,6 @@ export default function BoraverseLanding() {
     { rarity: 'rare', label: 'Rare', ...rarityConfig.rare },
     { rarity: 'common', label: 'Common', ...rarityConfig.common }
   ] as const
-
-  // Get sample cards for each rarity to display
-  const getSampleCardsByRarity = (rarity: string, count: number) => {
-    return photocards.filter(c => c.rarity === rarity).slice(0, count)
-  }
 
   if (demoMode) {
     return (

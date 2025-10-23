@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { Photocard } from '@/lib/models/Photocard'
 import { url as cloudinaryUrl } from '@/lib/cloudinary'
@@ -11,7 +11,7 @@ export const runtime = 'nodejs'
  * Public endpoint to fetch sample photocards for the landing page
  * Returns a mix of rarities to showcase the game's photocard collection
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connect()
 
