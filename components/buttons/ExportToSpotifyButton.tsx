@@ -160,7 +160,8 @@ export default function ExportToSpotifyButton({
         throw new Error(data.error || data.details || 'Failed to export playlist')
       }
 
-      // If backend refreshed the token, update localStorage
+
+      
       if (data.refreshedToken) {
         const spotifyTokenData = localStorage.getItem('spotify_token')
         if (spotifyTokenData) {
