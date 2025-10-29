@@ -1,0 +1,21 @@
+# LaTeX temporary files
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.vrb
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.xdv
+
+# Output PDF (comment if you want to track it)
+# system-design.pdf
+
+# OS specific
+.DS_Store
+Thumbs.db

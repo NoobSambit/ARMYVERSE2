@@ -1,0 +1,96 @@
+\section*{5. External Services Integration}
+
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]
+
+\node[backend, minimum width=4cm, minimum height=1.5cm] (api) {\Large API Core};
+
+% Firebase
+\node[security, above left=1.5cm and 2.5cm of api] (fb) {Firebase\\Auth};
+\node[component, fill=security!20, above=of fb, font=\small] (fbc) {Client Auth};
+\node[component, fill=security!20, below=of fb, font=\small] (fba) {Admin SDK};
+
+% Spotify
+\node[external, above right=1.5cm and 2.5cm of api] (sp) {Spotify\\Web API};
+\node[component, fill=external!20, above=of sp, font=\small] (spo) {OAuth 2.0};
+\node[component, fill=external!20, below=of sp, font=\small] (spd) {Data APIs};
+
+% YouTube
+\node[external, below right=0.8cm and 0.8cm of api] (yt) {YouTube\\API v3};
+\node[component, fill=external!20, below=of yt, font=\small] (ytd) {Search\\Trends\\Kworb};
+
+% Gemini
+\node[ai, below left=0.8cm and 0.8cm of api] (gm) {Gemini\\AI};
+\node[component, fill=ai!20, below=of gm, font=\small] (gmd) {Generation\\Analysis};
+
+% Cloudinary
+\node[media, left=3cm of api] (cl) {Cloudinary};
+\node[component, fill=media!20, above=of cl, font=\small] (clu) {Upload\\Transform};
+\node[component, fill=media!20, below=of cl, font=\small] (cls) {Share URLs\\Overlays};
+
+% MongoDB
+\node[database, right=3cm of api] (db) {MongoDB\\Atlas};
+\node[cache, below=of db] (mg) {Mongoose\\ODM};
+
+\draw[bidirectional] (fbc) -- (fb);
+\draw[arrow] (fb) -- (api);
+\draw[arrow] (api) -- (fba);
+
+\draw[bidirectional] (spo) -- (sp);
+\draw[arrow] (sp) -- (api);
+\draw[bidirectional] (api) -- (spd);
+
+\draw[arrow] (api) -- (yt);
+\draw[bidirectional] (yt) -- (ytd);
+
+\draw[arrow] (api) -- (gm);
+\draw[bidirectional] (gm) -- (gmd);
+
+\draw[arrow] (api) -- (cl);
+\draw[bidirectional] (clu) -- (cl);
+\draw[bidirectional] (cls) -- (cl);
+
+\draw[bidirectional] (api) -- (db);
+\draw[bidirectional] (db) -- (mg);
+
+\end{tikzpicture}
+\end{center}
+
+\subsection*{Service Integration Details}
+
+\textbf{Firebase Authentication}
+\begin{itemize}
+    \item OAuth 2.0 integration with Google Sign-In
+    \item JWT token generation and verification
+    \item Admin SDK for server-side token validation
+\end{itemize}
+
+\textbf{Spotify Web API}
+\begin{itemize}
+    \item OAuth 2.0 flow with refresh tokens
+    \item Endpoints: Playlists, Top Tracks/Artists, Audio Features, Recommendations
+    \item Rate limiting and caching strategy
+\end{itemize}
+
+\textbf{YouTube Data API v3}
+\begin{itemize}
+    \item Video search and trending content
+    \item Kworb data scraping for BTS analytics
+    \item Thumbnail CDN optimization
+\end{itemize}
+
+\textbf{Google Gemini AI}
+\begin{itemize}
+    \item Natural language playlist generation
+    \item Mood and preference analysis
+    \item Content recommendations
+\end{itemize}
+
+\textbf{Cloudinary}
+\begin{itemize}
+    \item Blog image uploads with optimization
+    \item Photocard storage and transformation
+    \item Share URL generation with overlays
+\end{itemize}
+
+\newpage

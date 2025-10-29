@@ -1,0 +1,138 @@
+\section*{3. Database Schema \& Models (MongoDB)}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1cm and 1.5cm]
+
+% Core User Models
+\node[database, minimum width=2.5cm] (user) {User\\Model};
+\node[database, below=of user] (usergame) {UserGameState};
+\node[database, below=of usergame] (userquest) {UserQuestProgress};
+\node[database, below=of userquest] (mastery) {MasteryProgress};
+
+% Content Models
+\node[database, right=3cm of user] (blog) {Blog\\Model};
+\node[database, below=of blog] (collection) {Collection};
+\node[database, below=of collection] (playlist) {Playlist};
+\node[database, below=of playlist] (track) {Track};
+
+% Game Models
+\node[database, right=3cm of blog] (photocard) {Photocard};
+\node[database, below=of photocard] (inventory) {InventoryItem};
+\node[database, below=of inventory] (quiz) {QuizSession};
+\node[database, below=of quiz] (question) {Question};
+
+% Game System Models
+\node[database, right=3cm of photocard] (droppool) {DropPool};
+\node[database, below=of droppool] (questdef) {QuestDefinition};
+\node[database, below=of questdef] (leaderboard) {LeaderboardEntry};
+\node[database, below=of leaderboard] (audit) {InventoryGrantAudit};
+
+% Analytics Models
+\node[database, right=3cm of droppool] (kworb) {KworbSnapshot};
+\node[database, below=of kworb] (ytkworb) {YouTubeKworb\\Snapshot};
+
+% Relationships
+\draw[bidirectional, red, very thick] (user) -- (usergame) node[midway, right, font=\tiny] {1:1};
+\draw[bidirectional, red] (user) -- (userquest) node[midway, right, font=\tiny] {1:N};
+\draw[bidirectional, red] (user) -- (mastery) node[midway, right, font=\tiny] {1:N};
+\draw[bidirectional, blue] (user) -- (blog) node[midway, above, font=\tiny] {1:N author};
+\draw[bidirectional, blue] (user) -- (collection) node[midway, above, font=\tiny] {1:N};
+\draw[bidirectional, blue] (user) -- (playlist) node[midway, above, font=\tiny] {1:N creator};
+\draw[bidirectional, green!60!black] (user) -- (inventory) node[midway, above, font=\tiny] {1:N owner};
+\draw[bidirectional, green!60!black] (user) -- (quiz) node[midway, above, font=\tiny] {1:N};
+\draw[bidirectional, green!60!black] (user) -- (leaderboard) node[midway, above, font=\tiny] {1:N};
+
+\draw[arrow, orange, thick] (playlist) -- (track) node[midway, right, font=\tiny] {N:M};
+\draw[arrow, purple, thick] (inventory) -- (photocard) node[midway, above, font=\tiny] {N:1 cardRef};
+\draw[arrow, purple] (quiz) -- (question) node[midway, above, font=\tiny] {N:M};
+\draw[arrow, purple] (photocard) -- (droppool) node[midway, above, font=\tiny] {N:1 pool};
+
+% Schema Details Boxes
+\node[component, below=2.5cm of user, fill=frontend!20, minimum width=2.3cm, minimum height=2.8cm, 
+      align=left, font=\tiny] (userdetail) {
+    \textbf{User Schema:}\\
+    • uid (Firebase)\\
+    • email, displayName\\
+    • photoURL\\
+    • spotifyId\\
+    • spotifyTokens\\
+    • preferences\\
+    • createdAt, updatedAt
+};
+
+\node[component, below=2.5cm of blog, fill=backend!20, minimum width=2.3cm, minimum height=2.8cm, 
+      align=left, font=\tiny] (blogdetail) {
+    \textbf{Blog Schema:}\\
+    • title, content (HTML)\\
+    • author (ref User)\\
+    • tags[], moods[]\\
+    • reactions (Map)\\
+    • comments[]\\
+    • views, saves\\
+    • language, type
+};
+
+\node[component, below=2.5cm of photocard, fill=ai!20, minimum width=2.3cm, minimum height=2.8cm, 
+      align=left, font=\tiny] (gamedetail) {
+    \textbf{Photocard Schema:}\\
+    • member, era\\
+    • rarity (enum)\\
+    • publicId\\
+    • imageUrl\\
+    • set, stats\\
+    • dropPoolId (ref)\\
+    • createdAt
+};
+
+\node[component, below=2.5cm of droppool, fill=cache!20, minimum width=2.3cm, minimum height=2.8cm, 
+      align=left, font=\tiny] (systemdetail) {
+    \textbf{DropPool Schema:}\\
+    • name, description\\
+    • weights (Map)\\
+    • rewards\\
+    • requirements\\
+    • isActive\\
+    • expiresAt
+};
+
+\node[component, below=2.5cm of kworb, fill=external!20, minimum width=2.3cm, minimum height=2.8cm, 
+      align=left, font=\tiny] (analyticsdetail) {
+    \textbf{Kworb Schema:}\\
+    • date (indexed)\\
+    • songs[] (array)\\
+    • albums[] (array)\\
+    • artists[] (array)\\
+    • globalDaily[]\\
+    • createdAt
+};
+
+% Group Boxes
+\begin{scope}[on background layer]
+    \node[groupbox, fit=(user)(usergame)(userquest)(mastery)(userdetail), 
+          label=above:\textbf{User Domain (4 models)}] {};
+    \node[groupbox, fit=(blog)(collection)(playlist)(track)(blogdetail), 
+          label=above:\textbf{Content Domain (4 models)}] {};
+    \node[groupbox, fit=(photocard)(inventory)(quiz)(question)(gamedetail), 
+          label=above:\textbf{Game Core Domain (4 models)}] {};
+    \node[groupbox, fit=(droppool)(questdef)(leaderboard)(audit)(systemdetail), 
+          label=above:\textbf{Game Systems (4 models)}] {};
+    \node[groupbox, fit=(kworb)(ytkworb)(analyticsdetail), 
+          label=above:\textbf{Analytics (2 models)}] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+\subsection*{Database Design Principles}
+\begin{itemize}
+    \item \textbf{Total Models:} 18 Mongoose schemas with TypeScript support
+    \item \textbf{Indexing Strategy:} Compound indexes on frequently queried fields (uid, date, rarity)
+    \item \textbf{Referential Integrity:} ObjectId references with populate support
+    \item \textbf{Timestamps:} Automatic createdAt/updatedAt on all models
+    \item \textbf{Validation:} Schema-level validation with custom validators
+    \item \textbf{TTL Indexes:} Auto-expiration for QuizSession (20 min) and temporary data
+\end{itemize}
+
+\newpage

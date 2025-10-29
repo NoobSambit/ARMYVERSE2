@@ -1,0 +1,98 @@
+\section*{7. Game System Flow (Boraverse)}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.4cm and 2cm]
+
+\node[frontend, minimum width=3cm] (gamehub) {GameHub Component};
+
+% Quiz Flow
+\node[backend, below left=of gamehub, xshift=-1cm] (quizstart) {/game/quiz/start};
+\node[backend, below=of quizstart] (quizcomplete) {/game/quiz/complete};
+\node[database, below=of quizcomplete] (scoring) {Scoring Logic};
+\node[database, below=of scoring] (droproll) {Drop Roll};
+\node[database, below=of droproll] (grantcard) {Grant Card};
+
+% Craft Flow
+\node[backend, below right=of gamehub, xshift=1cm] (craft) {/game/craft};
+\node[database, below=of craft] (checkres) {Check Resources};
+\node[database, below=of checkres] (craftcard) {Create Card};
+
+% Other Systems
+\node[backend, right=3cm of gamehub] (mastery) {/game/mastery};
+\node[backend, below=of mastery] (quests) {/game/quests};
+\node[backend, below=of quests] (leaderboard) {/game/leaderboard};
+\node[backend, below=of leaderboard] (share) {/game/share};
+
+% Data Models
+\node[database, below=3cm of checkres, xshift=-1.5cm] (inventory) {InventoryItem};
+\node[cache, right=1.5cm of inventory] (usergame) {UserGameState};
+\node[database, right=1.5cm of usergame] (photocard) {Photocard};
+
+% Arrows - Quiz Flow
+\draw[arrow] (gamehub) -- (quizstart);
+\draw[arrow] (quizstart) -- (quizcomplete);
+\draw[arrow] (quizcomplete) -- (scoring);
+\draw[arrow] (scoring) -- (droproll);
+\draw[arrow] (droproll) -- (grantcard);
+\draw[arrow] (grantcard) -- (inventory);
+
+% Arrows - Craft Flow
+\draw[arrow] (gamehub) -- (craft);
+\draw[arrow] (craft) -- (checkres);
+\draw[arrow] (checkres) -- (craftcard);
+\draw[arrow] (craftcard) -- (inventory);
+
+% Arrows - Other Systems
+\draw[arrow] (gamehub) -- (mastery);
+\draw[arrow] (gamehub) -- (quests);
+\draw[arrow] (gamehub) -- (leaderboard);
+\draw[arrow] (leaderboard) -- (share);
+
+% Model Relationships
+\draw[bidirectional] (inventory) -- (usergame);
+\draw[bidirectional] (inventory) -- (photocard);
+\draw[arrow] (mastery) -- (usergame);
+\draw[arrow] (quests) -- (usergame);
+
+\end{tikzpicture}
+\end{center}
+
+\subsection*{Game Mechanics}
+
+\textbf{Quiz System}
+\begin{itemize}
+    \item Start quiz session with locale and question count
+    \item TTL: 20 minutes per session
+    \item Scoring: 1 point per correct answer
+    \item Rewards: Photocard based on rarity drop table
+\end{itemize}
+
+\textbf{Drop System}
+\begin{itemize}
+    \item Rarity distribution: Common 70\%, Rare 22\%, Epic 7\%, Legendary 1\%
+    \item Pity system: Epic guaranteed every 15 pulls, Legendary at 50
+    \item Seasonal pools with weighted drops
+\end{itemize}
+
+\textbf{Crafting System}
+\begin{itemize}
+    \item Spend dust to craft specific cards
+    \item Buy ticket rolls with rarity floor
+    \item Resource management through UserGameState
+\end{itemize}
+
+\textbf{Mastery System}
+\begin{itemize}
+    \item Member and era-specific XP tracking
+    \item Milestone claims grant themed pulls
+    \item Progressive rewards
+\end{itemize}
+
+\textbf{Quest System}
+\begin{itemize}
+    \item Daily and weekly tasks
+    \item Rewards: Dust or ticket currency
+    \item Auto-reset on schedule
+\end{itemize}
+
+\newpage

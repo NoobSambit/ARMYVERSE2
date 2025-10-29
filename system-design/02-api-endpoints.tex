@@ -1,0 +1,98 @@
+\section*{2. Detailed API Endpoints Architecture}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.4cm and 1.2cm]
+
+% API Gateway
+\node[backend, minimum width=12cm, minimum height=1cm] (gateway) {\Large Next.js API Routes (app/api/*)};
+
+% Authentication & User APIs
+\node[apibox, below left=1cm and -5cm of gateway] (auth1) {GET /spotify/auth-url};
+\node[apibox, below=of auth1] (auth2) {GET /spotify/callback};
+\node[apibox, below=of auth2] (auth3) {GET /spotify/user/[userId]};
+\node[apibox, below=of auth3] (auth4) {* /user/*};
+
+% Blog APIs
+\node[apibox, right=1.5cm of auth1] (blog1) {GET/POST /blogs};
+\node[apibox, below=of blog1] (blog2) {GET/PUT/DEL /blogs/[id]};
+\node[apibox, below=of blog2] (blog3) {POST /blogs/[id]/reactions};
+\node[apibox, below=of blog3] (blog4) {GET/POST /blogs/[id]/comments};
+\node[apibox, below=of blog4] (blog5) {POST /blogs/[id]/save};
+
+% Playlist APIs
+\node[apibox, right=1.5cm of blog1] (play1) {POST /playlist/ai-enhanced};
+\node[apibox, below=of play1] (play2) {POST /playlist/export};
+\node[apibox, below=of play2] (play3) {POST /playlist/generate};
+\node[apibox, below=of play3] (play4) {POST /playlist/streaming};
+\node[apibox, below=of play4] (play5) {GET/POST /songs};
+
+% Game APIs (Boraverse)
+\node[apibox, right=1.5cm of play1] (game1) {POST /game/quiz/start};
+\node[apibox, below=of game1] (game2) {POST /game/quiz/complete};
+\node[apibox, below=of game2] (game3) {GET /game/inventory};
+\node[apibox, below=of game3] (game4) {POST /game/craft};
+\node[apibox, below=of game4] (game5) {GET /game/mastery};
+\node[apibox, below=of game5] (game6) {GET/POST /game/quests};
+\node[apibox, below=of game6] (game7) {GET /game/leaderboard};
+\node[apibox, below=of game7] (game8) {POST /game/share};
+
+% Spotify Data APIs
+\node[apibox, right=1.5cm of game1] (spot1) {POST /spotify/dashboard};
+\node[apibox, below=of spot1] (spot2) {GET/POST /spotify/playlists};
+\node[apibox, below=of spot2] (spot3) {GET /spotify/recent};
+\node[apibox, below=of spot3] (spot4) {GET /spotify/top/tracks};
+\node[apibox, below=of spot4] (spot5) {GET /spotify/top/artists};
+\node[apibox, below=of spot5] (spot6) {GET /spotify/recommendations};
+\node[apibox, below=of spot6] (spot7) {GET /spotify/audio-features};
+\node[apibox, below=of spot7] (spot8) {GET /spotify/kworb/*};
+
+% Trending & Misc APIs
+\node[apibox, right=1.5cm of spot1] (trend1) {GET /trending/spotify};
+\node[apibox, below=of trend1] (trend2) {GET /trending/youtube};
+\node[apibox, below=of trend2] (trend3) {GET /trending/top-songs};
+\node[apibox, below=of trend3] (misc1) {POST /upload};
+\node[apibox, below=of misc1] (misc2) {* /analytics};
+\node[apibox, below=of misc2] (misc3) {* /collections};
+\node[apibox, below=of misc3] (misc4) {* /youtube/*};
+\node[apibox, below=of misc4] (misc5) {GET /health};
+
+% Connect to gateway
+\draw[arrow] (gateway) -- (auth1);
+\draw[arrow] (gateway) -- (blog1);
+\draw[arrow] (gateway) -- (play1);
+\draw[arrow] (gateway) -- (game1);
+\draw[arrow] (gateway) -- (spot1);
+\draw[arrow] (gateway) -- (trend1);
+
+% Group boxes
+\begin{scope}[on background layer]
+    \node[groupbox, fit=(auth1)(auth2)(auth3)(auth4), 
+          label=above:\small\textbf{Auth (4 routes)}] {};
+    \node[groupbox, fit=(blog1)(blog2)(blog3)(blog4)(blog5), 
+          label=above:\small\textbf{Blog Platform (7 routes)}] {};
+    \node[groupbox, fit=(play1)(play2)(play3)(play4)(play5), 
+          label=above:\small\textbf{Playlists (6 routes)}] {};
+    \node[groupbox, fit=(game1)(game2)(game3)(game4)(game5)(game6)(game7)(game8), 
+          label=above:\small\textbf{Game/Boraverse (10 routes)}] {};
+    \node[groupbox, fit=(spot1)(spot2)(spot3)(spot4)(spot5)(spot6)(spot7)(spot8), 
+          label=above:\small\textbf{Spotify Data (15 routes)}] {};
+    \node[groupbox, fit=(trend1)(trend2)(trend3)(misc1)(misc2)(misc3)(misc4)(misc5), 
+          label=above:\small\textbf{Content \& Utils (10+ routes)}] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+\subsection*{API Design Principles}
+\begin{itemize}
+    \item \textbf{RESTful Architecture:} Standard HTTP methods (GET, POST, PUT, DELETE)
+    \item \textbf{Authentication:} Bearer token authentication using Firebase ID tokens
+    \item \textbf{Rate Limiting:} Implemented for public endpoints to prevent abuse
+    \item \textbf{Caching Strategy:} Spotify and YouTube data cached for performance
+    \item \textbf{Error Handling:} Consistent error responses with proper status codes
+    \item \textbf{Pagination:} Cursor-based pagination for large datasets
+\end{itemize}
+
+\newpage

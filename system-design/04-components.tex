@@ -1,0 +1,66 @@
+\section*{4. Component Architecture (Frontend)}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.8cm and 1cm]
+
+% Pages Layer
+\node[frontend] (home) {Home};
+\node[frontend, right=of home] (aiplay) {AI Playlist};
+\node[frontend, right=of aiplay] (create) {Create\\Playlist};
+\node[frontend, right=of create] (blog) {Blog};
+\node[frontend, right=of blog] (trend) {Trending};
+\node[frontend, right=of trend] (stats) {Stats};
+\node[frontend, right=of stats] (game) {Boraverse};
+\node[frontend, right=of game] (spot) {Spotify};
+
+% Component Groups
+\node[security, below=1.2cm of home, xshift=0.5cm, minimum width=2cm] (auth) {Auth (6)};
+\node[backend, below=1.2cm of blog, minimum width=2cm] (blogc) {Blog (5)};
+\node[ai, below=1.2cm of game, minimum width=2cm] (gamec) {Game (12)};
+\node[frontend, below=2.4cm of create, minimum width=2cm] (playc) {Playlist (2)};
+\node[external, below=2.4cm of stats, minimum width=2cm] (dashc) {Dashboard (4)};
+\node[media, below=2.4cm of trend, minimum width=2cm] (trendc) {Trending (2)};
+\node[cache, below=3.6cm of aiplay, minimum width=2cm] (profilec) {Profile (10)};
+\node[frontend, below=3.6cm of spot, minimum width=2cm] (layoutc) {Layout (4)};
+\node[ai, below=3.6cm of home, xshift=0.5cm, minimum width=2cm] (uic) {UI (4)};
+
+\draw[arrow] (home) -- (auth);
+\draw[arrow] (aiplay) -- (playc);
+\draw[arrow] (blog) -- (blogc);
+\draw[arrow] (game) -- (gamec);
+\draw[arrow] (stats) -- (dashc);
+\draw[arrow] (trend) -- (trendc);
+
+% State Layer
+\node[cache, below=1.2cm of profilec, xshift=-1.5cm] (ctx) {AuthContext};
+\node[cache, right=1.5cm of ctx] (hooks) {Hooks (5)};
+
+\draw[dashed-arrow] (auth) -- (ctx);
+\draw[dashed-arrow] (ctx) -- (hooks);
+
+\begin{scope}[on background layer]
+    \node[groupbox, fit=(home)(aiplay)(create)(blog)(trend)(stats)(game)(spot), 
+          label=above:\textbf{Pages (8)}] {};
+    \node[groupbox, fit=(auth)(blogc)(gamec)(playc)(dashc)(trendc)(profilec)(layoutc)(uic), 
+          label=above:\textbf{Components (50+)}] {};
+    \node[groupbox, fit=(ctx)(hooks), label=above:\textbf{State Management}] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{center}
+
+\subsection*{Component Breakdown}
+\textbf{Total:} 50+ reusable components organized by domain
+\begin{itemize}
+    \item Auth: SignIn/Up, SpotifyAuth, ProtectedRoute, FloatingConnect (6)
+    \item Blog: Editor, FeaturedPosts, FilterBar, PostGrid, PostCard (5)
+    \item Boraverse: GameHub, Craft, Quiz, Inventory, Mastery, Leaderboard (12)
+    \item Dashboard: BTSAnalytics, TopArtists, RecentTracks, UserProfile (4)
+    \item Trending: MemberCarousel, SongCard (2)
+    \item Profile: Card, Modal, EditForm, Stats, Badges (10)
+    \item Layout: Navbar, Footer, QuickActions, nav-data (4)
+    \item UI: Toast, Slider, MoodPills, Forms (4)
+    \item Playlist: Grid, Builder (2)
+\end{itemize}
+
+\newpage

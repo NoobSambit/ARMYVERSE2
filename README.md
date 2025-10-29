@@ -1,10 +1,27 @@
 # ArmyVerse - BTS Fan Platform
 
-### Importing quiz questions
+> 📚 **[Complete Documentation Available](./docs/README.md)** - Comprehensive guides for all features, setup instructions, API references, and architecture details are now organized in the `/docs` folder.
 
-CLI script to import questions (JSON array or NDJSON) into MongoDB.
+A comprehensive platform for BTS fans to discover music, create playlists, explore trending content, and play games.
 
-- Run with env var: `MONGODB_URI="<your-uri>" npm run import:questions`
+## Quick Links
+
+- **[Features Documentation](./docs/features/)** - Detailed guides for each feature
+- **[Setup Guide](./docs/setup/)** - Environment setup and deployment instructions
+- **[API Reference](./docs/api/)** - Complete API documentation
+- **[Architecture](./docs/architecture/)** - System design and database schema
+
+---
+
+## Features
+
+- **AI-Powered Playlist Generation**: Create personalized BTS playlists using advanced AI
+- **Manual Playlist Creation**: Hand-pick your favorite tracks
+- **Spotify Integration**: Connect your account to save and sync playlists
+- **Trending Content**: Discover the hottest BTS content across platforms
+- **Dashboard Analytics**: View your listening habits and BTS-specific insights
+- **BTS Blog Platform**: Write, share, and discover BTS-themed blog posts with rich text editing, reactions, and community features
+ - **Spotify Analytics Snapshots**: Daily snapshot of songs/albums totals, global daily positions, all-time artist ranks, and monthly listeners with a dashboard at `/spotify`
 - Or: `MONGODB_URI="<your-uri>" node scripts/import-questions.js --file /home/hairyfairy/Documents/ARMYVERSE/data/questions.json --db armyverse --collection questions --batch 1000`
 - NDJSON supported: one JSON object per line; blanks ignored.
 - Upserts by `hash` (auto-generated if missing) and creates unique index on `hash`.

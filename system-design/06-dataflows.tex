@@ -1,0 +1,55 @@
+\section*{6. Data Flow Diagrams}
+
+\subsection*{6.1 User Authentication Flow}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm]
+
+\node[frontend] (browser) {Browser};
+\node[frontend, below=of browser] (signin) {SignIn Component};
+\node[backend, below=of signin] (authapi) {/api/spotify/auth-url};
+\node[external, below=of authapi] (spotifyauth) {Spotify OAuth};
+\node[backend, below=of spotifyauth] (callback) {/api/spotify/callback};
+\node[security, below=of callback] (firebaseauth) {Firebase Auth};
+\node[database, below=of firebaseauth] (userdb) {User Model};
+\node[cache, below=of userdb] (session) {Session Storage};
+
+\draw[arrow] (browser) -- (signin) node[midway, right, font=\tiny] {1. Click Login};
+\draw[arrow] (signin) -- (authapi) node[midway, right, font=\tiny] {2. Request URL};
+\draw[arrow] (authapi) -- (spotifyauth) node[midway, right, font=\tiny] {3. Redirect};
+\draw[arrow] (spotifyauth) -- (callback) node[midway, right, font=\tiny] {4. Code};
+\draw[arrow] (callback) -- (firebaseauth) node[midway, right, font=\tiny] {5. Create Token};
+\draw[arrow] (firebaseauth) -- (userdb) node[midway, right, font=\tiny] {6. Save User};
+\draw[arrow] (userdb) -- (session) node[midway, right, font=\tiny] {7. Store Session};
+\draw[arrow, dashed, bend left=60] (session) to node[left, font=\tiny] {8. Auth State} (browser);
+
+\end{tikzpicture}
+\end{center}
+
+\subsection*{6.2 AI Playlist Generation Flow}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.3cm]
+
+\node[frontend] (ui) {Playlist UI};
+\node[backend, below=of ui] (playapi) {/api/playlist/ai-enhanced};
+\node[database, below=of playapi] (songdb) {Track Model};
+\node[ai, below=of songdb] (gemini) {Gemini AI};
+\node[external, below=of gemini] (spotify) {Spotify Recommendations};
+\node[backend, below=of spotify] (generate) {Generate Playlist};
+\node[database, below=of generate] (save) {Save to DB};
+\node[external, below=of save] (export) {Export to Spotify};
+
+\draw[arrow] (ui) -- (playapi) node[midway, right, font=\tiny] {Mood/Prefs};
+\draw[arrow] (playapi) -- (songdb) node[midway, right, font=\tiny] {Fetch Songs};
+\draw[arrow] (songdb) -- (gemini) node[midway, right, font=\tiny] {Analyze};
+\draw[arrow] (gemini) -- (spotify) node[midway, right, font=\tiny] {Get Similar};
+\draw[arrow] (spotify) -- (generate) node[midway, right, font=\tiny] {Combine};
+\draw[arrow] (generate) -- (save) node[midway, right, font=\tiny] {Store};
+\draw[arrow] (save) -- (export) node[midway, right, font=\tiny] {Optional};
+\draw[arrow, dashed, bend left=60] (export) to node[left, font=\tiny] {Playlist} (ui);
+
+\end{tikzpicture}
+\end{center}
+
+\newpage

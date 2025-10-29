@@ -1,0 +1,106 @@
+\section*{1. High-Level System Architecture}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.5cm and 2cm]
+
+% Client Layer
+\node[frontend, minimum width=8cm, minimum height=1.2cm] (client) {\Large Client Layer (Browser)};
+
+% Next.js Frontend Layer
+\node[frontend, below=of client, xshift=-5cm] (nextjs) {Next.js 14\\App Router};
+\node[frontend, below=of client, xshift=-1.5cm] (react) {React 18\\Components};
+\node[frontend, below=of client, xshift=2cm] (tailwind) {Tailwind CSS\\+ Radix UI};
+\node[frontend, below=of client, xshift=5.5cm] (framer) {Framer Motion\\Animations};
+
+% API Gateway Layer
+\node[backend, below=1.8cm of react, minimum width=10cm, minimum height=1.2cm] (apigateway) {\Large Next.js API Routes Layer};
+
+% Core API Groups
+\node[backend, below=1.5cm of apigateway, xshift=-7cm] (authapi) {Auth APIs\\OAuth + Firebase};
+\node[backend, below=1.5cm of apigateway, xshift=-4.5cm] (blogapi) {Blog APIs\\CRUD + Social};
+\node[backend, below=1.5cm of apigateway, xshift=-2cm] (playlistapi) {Playlist APIs\\AI + Export};
+\node[backend, below=1.5cm of apigateway, xshift=0.5cm] (gameapi) {Game APIs\\Quiz + Craft};
+\node[backend, below=1.5cm of apigateway, xshift=3cm] (spotifyapi) {Spotify APIs\\Data + Auth};
+\node[backend, below=1.5cm of apigateway, xshift=5.5cm] (trendingapi) {Trending APIs\\Multi-platform};
+\node[backend, below=1.5cm of apigateway, xshift=8cm] (uploadapi) {Upload APIs\\Media};
+
+% Database Layer
+\node[database, below=3.5cm of gameapi, xshift=-2.5cm] (mongodb) {MongoDB\\Atlas};
+
+% External Services
+\node[external, below=3.5cm of gameapi, xshift=2cm] (firebase) {Firebase\\Auth};
+\node[external, right=0.8cm of firebase] (spotify) {Spotify\\Web API};
+\node[external, right=0.8cm of spotify] (youtube) {YouTube\\Data API};
+\node[ai, right=0.8cm of youtube] (gemini) {Google\\Gemini AI};
+\node[media, right=0.8cm of gemini] (cloudinary) {Cloudinary\\CDN};
+
+% Business Logic Layer
+\node[cache, below=1.2cm of mongodb, xshift=-2.5cm] (mongoose) {Mongoose ODM\\18 Models};
+\node[cache, below=1.2cm of firebase, xshift=2cm] (nextauth) {NextAuth.js\\Session Mgmt};
+
+% Arrows - Client to Frontend
+\draw[arrow] (client) -- (nextjs);
+\draw[arrow] (client) -- (react);
+\draw[arrow] (client) -- (tailwind);
+\draw[arrow] (client) -- (framer);
+
+% Arrows - Frontend to API Gateway
+\draw[arrow] (nextjs) -- (apigateway);
+\draw[arrow] (react) -- (apigateway);
+
+% Arrows - API Gateway to Core APIs
+\draw[arrow] (apigateway) -- (authapi);
+\draw[arrow] (apigateway) -- (blogapi);
+\draw[arrow] (apigateway) -- (playlistapi);
+\draw[arrow] (apigateway) -- (gameapi);
+\draw[arrow] (apigateway) -- (spotifyapi);
+\draw[arrow] (apigateway) -- (trendingapi);
+\draw[arrow] (apigateway) -- (uploadapi);
+
+% Arrows - APIs to Database
+\draw[arrow] (authapi) -- (mongodb);
+\draw[arrow] (blogapi) -- (mongodb);
+\draw[arrow] (playlistapi) -- (mongodb);
+\draw[arrow] (gameapi) -- (mongodb);
+\draw[arrow] (spotifyapi) -- (mongodb);
+\draw[arrow] (trendingapi) -- (mongodb);
+
+% Arrows - MongoDB to Mongoose
+\draw[bidirectional] (mongodb) -- (mongoose);
+
+% Arrows - APIs to External Services
+\draw[arrow] (authapi) -- (firebase);
+\draw[arrow] (authapi) -- (nextauth);
+\draw[arrow] (spotifyapi) -- (spotify);
+\draw[arrow] (trendingapi) -- (spotify);
+\draw[arrow] (trendingapi) -- (youtube);
+\draw[arrow] (playlistapi) -- (gemini);
+\draw[arrow] (playlistapi) -- (spotify);
+\draw[arrow] (uploadapi) -- (cloudinary);
+\draw[arrow] (gameapi) -- (cloudinary);
+
+% Group Boxes
+\begin{scope}[on background layer]
+    \node[groupbox, fit=(nextjs)(react)(tailwind)(framer), label=above:\textbf{Presentation Layer}] {};
+    \node[groupbox, fit=(authapi)(blogapi)(playlistapi)(gameapi)(spotifyapi)(trendingapi)(uploadapi), 
+          label=above:\textbf{Application Layer - 50+ API Routes}] {};
+    \node[groupbox, fit=(mongodb)(mongoose)(nextauth), label=above:\textbf{Data Layer}] {};
+    \node[groupbox, fit=(firebase)(spotify)(youtube)(gemini)(cloudinary), 
+          label=above:\textbf{External Services Layer}] {};
+\end{scope}
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+
+\subsection*{Architecture Highlights}
+\begin{itemize}
+    \item \textbf{Layered Architecture:} Clear separation between presentation, application, data, and external layers
+    \item \textbf{API-First Design:} All business logic exposed through RESTful API routes
+    \item \textbf{Microservices Integration:} Firebase, Spotify, YouTube, Gemini, Cloudinary
+    \item \textbf{Real-time Capabilities:} OAuth flows, live data synchronization
+    \item \textbf{Scalability:} MongoDB Atlas for horizontal scaling, edge runtime support
+\end{itemize}
+
+\newpage

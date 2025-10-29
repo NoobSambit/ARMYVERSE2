@@ -1,0 +1,63 @@
+\documentclass[12pt,landscape]{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{helvet}
+\usepackage{tcolorbox}
+\usepackage{array}
+
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, shadows}
+
+% Define colors following modern system design standards
+\definecolor{frontend}{RGB}{66, 165, 245}     % Blue
+\definecolor{backend}{RGB}{102, 187, 106}     % Green
+\definecolor{database}{RGB}{255, 167, 38}     % Orange
+\definecolor{external}{RGB}{171, 71, 188}     % Purple
+\definecolor{security}{RGB}{239, 83, 80}      % Red
+\definecolor{cache}{RGB}{255, 193, 7}         % Amber
+\definecolor{media}{RGB}{38, 166, 154}        % Teal
+\definecolor{ai}{RGB}{233, 30, 99}            % Pink
+
+\renewcommand{\familydefault}{\sfdefault}
+
+\tikzset{
+    component/.style={rectangle, rounded corners, minimum width=2.5cm, minimum height=1cm,
+        text centered, draw=black, thick, drop shadow, font=\small\bfseries},
+    apibox/.style={component, fill=backend!30, minimum width=2cm, minimum height=0.7cm, font=\scriptsize},
+    frontend/.style={component, fill=frontend!40},
+    backend/.style={component, fill=backend!40},
+    database/.style={cylinder, shape border rotate=90, draw=black, thick, fill=database!40,
+        minimum height=1.2cm, minimum width=1.8cm, text centered, drop shadow, font=\small\bfseries},
+    external/.style={component, fill=external!40},
+    security/.style={component, fill=security!40},
+    cache/.style={component, fill=cache!40},
+    media/.style={component, fill=media!40},
+    ai/.style={component, fill=ai!40},
+    arrow/.style={-{Stealth[length=3mm]}, thick},
+    bidirectional/.style={{Stealth[length=2mm]}-{Stealth[length=2mm]}, thick},
+    dashed-arrow/.style={-{Stealth[length=3mm]}, thick, dashed},
+    groupbox/.style={draw=black, thick, rounded corners, inner sep=10pt, fill=gray!10}
+}
+
+\begin{document}
+
+\begin{center}
+{\Huge\textbf{ArmyVerse System Design}}\\[0.3cm]
+{\Large BTS Fan Platform - Comprehensive Architecture}\\[0.2cm]
+{\large Version 1.0 | Next.js 14 + MongoDB + Firebase + Multi-Service Integration}\\[0.2cm]
+{\normalsize Generated: October 2025}
+\end{center}
+
+\vspace{0.5cm}
+
+% Include all sections
+\input{01-architecture.tex}
+\input{02-api-endpoints.tex}
+\input{03-database.tex}
+\input{04-components.tex}
+\input{05-services.tex}
+\input{06-dataflows.tex}
+\input{07-game-system.tex}
+\input{08-tech-stack.tex}
+
+\end{document}
