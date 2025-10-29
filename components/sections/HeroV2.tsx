@@ -1,32 +1,48 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { TrendingUp, Sparkles, Gamepad2, BarChart3, BookOpen, Music } from 'lucide-react'
 import FeatureShowcase from './FeatureShowcase'
 
 export default function HeroV2() {
-  const [cursorSpotlight, setCursorSpotlight] = useState({ x: 0, y: 0 })
   const heroRef = useRef<HTMLDivElement>(null)
+  const spotlightRef = useRef<HTMLDivElement>(null)
+  const rafId = useRef<number>()
 
-  // Cursor spotlight effect
+  // Cursor spotlight effect using RAF + CSS custom properties (no React state updates)
   useEffect(() => {
+    const hero = heroRef.current
+    const spotlight = spotlightRef.current
+    if (!hero || !spotlight) return
+
+    // Only add listener if user hasn't requested reduced motion and not on mobile
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const isMobile = window.matchMedia('(max-width: 768px)')
+    if (mediaQuery.matches || isMobile.matches) return
+
+    let mouseX = 0
+    let mouseY = 0
+
     const handleMouseMove = (e: MouseEvent) => {
-      if (!heroRef.current) return
-      const rect = heroRef.current.getBoundingClientRect()
+      const rect = hero.getBoundingClientRect()
+      mouseX = e.clientX - rect.left
+      mouseY = e.clientY - rect.top
       
-      // Cursor spotlight position
-      setCursorSpotlight({ 
-        x: e.clientX - rect.left, 
-        y: e.clientY - rect.top 
-      })
+      // Use RAF to batch updates and sync with browser paint
+      if (!rafId.current) {
+        rafId.current = requestAnimationFrame(() => {
+          spotlight.style.setProperty('--spotlight-x', `${mouseX}px`)
+          spotlight.style.setProperty('--spotlight-y', `${mouseY}px`)
+          rafId.current = undefined
+        })
+      }
     }
 
-    // Only add listener if user hasn't requested reduced motion
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (!mediaQuery.matches) {
-      window.addEventListener('mousemove', handleMouseMove)
-      return () => window.removeEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      if (rafId.current) cancelAnimationFrame(rafId.current)
     }
   }, [])
 
@@ -50,9 +66,10 @@ export default function HeroV2() {
       
       {/* Cursor spotlight effect */}
       <div 
+        ref={spotlightRef}
         className="absolute inset-0 -z-10 opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
-          background: `radial-gradient(600px circle at ${cursorSpotlight.x}px ${cursorSpotlight.y}px, rgba(76, 29, 149, 0.1), transparent 40%)`
+          background: `radial-gradient(600px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(76, 29, 149, 0.1), transparent 40%)`
         }}
       />
       

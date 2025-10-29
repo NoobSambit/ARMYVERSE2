@@ -7,6 +7,7 @@ import { TrendingUp, Sparkles, Music, Gamepad2, BarChart3, UserCircle } from 'lu
 export default function FeatureShowcase() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const rafId = useRef<number>()
 
   const features = [
     {
@@ -63,15 +64,24 @@ export default function FeatureShowcase() {
     const scrollContainer = scrollRef.current
     if (!scrollContainer) return
 
+    // Throttle scroll updates using RAF
     const handleScroll = () => {
-      const scrollLeft = scrollContainer.scrollLeft
-      const cardWidth = scrollContainer.offsetWidth * 0.85
-      const index = Math.round(scrollLeft / cardWidth)
-      setActiveIndex(index)
+      if (rafId.current) return
+      
+      rafId.current = requestAnimationFrame(() => {
+        const scrollLeft = scrollContainer.scrollLeft
+        const cardWidth = scrollContainer.offsetWidth * 0.85
+        const index = Math.round(scrollLeft / cardWidth)
+        setActiveIndex(index)
+        rafId.current = undefined
+      })
     }
 
-    scrollContainer.addEventListener('scroll', handleScroll)
-    return () => scrollContainer.removeEventListener('scroll', handleScroll)
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll)
+      if (rafId.current) cancelAnimationFrame(rafId.current)
+    }
   }, [])
 
   return (

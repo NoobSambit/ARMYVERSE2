@@ -283,9 +283,15 @@
     radial-gradient(1200px 500px at 10% 60%, rgba(124, 45, 18, 0.12), rgba(76, 29, 149, 0.06) 55%, transparent 90%),
     radial-gradient(700px 900px at 90% -50px, rgba(107, 33, 168, 0.2), rgba(190, 24, 93, 0.1) 50%, transparent 80%),
     linear-gradient(180deg, rgba(15, 11, 22, 1) 0%, rgba(26, 13, 46, 0.95) 15%, rgba(45, 27, 78, 0.9) 30%, rgba(26, 13, 46, 0.95) 60%, rgba(15, 11, 22, 1) 100%);
-  background-attachment: fixed;
+  background-attachment: scroll;
   background-size: 110% 110%, 105% 105%, 115% 115%, 105% 105%, 100% 100%;
-  animation: backgroundShift 20s ease-in-out infinite;
+}
+
+/* Only animate gradients if user hasn't requested reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  .page-gradient {
+    animation: backgroundShift 20s ease-in-out infinite;
+  }
 }
 
 /* Mobile adjustments for page gradient */
@@ -822,35 +828,36 @@
   }
 }
 
-/* Mobile aurora adjustments */
+/* Mobile aurora adjustments - reduce size and opacity for better performance */
 @media (max-width: 768px) {
   .aurora-glow {
-    filter: blur(40px);
-    opacity: 0.5;
+    filter: blur(30px);
+    opacity: 0.3;
+    animation: none; /* Disable animations on mobile */
   }
   
   .aurora-glow-1 {
-    width: 500px;
-    height: 500px;
-    opacity: 0.6;
+    width: 400px;
+    height: 400px;
+    opacity: 0.35;
   }
   
   .aurora-glow-2 {
-    width: 450px;
-    height: 450px;
-    opacity: 0.6;
+    width: 350px;
+    height: 350px;
+    opacity: 0.35;
   }
   
   .aurora-glow-3 {
-    width: 400px;
-    height: 400px;
-    opacity: 0.55;
+    width: 300px;
+    height: 300px;
+    opacity: 0.3;
   }
   
   .aurora-glow-4 {
-    width: 420px;
-    height: 420px;
-    opacity: 0.55;
+    width: 320px;
+    height: 320px;
+    opacity: 0.3;
   }
 }
 

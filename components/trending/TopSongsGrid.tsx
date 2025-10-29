@@ -28,8 +28,6 @@ function formatNumber(num?: number): string {
 }
 
 export default function TopSongsGrid({ songs, platform }: TopSongsGridProps) {
-  console.log(`TopSongsGrid [${platform}]: Received ${songs?.length || 0} songs`, songs)
-  
   if (!songs || songs.length === 0) {
     return (
       <div className="text-center py-12 px-4">

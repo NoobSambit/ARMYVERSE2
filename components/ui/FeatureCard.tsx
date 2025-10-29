@@ -23,12 +23,12 @@ export default function FeatureCard({ icon: Icon, title, description, href, dela
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
       }}
     >
-      {/* Frosted glass background */}
-      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-[28px] transition-all duration-300 group-hover:bg-white/[0.06] group-hover:border-white/[0.12]" />
+      {/* Frosted glass background - reduced blur on mobile */}
+      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-xl md:backdrop-blur-xl max-md:backdrop-blur-md border border-white/[0.08] rounded-[28px] transition-all duration-300 group-hover:bg-white/[0.06] group-hover:border-white/[0.12]" />
       
-      {/* Subtle glow effect on hover */}
+      {/* Subtle glow effect on hover - disabled on touch devices */}
       <div 
-        className="absolute inset-0 rounded-[28px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        className="absolute inset-0 rounded-[28px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 max-md:hidden"
         style={{ 
           boxShadow: `0 0 40px ${accentColor}40, inset 0 0 20px ${accentColor}10`
         }}
