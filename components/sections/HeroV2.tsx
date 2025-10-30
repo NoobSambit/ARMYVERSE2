@@ -39,9 +39,10 @@ export default function HeroV2() {
       }
     }
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    // Attach to hero element only, not window
+    hero.addEventListener('mousemove', handleMouseMove, { passive: true })
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
+      hero.removeEventListener('mousemove', handleMouseMove)
       if (rafId.current) cancelAnimationFrame(rafId.current)
     }
   }, [])
@@ -52,7 +53,7 @@ export default function HeroV2() {
   }
 
   return (
-    <section ref={heroRef} className="relative h-[calc(100vh-4rem)] flex items-center overflow-hidden py-4 lg:py-6">
+    <section ref={heroRef} className="relative h-[calc(100vh-4rem)] flex items-center py-4 lg:py-6">
       {/* Enhanced background gradients */}
       <div className="absolute inset-0 -z-20 hero-global-gradients"></div>
       
@@ -101,23 +102,8 @@ export default function HeroV2() {
               <div className="mb-4">
                 <div className="relative">
                   {/* Gradient border layer */}
-                  <h1 
-                    className="absolute inset-0 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-2"
-                    style={{
-                      WebkitTextStroke: '4px',
-                      background: 'linear-gradient(90deg, #4c1d95, #6b21a8, #7c3aed, #8b5cf6, #4c1d95)',
-                      backgroundSize: '200% 100%',
-                      WebkitBackgroundClip: 'text',
-                      backgroundClip: 'text',
-                      color: 'transparent',
-                      animation: 'gradient-x 4s ease-in-out infinite',
-                      zIndex: 1
-                    }}
-                  >
-                    ARMYVERSE
-                  </h1>
                   {/* Main text layer */}
-                  <h1 className="relative text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-2 text-shimmer armyverse-title-gradient-border">
+                  <h1 className="relative text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-2 bg-gradient-to-r from-[#c4b5fd] via-[#f472b6] to-[#fb923c] bg-clip-text text-transparent">
                     ARMYVERSE
                   </h1>
                 </div>
@@ -174,6 +160,7 @@ export default function HeroV2() {
           </div>
         </div>
       </div>
+      <div className="absolute bottom-0 left-0 right-0 h-36 pointer-events-none hero-bottom-fade z-0" />
     </section>
   )
 }

@@ -123,12 +123,14 @@
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient-shift 3s ease infinite;
+    will-change: background-position;
   }
 
   /* Horizontal gradient animation for borders */
   .animate-gradient-x {
     background-size: 200% 100%;
     animation: gradient-x 6s linear infinite;
+    will-change: background-position;
   }
   @keyframes gradient-x {
     0% { background-position: 0% 50%; }
@@ -276,35 +278,30 @@
 
 /* Page-wide dark purple gradient background helper */
 .page-gradient {
-  /* Dynamic dark purple to black with dark pink gradients - no black circles */
-  background:
-    radial-gradient(1400px 900px at 30% -100px, rgba(76, 29, 149, 0.3), rgba(107, 33, 168, 0.12) 40%, transparent 80%),
-    radial-gradient(900px 700px at 70% 20%, rgba(190, 24, 93, 0.18), rgba(124, 45, 18, 0.1) 50%, transparent 80%),
-    radial-gradient(1200px 500px at 10% 60%, rgba(124, 45, 18, 0.12), rgba(76, 29, 149, 0.06) 55%, transparent 90%),
-    radial-gradient(700px 900px at 90% -50px, rgba(107, 33, 168, 0.2), rgba(190, 24, 93, 0.1) 50%, transparent 80%),
-    linear-gradient(180deg, rgba(15, 11, 22, 1) 0%, rgba(26, 13, 46, 0.95) 15%, rgba(45, 27, 78, 0.9) 30%, rgba(26, 13, 46, 0.95) 60%, rgba(15, 11, 22, 1) 100%);
+  /* Seamless dark purple to black gradient - no visible seams */
+  background-color: #0f0b16;
+  background-image:
+    radial-gradient(1400px 900px at 30% -100px, rgba(76, 29, 149, 0.25), rgba(107, 33, 168, 0.1) 40%, transparent 80%),
+    radial-gradient(900px 700px at 70% 20%, rgba(190, 24, 93, 0.15), rgba(124, 45, 18, 0.08) 50%, transparent 80%),
+    radial-gradient(1200px 500px at 10% 60%, rgba(124, 45, 18, 0.1), rgba(76, 29, 149, 0.05) 55%, transparent 90%),
+    radial-gradient(700px 900px at 90% -50px, rgba(107, 33, 168, 0.15), rgba(190, 24, 93, 0.08) 50%, transparent 80%);
   background-attachment: scroll;
-  background-size: 110% 110%, 105% 105%, 115% 115%, 105% 105%, 100% 100%;
+  background-size: 110% 110%, 105% 105%, 115% 115%, 105% 105%;
 }
 
-/* Only animate gradients if user hasn't requested reduced motion */
-@media (prefers-reduced-motion: no-preference) {
-  .page-gradient {
-    animation: backgroundShift 20s ease-in-out infinite;
-  }
-}
+/* Disable page gradient animation for better performance */
 
 /* Mobile adjustments for page gradient */
 @media (max-width: 768px) {
   .page-gradient {
-    background:
-      radial-gradient(800px 600px at 30% -80px, rgba(76, 29, 149, 0.4), rgba(107, 33, 168, 0.2) 45%, transparent 85%),
-      radial-gradient(600px 500px at 70% 25%, rgba(190, 24, 93, 0.3), rgba(124, 45, 18, 0.15) 55%, transparent 90%),
-      radial-gradient(500px 400px at 10% 70%, rgba(124, 45, 18, 0.2), rgba(76, 29, 149, 0.1) 60%, transparent 95%),
-      radial-gradient(500px 600px at 90% -30px, rgba(107, 33, 168, 0.3), rgba(190, 24, 93, 0.15) 50%, transparent 85%),
-      linear-gradient(180deg, rgba(15, 11, 22, 1) 0%, rgba(26, 13, 46, 0.98) 20%, rgba(45, 27, 78, 0.95) 40%, rgba(26, 13, 46, 0.98) 70%, rgba(15, 11, 22, 1) 100%);
+    background-color: #0f0b16;
+    background-image:
+      radial-gradient(800px 600px at 30% -80px, rgba(76, 29, 149, 0.3), rgba(107, 33, 168, 0.15) 45%, transparent 85%),
+      radial-gradient(600px 500px at 70% 25%, rgba(190, 24, 93, 0.2), rgba(124, 45, 18, 0.1) 55%, transparent 90%),
+      radial-gradient(500px 400px at 10% 70%, rgba(124, 45, 18, 0.15), rgba(76, 29, 149, 0.08) 60%, transparent 95%),
+      radial-gradient(500px 600px at 90% -30px, rgba(107, 33, 168, 0.2), rgba(190, 24, 93, 0.1) 50%, transparent 85%);
     background-attachment: scroll;
-    background-size: 120% 120%, 110% 110%, 130% 130%, 110% 110%, 100% 100%;
+    background-size: 120% 120%, 110% 110%, 130% 130%, 110% 110%;
   }
 }
 
@@ -329,7 +326,15 @@
     radial-gradient(1400px 500px at 85% -20px, rgba(107, 33, 168, 0.25), rgba(190, 24, 93, 0.12) 50%, transparent 80%),
     linear-gradient(180deg, rgba(15, 11, 22, 0.98) 0%, rgba(26, 13, 46, 0.85) 25%, rgba(45, 27, 78, 0.75) 50%, rgba(26, 13, 46, 0.85) 75%, rgba(15, 11, 22, 0.98) 100%);
   background-size: 125% 125%, 115% 115%, 110% 110%, 135% 135%, 100% 100%;
-  animation: heroGradientShift 25s ease-in-out infinite;
+  /* Disable animation for better performance */
+}
+
+.hero-bottom-fade {
+  background: transparent;
+}
+
+.section-top-fade {
+  display: none;
 }
 
 /* Mobile adjustments for hero gradients */
@@ -345,44 +350,26 @@
   }
 }
 
+/* Simplified hero gradient - remove expensive hue-rotate */
 @keyframes heroGradientShift {
   0%, 100% {
     background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
-    filter: hue-rotate(0deg);
-  }
-  25% {
-    background-position: 15% 25%, -15% 15%, 10% -15%, -10% 20%, 0% 0%;
-    filter: hue-rotate(5deg);
   }
   50% {
-    background-position: -10% 15%, 20% -10%, -15% 25%, 15% -15%, 0% 0%;
-    filter: hue-rotate(-3deg);
-  }
-  75% {
-    background-position: 5% -10%, -5% 20%, 20% 10%, -20% 5%, 0% 0%;
-    filter: hue-rotate(8deg);
+    background-position: 5% 10%, -5% 5%, 3% -5%, -3% 8%, 0% 0%;
   }
 }
 
-/* Section backgrounds */
+/* Section backgrounds - subtle overlay only */
 .section-gradients {
-  background:
-    radial-gradient(1000px 600px at 30% 20%, rgba(76, 29, 149, 0.12), rgba(107, 33, 168, 0.06) 45%, transparent 75%),
-    radial-gradient(800px 500px at 70% 80%, rgba(190, 24, 93, 0.1), rgba(124, 45, 18, 0.05) 55%, transparent 85%),
-    radial-gradient(700px 800px at 10% 50%, rgba(124, 45, 18, 0.08), rgba(76, 29, 149, 0.04) 50%, transparent 80%);
-  background-size: 115% 115%, 125% 125%, 105% 105%;
-  animation: sectionGradientShift 30s ease-in-out infinite;
+  background: transparent;
+  /* Disable animation for better performance */
 }
 
 /* Mobile adjustments for section gradients */
 @media (max-width: 768px) {
   .section-gradients {
-    background:
-      radial-gradient(600px 400px at 30% 25%, rgba(76, 29, 149, 0.18), rgba(107, 33, 168, 0.1) 50%, transparent 85%),
-      radial-gradient(500px 350px at 70% 75%, rgba(190, 24, 93, 0.15), rgba(124, 45, 18, 0.08) 60%, transparent 90%),
-      radial-gradient(450px 500px at 10% 55%, rgba(124, 45, 18, 0.12), rgba(76, 29, 149, 0.06) 55%, transparent 85%);
-    background-size: 125% 125%, 135% 135%, 115% 115%;
-    background-attachment: scroll;
+    background: transparent;
   }
 }
 
@@ -416,7 +403,8 @@
 		0 8px 24px -10px rgba(76, 29, 149, 0.45),
 		0 0 0 1px rgba(255, 255, 255, 0.1),
 		inset 0 1px 0 rgba(255, 255, 255, 0.1);
-	transition: all 150ms ease;
+	transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+	will-change: transform;
 }
 .btn-glass-primary:hover { 
 	filter: brightness(1.05); 
@@ -443,12 +431,13 @@
 .btn-glass-secondary {
 	@apply inline-flex items-center justify-center h-11 rounded-full px-4 gap-2 text-white border border-white/10;
 	background: rgba(255, 255, 255, 0.05);
-	backdrop-filter: blur(12px);
+	backdrop-filter: blur(8px);
 	box-shadow: 
 		0 4px 16px -4px rgba(0, 0, 0, 0.2),
 		0 0 0 1px rgba(255, 255, 255, 0.1),
 		inset 0 1px 0 rgba(255, 255, 255, 0.1);
-	transition: all 150ms ease;
+	transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+	will-change: transform;
 }
 .btn-glass-secondary:hover { 
 	background: rgba(255, 255, 255, 0.08); 
@@ -472,8 +461,9 @@
 .btn-glass-ghost {
 	@apply inline-flex items-center justify-center h-11 rounded-full px-4 gap-2 text-white/80 border border-white/5;
 	background: rgba(255, 255, 255, 0.02);
-	backdrop-filter: blur(8px);
-	transition: all 150ms ease;
+	backdrop-filter: blur(6px);
+	transition: transform 150ms ease, background 150ms ease, color 150ms ease, border-color 150ms ease;
+	will-change: transform;
 }
 .btn-glass-ghost:hover { 
 	background: rgba(255, 255, 255, 0.05); 
@@ -560,7 +550,7 @@
 /* Glass container system */
 .container-glass {
     background: rgba(255, 255, 255, 0.035);
-	backdrop-filter: blur(12px);
+	backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
 	box-shadow: 
 		0 8px 32px -8px rgba(0, 0, 0, 0.3),
@@ -599,9 +589,9 @@
 .input-glass {
 	@apply w-full px-4 py-3 rounded-xl text-white placeholder-white/50;
 	background: rgba(255, 255, 255, 0.05);
-	backdrop-filter: blur(8px);
+	backdrop-filter: blur(6px);
 	border: 1px solid rgba(255, 255, 255, 0.1);
-	transition: all 150ms ease;
+	transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 .input-glass:focus {
 	outline: none;
@@ -767,97 +757,56 @@
 .aurora-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.4;
-  animation: aurora-drift 20s ease-in-out infinite;
+  filter: blur(40px);
+  opacity: 0.25;
+  /* Disable animation for better performance */
+  will-change: auto;
 }
 
 .aurora-glow-1 {
   width: 800px;
   height: 800px;
-  background: radial-gradient(circle, rgba(76, 29, 149, 0.6) 0%, rgba(107, 33, 168, 0.3) 30%, rgba(124, 45, 18, 0.1) 60%, transparent 80%);
+  background: radial-gradient(circle, rgba(76, 29, 149, 0.35) 0%, rgba(107, 33, 168, 0.15) 30%, rgba(124, 45, 18, 0.05) 60%, transparent 80%);
   top: -15%;
   left: -10%;
-  animation-delay: 0s;
-  animation-duration: 25s;
 }
 
 .aurora-glow-2 {
   width: 700px;
   height: 700px;
-  background: radial-gradient(circle, rgba(190, 24, 93, 0.5) 0%, rgba(124, 45, 18, 0.25) 35%, rgba(76, 29, 149, 0.1) 65%, transparent 85%);
+  background: radial-gradient(circle, rgba(190, 24, 93, 0.3) 0%, rgba(124, 45, 18, 0.12) 35%, rgba(76, 29, 149, 0.05) 65%, transparent 85%);
   bottom: -20%;
   right: -10%;
-  animation-delay: -8s;
-  animation-duration: 30s;
 }
 
 .aurora-glow-3 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(107, 33, 168, 0.45) 0%, rgba(190, 24, 93, 0.2) 40%, rgba(124, 45, 18, 0.1) 70%, transparent 90%);
+  background: radial-gradient(circle, rgba(107, 33, 168, 0.25) 0%, rgba(190, 24, 93, 0.1) 40%, rgba(124, 45, 18, 0.05) 70%, transparent 90%);
   top: 40%;
   left: 60%;
   transform: translate(-50%, -50%);
-  animation-delay: -16s;
-  animation-duration: 22s;
 }
 
 .aurora-glow-4 {
   width: 650px;
   height: 650px;
-  background: radial-gradient(circle, rgba(124, 45, 18, 0.4) 0%, rgba(76, 29, 149, 0.25) 35%, rgba(190, 24, 93, 0.15) 60%, rgba(107, 33, 168, 0.05) 80%, transparent 100%);
+  background: radial-gradient(circle, rgba(124, 45, 18, 0.2) 0%, rgba(76, 29, 149, 0.12) 35%, rgba(190, 24, 93, 0.08) 60%, rgba(107, 33, 168, 0.03) 80%, transparent 100%);
   top: -8%;
   right: -8%;
-  animation-delay: -12s;
-  animation-duration: 28s;
 }
 
+/* Aurora animation disabled for performance */
 @keyframes aurora-drift {
   0%, 100% {
     transform: translate(0, 0) scale(1);
   }
-  25% {
-    transform: translate(20px, -20px) scale(1.05);
-  }
-  50% {
-    transform: translate(-15px, 15px) scale(0.95);
-  }
-  75% {
-    transform: translate(15px, 20px) scale(1.02);
-  }
 }
 
-/* Mobile aurora adjustments - reduce size and opacity for better performance */
+/* Mobile aurora adjustments - hide for performance */
 @media (max-width: 768px) {
   .aurora-glow {
-    filter: blur(30px);
-    opacity: 0.3;
-    animation: none; /* Disable animations on mobile */
-  }
-  
-  .aurora-glow-1 {
-    width: 400px;
-    height: 400px;
-    opacity: 0.35;
-  }
-  
-  .aurora-glow-2 {
-    width: 350px;
-    height: 350px;
-    opacity: 0.35;
-  }
-  
-  .aurora-glow-3 {
-    width: 300px;
-    height: 300px;
-    opacity: 0.3;
-  }
-  
-  .aurora-glow-4 {
-    width: 320px;
-    height: 320px;
-    opacity: 0.3;
+    display: none; /* Completely hide on mobile for better performance */
   }
 }
 
@@ -940,18 +889,18 @@
   filter: drop-shadow(0 0 8px rgba(76, 29, 149, 0.5)) drop-shadow(0 0 16px rgba(107, 33, 168, 0.3));
 }
 
-/* Pulsing glow animation */
+/* Pulsing glow animation - reduced intensity */
 @keyframes pulse-glow {
   0%, 100% {
-    filter: drop-shadow(0 0 30px rgba(76, 29, 149, 0.4));
+    filter: drop-shadow(0 0 20px rgba(76, 29, 149, 0.3));
   }
   50% {
-    filter: drop-shadow(0 0 50px rgba(76, 29, 149, 0.7));
+    filter: drop-shadow(0 0 30px rgba(76, 29, 149, 0.5));
   }
 }
 
 .animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow 3s ease-in-out infinite;
 }
 
 /* Floating animation */

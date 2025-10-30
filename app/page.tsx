@@ -37,6 +37,7 @@ export default async function Home() {
       {/* Spotify Analytics (Kworb) quick status */}
       <section id="spotify-kworb" className="py-12 sm:py-16 px-4 relative">
         <div className="absolute inset-0 -z-10 section-gradients"></div>
+        <div className="section-top-fade" />
         <div className="max-w-7xl mx-auto">
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
@@ -55,6 +56,7 @@ export default async function Home() {
       {/* Trending Section */}
       <section id="trending" className="py-12 sm:py-16 px-4 relative">
         <div className="absolute inset-0 -z-10 section-gradients"></div>
+        <div className="section-top-fade" />
         <NewTrendingSection />
       </section>
 

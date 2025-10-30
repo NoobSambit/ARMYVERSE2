@@ -24,7 +24,7 @@ export default function FeatureCard({ icon: Icon, title, description, href, dela
       }}
     >
       {/* Frosted glass background - reduced blur on mobile */}
-      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-xl md:backdrop-blur-xl max-md:backdrop-blur-md border border-white/[0.08] rounded-[28px] transition-all duration-300 group-hover:bg-white/[0.06] group-hover:border-white/[0.12]" />
+      <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-md md:backdrop-blur-lg max-md:backdrop-blur-sm border border-white/[0.08] rounded-[28px] transition-all duration-300 group-hover:bg-white/[0.06] group-hover:border-white/[0.12]" style={{ willChange: 'auto' }} />
       
       {/* Subtle glow effect on hover - disabled on touch devices */}
       <div 
