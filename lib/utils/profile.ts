@@ -206,7 +206,7 @@ export const getDefaultProfile = () => ({
     explicitContentFilter: true,
     allowMentions: true,
     allowDMs: true,
-    blockedUserIds: []
+    blockedUserIds: [] as string[]
   },
   notifications: {
     channels: {

@@ -6,20 +6,22 @@ import { Shield, Eye, Users, Lock, AlertTriangle, Download, Trash2, UserX, Check
 import { track } from '@/lib/utils/analytics'
 import { useAuth } from '@/contexts/AuthContext'
 
-type FieldVisibilityKey = 'bias' | 'socials' | 'stats'
+type FieldVisibilityKey = 'bias' | 'era' | 'socials' | 'stats'
+
+interface ProfilePrivacySettings {
+  privacy?: {
+    visibility?: 'public' | 'followers' | 'private'
+    fieldVisibility?: Partial<Record<FieldVisibilityKey, boolean>>
+    explicitContentFilter?: boolean
+    allowMentions?: boolean
+    allowDMs?: boolean
+    blockedUserIds?: string[]
+  }
+}
 
 interface PrivacyFormProps {
-  profile: Record<string, unknown> & {
-    privacy: {
-      visibility?: string
-      fieldVisibility?: Partial<Record<FieldVisibilityKey, boolean>>
-      explicitContentFilter?: boolean
-      allowMentions?: boolean
-      allowDMs?: boolean
-      blockedUserIds?: string[]
-    }
-  }
-  onUpdate: (updates: Record<string, unknown>) => void
+  profile: ProfilePrivacySettings
+  onUpdate: (updates: Partial<Pick<ProfilePrivacySettings, 'privacy'>>) => void
   loading?: boolean
   error: string | null
   onError?: (message: string | null) => void

@@ -217,15 +217,11 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
       }
 
       const img = new window.Image()
-      const imageLoaded = await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve()
         img.onerror = () => reject(new Error('Failed to load image'))
         img.src = croppingImage
       })
-
-      if (!imageLoaded && img.complete === false) {
-        throw new Error('Failed to load image')
-      }
 
       ctx.drawImage(
         img,

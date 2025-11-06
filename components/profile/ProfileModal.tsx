@@ -56,17 +56,12 @@ interface ProfileData {
     badgeStyle: 'minimal' | 'collectible'
   }
   privacy: {
-    visibility: 'public' | 'followers' | 'private'
-    fieldVisibility: {
-      bias: boolean
-      era: boolean
-      socials: boolean
-      stats: boolean
-    }
-    explicitContentFilter: boolean
-    allowMentions: boolean
-    allowDMs: boolean
-    blockedUserIds: string[]
+    visibility?: 'public' | 'followers' | 'private'
+    fieldVisibility?: Partial<Record<'bias' | 'era' | 'socials' | 'stats', boolean>>
+    explicitContentFilter?: boolean
+    allowMentions?: boolean
+    allowDMs?: boolean
+    blockedUserIds?: string[]
   }
   notifications: {
     channels: {
