@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
+import ProfileViewModal from '@/components/profile/ProfileViewModal'
 import { 
   MessageCircle, 
   Share2, 
@@ -68,6 +69,7 @@ export default function BlogViewPage() {
   const [newComment, setNewComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
   // Get user ID from Firebase auth
   const userId = user?.uid || user?.email || 'user123'
@@ -237,10 +239,13 @@ export default function BlogViewPage() {
 
           {/* Meta Info */}
           <div className="flex flex-wrap items-center gap-4 text-gray-300 mb-6">
-            <div className="flex items-center">
+            <button 
+              onClick={() => setSelectedUserId(blog.author.id)}
+              className="flex items-center hover:text-purple-400 transition-colors"
+            >
               <User className="w-4 h-4 mr-2" />
               {blog.author.name}
-            </div>
+            </button>
             <div className="flex items-center">
               <Calendar className="w-4 h-4 mr-2" />
               {formatDate(blog.createdAt)}
@@ -426,6 +431,9 @@ export default function BlogViewPage() {
           </div>
         </motion.div>
       </div>
+      
+      {/* Profile View Modal */}
+      <ProfileViewModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
     </div>
   )
 } 

@@ -180,9 +180,31 @@ export async function POST(request: NextRequest) {
       const weekNo = Math.ceil((((tmp.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
       return `weekly-${tmp.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`
     })()
+    
+    // Get user profile data from MongoDB for leaderboard
+    const { User } = await import('@/lib/models/User')
+    const userDoc = await User.findOne({ firebaseUid: user.uid }).lean()
+    const profileDisplayName = (userDoc as any)?.profile?.displayName || user.name || user.email || 'User'
+    const profileAvatarUrl = (userDoc as any)?.profile?.avatarUrl || user.picture || ''
+    
+    console.log('[Quiz Complete] Updating leaderboard:', {
+      userId: user.uid,
+      displayName: profileDisplayName,
+      avatarUrl: profileAvatarUrl,
+      score: correctCount,
+      hasProfile: !!(userDoc as any)?.profile
+    })
+    
     await LeaderboardEntry.findOneAndUpdate(
       { periodKey, userId: user.uid },
-      { $max: { score: correctCount }, $set: { displayName: user.name || user.email || 'User', avatarUrl: user.picture || '' }, $setOnInsert: { updatedAt: new Date() } },
+      { 
+        $max: { score: correctCount }, 
+        $set: {
+          displayName: profileDisplayName, 
+          avatarUrl: profileAvatarUrl,
+          updatedAt: new Date()
+        }
+      },
       { upsert: true }
     )
 

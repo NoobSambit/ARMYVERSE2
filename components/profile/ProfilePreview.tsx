@@ -2,7 +2,7 @@
 
 import React, { CSSProperties } from 'react'
 import Image from 'next/image'
-import { MapPin, Calendar, Music, Globe, Twitter, Instagram, Youtube, ExternalLink } from 'lucide-react'
+import { MapPin, Calendar, Music, Globe, Twitter, Instagram, Youtube, ExternalLink, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getPublicProfile, isFieldVisible, getDefaultProfile } from '@/lib/utils/profile'
 
@@ -48,7 +48,8 @@ interface ProfilePreviewProps {
 }
 
 export default function ProfilePreview({ profile }: ProfilePreviewProps) {
-  const publicProfile = getPublicProfile(profile)
+  const isPrivate = (profile?.privacy as any)?.visibility === 'private'
+  const publicProfile = isPrivate ? profile : getPublicProfile(profile)
   const originalPrivacy = profile?.privacy
 
   const accentColor = profile?.personalization?.accentColor || DEFAULT_PERSONALIZATION.accentColor
@@ -195,8 +196,19 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
             </div>
           )}
           
+          {/* Private Profile Notice */}
+          {isPrivate && (
+            <div className="bg-black/20 rounded-lg p-6 text-center">
+              <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <h4 className="text-white font-medium mb-2">Private Profile</h4>
+              <p className="text-gray-400 text-sm">
+                This user has set their profile to private
+              </p>
+            </div>
+          )}
+          
           {/* ARMY Info */}
-          <div className="space-y-4">
+          {!isPrivate && <div className="space-y-4">
             {/* Bias */}
             {isFieldVisible('bias', originalPrivacy) && publicProfile.bias && publicProfile.bias.length > 0 && (
               <div>
@@ -263,10 +275,10 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
                 <span>ARMY since {formatDate(publicProfile.armySinceYear)}</span>
               </div>
             )}
-          </div>
+          </div>}
           
           {/* Top Song/Album */}
-          {(publicProfile.topSong || publicProfile.topAlbum) && (
+          {!isPrivate && (publicProfile.topSong || publicProfile.topAlbum) && (
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-400">Current Favorites</h4>
               
@@ -301,7 +313,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
           )}
           
           {/* Location */}
-          {publicProfile.location && (
+          {!isPrivate && publicProfile.location && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <MapPin className="w-4 h-4" />
               <span>{publicProfile.location}</span>
@@ -309,7 +321,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
           )}
           
           {/* Social Links */}
-          {isFieldVisible('socials', originalPrivacy) && publicProfile.socials && (
+          {!isPrivate && isFieldVisible('socials', originalPrivacy) && publicProfile.socials && (
             <div>
               <h4 className="text-sm font-medium text-gray-400 mb-3">Connect</h4>
               <div className="flex flex-wrap gap-3">
@@ -344,7 +356,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
           )}
           
           {/* Stats */}
-          {isFieldVisible('stats', originalPrivacy) && publicProfile.stats && (
+          {!isPrivate && isFieldVisible('stats', originalPrivacy) && publicProfile.stats && (
             <div className="border-t pt-4" style={{ borderColor: withAlpha(accentColor, 0.2) }}>
               <h4 className="text-sm font-medium text-gray-400 mb-3">Activity</h4>
               <div className="grid grid-cols-3 gap-4 text-center">

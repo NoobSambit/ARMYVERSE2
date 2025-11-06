@@ -39,7 +39,26 @@ export async function GET(request: NextRequest) {
       myRank = await LeaderboardEntry.countDocuments({ periodKey, score: { $gt: my.score } }) + 1
     }
 
-    return NextResponse.json({ periodKey, entries: rows, nextCursor, me: my ? { score: my.score, rank: myRank } : null })
+    console.log('[Leaderboard] Current user entry:', my)
+    console.log('[Leaderboard] Top 3 entries:', rows.slice(0, 3))
+
+    return NextResponse.json({ 
+      periodKey, 
+      entries: rows.map(r => ({
+        _id: String(r._id),
+        userId: r.userId,
+        displayName: r.displayName || 'User',
+        avatarUrl: r.avatarUrl || '',
+        score: r.score
+      })), 
+      nextCursor, 
+      me: my ? { 
+        score: my.score, 
+        rank: myRank,
+        displayName: my.displayName || 'You',
+        avatarUrl: my.avatarUrl || ''
+      } : null 
+    })
   } catch (error) {
     console.error('Leaderboard GET error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

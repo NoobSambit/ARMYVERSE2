@@ -6,6 +6,7 @@ import { Clock, Eye, Heart, User, MoreVertical, RotateCcw, PlusCircle, Upload, C
 import { track } from '@/lib/utils/analytics'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEffect, useState } from 'react'
+import ProfileViewModal from '@/components/profile/ProfileViewModal'
 
 export interface PostCardProps {
 	post: {
@@ -37,6 +38,7 @@ export default function PostCard({ post, variant = 'grid' }: PostCardProps) {
 	const [menuOpen, setMenuOpen] = useState(false)
 	const [collectionsOpen, setCollectionsOpen] = useState(false)
 	const [myCollections, setMyCollections] = useState<Array<{ slug: string; title: string }>>([])
+	const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
 	useEffect(() => {
 		if (isOwner && collectionsOpen && user) {
@@ -72,7 +74,20 @@ export default function PostCard({ post, variant = 'grid' }: PostCardProps) {
 					<p className={`text-[#B6B3C7] ${variant === 'list' ? 'hidden md:line-clamp-2' : 'mt-2 line-clamp-2'}`}>{excerpt}...</p>
 					<div className="mt-3 flex items-center justify-between text-sm text-gray-400">
 						<div className="flex items-center gap-3">
-							<span className="inline-flex items-center"><User className="w-4 h-4 mr-1" />{post.author?.name || 'Unknown'}</span>
+							{post.author?.id ? (
+								<button 
+									onClick={(e) => {
+										e.preventDefault()
+										e.stopPropagation()
+										setSelectedUserId(post.author!.id!)
+									}}
+									className="inline-flex items-center hover:text-purple-400 transition-colors"
+								>
+									<User className="w-4 h-4 mr-1" />{post.author?.name || 'Unknown'}
+								</button>
+							) : (
+								<span className="inline-flex items-center"><User className="w-4 h-4 mr-1" />{post.author?.name || 'Unknown'}</span>
+							)}
 							{post.readTime ? (<span className="inline-flex items-center"><Clock className="w-4 h-4 mr-1" />{post.readTime} min</span>) : null}
 						</div>
 						<div className="flex items-center gap-3">
@@ -116,6 +131,9 @@ export default function PostCard({ post, variant = 'grid' }: PostCardProps) {
 					)}
 				</div>
 			)}
+			
+			{/* Profile View Modal */}
+			<ProfileViewModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
 		</article>
 	)
 }
