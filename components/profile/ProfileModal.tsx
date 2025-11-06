@@ -53,8 +53,6 @@ interface ProfileData {
     accentColor: string
     themeIntensity: number
     backgroundStyle: 'gradient' | 'noise' | 'bts-motif' | 'clean'
-    density: 'comfortable' | 'compact'
-    reduceMotion: boolean
     badgeStyle: 'minimal' | 'collectible'
   }
   privacy: {

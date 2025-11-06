@@ -66,8 +66,6 @@ const profileUpdateSchema = z.object({
     accentColor: z.string().optional(),
     themeIntensity: z.number().min(0).max(100).optional(),
     backgroundStyle: z.enum(['gradient', 'noise', 'bts-motif', 'clean']).optional(),
-    density: z.enum(['comfortable', 'compact']).optional(),
-    reduceMotion: z.boolean().optional(),
     badgeStyle: z.enum(['minimal', 'collectible']).optional()
   }).optional(),
   privacy: z.object({
@@ -77,7 +75,7 @@ const profileUpdateSchema = z.object({
       era: z.boolean().optional(),
       socials: z.boolean().optional(),
       stats: z.boolean().optional()
-    }).optional(),
+    }).partial().optional(),
     explicitContentFilter: z.boolean().optional(),
     allowMentions: z.boolean().optional(),
     allowDMs: z.boolean().optional(),

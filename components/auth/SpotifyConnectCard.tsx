@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import { FaSpotify, FaLock } from 'react-icons/fa'
 import { CheckCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 interface SpotifyConnectCardProps {
   onAuthSuccess?: () => void
@@ -10,36 +12,46 @@ interface SpotifyConnectCardProps {
 
 export default function SpotifyConnectCard({ onAuthSuccess }: SpotifyConnectCardProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const { user } = useAuth()
+  const { refreshStatus } = useSpotifyAuth()
 
   // Handle callback from Spotify (store token from URL and mark as authenticated)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const auth = urlParams.get('auth')
-    const token = urlParams.get('token')
     const error = urlParams.get('error')
 
     if (error) {
       return
     }
 
-    if (auth === 'success' && token) {
-      try {
-        const tokenData = JSON.parse(decodeURIComponent(token))
-        const tokenWithTimestamp = { ...tokenData, timestamp: Date.now() }
-        localStorage.setItem('spotify_token', JSON.stringify(tokenWithTimestamp))
-        // fire a custom event so same-tab listeners can react immediately
-        window.dispatchEvent(new Event('spotify_token_set'))
-        onAuthSuccess?.()
-      } catch {
-        // ignore parse error, fallback to manual reconnect
-      }
+    if (auth === 'success') {
+      refreshStatus()
+      onAuthSuccess?.()
     }
-  }, [onAuthSuccess])
+
+    if (auth || error) {
+      urlParams.delete('auth')
+      urlParams.delete('error')
+      const nextQuery = urlParams.toString()
+      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`
+      window.history.replaceState({}, document.title, nextUrl)
+    }
+  }, [onAuthSuccess, refreshStatus])
 
   const handleConnect = async () => {
     try {
+      if (!user) {
+        return
+      }
+
       setIsLoading(true)
-      const response = await fetch('/api/spotify/auth-url')
+      const idToken = await user.getIdToken()
+      const response = await fetch('/api/spotify/auth-url', {
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      })
       const data = await response.json()
       if (data?.url) {
         window.location.href = data.url

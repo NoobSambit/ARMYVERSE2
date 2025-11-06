@@ -1,10 +1,22 @@
 'use client'
 
-import React from 'react'
+import React, { CSSProperties } from 'react'
 import Image from 'next/image'
 import { MapPin, Calendar, Music, Globe, Twitter, Instagram, Youtube, ExternalLink } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { getPublicProfile, isFieldVisible } from '@/lib/utils/profile'
+import { getPublicProfile, isFieldVisible, getDefaultProfile } from '@/lib/utils/profile'
+
+const DEFAULT_PERSONALIZATION = getDefaultProfile().personalization
+
+const clamp = (value: number, min = 0, max = 1) => Math.min(Math.max(value, min), max)
+
+const withAlpha = (hex: string, alpha: number) => {
+  const normalized = hex?.replace('#', '')
+  if (!normalized || normalized.length !== 6) return hex
+  const alphaValue = Math.round(clamp(alpha, 0, 1) * 255)
+  const alphaHex = alphaValue.toString(16).padStart(2, '0')
+  return `#${normalized}${alphaHex}`
+}
 
 interface PublicProfileShape {
   displayName?: string
@@ -23,18 +35,55 @@ interface PublicProfileShape {
   socials?: Record<string, unknown>
   stats?: { totalPlaylists?: number; totalLikes?: number; totalSaves?: number }
   privacy?: unknown
+  personalization?: {
+    accentColor?: string
+    themeIntensity?: number
+    backgroundStyle?: 'gradient' | 'noise' | 'bts-motif' | 'clean'
+    badgeStyle?: 'minimal' | 'collectible'
+  }
 }
 
 interface ProfilePreviewProps {
   profile: PublicProfileShape
 }
 
-// Removed unused constants
-
 export default function ProfilePreview({ profile }: ProfilePreviewProps) {
   const publicProfile = getPublicProfile(profile)
   const originalPrivacy = profile?.privacy
-  
+
+  const accentColor = profile?.personalization?.accentColor || DEFAULT_PERSONALIZATION.accentColor
+  const themeIntensity = profile?.personalization?.themeIntensity ?? DEFAULT_PERSONALIZATION.themeIntensity
+  const backgroundStyle = profile?.personalization?.backgroundStyle || DEFAULT_PERSONALIZATION.backgroundStyle
+  const badgeStyle = profile?.personalization?.badgeStyle || DEFAULT_PERSONALIZATION.badgeStyle
+
+  const intensityFactor = clamp(themeIntensity / 100)
+  const accentSoft = withAlpha(accentColor, 0.12 + intensityFactor * 0.25)
+  const accentBorder = withAlpha(accentColor, 0.25 + intensityFactor * 0.35)
+  const accentGlow = withAlpha(accentColor, 0.45 + intensityFactor * 0.35)
+  const accentText = accentColor
+
+  const backgroundStyles: Record<'gradient' | 'noise' | 'bts-motif' | 'clean', CSSProperties> = {
+    gradient: {
+      background: `linear-gradient(140deg, ${withAlpha(accentColor, 0.45 + intensityFactor * 0.35)} 0%, ${withAlpha(accentColor, 0.1)} 100%)`
+    },
+    noise: {
+      backgroundColor: '#12021f',
+      backgroundImage: `radial-gradient(circle at 20% 20%, ${withAlpha(accentColor, 0.2)} 0%, transparent 55%),
+        radial-gradient(circle at 80% 0%, ${withAlpha(accentColor, 0.12)} 0%, transparent 45%),
+        linear-gradient(${withAlpha('#ffffff', 0.015)} 1px, transparent 0),
+        linear-gradient(90deg, ${withAlpha('#ffffff', 0.02)} 1px, transparent 0)`
+    },
+    'bts-motif': {
+      backgroundColor: '#11041d',
+      backgroundImage: `radial-gradient(circle at 15% 25%, ${withAlpha(accentColor, 0.25)} 0%, transparent 55%),
+        radial-gradient(circle at 85% 35%, ${withAlpha(accentColor, 0.18)} 0%, transparent 50%),
+        repeating-linear-gradient(135deg, ${withAlpha(accentColor, 0.08)} 0px, ${withAlpha(accentColor, 0.08)} 8px, transparent 8px, transparent 24px)`
+    },
+    clean: {
+      background: `linear-gradient(120deg, ${withAlpha(accentColor, 0.18)} 0%, ${withAlpha('#000000', 0.5)} 100%)`
+    }
+  }
+
   const formatDate = (year: number) => {
     if (!year) return ''
     const currentYear = new Date().getFullYear()
@@ -73,20 +122,21 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-purple-500/20">
+      <div className="p-6 border-b" style={{ borderColor: withAlpha(accentColor, 0.25) }}>
         <h3 className="text-lg font-semibold text-white mb-2">Public Profile Preview</h3>
         <p className="text-sm text-gray-400">
           This is how your profile appears to others
         </p>
       </div>
-      
+
       {/* Preview content */}
       <div className="flex-1 overflow-y-auto p-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="space-y-6"
+          className="space-y-6 rounded-xl p-5"
+          style={backgroundStyles[backgroundStyle]}
         >
           {/* Banner */}
           {publicProfile.bannerUrl && (
@@ -103,7 +153,10 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
           {/* Avatar and basic info */}
           <div className="flex items-start gap-4">
             <div className="relative">
-              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-purple-500/30">
+              <div
+                className="w-20 h-20 rounded-full overflow-hidden border-4"
+                style={{ borderColor: accentBorder, boxShadow: badgeStyle === 'collectible' ? `0 0 18px ${accentGlow}` : undefined }}
+              >
                 <Image
                   src={publicProfile.avatarUrl || '/avatar-placeholder.svg'}
                   alt="Profile avatar"
@@ -152,7 +205,13 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
                   {publicProfile.bias.map((bias: string, index: number) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-purple-600/20 text-purple-300 rounded-full text-sm"
+                      className="px-3 py-1 rounded-full text-sm"
+                      style={{
+                        backgroundColor: accentSoft,
+                        color: accentText,
+                        border: badgeStyle === 'collectible' ? `1px solid ${accentBorder}` : undefined,
+                        boxShadow: badgeStyle === 'collectible' ? `0 2px 12px ${withAlpha(accentColor, 0.25)}` : undefined
+                      }}
                     >
                       {bias}
                     </span>
@@ -165,7 +224,15 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
             {publicProfile.biasWrecker && (
               <div>
                 <h4 className="text-sm font-medium text-gray-400 mb-2">Bias Wrecker</h4>
-                <span className="px-3 py-1 bg-pink-600/20 text-pink-300 rounded-full text-sm">
+                <span
+                  className="px-3 py-1 rounded-full text-sm"
+                  style={{
+                    backgroundColor: accentSoft,
+                    color: accentText,
+                    border: badgeStyle === 'collectible' ? `1px solid ${accentBorder}` : undefined,
+                    boxShadow: badgeStyle === 'collectible' ? `0 2px 12px ${withAlpha(accentColor, 0.25)}` : undefined
+                  }}
+                >
                   {publicProfile.biasWrecker}
                 </span>
               </div>
@@ -175,7 +242,15 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
             {isFieldVisible('era', originalPrivacy) && publicProfile.favoriteEra && (
               <div>
                 <h4 className="text-sm font-medium text-gray-400 mb-2">Favorite Era</h4>
-                <span className="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-full text-sm">
+                <span
+                  className="px-3 py-1 rounded-full text-sm"
+                  style={{
+                    backgroundColor: accentSoft,
+                    color: accentText,
+                    border: badgeStyle === 'collectible' ? `1px solid ${accentBorder}` : undefined,
+                    boxShadow: badgeStyle === 'collectible' ? `0 2px 12px ${withAlpha(accentColor, 0.25)}` : undefined
+                  }}
+                >
                   {publicProfile.favoriteEra}
                 </span>
               </div>
@@ -196,8 +271,8 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
               <h4 className="text-sm font-medium text-gray-400">Current Favorites</h4>
               
               {publicProfile.topSong && (
-                <div className="flex items-center gap-3 p-3 bg-black/20 rounded-lg">
-                  <Music className="w-5 h-5 text-purple-400" />
+                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: withAlpha(accentColor, 0.08), border: `1px solid ${withAlpha(accentColor, 0.18)}` }}>
+                  <Music className="w-5 h-5" style={{ color: accentText }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">
                       {publicProfile.topSong.name}
@@ -210,8 +285,8 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
               )}
               
               {publicProfile.topAlbum && (
-                <div className="flex items-center gap-3 p-3 bg-black/20 rounded-lg">
-                  <Music className="w-5 h-5 text-purple-400" />
+                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: withAlpha(accentColor, 0.08), border: `1px solid ${withAlpha(accentColor, 0.18)}` }}>
+                  <Music className="w-5 h-5" style={{ color: accentText }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">
                       {publicProfile.topAlbum.name}
@@ -250,13 +325,17 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-2 bg-black/20 hover:bg-black/40 rounded-lg transition-colors group"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors group"
+                      style={{
+                        backgroundColor: withAlpha(accentColor, 0.08),
+                        border: `1px solid ${withAlpha(accentColor, 0.15)}`
+                      }}
                     >
                       {getSocialIcon(platform)}
                       <span className="text-sm text-gray-300 group-hover:text-white">
                         {platform}
                       </span>
-                      <ExternalLink className="w-3 h-3 text-gray-500" />
+                      <ExternalLink className="w-3 h-3" style={{ color: accentText }} />
                     </a>
                   )
                 })}
@@ -266,23 +345,23 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
           
           {/* Stats */}
           {isFieldVisible('stats', originalPrivacy) && publicProfile.stats && (
-            <div className="border-t border-purple-500/20 pt-4">
+            <div className="border-t pt-4" style={{ borderColor: withAlpha(accentColor, 0.2) }}>
               <h4 className="text-sm font-medium text-gray-400 mb-3">Activity</h4>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-bold" style={{ color: accentText }}>
                     {publicProfile.stats.totalPlaylists || 0}
                   </p>
                   <p className="text-xs text-gray-400">Playlists</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-bold" style={{ color: accentText }}>
                     {publicProfile.stats.totalLikes || 0}
                   </p>
                   <p className="text-xs text-gray-400">Likes</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-bold" style={{ color: accentText }}>
                     {publicProfile.stats.totalSaves || 0}
                   </p>
                   <p className="text-xs text-gray-400">Saves</p>

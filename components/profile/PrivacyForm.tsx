@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Shield, Eye, Users, Lock, AlertTriangle, Download, Trash2, UserX, Check } from 'lucide-react'
 import { track } from '@/lib/utils/analytics'
+import { useAuth } from '@/contexts/AuthContext'
 
 type FieldVisibilityKey = 'bias' | 'socials' | 'stats'
 
@@ -57,6 +58,9 @@ export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormPro
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [exporting, setExporting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const { user } = useAuth()
 
   const handleInputChange = useCallback((field: string, value: string | boolean | string[]) => {
     onUpdate({
@@ -81,8 +85,18 @@ export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormPro
 
   const handleExportData = useCallback(async () => {
     setExporting(true)
+    setFormError(null)
     try {
-      const response = await fetch('/api/user/export-data')
+      if (!user) {
+        throw new Error('You must be signed in to export data.')
+      }
+
+      const token = await user.getIdToken()
+      const response = await fetch('/api/user/export-data', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
@@ -94,28 +108,52 @@ export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormPro
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
         await track('data_exported', { format: 'json' })
+      } else {
+        const body = await response.json().catch(() => ({}))
+        throw new Error(body.error || 'Failed to export data')
       }
     } catch (err) {
       console.error('Export failed:', err)
+      setFormError(err instanceof Error ? err.message : 'Failed to export data')
     } finally {
       setExporting(false)
     }
-  }, [])
+  }, [user])
 
   const handleDeleteAccount = useCallback(async () => {
     if (deleteConfirmText !== 'DELETE') return
-    
+    if (!user) {
+      setFormError('You must be signed in to delete your account.')
+      return
+    }
+
+    setDeleting(true)
+    setFormError(null)
+
     try {
       await track('account_deletion_initiated', {})
-      const response = await fetch('/api/user/delete-account', { method: 'DELETE' })
+      const token = await user.getIdToken()
+      const response = await fetch('/api/user/delete-account', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       if (response.ok) {
         // Redirect to home page or show success message
         window.location.href = '/'
+        return
       }
+
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body.error || 'Failed to delete account')
     } catch (err) {
       console.error('Delete account failed:', err)
+      setFormError(err instanceof Error ? err.message : 'Failed to delete account')
+    } finally {
+      setDeleting(false)
     }
-  }, [deleteConfirmText])
+  }, [deleteConfirmText, user])
 
   const isDeleteEnabled = deleteConfirmText === 'DELETE'
 

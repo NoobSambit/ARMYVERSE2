@@ -193,8 +193,6 @@ export const getDefaultProfile = () => ({
     accentColor: '#8B5CF6',
     themeIntensity: 50,
     backgroundStyle: 'gradient' as const,
-    density: 'comfortable' as const,
-    reduceMotion: false,
     badgeStyle: 'minimal' as const
   },
   privacy: {

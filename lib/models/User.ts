@@ -110,15 +110,6 @@ const profileSchema = new mongoose.Schema({
       enum: ['gradient', 'noise', 'bts-motif', 'clean'],
       default: 'gradient'
     },
-    density: {
-      type: String,
-      enum: ['comfortable', 'compact'],
-      default: 'comfortable'
-    },
-    reduceMotion: {
-      type: Boolean,
-      default: false
-    },
     badgeStyle: {
       type: String,
       enum: ['minimal', 'collectible'],
@@ -181,6 +172,20 @@ const profileSchema = new mongoose.Schema({
       recommendations: { type: Boolean, default: true }
     }
   },
+  integrations: {
+    spotify: {
+      accessToken: { type: String },
+      refreshToken: { type: String },
+      scopes: [{ type: String }],
+      tokenType: { type: String },
+      expiresAt: { type: Date },
+      spotifyUserId: { type: String, index: true },
+      firebaseUid: { type: String, index: true },
+      displayName: { type: String },
+      avatarUrl: { type: String },
+      updatedAt: { type: Date }
+    }
+  },
   
   // Computed/cached fields
   stats: {
@@ -204,6 +209,12 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     lowercase: true
+  },
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true
   },
   password: {
     type: String,

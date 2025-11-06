@@ -1,15 +1,14 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Palette, Monitor, Image as ImageIcon, Layout, Zap, Award } from 'lucide-react'
+import { Palette, Monitor, Image as ImageIcon, Award, RotateCcw } from 'lucide-react'
+import { getDefaultProfile } from '@/lib/utils/profile'
 
 interface PersonalizationShape {
   accentColor?: string
   themeIntensity?: number
   backgroundStyle?: 'gradient' | 'noise' | 'bts-motif' | 'clean'
-  density?: 'comfortable' | 'compact'
-  reduceMotion?: boolean
   badgeStyle?: 'minimal' | 'collectible'
 }
 interface ProfilePersonalization { personalization?: PersonalizationShape }
@@ -38,11 +37,6 @@ const BACKGROUND_STYLES = [
   { id: 'clean', name: 'Clean', description: 'Minimal solid background' }
 ]
 
-const DENSITY_OPTIONS = [
-  { id: 'comfortable', name: 'Comfortable', description: 'More spacing between elements' },
-  { id: 'compact', name: 'Compact', description: 'Tighter spacing for more content' }
-]
-
 const BADGE_STYLES = [
   { id: 'minimal', name: 'Minimal', description: 'Simple, clean badge design' },
   { id: 'collectible', name: 'Collectible', description: 'Detailed, collectible-style badges' }
@@ -52,6 +46,7 @@ type PersonalizationFieldValue = string | number | boolean
 
 export default function PersonalizationForm({ profile, onUpdate, error }: PersonalizationFormProps) {
   const [customColor, setCustomColor] = useState('')
+  const defaults = useMemo(() => getDefaultProfile().personalization, [])
 
   const handleInputChange = useCallback((field: string, value: PersonalizationFieldValue) => {
     onUpdate({
@@ -69,6 +64,16 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
     }
   }, [handleInputChange])
 
+  const resetPersonalization = useCallback(() => {
+    onUpdate({ personalization: { ...defaults } })
+    setCustomColor('')
+  }, [defaults, onUpdate])
+
+  const accentColor = profile.personalization?.accentColor || customColor || defaults.accentColor
+  const themeIntensity = profile.personalization?.themeIntensity ?? defaults.themeIntensity
+  const backgroundStyle = profile.personalization?.backgroundStyle || defaults.backgroundStyle
+  const badgeStyle = profile.personalization?.badgeStyle || defaults.badgeStyle
+
   return (
     <div className="space-y-8">
       {/* Error display */}
@@ -81,6 +86,21 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
           <p className="text-red-400 text-sm">{error}</p>
         </motion.div>
       )}
+
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-white font-semibold text-xl">Personalize your profile</h2>
+          <p className="text-sm text-gray-400">Fine-tune colors and presentation instantly.</p>
+        </div>
+        <button
+          type="button"
+          onClick={resetPersonalization}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-purple-500/40 text-purple-300 hover:bg-purple-500/10 transition-colors"
+        >
+          <RotateCcw className="w-4 h-4" />
+          Reset
+        </button>
+      </div>
 
       {/* Accent Color */}
       <div className="space-y-4">
@@ -97,14 +117,14 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
                 type="button"
                 onClick={() => handleInputChange('accentColor', color.value)}
                 className={`relative p-3 rounded-lg border-2 transition-all ${
-                  profile.personalization?.accentColor === color.value
+                  accentColor === color.value
                     ? 'border-purple-500'
                     : 'border-gray-700 hover:border-gray-600'
                 }`}
               >
                 <div className={`w-full h-8 rounded ${color.class}`} />
                 <p className="text-xs text-gray-400 mt-2 text-center">{color.name}</p>
-                {profile.personalization?.accentColor === color.value && (
+                {accentColor === color.value && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
                     <div className="w-2 h-2 bg-white rounded-full" />
                   </div>
@@ -121,13 +141,13 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
               <input
                 id="customColor"
                 type="color"
-                value={customColor || profile.personalization?.accentColor || '#8B5CF6'}
+                value={accentColor}
                 onChange={(e) => handleCustomColorChange(e.target.value)}
                 className="w-12 h-12 rounded-lg border border-gray-700 bg-transparent cursor-pointer"
               />
               <input
                 type="text"
-                value={customColor || profile.personalization?.accentColor || ''}
+                value={customColor || profile.personalization?.accentColor || accentColor || ''}
                 onChange={(e) => handleCustomColorChange(e.target.value)}
                 placeholder="#8B5CF6"
                 className="flex-1 px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
@@ -154,14 +174,14 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
             type="range"
             min="0"
             max="100"
-            value={profile.personalization?.themeIntensity || 50}
+            value={themeIntensity}
             onChange={(e) => handleInputChange('themeIntensity', parseInt(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
           />
           
           <div className="flex justify-center">
             <span className="text-sm text-gray-300">
-              {profile.personalization?.themeIntensity || 50}%
+              {themeIntensity}%
             </span>
           </div>
         </div>
@@ -181,7 +201,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
               type="button"
               onClick={() => handleInputChange('backgroundStyle', style.id)}
               className={`p-4 rounded-lg border-2 transition-all text-left ${
-                profile.personalization?.backgroundStyle === style.id
+                backgroundStyle === style.id
                   ? 'border-purple-500 bg-purple-500/10'
                   : 'border-gray-700 hover:border-gray-600 bg-black/20'
               }`}
@@ -190,62 +210,6 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
               <p className="text-gray-400 text-sm">{style.description}</p>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Card Density */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Layout className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Card Density</h3>
-        </div>
-        
-        <div className="space-y-3">
-          {DENSITY_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => handleInputChange('density', option.id)}
-              className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                profile.personalization?.density === option.id
-                  ? 'border-purple-500 bg-purple-500/10'
-                  : 'border-gray-700 hover:border-gray-600 bg-black/20'
-              }`}
-            >
-              <h4 className="text-white font-medium mb-1">{option.name}</h4>
-              <p className="text-gray-400 text-sm">{option.description}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Motion Preferences */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Motion Preferences</h3>
-        </div>
-        
-        <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg">
-          <div>
-            <h4 className="text-white font-medium">Reduce Animations</h4>
-            <p className="text-gray-400 text-sm">
-              Minimize motion for better accessibility
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleInputChange('reduceMotion', !profile.personalization?.reduceMotion)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              profile.personalization?.reduceMotion ? 'bg-purple-600' : 'bg-gray-700'
-            }`}
-          >
-            <div
-              className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                profile.personalization?.reduceMotion ? 'translate-x-7' : 'translate-x-1'
-              }`}
-            />
-          </button>
         </div>
       </div>
 
@@ -263,7 +227,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
               type="button"
               onClick={() => handleInputChange('badgeStyle', style.id)}
               className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                profile.personalization?.badgeStyle === style.id
+                badgeStyle === style.id
                   ? 'border-purple-500 bg-purple-500/10'
                   : 'border-gray-700 hover:border-gray-600 bg-black/20'
               }`}
@@ -276,9 +240,9 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
       </div>
 
       {/* Live Preview Note */}
-      <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-        <p className="text-purple-300 text-sm">
-          💡 Changes are applied instantly to the preview panel. Your preferences are saved automatically.
+      <div className="p-4 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg">
+        <p className="text-purple-200 text-sm">
+          💡 Adjustments are synced instantly with the preview and saved automatically.
         </p>
       </div>
     </div>

@@ -7,6 +7,7 @@ import MoodPills from '@/components/ui/MoodPills'
 import InteractiveSlider from '@/components/ui/InteractiveSlider'
 import { ToastProvider, useToast } from '@/components/ui/Toast'
 import { SongDoc } from '@/hooks/useAllSongs'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 interface Track {
   title: string
@@ -22,6 +23,7 @@ function AIPlaylistContent() {
   const { showToast } = useToast()
   const [isGenerating, setIsGenerating] = useState(false)
   const [playlist, setPlaylist] = useState<Track[]>([])
+
   const [prompt, setPrompt] = useState('')
   const [playlistName, setPlaylistName] = useState('')
   const [selectedMoods, setSelectedMoods] = useState<string[]>([])
@@ -43,6 +45,7 @@ function AIPlaylistContent() {
   }>>([])
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [configName, setConfigName] = useState('')
+  const { isAuthenticated, status, refreshStatus } = useSpotifyAuth()
 
   // Load saved configurations from localStorage
   useEffect(() => {
@@ -188,21 +191,20 @@ function AIPlaylistContent() {
       return
     }
 
-    // Get Spotify token from localStorage
-    const spotifyTokenData = localStorage.getItem('spotify_token')
-    let token = null
-    
-    if (spotifyTokenData) {
-      try {
-        const tokenObj = JSON.parse(spotifyTokenData)
-        token = tokenObj.access_token
-      } catch (error) {
-        console.error('Error parsing Spotify token:', error)
-      }
+    if (!isAuthenticated) {
+      showToast('error', 'Please connect your Spotify account first!')
+      return
     }
 
-    if (!token) {
-      showToast('error', 'Please connect your Spotify account first!')
+    let accessToken = status?.accessToken
+
+    if (!accessToken) {
+      const refreshed = await refreshStatus()
+      accessToken = refreshed?.accessToken
+    }
+
+    if (!accessToken) {
+      showToast('error', 'Unable to retrieve Spotify access token. Please reconnect your account.')
       return
     }
 
@@ -213,7 +215,7 @@ function AIPlaylistContent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           name: playlistName || `AI Generated BTS Playlist - ${prompt}`,
@@ -223,12 +225,38 @@ function AIPlaylistContent() {
 
       const data = await response.json()
 
-      if (response.ok) {
-        window.open(data.playlistUrl, '_blank')
-        showToast('success', 'Playlist exported to Spotify!')
-      } else {
+      if (!response.ok) {
+        if (response.status === 401) {
+          const refreshed = await refreshStatus()
+          if (refreshed?.accessToken) {
+            const retryResponse = await fetch('/api/playlist/export', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${refreshed.accessToken}`,
+              },
+              body: JSON.stringify({
+                name: playlistName || `AI Generated BTS Playlist - ${prompt}`,
+                songs: playlist,
+              }),
+            })
+
+            const retryData = await retryResponse.json()
+            if (!retryResponse.ok) {
+              throw new Error(retryData.error || 'Failed to export playlist')
+            }
+
+            window.open(retryData.playlistUrl, '_blank')
+            showToast('success', 'Playlist exported to Spotify!')
+            return
+          }
+        }
+
         throw new Error(data.error || 'Failed to export playlist')
       }
+
+      window.open(data.playlistUrl, '_blank')
+      showToast('success', 'Playlist exported to Spotify!')
     } catch (error) {
       console.error('Error exporting to Spotify:', error)
       showToast('error', error instanceof Error ? error.message : 'Failed to export to Spotify. Please try again.')

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import StreamingFocusForm from '@/components/forms/StreamingFocusForm'
@@ -19,7 +19,7 @@ export default function CreatePlaylist() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(null)
   const { songs: allSongs } = useAllSongs()
-  const { isAuthenticated, isLoading, disconnect } = useSpotifyAuth()
+  const { isAuthenticated, isLoading, disconnect, status, refreshStatus } = useSpotifyAuth()
 
   const filteredTracks = allSongs.filter(track =>
     track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -36,7 +36,7 @@ export default function CreatePlaylist() {
     setPlaylistTracks(playlistTracks.filter(t => t.spotifyId !== spotifyId))
   }
 
-  const handleSaveToSpotify = async (songsToSave?: SongDoc[]) => {
+  const handleSaveToSpotify = useCallback(async (songsToSave?: SongDoc[]) => {
     if (!isAuthenticated) {
       setSaveError('Please connect your Spotify account first')
       return
@@ -53,28 +53,22 @@ export default function CreatePlaylist() {
     setSaveSuccess(null)
 
     try {
-      // Get Spotify token from localStorage
-      const spotifyTokenData = localStorage.getItem('spotify_token')
-      let token = null
-      
-      if (spotifyTokenData) {
-        try {
-          const tokenObj = JSON.parse(spotifyTokenData)
-          token = tokenObj.access_token
-        } catch (error) {
-          console.error('Error parsing Spotify token:', error)
-        }
+      let accessToken = status?.accessToken
+
+      if (!accessToken) {
+        const refreshed = await refreshStatus()
+        accessToken = refreshed?.accessToken
       }
 
-      if (!token) {
-        throw new Error('Spotify access token not found. Please reconnect your account.')
+      if (!accessToken) {
+        throw new Error('Spotify access token unavailable. Please reconnect your account.')
       }
 
       const response = await fetch('/api/playlist/export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           name: playlistName,
@@ -89,6 +83,37 @@ export default function CreatePlaylist() {
       const data = await response.json()
 
       if (!response.ok) {
+        if (response.status === 401) {
+          const refreshed = await refreshStatus()
+          if (refreshed?.accessToken) {
+            const retryResponse = await fetch('/api/playlist/export', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${refreshed.accessToken}`
+              },
+              body: JSON.stringify({
+                name: playlistName,
+                songs: tracks.map(track => ({
+                  title: track.name,
+                  artist: track.artist,
+                  spotifyId: track.spotifyId
+                }))
+              })
+            })
+
+            const retryData = await retryResponse.json()
+            if (!retryResponse.ok) {
+              throw new Error(retryData.error || 'Failed to save playlist to Spotify')
+            }
+
+            setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
+            setSavedPlaylistUrl(retryData.playlistUrl)
+            setTimeout(() => setSaveSuccess(null), 5000)
+            return
+          }
+        }
+
         throw new Error(data.error || 'Failed to save playlist to Spotify')
       }
 
@@ -102,7 +127,7 @@ export default function CreatePlaylist() {
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [isAuthenticated, status, refreshStatus, playlistName, playlistTracks, setSaveError, setSaveSuccess])
 
 
 

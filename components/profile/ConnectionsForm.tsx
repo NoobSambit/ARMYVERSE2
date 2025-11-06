@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Music, Twitter, Instagram, Youtube, Globe, Link, Eye, EyeOff, Check, X, AlertCircle } from 'lucide-react'
 import { formatSocialUrl, extractSocialHandle, validateUrl } from '@/lib/utils/profile'
 import { track } from '@/lib/utils/analytics'
+import { useAuth } from '@/contexts/AuthContext'
 
 type SocialVisibility = Record<string, boolean>
 type ProfileSocials = {
@@ -55,11 +56,13 @@ const SOCIAL_PLATFORMS = [
 ]
 
 export default function ConnectionsForm({ profile, onUpdate, error }: ConnectionsFormProps) {
+  const { user } = useAuth()
   const [spotifyStatus, setSpotifyStatus] = useState<{
     connected: boolean
     loading: boolean
     error?: string
     scopes?: string[]
+    displayName?: string
   }>({ connected: false, loading: true })
   
   const [urlErrors, setUrlErrors] = useState<Record<string, string>>({})
@@ -67,20 +70,40 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
   // Check Spotify connection status
   useEffect(() => {
     const checkSpotifyStatus = async () => {
+      if (!user) {
+        setSpotifyStatus(prev => ({ ...prev, connected: false, loading: false, error: 'Sign in required' }))
+        return
+      }
+
       try {
-        const response = await fetch('/api/spotify/dashboard')
+        const token = await user.getIdToken()
+        const response = await fetch('/api/spotify/status', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+
         if (response.ok) {
           const data = await response.json()
-          setSpotifyStatus({
-            connected: true,
-            loading: false,
-            scopes: data.scopes || []
-          })
+          if (data.connected) {
+            setSpotifyStatus({
+              connected: true,
+              loading: false,
+              scopes: data.scopes || [],
+              displayName: data.displayName
+            })
+          } else {
+            setSpotifyStatus({
+              connected: false,
+              loading: false,
+              error: 'Not connected'
+            })
+          }
         } else {
           setSpotifyStatus({
             connected: false,
             loading: false,
-            error: 'Not connected'
+            error: 'Failed to fetch status'
           })
         }
       } catch (err) {
@@ -93,7 +116,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     }
 
     checkSpotifyStatus()
-  }, [])
+  }, [user])
 
   const handleInputChange = useCallback((field: string, value: string) => {
     onUpdate({
@@ -138,8 +161,15 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
   }, [onUpdate, profile.socials])
 
   const connectSpotify = useCallback(async () => {
+    if (!user) return
+
     try {
-      const response = await fetch('/api/spotify/auth-url')
+      const token = await user.getIdToken()
+      const response = await fetch('/api/spotify/auth-url', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       if (response.ok) {
         const { url } = await response.json()
         await track('connection_connected', { platform: 'spotify' })
@@ -148,11 +178,19 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     } catch (err) {
       console.error('Failed to get Spotify auth URL:', err)
     }
-  }, [])
+  }, [user])
 
   const disconnectSpotify = useCallback(async () => {
+    if (!user) return
+
     try {
-      const response = await fetch('/api/spotify/disconnect', { method: 'POST' })
+      const token = await user.getIdToken()
+      const response = await fetch('/api/spotify/disconnect', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       if (response.ok) {
         setSpotifyStatus({
           connected: false,
@@ -163,7 +201,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     } catch (err) {
       console.error('Failed to disconnect Spotify:', err)
     }
-  }, [])
+  }, [user])
 
   const getScopeDescription = (scopes: string[]) => {
     const scopeMap: Record<string, string> = {
@@ -211,6 +249,9 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full" />
                 <span className="text-green-400 font-medium">Connected to Spotify</span>
+                {spotifyStatus.displayName && (
+                  <span className="text-sm text-gray-400">as {spotifyStatus.displayName}</span>
+                )}
               </div>
               
               {spotifyStatus.scopes && spotifyStatus.scopes.length > 0 && (

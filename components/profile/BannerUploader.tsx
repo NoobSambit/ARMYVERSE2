@@ -20,6 +20,11 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [croppingImage, setCroppingImage] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [imageMeta, setImageMeta] = useState<{ width: number; height: number } | null>(null)
+  const [cropAxis, setCropAxis] = useState<'vertical' | 'horizontal'>('vertical')
+  const [cropPosition, setCropPosition] = useState(0.5)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const validateFile = (file: File): string | null => {
@@ -63,27 +68,23 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
     })
   }
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     setUploading(true)
     setError(null)
 
     try {
-      // Validate file
       const validationError = validateFile(file)
       if (validationError) {
         setError(validationError)
         return
       }
 
-      // Compress image
       const compressedFile = await compressImage(file)
       
-      // Create form data
       const formData = new FormData()
       formData.append('file', compressedFile, 'banner.jpg')
       formData.append('type', 'banner')
 
-      // Upload
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData
@@ -103,18 +104,37 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
     } finally {
       setUploading(false)
     }
-  }
+  }, [onUpload])
 
   const handleFileSelect = useCallback((file: File) => {
-    // Create preview
+    const validationError = validateFile(file)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    setSelectedFile(file)
     const reader = new FileReader()
     reader.onload = (e) => {
-      setPreview(e.target?.result as string)
+      const result = e.target?.result as string
+      if (!result) return
+      setCroppingImage(result)
+      const img = new window.Image()
+      img.onload = () => {
+        const width = img.naturalWidth
+        const height = img.naturalHeight
+        setImageMeta({ width, height })
+        const targetRatio = 16 / 6
+        const imageRatio = width / height
+        if (imageRatio > targetRatio) {
+          setCropAxis('horizontal')
+        } else {
+          setCropAxis('vertical')
+        }
+        setCropPosition(0.5)
+      }
+      img.src = result
     }
     reader.readAsDataURL(file)
-
-    // Upload file
-    uploadFile(file)
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -153,6 +173,93 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
     setPreview(null)
     setError(null)
   }, [onUpload])
+
+  const closeCropper = useCallback(() => {
+    setCroppingImage(null)
+    setSelectedFile(null)
+    setImageMeta(null)
+    setCropPosition(0.5)
+  }, [])
+
+  const handleCropCancel = useCallback(() => {
+    closeCropper()
+  }, [closeCropper])
+
+  const handleCropConfirm = useCallback(async () => {
+    if (!croppingImage || !selectedFile || !imageMeta) {
+      return
+    }
+    try {
+      const targetRatio = 16 / 6
+      let cropWidth = imageMeta.width
+      let cropHeight = cropWidth / targetRatio
+      let offsetX = 0
+      let offsetY = 0
+
+      if (cropHeight > imageMeta.height) {
+        cropHeight = imageMeta.height
+        cropWidth = cropHeight * targetRatio
+        const maxOffsetX = imageMeta.width - cropWidth
+        offsetX = maxOffsetX * cropPosition
+      } else {
+        const maxOffsetY = imageMeta.height - cropHeight
+        offsetY = maxOffsetY * cropPosition
+      }
+
+      const canvas = document.createElement('canvas')
+      const outputWidth = 1200
+      canvas.width = outputWidth
+      canvas.height = outputWidth / targetRatio
+      const ctx = canvas.getContext('2d')
+
+      if (!ctx) {
+        throw new Error('Failed to process image')
+      }
+
+      const img = new window.Image()
+      const imageLoaded = await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('Failed to load image'))
+        img.src = croppingImage
+      })
+
+      if (!imageLoaded && img.complete === false) {
+        throw new Error('Failed to load image')
+      }
+
+      ctx.drawImage(
+        img,
+        offsetX,
+        offsetY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      )
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => {
+          if (result) {
+            resolve(result)
+          } else {
+            reject(new Error('Failed to create image blob'))
+          }
+        }, 'image/jpeg', 0.9)
+      })
+
+      const croppedFile = new File([blob], selectedFile.name || 'banner.jpg', { type: 'image/jpeg' })
+
+      setPreview(dataUrl)
+      closeCropper()
+      await uploadFile(croppedFile)
+    } catch (err) {
+      console.error('Crop error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to process image')
+    }
+  }, [closeCropper, cropPosition, croppingImage, imageMeta, selectedFile, uploadFile])
 
   const displayUrl = preview || currentUrl
 
@@ -286,8 +393,68 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
         <p>• Drag and drop or click to upload</p>
         <p>• JPEG, PNG, WebP up to 10MB</p>
         <p>• Recommended: 1200x450px (16:6 aspect ratio)</p>
-        <p>• Image will be automatically cropped to fit</p>
+        <p>• Adjust the visible section before saving</p>
       </div>
+
+      <AnimatePresence>
+        {croppingImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-6"
+          >
+            <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-purple-500/30 bg-[#150424]">
+              <div className="relative aspect-[16/6] w-full bg-black/80">
+                <img
+                  src={croppingImage}
+                  alt="Crop preview"
+                  className="h-full w-full object-cover"
+                  style={{
+                    objectPosition:
+                      cropAxis === 'vertical'
+                        ? `50% ${Math.round(cropPosition * 100)}%`
+                        : `${Math.round(cropPosition * 100)}% 50%`
+                  }}
+                />
+                <div className="pointer-events-none absolute inset-0 border-2 border-purple-500/60" />
+              </div>
+              <div className="flex flex-col gap-4 border-t border-purple-500/20 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex w-full max-w-sm items-center gap-3">
+                  <span className="text-xs text-gray-400 capitalize">
+                    {cropAxis === 'vertical' ? 'Vertical' : 'Horizontal'} focus
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={Math.round(cropPosition * 100)}
+                    onChange={(e) => setCropPosition(Number(e.target.value) / 100)}
+                    className="h-1 flex-1 appearance-none rounded-full bg-gray-700"
+                  />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCropCancel}
+                    className="rounded-lg bg-gray-700 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCropConfirm}
+                    disabled={uploading}
+                    className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Save selection
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

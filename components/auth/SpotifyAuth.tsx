@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Music, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 interface SpotifyAuthProps {
   onAuthSuccess?: () => void
@@ -11,64 +13,76 @@ interface SpotifyAuthProps {
 export default function SpotifyAuth({ onAuthSuccess }: SpotifyAuthProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+  const { isAuthenticated, refreshStatus, isLoading: statusLoading } = useSpotifyAuth()
 
   const handleSpotifyAuth = async () => {
     try {
+      if (!user) {
+        setError('Please sign in to continue')
+        return
+      }
+
       setIsLoading(true)
       setError(null)
 
-      // Get auth URL from backend
-      const response = await fetch('/api/spotify/auth-url')
+      const idToken = await user.getIdToken()
+      const response = await fetch('/api/spotify/auth-url', {
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      })
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}))
+        throw new Error(errorBody.error || 'Failed to get authentication URL')
+      }
+
       const data = await response.json()
 
       if (data.url) {
-        // Redirect to Spotify auth
         window.location.href = data.url
       } else {
         setError('Failed to get authentication URL')
       }
     } catch (err) {
       console.error('Error starting Spotify auth:', err)
-      setError('Failed to start authentication')
+      setError(err instanceof Error ? err.message : 'Failed to start authentication')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Check if user is already authenticated (from URL params)
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const auth = urlParams.get('auth')
-    const token = urlParams.get('token')
-    const error = urlParams.get('error')
-    
-    if (error) {
-      setError(`Authentication failed: ${error}`)
-      return
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    const auth = params.get('auth')
+    const authError = params.get('error')
+
+    if (authError) {
+      setError(`Authentication failed: ${authError}`)
     }
-    
-    if (auth === 'success' && token) {
-      try {
-        // User just returned from Spotify auth
-        const tokenData = JSON.parse(decodeURIComponent(token))
-        // Add timestamp for token expiration tracking
-        const tokenWithTimestamp = {
-          ...tokenData,
-          timestamp: Date.now()
-        }
-        localStorage.setItem('spotify_token', JSON.stringify(tokenWithTimestamp))
-        onAuthSuccess?.()
-      } catch (err) {
-        console.error('Error parsing token:', err)
-        setError('Failed to process authentication response')
-      }
+
+    if (auth === 'success') {
+      refreshStatus()
+      onAuthSuccess?.()
     }
-  }, [onAuthSuccess])
+
+    if (auth || authError) {
+      params.delete('auth')
+      params.delete('error')
+      const nextQuery = params.toString()
+      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`
+      window.history.replaceState({}, document.title, nextUrl)
+    }
+  }, [onAuthSuccess, refreshStatus])
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+
       className="min-h-screen flex items-center justify-center py-8 px-6"
     >
       <div className="max-w-md w-full">
@@ -153,10 +167,10 @@ export default function SpotifyAuth({ onAuthSuccess }: SpotifyAuthProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSpotifyAuth}
-            disabled={isLoading}
+            disabled={isLoading || statusLoading}
             className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-600 disabled:to-gray-700 rounded-xl text-white font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3"
           >
-            {isLoading ? (
+            {isLoading || statusLoading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span>Connecting...</span>
@@ -164,7 +178,7 @@ export default function SpotifyAuth({ onAuthSuccess }: SpotifyAuthProps) {
             ) : (
               <>
                 <ExternalLink className="w-5 h-5" />
-                <span>Connect with Spotify</span>
+                <span>{isAuthenticated ? 'Reconnect with Spotify' : 'Connect with Spotify'}</span>
               </>
             )}
           </motion.button>

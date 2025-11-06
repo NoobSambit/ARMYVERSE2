@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { ExternalLink, Loader2, Bug } from 'lucide-react'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 interface Track {
   title: string
@@ -15,53 +16,55 @@ interface Track {
 
 interface ExportToSpotifyButtonProps {
   tracks: Track[]
-  isAuthenticated: boolean
   onExportSuccess?: (playlistUrl: string) => void
   onExportError?: (error: string) => void
 }
 
 export default function ExportToSpotifyButton({
   tracks,
-  isAuthenticated,
   onExportSuccess,
   onExportError
 }: ExportToSpotifyButtonProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [isDebugging, setIsDebugging] = useState(false)
+  const { isAuthenticated, status, refreshStatus } = useSpotifyAuth()
 
-  const debugToken = async () => {
-    setIsDebugging(true)
-    
-    const spotifyTokenData = localStorage.getItem('spotify_token')
-    let token = null
-    
-    if (spotifyTokenData) {
-      try {
-        const tokenObj = JSON.parse(spotifyTokenData)
-        token = tokenObj.access_token
-      } catch (error) {
-        console.error('Error parsing Spotify token:', error)
-      }
+  const getValidAccessToken = useCallback(async () => {
+    let accessToken = status?.accessToken
+
+    if (!accessToken) {
+      const refreshed = await refreshStatus()
+      accessToken = refreshed?.accessToken
     }
 
-    if (!token) {
-      onExportError?.('No Spotify token found. Please reconnect your account.')
-      setIsDebugging(false)
+    return accessToken || null
+  }, [status, refreshStatus])
+
+  const debugToken = useCallback(async () => {
+    if (!isAuthenticated) {
+      onExportError?.('Please connect your Spotify account first')
       return
     }
 
+    setIsDebugging(true)
+
     try {
+      const accessToken = await getValidAccessToken()
+      if (!accessToken) {
+        onExportError?.('Unable to retrieve Spotify token. Please reconnect your account.')
+        return
+      }
+
       const response = await fetch('/api/playlist/export', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${accessToken}`
         }
       })
 
       const data = await response.json()
-      console.log('Token debug info:', data)
-      
-      if (data.tokenValid) {
+
+      if (response.ok && data.tokenValid) {
         onExportSuccess?.(`Token is valid! User: ${data.userData.display_name}, Scopes: ${data.scopes}`)
       } else {
         onExportError?.(`Token validation failed: ${data.error || 'Unknown error'}`)
@@ -72,9 +75,9 @@ export default function ExportToSpotifyButton({
     } finally {
       setIsDebugging(false)
     }
-  }
+  }, [isAuthenticated, getValidAccessToken, onExportError, onExportSuccess])
 
-  const handleExport = async () => {
+  const handleExport = useCallback(async () => {
     if (!isAuthenticated) {
       onExportError?.('Please connect your Spotify account first')
       return
@@ -86,55 +89,24 @@ export default function ExportToSpotifyButton({
     }
 
     setIsExporting(true)
-    
-    // Get Spotify token from localStorage and extract access_token
-    const spotifyTokenData = localStorage.getItem('spotify_token')
-    let token = null
-    let refreshToken = null
-    
-    if (spotifyTokenData) {
-      try {
-        const tokenObj = JSON.parse(spotifyTokenData)
-        token = tokenObj.access_token
-        refreshToken = tokenObj.refresh_token
-        
-        // Check if token is expired (if we have expiration info)
-        if (tokenObj.expires_in && tokenObj.timestamp) {
-          const now = Date.now()
-          const expirationTime = tokenObj.timestamp + (tokenObj.expires_in * 1000)
-          if (now > expirationTime) {
-            onExportError?.('Spotify token has expired. Please reconnect your account.')
-            setIsExporting(false)
-            return
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing Spotify token:', error)
-      }
-    }
-
-    if (!token) {
-      onExportError?.('Spotify access token not found. Please reconnect your account.')
-      setIsExporting(false)
-      return
-    }
 
     try {
-      const requestBody: any = {
+      const accessToken = await getValidAccessToken()
+      if (!accessToken) {
+        onExportError?.('Spotify access token not available. Please reconnect your account.')
+        return
+      }
+
+      const requestBody = {
         name: 'AI Generated BTS Playlist',
         songs: tracks
-      }
-      
-      // Include refresh token if available
-      if (refreshToken) {
-        requestBody.refreshToken = refreshToken
       }
 
       const response = await fetch('/api/playlist/export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${accessToken}`
         },
         body: JSON.stringify(requestBody)
       })
@@ -142,46 +114,31 @@ export default function ExportToSpotifyButton({
       const data = await response.json()
 
       if (!response.ok) {
-        // Handle specific error cases
-        if (response.status === 401 || response.status === 403) {
-          // Clear invalid token from localStorage
-          localStorage.removeItem('spotify_token')
-          // Dispatch event to trigger auth state refresh
-          window.dispatchEvent(new Event('spotify_token_set'))
-          
-          if (response.status === 401) {
-            onExportError?.('Spotify token expired or invalid. Please reconnect your account.')
-          } else {
-            onExportError?.('Insufficient permissions. Please ensure your Spotify account has playlist creation permissions.')
+        if (response.status === 401) {
+          const refreshed = await refreshStatus()
+          if (refreshed?.accessToken) {
+            const retryResponse = await fetch('/api/playlist/export', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${refreshed.accessToken}`
+              },
+              body: JSON.stringify(requestBody)
+            })
+
+            const retryData = await retryResponse.json()
+            if (!retryResponse.ok) {
+              throw new Error(retryData.error || retryData.details || 'Failed to export playlist')
+            }
+
+            onExportSuccess?.(retryData.playlistUrl)
+            return
           }
-          return
         }
-        
+
         throw new Error(data.error || data.details || 'Failed to export playlist')
       }
 
-
-      
-      if (data.refreshedToken) {
-        const spotifyTokenData = localStorage.getItem('spotify_token')
-        if (spotifyTokenData) {
-          try {
-            const tokenObj = JSON.parse(spotifyTokenData)
-            tokenObj.access_token = data.refreshedToken
-            tokenObj.timestamp = Date.now()
-            localStorage.setItem('spotify_token', JSON.stringify(tokenObj))
-            // Dispatch event to notify other components
-            window.dispatchEvent(new Event('spotify_token_set'))
-          } catch (error) {
-            console.error('Error updating refreshed token:', error)
-          }
-        }
-      }
-      
-      // Show success message with details
-      const successMessage = `Successfully exported ${data.tracksAdded} out of ${data.totalSongs} tracks to Spotify!`
-      console.log(successMessage)
-      
       if (data.searchErrors && data.searchErrors.length > 0) {
         console.warn('Some tracks could not be found:', data.searchErrors)
       }
@@ -194,7 +151,7 @@ export default function ExportToSpotifyButton({
     } finally {
       setIsExporting(false)
     }
-  }
+  }, [isAuthenticated, tracks, getValidAccessToken, onExportError, onExportSuccess, refreshStatus])
 
   return (
     <div className="flex gap-2">
@@ -221,8 +178,7 @@ export default function ExportToSpotifyButton({
           </>
         )}
       </button>
-      
-      {/* Debug button for troubleshooting */}
+
       <button
         onClick={debugToken}
         disabled={!isAuthenticated || isDebugging}

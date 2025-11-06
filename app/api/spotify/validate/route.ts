@@ -1,46 +1,25 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 export const runtime = 'nodejs'
 
-const SPOTIFY_API_BASE = 'https://api.spotify.com/v1'
+const validateBodySchema = z.object({
+  userId: z.string().min(1)
+})
 
-// Validate Spotify token by checking /me endpoint
-export async function GET(req: Request) {
+export async function POST(request: Request) {
   try {
-    const authHeader = req.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
+    const payload = await request.json().catch(() => ({}))
+    const { userId } = validateBodySchema.parse(payload)
 
-    if (!token) {
-      return NextResponse.json({ tokenValid: false, error: 'No token provided' }, { status: 401 })
-    }
-
-    // Test the token with Spotify's /me endpoint
-    const meResponse = await fetch(`${SPOTIFY_API_BASE}/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-
-    if (!meResponse.ok) {
-      return NextResponse.json({ 
-        tokenValid: false, 
-        error: 'Token validation failed',
-        status: meResponse.status 
-      }, { status: meResponse.status })
-    }
-
-    const userData = await meResponse.json()
-
-    return NextResponse.json({
-      tokenValid: true,
-      userData: {
-        id: userData.id,
-        display_name: userData.display_name
-      }
-    })
+    // TODO: implement actual Spotify token lookup and validation for userId
+    // For now, assume the connection is invalid until backend storage is wired
+    return NextResponse.json({ connected: false, reason: 'not_implemented', userId })
   } catch (error) {
-    return NextResponse.json({ 
-      tokenValid: false,
-      error: 'Validation request failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid payload', details: error.flatten() }, { status: 400 })
+    }
+
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
