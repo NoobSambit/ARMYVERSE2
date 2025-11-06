@@ -9,10 +9,20 @@ import { useAuth } from '@/contexts/AuthContext'
 type FieldVisibilityKey = 'bias' | 'socials' | 'stats'
 
 interface PrivacyFormProps {
-  profile: any
-  onUpdate: (updates: any) => void
+  profile: Record<string, unknown> & {
+    privacy: {
+      visibility?: string
+      fieldVisibility?: Partial<Record<FieldVisibilityKey, boolean>>
+      explicitContentFilter?: boolean
+      allowMentions?: boolean
+      allowDMs?: boolean
+      blockedUserIds?: string[]
+    }
+  }
+  onUpdate: (updates: Record<string, unknown>) => void
   loading?: boolean
   error: string | null
+  onError?: (message: string | null) => void
 }
 
 const VISIBILITY_OPTIONS = [
@@ -54,12 +64,11 @@ const FIELD_VISIBILITY_OPTIONS: Array<{ id: FieldVisibilityKey; name: string; de
   }
 ]
 
-export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormProps) {
+export default function PrivacyForm({ profile, onUpdate, error, onError }: PrivacyFormProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [exporting, setExporting] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
   const { user } = useAuth()
 
   const handleInputChange = useCallback((field: string, value: string | boolean | string[]) => {
@@ -85,7 +94,7 @@ export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormPro
 
   const handleExportData = useCallback(async () => {
     setExporting(true)
-    setFormError(null)
+    onError?.(null)
     try {
       if (!user) {
         throw new Error('You must be signed in to export data.')
@@ -113,22 +122,23 @@ export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormPro
         throw new Error(body.error || 'Failed to export data')
       }
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to export data'
       console.error('Export failed:', err)
-      setFormError(err instanceof Error ? err.message : 'Failed to export data')
+      onError?.(message)
     } finally {
       setExporting(false)
     }
-  }, [user])
+  }, [user, onError])
 
   const handleDeleteAccount = useCallback(async () => {
     if (deleteConfirmText !== 'DELETE') return
     if (!user) {
-      setFormError('You must be signed in to delete your account.')
+      onError?.('You must be signed in to delete your account.')
       return
     }
 
     setDeleting(true)
-    setFormError(null)
+    onError?.(null)
 
     try {
       await track('account_deletion_initiated', {})
@@ -149,11 +159,11 @@ export default function PrivacyForm({ profile, onUpdate, error }: PrivacyFormPro
       throw new Error(body.error || 'Failed to delete account')
     } catch (err) {
       console.error('Delete account failed:', err)
-      setFormError(err instanceof Error ? err.message : 'Failed to delete account')
+      onError?.(err instanceof Error ? err.message : 'Failed to delete account')
     } finally {
       setDeleting(false)
     }
-  }, [deleteConfirmText, user])
+  }, [deleteConfirmText, user, onError])
 
   const isDeleteEnabled = deleteConfirmText === 'DELETE'
 
