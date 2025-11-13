@@ -406,7 +406,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                 </div>
               </div>
               <p className="text-xs text-gray-400">
-                Requires scopes: playlist-modify-public, playlist-modify-private, user-read-private. Add your Spotify account email to your app's User Management before connecting.
+                Requires scopes: playlist-modify-public, playlist-modify-private, user-read-private. Add your Spotify account email to your app&#39;s User Management before connecting.
               </p>
               <div className="flex gap-3">
                 <button

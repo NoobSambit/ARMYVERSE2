@@ -19,7 +19,7 @@ export default function CreatePlaylist() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(null)
   const { songs: allSongs } = useAllSongs()
-  const { isAuthenticated, status, refreshStatus } = useSpotifyAuth()
+  const { status, refreshStatus } = useSpotifyAuth()
 
   const filteredTracks = allSongs.filter(track =>
     track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -145,14 +145,14 @@ export default function CreatePlaylist() {
               />
               <button
                 onClick={() => setMode('normal')}
-                aria-selected={mode === 'normal'}
+                aria-pressed={mode === 'normal'}
                 className="segmented-item px-8"
               >
                 Normal
               </button>
               <button
                 onClick={() => setMode('focus')}
-                aria-selected={mode === 'focus'}
+                aria-pressed={mode === 'focus'}
                 className="segmented-item px-8"
               >
                 Streaming Focus
