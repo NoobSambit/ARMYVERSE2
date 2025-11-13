@@ -5,6 +5,36 @@ export const runtime = 'nodejs'
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1'
 const SPOTIFY_TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token'
 
+type SpotifyProfile = {
+  id: string
+  display_name?: string
+  email?: string
+}
+
+function getBearerFromRequest(req: Request): string | null {
+  const auth = req.headers.get('authorization') || req.headers.get('Authorization')
+  if (!auth) return null
+  const parts = auth.split(' ')
+  if (parts.length === 2 && parts[0].toLowerCase() === 'bearer' && parts[1]) {
+    return parts[1]
+  }
+  return null
+}
+
+async function getUserProfileFromToken(userAccessToken: string): Promise<SpotifyProfile | null> {
+  try {
+    const res = await fetch(`${SPOTIFY_API_BASE}/me`, {
+      headers: { Authorization: `Bearer ${userAccessToken}` }
+    })
+    if (!res.ok) return null
+    const profile = await res.json() as SpotifyProfile
+    if (!profile?.id) return null
+    return profile
+  } catch {
+    return null
+  }
+}
+
 async function getOwnerAccessToken(): Promise<string> {
   const clientId = process.env.SPOTIFY_CLIENT_ID
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET
@@ -67,15 +97,30 @@ async function getOwnerUserId(accessToken: string): Promise<string> {
 }
 
 // Expose a lightweight diagnostics endpoint for internal checks
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    // Prefer user token diagnostics when provided
+    const maybeUserToken = getBearerFromRequest(req)
+    if (maybeUserToken) {
+      const userProfile = await getUserProfileFromToken(maybeUserToken)
+      if (userProfile) {
+        console.log('Spotify export diagnostics: mode=user, userId=', userProfile.id)
+        return NextResponse.json({
+          tokenValid: true,
+          mode: 'user',
+          userData: userProfile
+        })
+      } else {
+        return NextResponse.json({ error: 'Invalid or expired user token' }, { status: 401 })
+      }
+    }
+
+    // Fall back to owner diagnostics
     const accessToken = await getOwnerAccessToken()
     const userId = await getOwnerUserId(accessToken)
 
-    return NextResponse.json({
-      tokenValid: true,
-      ownerUserId: userId
-    })
+    console.log('Spotify export diagnostics: mode=owner, ownerUserId=', userId)
+    return NextResponse.json({ tokenValid: true, mode: 'owner', ownerUserId: userId })
   } catch (error) {
     console.error('Spotify export diagnostics failed:', error)
     return NextResponse.json({
@@ -89,20 +134,39 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { name, songs } = body
-    const accessToken = await getOwnerAccessToken()
 
     if (!songs?.length) {
       return NextResponse.json({ error: 'No songs provided' }, { status: 400 })
     }
 
-    const userId = await getOwnerUserId(accessToken)
-    console.log('Owner user ID retrieved:', userId)
+    // Determine mode: user (if a valid Spotify user token is provided) or owner
+    let mode: 'user' | 'owner' = 'owner'
+    let actingAccessToken: string
+    let targetUserId: string
 
-    // 2. Create new playlist
-    const playlistResponse = await fetch(`${SPOTIFY_API_BASE}/users/${userId}/playlists`, {
+    const maybeUserToken = getBearerFromRequest(req)
+    if (maybeUserToken) {
+      const userProfile = await getUserProfileFromToken(maybeUserToken)
+      if (userProfile?.id) {
+        mode = 'user'
+        actingAccessToken = maybeUserToken
+        targetUserId = userProfile.id
+        console.log('Export mode=user; target userId:', targetUserId)
+      } else {
+        return NextResponse.json({ error: 'Unauthorized: invalid or expired user token' }, { status: 401 })
+      }
+    } else {
+      // No user token provided, use owner
+      actingAccessToken = await getOwnerAccessToken()
+      targetUserId = await getOwnerUserId(actingAccessToken)
+      console.log('Export mode=owner; owner userId:', targetUserId)
+    }
+
+    // 2. Create new playlist in the appropriate account
+    const playlistResponse = await fetch(`${SPOTIFY_API_BASE}/users/${targetUserId}/playlists`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${actingAccessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -146,7 +210,7 @@ export async function POST(req: Request) {
           const searchResponse = await fetch(
             `${SPOTIFY_API_BASE}/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
             {
-              headers: { 'Authorization': `Bearer ${accessToken}` }
+              headers: { 'Authorization': `Bearer ${actingAccessToken}` }
             }
           )
 
@@ -178,7 +242,7 @@ export async function POST(req: Request) {
       const addTracksResponse = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlist.id}/tracks`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${actingAccessToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ uris: trackUris })
@@ -206,7 +270,8 @@ export async function POST(req: Request) {
       playlistUrl: playlist.external_urls.spotify,
       tracksAdded: trackUris.length,
       totalSongs: songs.length,
-      searchErrors: searchErrors.length > 0 ? searchErrors : undefined
+      searchErrors: searchErrors.length > 0 ? searchErrors : undefined,
+      mode
     }
 
     console.log('Export completed successfully:', result)

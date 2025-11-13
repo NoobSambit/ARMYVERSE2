@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyFirebaseToken } from '@/lib/auth/verify'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
+import { getUserExportToken } from '@/lib/spotify/userTokens'
 
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token'
 const TOKEN_REFRESH_BUFFER_MS = 60 * 1000 // 1 minute
@@ -14,6 +15,18 @@ interface SpotifyIntegration {
   scopes?: string[]
   spotifyUserId?: string
   firebaseUid?: string
+  displayName?: string
+  avatarUrl?: string
+  updatedAt?: Date
+}
+
+interface SpotifyByoIntegration {
+  accessToken?: string
+  refreshTokenEnc?: string
+  tokenType?: string
+  expiresAt?: Date
+  scopes?: string[]
+  ownerId?: string
   displayName?: string
   avatarUrl?: string
   updatedAt?: Date
@@ -102,10 +115,33 @@ export async function GET(request: NextRequest) {
     await connect()
 
     const userDoc = await User.findOne({ email: authUser.email })
-    if (!userDoc || !userDoc.integrations?.spotify) {
+    if (!userDoc) {
       return NextResponse.json({ connected: false })
     }
 
+    // 1) Prefer BYO personal app if configured
+    const byo = (userDoc.integrations?.spotifyByo || {}) as SpotifyByoIntegration
+    if (byo && byo.refreshTokenEnc) {
+      const token = await getUserExportToken(userDoc)
+      if (token?.accessToken) {
+        return NextResponse.json({
+          connected: true,
+          spotifyUserId: byo.ownerId,
+          displayName: byo.displayName,
+          avatarUrl: byo.avatarUrl,
+          scopes: token.scopes || byo.scopes || [],
+          accessToken: token.accessToken,
+          expiresAt: token.expiresAt ? new Date(token.expiresAt).toISOString() : null,
+          lastUpdated: byo.updatedAt ? new Date(byo.updatedAt).toISOString() : null,
+          mode: 'byo'
+        })
+      }
+    }
+
+    // 2) Fallback to standard integration tokens
+    if (!userDoc.integrations?.spotify) {
+      return NextResponse.json({ connected: false })
+    }
     let integration = userDoc.integrations.spotify as SpotifyIntegration
 
     if (!integration.accessToken) {
@@ -136,7 +172,8 @@ export async function GET(request: NextRequest) {
       scopes: integration.scopes || [],
       accessToken: integration.accessToken,
       expiresAt: integration.expiresAt ? new Date(integration.expiresAt).toISOString() : null,
-      lastUpdated: integration.updatedAt ? new Date(integration.updatedAt).toISOString() : null
+      lastUpdated: integration.updatedAt ? new Date(integration.updatedAt).toISOString() : null,
+      mode: 'standard'
     })
   } catch (error) {
     console.error('Spotify status error:', error)

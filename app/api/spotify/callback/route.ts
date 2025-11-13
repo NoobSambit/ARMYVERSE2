@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
+import { decryptSecret, encryptSecret } from '@/lib/utils/secrets'
 
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token'
 const PROFILE_ENDPOINT = 'https://api.spotify.com/v1/me'
@@ -27,6 +28,91 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/stats?error=no_code', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
     }
 
+    // Attempt BYO flow if state matches pending.spotifyByo for any user
+    await connect()
+    let byoUser = null as any
+    if (state) {
+      byoUser = await User.findOne({ 'pending.spotifyByo.state': state })
+    }
+
+    if (byoUser && code) {
+      const pending = byoUser.pending?.spotifyByo || {}
+      const clientId = pending.clientIdEnc ? decryptSecret(pending.clientIdEnc) : ''
+      const clientSecret = pending.clientSecretEnc ? decryptSecret(pending.clientSecretEnc) : ''
+      const codeVerifier = pending.codeVerifierEnc ? decryptSecret(pending.codeVerifierEnc) : ''
+      const redirectUri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI || ''
+
+      const params = new URLSearchParams()
+      params.set('grant_type', 'authorization_code')
+      params.set('code', code)
+      params.set('redirect_uri', redirectUri)
+      if (!clientSecret) {
+        params.set('client_id', clientId)
+        params.set('code_verifier', codeVerifier)
+      }
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/x-www-form-urlencoded' }
+      if (clientSecret) {
+        headers['Authorization'] = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+      }
+
+      const tokenResponse = await fetch(TOKEN_ENDPOINT, {
+        method: 'POST',
+        headers,
+        body: params
+      })
+
+      if (!tokenResponse.ok) {
+        console.error('BYO token exchange failed:', await tokenResponse.text())
+        return NextResponse.redirect(new URL('/stats?error=token_exchange_failed', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
+      }
+
+      const tokenData = await tokenResponse.json() as {
+        access_token: string
+        token_type: string
+        expires_in: number
+        refresh_token?: string
+        scope?: string
+      }
+
+      if (!tokenData.access_token) {
+        return NextResponse.redirect(new URL('/stats?error=no_access_token', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
+      }
+
+      const profileResponse = await fetch(PROFILE_ENDPOINT, {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` }
+      })
+      if (!profileResponse.ok) {
+        console.error('BYO profile fetch failed:', await profileResponse.text())
+        return NextResponse.redirect(new URL('/stats?error=profile_fetch_failed', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
+      }
+      const profile = await profileResponse.json() as { id: string, display_name?: string, images?: Array<{ url: string }> }
+
+      const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000)
+      const scope = tokenData.scope ? tokenData.scope.split(' ') : (pending.scopes || [])
+
+      await User.findByIdAndUpdate(byoUser._id, {
+        $set: {
+          'integrations.spotifyByo': {
+            clientIdEnc: pending.clientIdEnc,
+            clientSecretEnc: pending.clientSecretEnc,
+            refreshTokenEnc: tokenData.refresh_token ? encryptSecret(tokenData.refresh_token) : byoUser.integrations?.spotifyByo?.refreshTokenEnc,
+            ownerId: profile.id,
+            scopes: scope,
+            tokenType: tokenData.token_type,
+            expiresAt,
+            displayName: profile.display_name || '',
+            avatarUrl: profile.images?.[0]?.url,
+            updatedAt: new Date()
+          }
+        },
+        $unset: { 'pending.spotifyByo': '' }
+      }, { new: true })
+
+      return NextResponse.redirect(new URL('/stats?auth=success', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
+    }
+
+    // Non-BYO: verify signed state and process existing owner app flow
     const stateSecret = process.env.SPOTIFY_STATE_SECRET
     if (!stateSecret || !state) {
       return NextResponse.redirect(new URL('/stats?error=invalid_state', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
@@ -54,7 +140,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/stats?error=state_expired', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
     }
 
-    // Exchange code for access token
+    // Exchange code for access token (owner app credentials)
     const tokenResponse = await fetch(TOKEN_ENDPOINT, {
       method: 'POST',
       headers: {

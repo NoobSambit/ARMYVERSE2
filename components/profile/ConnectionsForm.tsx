@@ -63,7 +63,9 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     error?: string
     scopes?: string[]
     displayName?: string
+    mode?: 'byo' | 'standard'
   }>({ connected: false, loading: true })
+  const [byo, setByo] = useState<{ clientId: string; clientSecret: string; busy: boolean; error?: string }>({ clientId: '', clientSecret: '', busy: false })
   
   const [urlErrors, setUrlErrors] = useState<Record<string, string>>({})
 
@@ -90,7 +92,8 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
               connected: true,
               loading: false,
               scopes: data.scopes || [],
-              displayName: data.displayName
+              displayName: data.displayName,
+              mode: data.mode
             })
           } else {
             setSpotifyStatus({
@@ -116,6 +119,52 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     }
 
     checkSpotifyStatus()
+  }, [user])
+
+  const submitBYO = useCallback(async () => {
+    if (!user) return
+    setByo(prev => ({ ...prev, busy: true, error: undefined }))
+    try {
+      const token = await user.getIdToken()
+      const response = await fetch('/api/spotify/client-credentials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          clientId: byo.clientId.trim(),
+          clientSecret: byo.clientSecret.trim() || undefined
+        })
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to prepare Spotify authorization')
+      }
+      const { url } = await response.json()
+      window.location.href = url
+    } catch (e) {
+      setByo(prev => ({ ...prev, error: e instanceof Error ? e.message : 'Failed to start authorization' }))
+    } finally {
+      setByo(prev => ({ ...prev, busy: false }))
+    }
+  }, [user, byo.clientId, byo.clientSecret])
+
+  const disconnectBYO = useCallback(async () => {
+    if (!user) return
+    try {
+      const token = await user.getIdToken()
+      const response = await fetch('/api/spotify/disconnect-byo', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (response.ok) {
+        await track('connection_disconnected', { platform: 'spotify-byo' })
+        setSpotifyStatus(prev => ({ ...prev, mode: undefined }))
+      }
+    } catch (err) {
+      console.error('Failed to disconnect Spotify BYO:', err)
+    }
   }, [user])
 
   const handleInputChange = useCallback((field: string, value: string) => {
@@ -296,6 +345,79 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                 Connect Spotify
               </button>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bring your own Spotify app */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Music className="w-5 h-5 text-green-400" />
+          <h3 className="text-lg font-semibold text-white">Bring your own Spotify app</h3>
+        </div>
+
+        <div className="p-6 bg-black/20 rounded-lg border border-gray-700 space-y-4">
+          {spotifyStatus.mode === 'byo' ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+                <span className="text-green-400 font-medium">Personal app connected</span>
+                {spotifyStatus.displayName && (
+                  <span className="text-sm text-gray-400">as {spotifyStatus.displayName}</span>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={disconnectBYO}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Disconnect personal Spotify
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {byo.error && (
+                <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-400" />
+                  <p className="text-red-400 text-sm">{byo.error}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Client ID</label>
+                  <input
+                    type="text"
+                    value={byo.clientId}
+                    onChange={(e) => setByo(prev => ({ ...prev, clientId: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                    placeholder="your-client-id"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Client Secret (optional)</label>
+                  <input
+                    type="password"
+                    value={byo.clientSecret}
+                    onChange={(e) => setByo(prev => ({ ...prev, clientSecret: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                    placeholder="your-client-secret (leave empty to use PKCE)"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400">
+                Requires scopes: playlist-modify-public, playlist-modify-private, user-read-private. Add your Spotify account email to your app's User Management before connecting.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={submitBYO}
+                  disabled={byo.busy || !byo.clientId}
+                  className={`px-4 py-2 rounded-lg transition-colors ${byo.busy || !byo.clientId ? 'bg-gray-700 text-gray-400' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                >
+                  {byo.busy ? 'Preparing…' : 'Connect personal Spotify'}
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

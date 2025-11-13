@@ -65,6 +65,7 @@ SPOTIFY_CLIENT_ID=your-spotify-client-id
 SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
 NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=https://your-domain.com/api/spotify/callback
 NEXT_PUBLIC_SPOTIFY_SCOPES=user-read-private user-read-email user-top-read user-read-recently-played playlist-read-private playlist-modify-public playlist-modify-private
+SPOTIFY_USER_SECRET_KEY=a-long-random-secret-used-to-encrypt-user-spotify-secrets
 ```
 
 **Where to get:**
@@ -73,6 +74,8 @@ NEXT_PUBLIC_SPOTIFY_SCOPES=user-read-private user-read-email user-top-read user-
 3. Copy Client ID and Client Secret
 4. Add redirect URI in app settings (must match exactly)
 5. Use scopes as shown above
+
+For per-user Spotify export (BYO app), set `SPOTIFY_USER_SECRET_KEY` to a long random string. This key encrypts user-provided client secrets and refresh tokens at rest.
 
 **Required Scopes:**
 - `user-read-private` - Read user profile

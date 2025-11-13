@@ -240,6 +240,42 @@ const userSchema = new mongoose.Schema({
     type: profileSchema,
     default: () => ({})
   },
+  integrations: {
+    spotify: {
+      accessToken: { type: String },
+      refreshToken: { type: String },
+      scopes: [{ type: String }],
+      tokenType: { type: String },
+      expiresAt: { type: Date },
+      spotifyUserId: { type: String, index: true },
+      firebaseUid: { type: String, index: true },
+      displayName: { type: String },
+      avatarUrl: { type: String },
+      updatedAt: { type: Date }
+    },
+    spotifyByo: {
+      clientIdEnc: { type: String },
+      clientSecretEnc: { type: String },
+      refreshTokenEnc: { type: String },
+      ownerId: { type: String, index: true },
+      scopes: [{ type: String }],
+      tokenType: { type: String },
+      expiresAt: { type: Date },
+      displayName: { type: String },
+      avatarUrl: { type: String },
+      updatedAt: { type: Date }
+    }
+  },
+  pending: {
+    spotifyByo: {
+      state: { type: String },
+      clientIdEnc: { type: String },
+      clientSecretEnc: { type: String },
+      scopes: [{ type: String }],
+      codeVerifierEnc: { type: String },
+      createdAt: { type: Date }
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import StreamingFocusForm from '@/components/forms/StreamingFocusForm'
 import CompactPlaylistGrid from '@/components/playlist/CompactPlaylistGrid'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 export default function CreatePlaylist() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -18,6 +19,7 @@ export default function CreatePlaylist() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(null)
   const { songs: allSongs } = useAllSongs()
+  const { isAuthenticated, status, refreshStatus } = useSpotifyAuth()
 
   const filteredTracks = allSongs.filter(track =>
     track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -46,25 +48,57 @@ export default function CreatePlaylist() {
     setSaveSuccess(null)
 
     try {
-      const response = await fetch('/api/playlist/export', {
+      // Try to use user token if connected; otherwise fall back to owner mode
+      let accessToken = status?.accessToken || null
+      if (!accessToken) {
+        const refreshed = await refreshStatus()
+        accessToken = refreshed?.accessToken || null
+      }
+
+      const makeBody = () => ({
+        name: playlistName,
+        songs: tracks.map(track => ({
+          title: track.name,
+          artist: track.artist,
+          spotifyId: track.spotifyId
+        }))
+      })
+
+      const makeHeaders = (token?: string | null) => {
+        const h: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (token) h['Authorization'] = `Bearer ${token}`
+        return h
+      }
+
+      let response = await fetch('/api/playlist/export', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: playlistName,
-          songs: tracks.map(track => ({
-            title: track.name,
-            artist: track.artist,
-            spotifyId: track.spotifyId
-          }))
-        })
+        headers: makeHeaders(accessToken),
+        body: JSON.stringify(makeBody())
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save playlist to Spotify')
+        // If we attempted with an invalid/expired user token, refresh and retry once
+        if (response.status === 401 && accessToken) {
+          const refreshed = await refreshStatus()
+          if (refreshed?.accessToken) {
+            response = await fetch('/api/playlist/export', {
+              method: 'POST',
+              headers: makeHeaders(refreshed.accessToken),
+              body: JSON.stringify(makeBody())
+            })
+            const retryData = await response.json()
+            if (!response.ok) {
+              throw new Error(retryData.error || 'Failed to save playlist to Spotify')
+            }
+            setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
+            setSavedPlaylistUrl(retryData.playlistUrl)
+            setTimeout(() => setSaveSuccess(null), 5000)
+            return
+          }
+        }
+        throw new Error(data.error || data.details || 'Failed to save playlist to Spotify')
       }
 
       setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
@@ -77,7 +111,7 @@ export default function CreatePlaylist() {
     } finally {
       setIsSaving(false)
     }
-  }, [playlistName, playlistTracks, setSaveError, setSaveSuccess])
+  }, [playlistName, playlistTracks, status, refreshStatus, setSaveError, setSaveSuccess])
 
 
 
@@ -215,8 +249,7 @@ export default function CreatePlaylist() {
                 <div>
                   <h3 className="text-white font-semibold text-lg">Instant Spotify Export</h3>
                   <p className="text-sm text-gray-300">
-                    Playlists you create are published straight to the official ArmyVerse Spotify account.
-                    As soon as the playlist is saved you&apos;ll receive a direct link to open it on Spotify.
+                    If your Spotify is connected, playlists export directly to your account. Otherwise, they are published to the official ArmyVerse Spotify and a link is provided.
                   </p>
                 </div>
               </div>
