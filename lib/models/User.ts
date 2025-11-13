@@ -184,6 +184,29 @@ const profileSchema = new mongoose.Schema({
       displayName: { type: String },
       avatarUrl: { type: String },
       updatedAt: { type: Date }
+    },
+    spotifyByo: {
+      clientIdEnc: { type: String },
+      clientSecretEnc: { type: String },
+      refreshTokenEnc: { type: String },
+      ownerId: { type: String },
+      displayName: { type: String },
+      avatarUrl: { type: String },
+      scopes: [{ type: String }],
+      tokenType: { type: String },
+      accessToken: { type: String },
+      expiresAt: { type: Date },
+      updatedAt: { type: Date }
+    }
+  },
+  pending: {
+    spotifyByo: {
+      state: { type: String },
+      clientIdEnc: { type: String },
+      clientSecretEnc: { type: String },
+      codeVerifierEnc: { type: String },
+      scopes: [{ type: String }],
+      createdAt: { type: Date }
     }
   },
   

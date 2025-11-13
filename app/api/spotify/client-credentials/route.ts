@@ -48,10 +48,17 @@ export async function POST(request: NextRequest) {
 
     const state = `byo-${crypto.randomBytes(16).toString('hex')}`
 
+    // Validate encryption key once (used for storing clientId/clientSecret and optional PKCE verifier)
+    const encKey = process.env.SPOTIFY_USER_SECRET_KEY || ''
+    if (!encKey || encKey.length < 16) {
+      return NextResponse.json({ error: 'Server missing SPOTIFY_USER_SECRET_KEY' }, { status: 500 })
+    }
+
     let codeChallenge: string | undefined
     let codeVerifierEnc: string | undefined
 
     if (!body.clientSecret) {
+      // Using PKCE flow — encrypt the verifier for temporary storage
       const verifier = generateCodeVerifier()
       codeChallenge = generateCodeChallenge(verifier)
       codeVerifierEnc = encryptSecret(verifier)
@@ -92,6 +99,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url })
   } catch (error) {
     console.error('client-credentials error:', error)
-    return NextResponse.json({ error: 'Failed to prepare authorization' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Failed to prepare authorization'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
