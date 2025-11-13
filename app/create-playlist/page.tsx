@@ -6,7 +6,6 @@ import Image from 'next/image'
 import StreamingFocusForm from '@/components/forms/StreamingFocusForm'
 import CompactPlaylistGrid from '@/components/playlist/CompactPlaylistGrid'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
-import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 export default function CreatePlaylist() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -19,7 +18,6 @@ export default function CreatePlaylist() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(null)
   const { songs: allSongs } = useAllSongs()
-  const { isAuthenticated, isLoading, disconnect, status, refreshStatus } = useSpotifyAuth()
 
   const filteredTracks = allSongs.filter(track =>
     track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -37,11 +35,6 @@ export default function CreatePlaylist() {
   }
 
   const handleSaveToSpotify = useCallback(async (songsToSave?: SongDoc[]) => {
-    if (!isAuthenticated) {
-      setSaveError('Please connect your Spotify account first')
-      return
-    }
-
     const tracks = songsToSave || playlistTracks
     if (tracks.length === 0) {
       setSaveError('Please add some tracks to your playlist first')
@@ -53,22 +46,10 @@ export default function CreatePlaylist() {
     setSaveSuccess(null)
 
     try {
-      let accessToken = status?.accessToken
-
-      if (!accessToken) {
-        const refreshed = await refreshStatus()
-        accessToken = refreshed?.accessToken
-      }
-
-      if (!accessToken) {
-        throw new Error('Spotify access token unavailable. Please reconnect your account.')
-      }
-
       const response = await fetch('/api/playlist/export', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name: playlistName,
@@ -83,37 +64,6 @@ export default function CreatePlaylist() {
       const data = await response.json()
 
       if (!response.ok) {
-        if (response.status === 401) {
-          const refreshed = await refreshStatus()
-          if (refreshed?.accessToken) {
-            const retryResponse = await fetch('/api/playlist/export', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${refreshed.accessToken}`
-              },
-              body: JSON.stringify({
-                name: playlistName,
-                songs: tracks.map(track => ({
-                  title: track.name,
-                  artist: track.artist,
-                  spotifyId: track.spotifyId
-                }))
-              })
-            })
-
-            const retryData = await retryResponse.json()
-            if (!retryResponse.ok) {
-              throw new Error(retryData.error || 'Failed to save playlist to Spotify')
-            }
-
-            setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
-            setSavedPlaylistUrl(retryData.playlistUrl)
-            setTimeout(() => setSaveSuccess(null), 5000)
-            return
-          }
-        }
-
         throw new Error(data.error || 'Failed to save playlist to Spotify')
       }
 
@@ -127,7 +77,7 @@ export default function CreatePlaylist() {
     } finally {
       setIsSaving(false)
     }
-  }, [isAuthenticated, status, refreshStatus, playlistName, playlistTracks, setSaveError, setSaveSuccess])
+  }, [playlistName, playlistTracks, setSaveError, setSaveSuccess])
 
 
 
@@ -219,10 +169,10 @@ export default function CreatePlaylist() {
                   <div className="flex space-x-4">
                     <button 
                       onClick={() => handleSaveToSpotify(focusResult)}
-                      disabled={!isAuthenticated || isSaving}
+                      disabled={isSaving}
                       className={`flex-1 ${
-                        !isAuthenticated
-                          ? 'btn-glass-secondary opacity-50 cursor-not-allowed'
+                        isSaving
+                          ? 'btn-glass-secondary cursor-wait'
                           : 'btn-glass-primary'
                       }`}
                     >
@@ -255,46 +205,22 @@ export default function CreatePlaylist() {
           </>
         )}
 
-          {/* Spotify Connection Banner */}
+          {/* Spotify Info Banner */}
           <div className="container-glass rounded-2xl p-6 mb-10">
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-[#C084FC] border-t-transparent rounded-full animate-spin mr-3"></div>
-                <span className="text-white font-medium">Checking Spotify connection...</span>
-              </div>
-            ) : isAuthenticated ? (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full mr-3 bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.6)]"></div>
-                  <span className="text-white font-medium text-lg">
-                    Spotify Connected
-                  </span>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-green-500/20 border border-green-500/40 p-3">
+                  <Music className="w-6 h-6 text-green-300" />
                 </div>
-                <button
-                  onClick={disconnect}
-                  className="btn-glass-secondary text-red-400 hover:text-red-300"
-                >
-                  Disconnect
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full mr-3 bg-red-400 shadow-[0_0_10px_rgba(248,113,113,0.6)]"></div>
-                  <span className="text-white font-medium text-lg">
-                    Spotify Not Connected
-                  </span>
+                <div>
+                  <h3 className="text-white font-semibold text-lg">Instant Spotify Export</h3>
+                  <p className="text-sm text-gray-300">
+                    Playlists you create are published straight to the official ArmyVerse Spotify account.
+                    As soon as the playlist is saved you&apos;ll receive a direct link to open it on Spotify.
+                  </p>
                 </div>
-                <button
-                  onClick={() => {
-                    window.location.href = '/stats'
-                  }}
-                  className="btn-glass-primary"
-                >
-                  Connect to Spotify
-                </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* MANUAL CREATOR WORKFLOW */}
@@ -422,10 +348,10 @@ export default function CreatePlaylist() {
                   <div className="flex space-x-4">
                     <button 
                       onClick={() => handleSaveToSpotify()}
-                      disabled={!isAuthenticated || isSaving}
+                      disabled={isSaving}
                       className={`flex-1 ${
-                        !isAuthenticated
-                          ? 'btn-glass-secondary opacity-50 cursor-not-allowed'
+                        isSaving
+                          ? 'btn-glass-secondary cursor-wait'
                           : 'btn-glass-primary'
                       }`}
                     >
