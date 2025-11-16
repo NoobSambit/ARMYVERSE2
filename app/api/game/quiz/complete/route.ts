@@ -183,7 +183,10 @@ export async function POST(request: NextRequest) {
     
     // Get user profile data from MongoDB for leaderboard
     const { User } = await import('@/lib/models/User')
-    const userDoc = await User.findOne({ firebaseUid: user.uid }).lean()
+    let userDoc = await User.findOne({ firebaseUid: user.uid }).lean()
+    if (!userDoc && user.email) {
+      userDoc = await User.findOne({ email: user.email }).lean()
+    }
     const profileDisplayName = (userDoc as any)?.profile?.displayName || user.name || user.email || 'User'
     const profileAvatarUrl = (userDoc as any)?.profile?.avatarUrl || user.picture || ''
     

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
 import { getPublicProfile } from '@/lib/utils/profile'
+import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,32 +26,45 @@ export async function GET(
 
     await connect()
 
-    // Find user by firebaseUid
-    const userDoc = await User.findOne({ firebaseUid: userId }).lean()
+    // Find user by firebaseUid, fallback to email (legacy data in blogs/comments)
+    let userDoc = await User.findOne({ firebaseUid: userId }).lean()
+    
+    if (!userDoc && userId.includes('@')) {
+      userDoc = await User.findOne({ email: userId }).lean()
+    }
     
     console.log('[Profile API] User found:', !!userDoc)
 
     if (!userDoc) {
+      // Fallback: derive minimal public profile from leaderboard if available
+      const lb = await LeaderboardEntry.findOne({ userId }).sort({ updatedAt: -1 }).lean()
+      if (lb) {
+        return NextResponse.json({
+          profile: {
+            userId,
+            displayName: (lb as any)?.displayName || 'User',
+            avatarUrl: (lb as any)?.avatarUrl || '',
+            personalization: undefined,
+            privacy: { visibility: 'public' }
+          }
+        })
+      }
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     const user = userDoc as any
 
-    if (!user.profile) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
     // Check privacy settings
-    const privacy = user.profile.privacy
+    const privacy = user.profile?.privacy
     
     // For private profiles, only show basic info (avatar, banner, displayName)
     if (privacy?.visibility === 'private') {
       return NextResponse.json({
         profile: {
           userId: user.firebaseUid,
-          displayName: user.profile.displayName || user.name || 'User',
-          avatarUrl: user.profile.avatarUrl || user.image || '',
-          bannerUrl: user.profile.bannerUrl || '',
+          displayName: (user.profile && user.profile.displayName) || user.name || 'User',
+          avatarUrl: (user.profile && user.profile.avatarUrl) || user.image || '',
+          bannerUrl: (user.profile && user.profile.bannerUrl) || '',
           privacy: { visibility: 'private' },
           personalization: user.profile.personalization
         }
@@ -68,9 +82,9 @@ export async function GET(
         ...publicProfile,
         userId: user.firebaseUid,
         // Always include these basic fields
-        displayName: user.profile.displayName || user.name || 'User',
-        avatarUrl: user.profile.avatarUrl || user.image || '',
-        personalization: user.profile.personalization
+        displayName: (user.profile && user.profile.displayName) || user.name || 'User',
+        avatarUrl: (user.profile && user.profile.avatarUrl) || user.image || '',
+        personalization: user.profile?.personalization
       }
     })
   } catch (error) {

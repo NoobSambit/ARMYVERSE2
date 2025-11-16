@@ -18,10 +18,54 @@ export async function GET(
       )
     }
     
+    // Enrich author and commenters with MongoDB profile display names/avatars
+    let enriched = blog as any
+    try {
+      const { User } = await import('@/lib/models/User')
+      // Author enrichment
+      if (enriched?.author?.id) {
+        const criteria = enriched.author.id.includes('@') ? { email: enriched.author.id } : { firebaseUid: enriched.author.id }
+        const u = await User.findOne(criteria, { profile: 1, name: 1, image: 1 }).lean()
+        if (u) {
+          enriched.author = {
+            id: enriched.author.id,
+            name: (u as any)?.profile?.displayName || (u as any)?.name || enriched.author.name,
+            avatar: (u as any)?.profile?.avatarUrl || (u as any)?.image || enriched.author.avatar || null
+          }
+        }
+      }
+      // Comments enrichment
+      if (Array.isArray(enriched?.comments) && enriched.comments.length > 0) {
+        const commenterIds: string[] = Array.from(
+          new Set(
+            (enriched.comments as any[])
+              .map((c: any) => (typeof c?.userId === 'string' ? c.userId : ''))
+              .filter((v: string) => v.length > 0)
+          )
+        )
+        const emailIds: string[] = commenterIds.filter((id) => id.includes('@'))
+        const uidIds: string[] = commenterIds.filter((id) => !id.includes('@'))
+        const [usersByUid, usersByEmail] = await Promise.all([
+          uidIds.length ? User.find({ firebaseUid: { $in: uidIds } }, { profile: 1, name: 1, firebaseUid: 1 }).lean() : [],
+          emailIds.length ? User.find({ email: { $in: emailIds } }, { profile: 1, name: 1, email: 1 }).lean() : []
+        ])
+        const map: Record<string, any> = {}
+        for (const u of usersByUid as any[]) if (u.firebaseUid) map[u.firebaseUid] = u
+        for (const u of usersByEmail as any[]) if (u.email) map[u.email] = u
+        enriched.comments = enriched.comments.map((c: any) => {
+          const u = map[c.userId]
+          if (u) {
+            return { ...c, name: (u as any)?.profile?.displayName || (u as any)?.name || c.name }
+          }
+          return c
+        })
+      }
+    } catch {}
+
     // Increment view count only if visible
     await Blog.findByIdAndUpdate(params.id, { $inc: { views: 1 } })
     
-    return NextResponse.json(blog)
+    return NextResponse.json(enriched)
     
   } catch (error) {
     console.error('Error fetching blog:', error)

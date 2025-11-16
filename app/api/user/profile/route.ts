@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
     await connect()
     
     // First, try to find the existing user
-    let dbUser = await User.findOne({ email: user.email }, { profile: 1, email: 1, name: 1 })
+    let dbUser = await User.findOne({ email: user.email }, { profile: 1, email: 1, name: 1, firebaseUid: 1 })
     
     // If user doesn't exist, create them with minimal profile
     if (!dbUser) {
@@ -147,6 +147,7 @@ export async function GET(request: NextRequest) {
           $setOnInsert: {
             name: user.displayName || user.email?.split('@')[0] || 'User',
             email: user.email!,
+            firebaseUid: user.uid,
             createdAt: new Date(),
             profile: {
               displayName: user.displayName || user.email?.split('@')[0] || 'User',
@@ -157,9 +158,14 @@ export async function GET(request: NextRequest) {
         { 
           upsert: true, 
           new: true,
-          projection: { profile: 1, email: 1, name: 1 }
+          projection: { profile: 1, email: 1, name: 1, firebaseUid: 1 }
         }
       )
+    }
+
+    if (dbUser && (!dbUser.firebaseUid || dbUser.firebaseUid !== user.uid)) {
+      await User.updateOne({ _id: dbUser._id }, { $set: { firebaseUid: user.uid } })
+      dbUser = await User.findOne({ email: user.email }, { profile: 1, email: 1, name: 1, firebaseUid: 1 })
     }
 
     // Extract profile data from Mongoose document and merge with Firebase auth data
@@ -282,6 +288,7 @@ export async function PUT(request: NextRequest) {
           $set: {
             name: user.displayName || user.email?.split('@')[0] || 'User',
             email: user.email!,
+            firebaseUid: user.uid,
             ...updateFields
           }
         },
@@ -298,6 +305,7 @@ export async function PUT(request: NextRequest) {
           $set: {
             name: user.displayName || user.email?.split('@')[0] || 'User',
             email: user.email!,
+            firebaseUid: user.uid,
             createdAt: new Date(),
             profile: {
               displayName: user.displayName || user.email?.split('@')[0] || 'User',

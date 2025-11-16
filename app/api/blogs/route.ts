@@ -150,11 +150,40 @@ export async function GET(request: NextRequest) {
         .lean(),
       Blog.countDocuments(query)
     ])
-    
+
+    // Enrich author names/avatars from MongoDB User.profile
+    const authorIds = Array.from(new Set(blogs.map((b: any) => b?.author?.id).filter(Boolean)))
+    const emailIds = authorIds.filter((id: string) => typeof id === 'string' && id.includes('@'))
+    const uidIds = authorIds.filter((id: string) => typeof id === 'string' && !id.includes('@'))
+
+    let usersByKey: Record<string, any> = {}
+    if (authorIds.length > 0) {
+      const [usersByUid, usersByEmail] = await Promise.all([
+        uidIds.length ? (await import('@/lib/models/User')).User.find({ firebaseUid: { $in: uidIds } }, { profile: 1, name: 1, image: 1, firebaseUid: 1, email: 1 }).lean() : [],
+        emailIds.length ? (await import('@/lib/models/User')).User.find({ email: { $in: emailIds } }, { profile: 1, name: 1, image: 1, firebaseUid: 1, email: 1 }).lean() : []
+      ])
+      for (const u of usersByUid as any[]) {
+        if (u.firebaseUid) usersByKey[u.firebaseUid] = u
+      }
+      for (const u of usersByEmail as any[]) {
+        if (u.email) usersByKey[u.email] = u
+      }
+    }
+
+    const enrichedBlogs = blogs.map((b: any) => {
+      if (b?.author?.id && usersByKey[b.author.id]) {
+        const u = usersByKey[b.author.id]
+        const displayName = u?.profile?.displayName || u?.name || b.author.name
+        const avatar = u?.profile?.avatarUrl || u?.image || b.author.avatar
+        return { ...b, author: { ...b.author, name: displayName, avatar } }
+      }
+      return b
+    })
+
     const totalPages = Math.ceil(total / limit)
     
     return NextResponse.json({
-      blogs,
+      blogs: enrichedBlogs,
       pagination: {
         page,
         limit,
@@ -193,13 +222,30 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Resolve author fields from MongoDB if possible
+    let resolvedAuthor = author
+    try {
+      if (author?.id) {
+        const { User } = await import('@/lib/models/User')
+        const criteria = author.id.includes('@') ? { email: author.id } : { firebaseUid: author.id }
+        const u = await User.findOne(criteria, { profile: 1, name: 1, image: 1 }).lean()
+        if (u) {
+          resolvedAuthor = {
+            id: author.id,
+            name: (u as any)?.profile?.displayName || (u as any)?.name || author.name,
+            avatar: (u as any)?.profile?.avatarUrl || (u as any)?.image || author.avatar || null
+          }
+        }
+      }
+    } catch {}
+
     const blog = new Blog({
       title,
       content,
       tags: tags || [],
       mood: mood || 'fun',
       coverImage,
-      author,
+      author: resolvedAuthor,
       // Respect requested status; default to draft if not provided or invalid
       status: status === 'published' ? 'published' : 'draft'
     })
