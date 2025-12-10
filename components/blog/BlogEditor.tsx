@@ -60,13 +60,8 @@ import {
   Keyboard,
   Minus,
   Type,
-  Heading1,
-  Heading2,
-  Heading3,
-  Link as LinkIcon,
   MessageSquareQuote,
-  Trash2,
-  RotateCcw
+  Trash2
 } from 'lucide-react'
 import { BLOG_TEMPLATES, fillVariables } from '../../lib/blog/templates'
 import type { BlogTemplate } from '../../lib/blog/templates'
@@ -141,8 +136,7 @@ export default function BlogEditor({
   const [focusMode, setFocusMode] = useState(false)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [readingProgress, setReadingProgress] = useState(0)
-  const [showFloatingMenu, setShowFloatingMenu] = useState(false)
-  
+
   // Mobile-specific state
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
@@ -229,6 +223,18 @@ export default function BlogEditor({
     }
   }, [initialData, editor])
 
+  // Keyboard shortcut helper functions (must be defined before useEffect that uses them)
+  const setHeading = useCallback((level: 1 | 2 | 3) => {
+    editor?.chain().focus().toggleHeading({ level }).run()
+  }, [editor])
+
+  const addLink = useCallback(() => {
+    const url = window.prompt('Enter URL:')
+    if (url && editor) {
+      editor.chain().focus().setLink({ href: url }).run()
+    }
+  }, [editor])
+
   // Auto-save effect
   useEffect(() => {
     const interval = setInterval(() => {
@@ -293,6 +299,17 @@ export default function BlogEditor({
         e.preventDefault()
         setFocusMode(prev => !prev)
       }
+      // Cmd/Ctrl + K for link
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        addLink()
+      }
+      // Cmd/Ctrl + Alt + 1/2/3 for headings
+      if ((e.metaKey || e.ctrlKey) && e.altKey && ['1', '2', '3'].includes(e.key)) {
+        e.preventDefault()
+        const level = parseInt(e.key) as 1 | 2 | 3
+        setHeading(level)
+      }
       // Esc to exit focus mode or close modals
       if (e.key === 'Escape') {
         if (focusMode) {
@@ -311,7 +328,7 @@ export default function BlogEditor({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [focusMode, showKeyboardShortcuts, showPreview, showTemplates, showSEO])
+  }, [focusMode, showKeyboardShortcuts, showPreview, showTemplates, showSEO, addLink, setHeading])
 
   // Reading progress tracker
   useEffect(() => {
@@ -467,25 +484,6 @@ export default function BlogEditor({
   const addPullQuote = () => {
     const quote = window.prompt('Enter your pull quote:') || 'Enter your pull quote here...'
     editor?.chain().focus().insertContent(`<div class="pull-quote"><p>${quote}</p></div>`).run()
-  }
-  const setHeading = (level: 1 | 2 | 3) => editor?.chain().focus().toggleHeading({ level }).run()
-  const addLink = () => {
-    const url = window.prompt('Enter URL:')
-    if (url && editor) {
-      editor.chain().focus().setLink({ href: url }).run()
-    }
-  }
-  const addImageWithCaption = async (file: File) => {
-    const url = await uploadImage(file)
-    if (url && editor) {
-      const alt = window.prompt('Add alt text for accessibility:') || ''
-      const caption = window.prompt('Add caption (optional):') || ''
-      if (caption) {
-        editor.chain().focus().insertContent(`<figure><img src="${url}" alt="${alt}" /><figcaption>${caption}</figcaption></figure>`).run()
-      } else {
-        editor.chain().focus().setImage({ src: url, alt }).run()
-      }
-    }
   }
 
   // Clear all content
