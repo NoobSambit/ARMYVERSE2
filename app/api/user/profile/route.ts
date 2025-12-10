@@ -65,7 +65,22 @@ const profileUpdateSchema = z.object({
   personalization: z.object({
     accentColor: z.string().optional(),
     themeIntensity: z.number().min(0).max(100).optional(),
-    backgroundStyle: z.enum(['gradient', 'noise', 'bts-motif', 'clean']).optional(),
+    backgroundStyle: z.enum([
+      // New styles
+      'purple-nebula',
+      'stage-lights',
+      'army-constellation',
+      'purple-aurora',
+      'mesh-gradient',
+      'glassmorphism',
+      'geometric-grid',
+      'holographic',
+      // Legacy styles (for migration compatibility)
+      'gradient',
+      'noise',
+      'bts-motif',
+      'clean'
+    ]).optional(),
     badgeStyle: z.enum(['minimal', 'collectible']).optional()
   }).optional(),
   privacy: z.object({

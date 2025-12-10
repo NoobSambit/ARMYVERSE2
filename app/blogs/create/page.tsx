@@ -47,7 +47,7 @@ export default function CreateBlogPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] flex items-center justify-center">
+      <div className="min-h-screen page-gradient flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     )

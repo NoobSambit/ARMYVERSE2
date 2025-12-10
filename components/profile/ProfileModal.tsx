@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { track } from '@/lib/utils/analytics'
 import { getDefaultProfile } from '@/lib/utils/profile'
+import { type AnyBackgroundStyleId } from './backgroundStyles'
 // import { auth } from '@/lib/firebase/config'
 import ProfileForm from './ProfileForm'
 import PersonalizationForm from './PersonalizationForm'
@@ -52,7 +53,7 @@ interface ProfileData {
   personalization: {
     accentColor: string
     themeIntensity: number
-    backgroundStyle: 'gradient' | 'noise' | 'bts-motif' | 'clean'
+    backgroundStyle: AnyBackgroundStyleId
     badgeStyle: 'minimal' | 'collectible'
   }
   privacy: {
@@ -139,7 +140,19 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       // Don't merge with default profile - use saved data directly
       const mergedProfile = profileData || getDefaultProfile()
       console.log('Merged Profile:', mergedProfile)
-      
+
+      // Migration: map old background styles to new ones (optional - styles work as-is now)
+      // Users can manually switch to new styles, or we auto-migrate on next personalization change
+      if (mergedProfile.personalization?.backgroundStyle) {
+        const currentStyle = mergedProfile.personalization.backgroundStyle
+        const legacyStyles = ['gradient', 'noise', 'bts-motif', 'clean']
+
+        if (legacyStyles.includes(currentStyle)) {
+          console.log(`User has legacy style "${currentStyle}" - will continue to work, migration optional`)
+          // Legacy styles continue to work, no forced migration needed
+        }
+      }
+
       setProfile(mergedProfile)
     } catch (err) {
       console.error('Failed to load profile:', err)

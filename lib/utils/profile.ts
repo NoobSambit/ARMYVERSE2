@@ -192,7 +192,7 @@ export const getDefaultProfile = () => ({
   personalization: {
     accentColor: '#8B5CF6',
     themeIntensity: 50,
-    backgroundStyle: 'gradient' as const,
+    backgroundStyle: 'mesh-gradient' as const,
     badgeStyle: 'minimal' as const
   },
   privacy: {

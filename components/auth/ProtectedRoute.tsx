@@ -23,7 +23,7 @@ export default function ProtectedRoute({ children, redirectTo = '/auth/signin' }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] flex items-center justify-center">
+      <div className="min-h-screen page-gradient flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-purple-400 mx-auto mb-4" />
           <p className="text-gray-300">Loading...</p>

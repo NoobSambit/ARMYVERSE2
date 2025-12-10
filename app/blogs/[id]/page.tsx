@@ -198,7 +198,7 @@ export default function BlogViewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] flex items-center justify-center">
+      <div className="min-h-screen page-gradient flex items-center justify-center">
         <div className="text-white text-xl">Loading blog...</div>
       </div>
     )
@@ -206,14 +206,14 @@ export default function BlogViewPage() {
 
   if (!blog) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c] flex items-center justify-center">
+      <div className="min-h-screen page-gradient flex items-center justify-center">
         <div className="text-white text-xl">Blog not found</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a082a] to-[#3a1d5c]">
+    <div className="min-h-screen page-gradient">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <motion.div

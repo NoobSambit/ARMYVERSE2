@@ -107,8 +107,23 @@ const profileSchema = new mongoose.Schema({
     },
     backgroundStyle: {
       type: String,
-      enum: ['gradient', 'noise', 'bts-motif', 'clean'],
-      default: 'gradient'
+      enum: [
+        // New styles
+        'purple-nebula',
+        'stage-lights',
+        'army-constellation',
+        'purple-aurora',
+        'mesh-gradient',
+        'glassmorphism',
+        'geometric-grid',
+        'holographic',
+        // Legacy styles (for migration compatibility)
+        'gradient',
+        'noise',
+        'bts-motif',
+        'clean'
+      ],
+      default: 'mesh-gradient'
     },
     badgeStyle: {
       type: String,

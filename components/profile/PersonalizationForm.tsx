@@ -4,11 +4,12 @@ import React, { useState, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Palette, Monitor, Image as ImageIcon, Award, RotateCcw } from 'lucide-react'
 import { getDefaultProfile } from '@/lib/utils/profile'
+import { BACKGROUND_STYLE_DEFINITIONS, type AnyBackgroundStyleId } from './backgroundStyles'
 
 interface PersonalizationShape {
   accentColor?: string
   themeIntensity?: number
-  backgroundStyle?: 'gradient' | 'noise' | 'bts-motif' | 'clean'
+  backgroundStyle?: AnyBackgroundStyleId
   badgeStyle?: 'minimal' | 'collectible'
 }
 interface ProfilePersonalization { personalization?: PersonalizationShape }
@@ -30,12 +31,7 @@ const ACCENT_COLORS = [
   { name: 'Teal', value: '#14B8A6', class: 'bg-teal-500' }
 ]
 
-const BACKGROUND_STYLES = [
-  { id: 'gradient', name: 'Gradient', description: 'Soft purple gradient background' },
-  { id: 'noise', name: 'Noise', description: 'Subtle texture overlay' },
-  { id: 'bts-motif', name: 'BTS Motif', description: 'BTS-inspired patterns' },
-  { id: 'clean', name: 'Clean', description: 'Minimal solid background' }
-]
+// Background styles imported from separate module for better code organization
 
 const BADGE_STYLES = [
   { id: 'minimal', name: 'Minimal', description: 'Simple, clean badge design' },
@@ -195,7 +191,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
         </div>
         
         <div className="grid grid-cols-2 gap-4">
-          {BACKGROUND_STYLES.map((style) => (
+          {BACKGROUND_STYLE_DEFINITIONS.map((style) => (
             <button
               key={style.id}
               type="button"

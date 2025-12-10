@@ -1,10 +1,11 @@
 'use client'
 
-import React, { CSSProperties } from 'react'
+import React from 'react'
 import Image from 'next/image'
 import { MapPin, Calendar, Music, Globe, Twitter, Instagram, Youtube, ExternalLink, Lock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getPublicProfile, isFieldVisible, getDefaultProfile } from '@/lib/utils/profile'
+import { getBackgroundStyles, type AnyBackgroundStyleId } from './backgroundStyles'
 
 const DEFAULT_PERSONALIZATION = getDefaultProfile().personalization
 
@@ -38,7 +39,7 @@ interface PublicProfileShape {
   personalization?: {
     accentColor?: string
     themeIntensity?: number
-    backgroundStyle?: 'gradient' | 'noise' | 'bts-motif' | 'clean'
+    backgroundStyle?: AnyBackgroundStyleId
     badgeStyle?: 'minimal' | 'collectible'
   }
 }
@@ -63,27 +64,8 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
   const accentGlow = withAlpha(accentColor, 0.45 + intensityFactor * 0.35)
   const accentText = accentColor
 
-  const backgroundStyles: Record<'gradient' | 'noise' | 'bts-motif' | 'clean', CSSProperties> = {
-    gradient: {
-      background: `linear-gradient(140deg, ${withAlpha(accentColor, 0.45 + intensityFactor * 0.35)} 0%, ${withAlpha(accentColor, 0.1)} 100%)`
-    },
-    noise: {
-      backgroundColor: '#12021f',
-      backgroundImage: `radial-gradient(circle at 20% 20%, ${withAlpha(accentColor, 0.2)} 0%, transparent 55%),
-        radial-gradient(circle at 80% 0%, ${withAlpha(accentColor, 0.12)} 0%, transparent 45%),
-        linear-gradient(${withAlpha('#ffffff', 0.015)} 1px, transparent 0),
-        linear-gradient(90deg, ${withAlpha('#ffffff', 0.02)} 1px, transparent 0)`
-    },
-    'bts-motif': {
-      backgroundColor: '#11041d',
-      backgroundImage: `radial-gradient(circle at 15% 25%, ${withAlpha(accentColor, 0.25)} 0%, transparent 55%),
-        radial-gradient(circle at 85% 35%, ${withAlpha(accentColor, 0.18)} 0%, transparent 50%),
-        repeating-linear-gradient(135deg, ${withAlpha(accentColor, 0.08)} 0px, ${withAlpha(accentColor, 0.08)} 8px, transparent 8px, transparent 24px)`
-    },
-    clean: {
-      background: `linear-gradient(120deg, ${withAlpha(accentColor, 0.18)} 0%, ${withAlpha('#000000', 0.5)} 100%)`
-    }
-  }
+  // Get performance-optimized background styles from separate module
+  const backgroundStyles = getBackgroundStyles(accentColor, intensityFactor, withAlpha)
 
   const formatDate = (year: number) => {
     if (!year) return ''

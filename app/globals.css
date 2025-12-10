@@ -608,9 +608,11 @@
   transition: all 200ms ease;
 }
 
-.prose img:hover {
-  @apply border-purple-400/30 shadow-xl;
-  transform: scale(1.02);
+@media (hover: hover) {
+  .prose img:hover {
+    @apply border-purple-400/30 shadow-xl;
+    transform: scale(1.02);
+  }
 }
 
 .prose img[width="25%"] {
@@ -632,9 +634,50 @@
   width: 100% !important;
 }
 
-/* Image caption styling */
+/* Figure with caption styling */
+.prose figure {
+  @apply my-8;
+}
+
 .prose figcaption {
-  @apply text-center text-sm text-white/60 mt-2 italic;
+  @apply text-center text-sm text-white/60 mt-3 italic;
+  font-family: 'Georgia', serif;
+}
+
+/* Pull quote styling - Medium-like */
+.prose .pull-quote,
+.prose [class*="pull-quote"] {
+  @apply my-6 md:my-10 px-4 md:px-8 py-4 md:py-6 border-l-4 border-purple-400 bg-gradient-to-r from-purple-500/10 to-transparent rounded-r-xl;
+  position: relative;
+}
+
+.prose .pull-quote p,
+.prose [class*="pull-quote"] p {
+  @apply text-xl md:text-2xl lg:text-3xl font-serif text-white/90 italic leading-relaxed m-0;
+  font-family: 'Georgia', serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.prose .pull-quote::before {
+  content: '"';
+  @apply absolute text-6xl text-purple-400/30 font-serif;
+  top: -0.25rem;
+  left: 0.5rem;
+  line-height: 1;
+}
+
+/* Horizontal rule - Medium-style */
+.prose hr {
+  @apply my-12 border-0 h-px bg-gradient-to-r from-transparent via-purple-400/40 to-transparent;
+  position: relative;
+}
+
+.prose hr::after {
+  content: '···';
+  @apply absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-purple-400/60 px-4;
+  background-color: #0f0b16;
+  letter-spacing: 0.5em;
 }
 
 /* Drag and drop indicator */
@@ -654,14 +697,14 @@
   .btn-glass-primary,
   .btn-glass-secondary,
   .btn-glass-ghost {
-    @apply h-12 px-6;
-    min-height: 48px;
+    @apply h-11 px-5;
+    min-height: 44px; /* iOS recommended minimum */
   }
   
   .btn-toolbar {
-    @apply w-12 h-12;
-    min-height: 48px;
-    min-width: 48px;
+    @apply w-11 h-11;
+    min-height: 44px;
+    min-width: 44px;
   }
   
   /* Mobile toolbar spacing */
@@ -671,6 +714,7 @@
     backdrop-filter: blur(16px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
   
   /* Mobile bottom sheet */
@@ -682,12 +726,13 @@
     border-radius: 20px 20px 0 0;
     max-height: 80vh;
     overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
   }
   
   /* Mobile modal adjustments */
   .modal-glass {
-    @apply mx-4 my-8;
-    max-height: calc(100vh - 4rem);
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem); /* Dynamic viewport height for mobile */
   }
   
   /* Mobile grid adjustments */
@@ -700,6 +745,7 @@
     @apply flex overflow-x-auto gap-2 pb-2;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
   }
   
   .mobile-chip-scroll::-webkit-scrollbar {
@@ -709,6 +755,7 @@
   /* Mobile input improvements */
   .input-glass {
     @apply h-12 text-base;
+    font-size: 16px; /* Prevent zoom on iOS */
   }
   
   /* Mobile editor adjustments */
@@ -728,6 +775,85 @@
   /* Mobile sidebar */
   .mobile-sidebar {
     @apply order-first mb-6;
+  }
+  
+  /* Prevent body scroll when modals are open */
+  body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+  
+  /* Safe area insets for notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Improve tap highlighting */
+  * {
+    -webkit-tap-highlight-color: rgba(168, 85, 247, 0.1);
+  }
+  
+  /* Prevent text size adjust on orientation change */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Mobile prose adjustments */
+  .prose {
+    @apply text-base;
+  }
+  
+  .prose h1 {
+    @apply text-2xl;
+  }
+  
+  .prose h2 {
+    @apply text-xl;
+  }
+  
+  .prose h3 {
+    @apply text-lg;
+  }
+  
+  .prose p {
+    @apply text-base leading-relaxed;
+  }
+  
+  .prose code {
+    @apply text-sm;
+  }
+  
+  .prose pre {
+    @apply text-sm overflow-x-auto;
+  }
+  
+  /* Mobile table improvements */
+  .prose table {
+    @apply text-sm;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile blockquote */
+  .prose blockquote {
+    @apply my-4 px-4 py-3;
+  }
+  
+  /* Horizontal rule mobile adjustments */
+  .prose hr {
+    @apply my-8;
+  }
+  
+  /* Figure caption mobile */
+  .prose figcaption {
+    @apply text-xs mt-2;
   }
 }
 
