@@ -49,75 +49,50 @@ const getSpotifyAccessToken = async () => {
 const findTrackInDatabase = async (title: string, artist: string, album: string = '') => {
   try {
     await connect()
-    
+
+    // Escape regex special characters
+    const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
     const cleanTitle = title.replace(/\(feat\..*?\)/gi, '').replace(/\(.*?version.*?\)/gi,'').trim()
     const cleanAlbum = album.replace(/\(.*?version.*?\)/gi,'').trim()
 
     // Artist fallback list - try original artist first, then BTS, then all members
     const artistFallbacks = [
-      artist, // Original artist from Gemini
+      artist, // Original artist from AI
       'BTS', // Most likely correct for group album tracks
       'RM', 'Jin', 'SUGA', 'Agust D', 'j-hope', 'Jimin', 'V', 'Jung Kook'
     ].filter((a, i, arr) => arr.indexOf(a) === i) // Remove duplicates
 
-    // More flexible title matching - allow partial matches
-    const titleWords = cleanTitle.split(' ').filter(word => word.length > 2) // Remove short words
-    const titlePattern = titleWords.length > 0 ? titleWords.join('.*') : cleanTitle
-    const flexibleTitleRe = new RegExp(titlePattern, 'i')
-    const exactTitleRe = new RegExp(`^${cleanTitle}$`, 'i')
-    const albumRe = cleanAlbum ? new RegExp(cleanAlbum, 'i') : null
-    const studioExcl = { $not: /live|karaoke|remix|concert/i }
+    // Build regex patterns
+    const escapedTitle = escapeRegex(cleanTitle)
+    const escapedAlbum = cleanAlbum ? escapeRegex(cleanAlbum) : ''
 
-    // Try each artist fallback
+    // Try each artist fallback - but limit attempts for performance
     for (const tryArtist of artistFallbacks) {
-      console.debug(`🎭 Trying artist: ${tryArtist}`)
-      
-      const attemptQueries = []
-      // 1. Exact title + album, studio only
-      if (albumRe) attemptQueries.push({ 
-        name: exactTitleRe, 
-        artist: new RegExp(`^${tryArtist}$`, 'i'),
-        album: { $regex: albumRe.source, $options: 'i', $not: /live|karaoke|remix|concert/i }, 
-        isBTSFamily: true 
-      })
-      // 2. Exact title + album (any version)
-      if (albumRe) attemptQueries.push({ 
-        name: exactTitleRe, 
-        artist: new RegExp(`^${tryArtist}$`, 'i'),
-        album: { $regex: albumRe.source, $options: 'i' }, 
-        isBTSFamily: true 
-      })
-      // 3. Exact title, studio only (any album)
-      attemptQueries.push({ 
-        name: exactTitleRe, 
-        artist: new RegExp(`^${tryArtist}$`, 'i'),
-        album: studioExcl, 
-        isBTSFamily: true 
-      })
-      // 4. Exact title, any version
-      attemptQueries.push({ 
-        name: exactTitleRe, 
-        artist: new RegExp(`^${tryArtist}$`, 'i'),
-        isBTSFamily: true 
-      })
-      // 5. Flexible title matching (new - more lenient)
-      attemptQueries.push({ 
-        name: flexibleTitleRe, 
-        artist: new RegExp(`^${tryArtist}$`, 'i'),
-        album: studioExcl, 
-        isBTSFamily: true 
-      })
-      // 6. Flexible title matching (any version)
-      attemptQueries.push({ 
-        name: flexibleTitleRe, 
-        artist: new RegExp(`^${tryArtist}$`, 'i'),
-        isBTSFamily: true 
+      const escapedArtist = escapeRegex(tryArtist)
+
+      // Simplified query strategy - only try the most likely matches
+      const queries = []
+
+      // 1. Exact title + exact artist (most common case)
+      queries.push({
+        name: new RegExp(`^${escapedTitle}$`, 'i'),
+        artist: new RegExp(`^${escapedArtist}$`, 'i'),
+        isBTSFamily: true
       })
 
-      let track = null
-      for (const q of attemptQueries) {
-        console.debug(`🔍 Trying query:`, JSON.stringify(q, null, 2))
-        track = await Track.findOne(q).sort({ popularity: -1 })
+      // 2. If album provided, try with album match
+      if (escapedAlbum) {
+        queries.push({
+          name: new RegExp(`^${escapedTitle}$`, 'i'),
+          artist: new RegExp(`^${escapedArtist}$`, 'i'),
+          album: new RegExp(escapedAlbum, 'i'),
+          isBTSFamily: true
+        })
+      }
+
+      for (const query of queries) {
+        const track = await Track.findOne(query).sort({ popularity: -1 }).lean()
         if (track) {
           console.debug(`✅ Found match: ${track.name} - ${track.artist} (${track.album})`)
           return {
@@ -131,6 +106,7 @@ const findTrackInDatabase = async (title: string, artist: string, album: string 
         }
       }
     }
+
     return null
   } catch (err) {
     console.debug('❌ DB lookup error:', err)
