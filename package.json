@@ -84,6 +84,7 @@
     "firebase-admin": "^13.5.0",
     "framer-motion": "^11.13.1",
     "googleapis": "^150.0.1",
+    "groq-sdk": "^0.37.0",
     "input-otp": "^1.4.2",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.453.0",

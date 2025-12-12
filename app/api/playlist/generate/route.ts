@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
 export const runtime = 'nodejs'
 
-// Initialize Gemini AI with error handling
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-if (!process.env.GEMINI_API_KEY) {
-  console.debug('⚠️ Warning: GEMINI_API_KEY not found in environment variables')
+// Initialize Groq AI with error handling
+const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null
+if (!process.env.GROQ_API_KEY) {
+  console.debug('⚠️ Warning: GROQ_API_KEY not found in environment variables')
 }
 
 export async function POST(req: Request) {
@@ -18,15 +18,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('Gemini API key not configured')
+    if (!groq) {
+      throw new Error('Groq API key not configured')
     }
 
     console.debug('🎵 Generating playlist for:', prompt)
 
-    // Create enhanced prompt for Gemini
+    // Create enhanced prompt for Groq
     const enhancedPrompt = `
-Create a BTS playlist based on this vibe: "${prompt}". 
+Create a BTS playlist based on this vibe: "${prompt}".
 Return exactly 8 songs with title and artist name.
 
 Return ONLY valid JSON in this exact format, with no other text:
@@ -39,20 +39,28 @@ Return ONLY valid JSON in this exact format, with no other text:
 
 Only include BTS songs (including solo works). The artist should be either "BTS" or the member's name (Jimin, Jungkook, V, RM, Suga, J-Hope, Jin).`
 
-    // Generate playlist using Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" })
-    
-    console.debug('🤖 Sending prompt to Gemini...')
-    const result = await model.generateContent(enhancedPrompt)
-    
-    if (!result?.response) {
-      throw new Error('No response from Gemini API')
-    }
-    
-    const response = result.response
-    const text = response.text()
+    // Generate playlist using Groq with Llama 3.3 70B
+    console.debug('🤖 Sending prompt to Groq (Llama 3.3 70B)...')
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "user",
+          content: enhancedPrompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1024,
+      response_format: { type: "json_object" }
+    })
 
-    console.debug('✅ Received response from Gemini:', text)
+    if (!completion?.choices?.[0]?.message?.content) {
+      throw new Error('No response from Groq API')
+    }
+
+    const text = completion.choices[0].message.content
+
+    console.debug('✅ Received response from Groq:', text)
 
     // Parse the JSON response
     let playlist
@@ -91,9 +99,9 @@ Only include BTS songs (including solo works). The artist should be either "BTS"
       })
 
     } catch (parseError) {
-      console.debug('❌ Error parsing Gemini response:', parseError)
+      console.debug('❌ Error parsing Groq response:', parseError)
       console.debug('Raw response:', text)
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Failed to parse AI response',
         details: parseError instanceof Error ? parseError.message : 'Unknown error'
       }, { status: 500 })

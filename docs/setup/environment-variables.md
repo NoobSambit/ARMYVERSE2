@@ -105,19 +105,20 @@ NEXT_PUBLIC_YT_THUMB_CDN=ytimg.com
 
 ---
 
-### Google AI (Gemini)
+### Groq API (Llama 3.3 70B)
 
 ```env
-GOOGLE_AI_API_KEY=your-google-ai-api-key
+GROQ_API_KEY=your-groq-api-key
 ```
 
 **Where to get:**
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create API key
-3. Enable Gemini API
-4. Copy the key
+1. Go to [Groq Console](https://console.groq.com/)
+2. Sign up or log in
+3. Navigate to API Keys section
+4. Create new API key
+5. Copy the key
 
-**Used for:** AI playlist generation
+**Used for:** AI playlist generation with Llama 3.3 70B model
 
 ---
 
@@ -303,8 +304,8 @@ NEXT_PUBLIC_SPOTIFY_SCOPES=user-read-private user-read-email user-top-read user-
 YOUTUBE_API_KEY=
 NEXT_PUBLIC_YT_THUMB_CDN=ytimg.com
 
-# Google AI
-GOOGLE_AI_API_KEY=
+# Groq AI
+GROQ_API_KEY=
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=

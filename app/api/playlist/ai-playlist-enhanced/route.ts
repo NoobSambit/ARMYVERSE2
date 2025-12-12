@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 import { connect } from '@/lib/db/mongoose'
 import { Track } from '@/lib/models/Track'
 
@@ -7,8 +7,8 @@ export const runtime = 'nodejs'
 
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1'
 
-// Initialize Gemini AI
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null
+// Initialize Groq AI
+const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null
 
 // Cache for Spotify access token
 let spotifyAccessToken: string | null = null
@@ -201,14 +201,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
     }
     
-    if (!genAI) {
-      console.debug('❌ Gemini API key not configured')
+    if (!groq) {
+      console.debug('❌ Groq API key not configured')
       return NextResponse.json({ error: 'AI service not configured' }, { status: 500 })
     }
     
     console.debug('🎵 Generating AI playlist with database lookup...')
     
-    // Create sophisticated prompt for Gemini with STRICT validation
+    // Create sophisticated prompt for Groq with STRICT validation
     let enhancedPrompt = `Create a BTS playlist with these specifications:
 
 MAIN REQUEST: "${prompt}"
@@ -268,43 +268,61 @@ INVALID EXAMPLES (DO NOT include these - they don't exist on Spotify):
 - "So Far Away (SUGA, Jin, Jung Kook ver.)" (doesn't exist)
 - Any unreleased or demo versions
 
-REQUIRED FORMAT - Return ONLY this JSON array:
-[
-  {"title": "Song Name", "artist": "Artist Name", "album": "Album Name"},
-  {"title": "Song Name", "artist": "Artist Name", "album": "Album Name"}
-]
+REQUIRED FORMAT - Return ONLY this JSON object with a "playlist" key containing an array:
+{
+  "playlist": [
+    {"title": "Song Name", "artist": "Artist Name", "album": "Album Name"},
+    {"title": "Song Name", "artist": "Artist Name", "album": "Album Name"}
+  ]
+}
 
-IMPORTANT: Only return the JSON array, no explanations or other text. Only include songs that actually exist on Spotify.`
+IMPORTANT: Only return the JSON object, no explanations or other text. Only include songs that actually exist on Spotify.`
 
-    console.debug('🤖 Using Gemini 2.0 Flash with enhanced prompt')
-    
-    // Use Gemini 2.0 Flash model
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
-    const result = await model.generateContent(enhancedPrompt)
-    const response = result.response
-    const text = response.text()
-    
-    console.debug('🤖 Raw Gemini response length:', text.length)
+    console.debug('🤖 Using Groq with Llama 3.3 70B')
+
+    // Use Groq with Llama 3.3 70B model
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "user",
+          content: enhancedPrompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2048,
+      response_format: { type: "json_object" }
+    })
+
+    if (!completion?.choices?.[0]?.message?.content) {
+      throw new Error('No response from Groq API')
+    }
+
+    const text = completion.choices[0].message.content
+
+    console.debug('🤖 Raw Groq response length:', text.length)
     
     // Parse JSON from response
     let aiPlaylist
     try {
-      // Try to find JSON in the response
-      const jsonMatch = text.match(/\[\s*{[\s\S]*}\s*\]/)
-      if (jsonMatch) {
-        aiPlaylist = JSON.parse(jsonMatch[0])
+      const parsed = JSON.parse(text.trim())
+
+      // Handle both array and object with playlist key
+      if (Array.isArray(parsed)) {
+        aiPlaylist = parsed
+      } else if (parsed.playlist && Array.isArray(parsed.playlist)) {
+        aiPlaylist = parsed.playlist
       } else {
-        // If no JSON found, try parsing the whole response
-        aiPlaylist = JSON.parse(text.trim())
+        throw new Error('Invalid playlist format - expected array or object with playlist key')
       }
-      
+
       // Validate the playlist structure
-      if (!Array.isArray(aiPlaylist) || aiPlaylist.length === 0) {
-        throw new Error('Invalid playlist format')
+      if (aiPlaylist.length === 0) {
+        throw new Error('Invalid playlist format - empty array')
       }
-      
+
       console.debug(`✅ Parsed ${aiPlaylist.length} songs from AI`)
-      
+
     } catch (parseError) {
       console.debug('❌ Failed to parse AI response:', parseError)
       console.debug('Raw response was:', text)
