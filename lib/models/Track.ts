@@ -1,4 +1,36 @@
-import mongoose from 'mongoose'
+import mongoose, { Document } from 'mongoose'
+
+export interface ITrack extends Document {
+  spotifyId: string
+  youtubeId?: string
+  name: string
+  artist: string
+  album: string
+  duration: number
+  popularity?: number
+  isBTSFamily?: boolean
+  releaseDate?: Date
+  genres?: string[]
+  audioFeatures?: {
+    danceability?: number
+    energy?: number
+    valence?: number
+    tempo?: number
+    acousticness?: number
+    instrumentalness?: number
+    liveness?: number
+    speechiness?: number
+  }
+  thumbnails?: {
+    small?: string
+    medium?: string
+    large?: string
+  }
+  previewUrl?: string
+  isExplicit?: boolean
+  createdAt?: Date
+  updatedAt?: Date
+}
 
 const trackSchema = new mongoose.Schema({
   spotifyId: {
@@ -77,4 +109,4 @@ trackSchema.pre('save', function(next) {
 
 trackSchema.index({ name: 'text', artist: 'text', album: 'text' })
 
-export const Track = mongoose.models.Track || mongoose.model('Track', trackSchema)
+export const Track = (mongoose.models.Track || mongoose.model<ITrack>('Track', trackSchema)) as mongoose.Model<ITrack>
