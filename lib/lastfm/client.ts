@@ -119,15 +119,18 @@ export class LastFmClient {
     username: string,
     options: LastFmRecentTracksOptions = {}
   ): Promise<{ tracks: LastFmTrack[]; total: number }> {
-    const response = await this.fetchWithRateLimit<LastFmRecentTracksResponse>({
+    const params: Record<string, string | number> = {
       method: 'user.getrecenttracks',
       user: username,
       limit: options.limit || 50,
       page: options.page || 1,
-      from: options.from,
-      to: options.to,
       extended: options.extended || 0,
-    })
+    }
+
+    if (options.from !== undefined) params.from = options.from
+    if (options.to !== undefined) params.to = options.to
+
+    const response = await this.fetchWithRateLimit<LastFmRecentTracksResponse>(params)
 
     return {
       tracks: response.recenttracks.track,

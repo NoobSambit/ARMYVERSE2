@@ -2,13 +2,12 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Sparkles, 
-  Search, 
-  Plus, 
-  Heart, 
-  Brain, 
-  Users, 
+import {
+  Sparkles,
+  Search,
+  Plus,
+  Brain,
+  Users,
   Palette,
   Target,
   TrendingUp,

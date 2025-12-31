@@ -2,7 +2,7 @@
 
 import { LastFmClient } from '../lastfm/client'
 import { BTSTimeline, TimelineEntry, LastFmWeeklyChart } from '../lastfm/types'
-import { isBTSTrack, getFavoriteBTSAlbum } from './bts-detection'
+import { isBTSTrack, getFavoriteBTSAlbum, detectMember } from './bts-detection'
 
 /**
  * Samples weekly charts to reduce API calls

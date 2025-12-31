@@ -47,7 +47,7 @@ export function mapLastFmTrack(track: LastFmTrack | LastFmTopTrack): any {
     playcount: 'playcount' in track ? track.playcount : undefined,
     date: 'date' in track && track.date ? track.date : undefined,
     '@attr': track['@attr'],
-    nowplaying: track['@attr']?.nowplaying === 'true'
+    nowplaying: track['@attr'] && 'nowplaying' in track['@attr'] ? track['@attr'].nowplaying === 'true' : false
   }
 }
 

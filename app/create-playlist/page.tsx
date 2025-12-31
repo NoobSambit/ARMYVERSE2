@@ -302,7 +302,7 @@ export default function CreatePlaylist() {
                   ))}
                   {filteredTracks.length === 0 && (
                     <div className="text-center py-12 text-gray-500 text-sm">
-                      No songs found matching "{searchQuery}"
+                      No songs found matching &quot;{searchQuery}&quot;
                     </div>
                   )}
                 </div>
