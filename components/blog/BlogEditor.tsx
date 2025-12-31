@@ -1025,11 +1025,11 @@ export default function BlogEditor({
               <EditorContent
                 editor={editor}
                 className={`prose prose-invert prose-purple prose-base md:prose-lg max-w-none min-h-[400px] md:min-h-[600px] focus:outline-none text-white caret-purple-400 selection:bg-purple-600/40 ${
-                  focusMode ? 'prose-xl leading-relaxed' : ''
+                  focusMode ? 'prose-xl' : ''
                 }`}
                 style={{
                   fontSize: focusMode ? '1.125rem' : undefined,
-                  lineHeight: focusMode ? '1.8' : undefined,
+                  lineHeight: focusMode ? '1.5' : '1.5',
                 }}
               />
             </div>

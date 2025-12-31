@@ -244,18 +244,27 @@
 /* Skip link for keyboard navigation */
 .skip-link {
   position: absolute;
-  top: -40px;
-  left: 6px;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
   background: var(--color-primary);
   color: white;
   padding: 8px;
   text-decoration: none;
   border-radius: 4px;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .skip-link:focus {
+  position: fixed;
+  left: 6px;
   top: 6px;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
 }
 
 /* Custom scrollbar */
@@ -600,6 +609,20 @@
 	box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
 }
 
+/* ProseMirror Editor Spacing */
+.ProseMirror p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.ProseMirror p:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
 /* Editor image styling */
 .prose img {
   @apply rounded-xl border border-white/10 shadow-lg;
@@ -822,7 +845,10 @@
   }
   
   .prose p {
-    @apply text-base leading-relaxed;
+    @apply text-base;
+    line-height: 1.5;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
   }
   
   .prose code {

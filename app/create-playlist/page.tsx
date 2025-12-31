@@ -1,12 +1,13 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react'
+import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle, Sparkles, AudioWaveform as Audio, ListMusic } from 'lucide-react'
 import Image from 'next/image'
 import StreamingFocusForm from '@/components/forms/StreamingFocusForm'
 import CompactPlaylistGrid from '@/components/playlist/CompactPlaylistGrid'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
+import Link from 'next/link'
 
 export default function CreatePlaylist() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -113,122 +114,130 @@ export default function CreatePlaylist() {
     }
   }, [playlistName, playlistTracks, status, refreshStatus, setSaveError, setSaveSuccess])
 
-
-
   return (
     <div className="min-h-screen page-gradient relative overflow-hidden">
-      {/* Aurora Background Effects */}
-      <div className="aurora-container absolute inset-0 pointer-events-none">
-        <div className="aurora-glow aurora-glow-1" />
-        <div className="aurora-glow aurora-glow-2" />
-        <div className="aurora-glow aurora-glow-3" />
+      {/* Subtle background glow - luxurious feel */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-pink-900/10 rounded-full blur-[100px]"></div>
       </div>
 
-      <div className="relative z-10 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* header + tabs */}
-          <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-[#FF9AD5] via-[#C084FC] to-[#A274FF] bg-clip-text text-transparent">Create Playlist</span>
-            </h1>
-            <p className="text-gray-300 mb-6 text-lg">Prefer AI-assisted playlists? <a className="text-[#C084FC] hover:text-[#A274FF] underline decoration-[#C084FC]/60 hover:decoration-[#A274FF] transition-colors font-medium" href="/ai-playlist">Try AI Playlist</a></p>
-            
-            {/* Segmented Control */}
-            <div className="segmented">
-              <div 
-                className="segmented-thumb" 
-                style={{
-                  width: '50%',
-                  left: mode === 'normal' ? '0.25rem' : '50%',
-                  transform: mode === 'normal' ? 'translateX(0)' : 'translateX(-0.25rem)'
-                }}
-              />
-              <button
-                onClick={() => setMode('normal')}
-                aria-pressed={mode === 'normal'}
-                className="segmented-item px-8"
-              >
-                Normal
-              </button>
-              <button
-                onClick={() => setMode('focus')}
-                aria-pressed={mode === 'focus'}
-                className="segmented-item px-8"
-              >
-                Streaming Focus
-              </button>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 relative z-10">
+        
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+            Create Playlist
+          </h1>
+          <p className="text-gray-400 text-lg font-light mb-8 max-w-2xl mx-auto">
+            Curate your own collection or optimize for streaming
+          </p>
+          
+          <div className="flex items-center justify-center gap-2 mb-8 text-sm">
+             <span className="text-gray-500">Want AI assistance?</span>
+             <Link href="/ai-playlist" className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 font-medium">
+               <Sparkles className="w-3 h-3" />
+               Try AI Generator
+             </Link>
           </div>
+
+          {/* Mode Toggle */}
+          <div className="inline-flex p-1 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
+            <button
+              onClick={() => setMode('normal')}
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                mode === 'normal'
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <ListMusic className="w-4 h-4" />
+              Manual Curator
+            </button>
+            <button
+              onClick={() => setMode('focus')}
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                mode === 'focus'
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Audio className="w-4 h-4" />
+              Streaming Focus
+            </button>
+          </div>
+        </div>
 
         {/* STREAMING FOCUS WORKFLOW */}
         {mode === 'focus' && (
-          <>
-            <StreamingFocusForm onGenerated={(songs) => setFocusResult(songs)} />
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="glass-effect rounded-3xl p-6 sm:p-8 border border-white/10 bg-black/40 backdrop-blur-xl">
+               <StreamingFocusForm onGenerated={(songs) => setFocusResult(songs)} />
+            </div>
+            
             {focusResult && (
-              <div className="mb-10">
-                <h3 className="text-white text-2xl font-bold mb-4">Generated Playlist</h3>
+              <div className="glass-effect rounded-3xl p-6 sm:p-8 border border-white/10 bg-black/40 backdrop-blur-xl">
+                <h3 className="text-2xl font-bold text-white mb-6">Generated Playlist</h3>
                 
                 {/* Playlist Name Input */}
                 <div className="mb-6">
-                  <label className="block text-white font-medium mb-2">Playlist Name</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-2 pl-1">Name</label>
                   <input
                     type="text"
                     value={playlistName}
                     onChange={(e) => setPlaylistName(e.target.value)}
-                    className="input-glass"
+                    className="w-full p-3.5 bg-white/5 border border-white/10 rounded-xl focus:border-purple-400/50 focus:bg-white/10 focus:outline-none text-white placeholder-gray-500 transition-all duration-300"
                     placeholder="Enter playlist name"
-                    aria-label="Playlist name"
                   />
                 </div>
 
                 <CompactPlaylistGrid songs={focusResult} primaryId={focusResult[0]?.spotifyId} />
 
                 {/* Export to Spotify Section */}
-                <div className="mt-6 space-y-4">
+                <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
                   {/* Error/Success Messages */}
                   {saveError && (
-                    <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 flex items-center space-x-3">
-                      <AlertCircle className="w-5 h-5 text-red-400" />
-                      <span className="text-red-300">{saveError}</span>
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-red-300 text-sm">
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <span>{saveError}</span>
                     </div>
                   )}
                   
                   {saveSuccess && (
-                    <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 flex items-center space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                      <span className="text-green-300">{saveSuccess}</span>
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-center gap-3 text-green-300 text-sm">
+                      <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                      <span>{saveSuccess}</span>
                     </div>
                   )}
 
-                  <div className="flex space-x-4">
+                  <div className="flex gap-4">
                     <button 
                       onClick={() => handleSaveToSpotify(focusResult)}
                       disabled={isSaving}
-                      className={`flex-1 ${
-                        isSaving
-                          ? 'btn-glass-secondary cursor-wait'
-                          : 'btn-glass-primary'
-                      }`}
+                      className="flex-1 bg-white text-black hover:bg-gray-100 font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isSaving ? (
-                        <div className="flex items-center justify-center">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                          Saving...
-                        </div>
+                        <>
+                           <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                           <span>Saving...</span>
+                        </>
                       ) : (
-                        'Save to Spotify'
+                        <>
+                          <Music className="w-5 h-5" />
+                          <span>Save to Spotify</span>
+                        </>
                       )}
                     </button>
+                    
                     <button 
                       onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
                       disabled={!savedPlaylistUrl}
-                      className={`px-4 py-3 rounded-xl transition-colors ${
+                      className={`px-5 py-3.5 rounded-xl border transition-all duration-300 flex items-center justify-center ${
                         savedPlaylistUrl
-                          ? 'bg-black/50 border border-gray-700 text-white hover:border-purple-400'
-                          : 'bg-gray-600 border border-gray-600 text-gray-400 cursor-not-allowed'
+                          ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20'
+                          : 'bg-white/5 border-white/5 text-gray-500 cursor-not-allowed'
                       }`}
                       title="Open in Spotify"
-                      aria-label="Open playlist in Spotify"
                     >
                       <ExternalLink className="w-5 h-5" />
                     </button>
@@ -236,183 +245,184 @@ export default function CreatePlaylist() {
                 </div>
               </div>
             )}
-          </>
-        )}
-
-          {/* Spotify Info Banner */}
-          <div className="container-glass rounded-2xl p-6 mb-10">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-green-500/20 border border-green-500/40 p-3">
-                  <Music className="w-6 h-6 text-green-300" />
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-lg">Instant Spotify Export</h3>
-                  <p className="text-sm text-gray-300">
-                    If your Spotify is connected, playlists export directly to your account. Otherwise, they are published to the official ArmyVerse Spotify and a link is provided.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
+        )}
 
           {/* MANUAL CREATOR WORKFLOW */}
           {mode === 'normal' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* search */}
-              <div className="container-glass rounded-3xl p-6 md:p-8">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                <Search className="w-6 h-6 mr-3 text-purple-400" />
-                Search BTS Songs
-              </h2>
-
-              <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search for BTS songs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input-glass pl-10"
-                />
-              </div>
-
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-hide">
-                {filteredTracks.map((track) => (
-                  <div
-                    key={track.spotifyId}
-                    className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 hover:border-[#C084FC]/50 transition-all"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                        <Image
-                          src={track.thumbnails?.large || track.thumbnails?.medium || track.thumbnails?.small || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=40&h=40&fit=crop'}
-                          alt={track.name}
-                          width={40}
-                          height={40}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-medium">{track.name}</h3>
-                        <p className="text-gray-400 text-sm">{track.artist}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => addToPlaylist(track)}
-                      className="btn-toolbar is-active"
-                      title="Add to playlist"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-              {/* playlist */}
-              <div className="container-glass rounded-3xl p-6 md:p-8">
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                <Music className="w-6 h-6 mr-3 text-purple-400" />
-                Your Playlist
-              </h2>
-
-              <div className="mb-6">
-                <label className="block text-white font-medium mb-2">Playlist Name</label>
-                <input
-                  type="text"
-                  value={playlistName}
-                  onChange={(e) => setPlaylistName(e.target.value)}
-                  className="input-glass"
-                  placeholder="Enter playlist name"
-                  aria-label="Playlist name"
-                />
-              </div>
-
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-hide">
-                {playlistTracks.map((track) => (
-                  <div
-                    key={track.spotifyId}
-                    className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                        <Image
-                          src={track.thumbnails?.large || track.thumbnails?.medium || track.thumbnails?.small || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=40&h=40&fit=crop'}
-                          alt={track.name}
-                          width={40}
-                          height={40}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-medium">{track.name}</h3>
-                        <p className="text-gray-400 text-sm">{track.artist}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => removeFromPlaylist(track.spotifyId)}
-                      className="btn-toolbar hover:text-red-400"
-                      title="Remove from playlist"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {playlistTracks.length > 0 && (
-                <div className="mt-6 space-y-4">
-                  {/* Error/Success Messages */}
-                  {saveError && (
-                    <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 flex items-center space-x-3">
-                      <AlertCircle className="w-5 h-5 text-red-400" />
-                      <span className="text-red-300">{saveError}</span>
-                    </div>
-                  )}
-                  
-                  {saveSuccess && (
-                    <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 flex items-center space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                      <span className="text-green-300">{saveSuccess}</span>
-                    </div>
-                  )}
-
-                  <div className="flex space-x-4">
-                    <button 
-                      onClick={() => handleSaveToSpotify()}
-                      disabled={isSaving}
-                      className={`flex-1 ${
-                        isSaving
-                          ? 'btn-glass-secondary cursor-wait'
-                          : 'btn-glass-primary'
-                      }`}
-                    >
-                      {isSaving ? (
-                        <div className="flex items-center justify-center">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                          Saving...
-                        </div>
-                      ) : (
-                        'Save to Spotify'
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
-                      disabled={!savedPlaylistUrl}
-                      className={savedPlaylistUrl ? 'btn-glass-secondary' : 'btn-glass-secondary opacity-50 cursor-not-allowed'}
-                      title="Open in Spotify"
-                      aria-label="Open playlist in Spotify"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                    </button>
-                  </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+              {/* Search Panel */}
+              <div className="glass-effect rounded-3xl p-6 sm:p-8 border border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col">
+                <div className="flex items-center gap-3 mb-6">
+                   <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                      <Search className="w-5 h-5 text-purple-300" />
+                   </div>
+                   <h2 className="text-xl font-bold text-white">Find Songs</h2>
                 </div>
-              )}
-            </div>
+
+                <div className="relative mb-6">
+                  <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Search by title or album..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-400/50 focus:bg-white/10 focus:outline-none text-white placeholder-gray-500 transition-all duration-300 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                  {filteredTracks.map((track) => (
+                    <div
+                      key={track.spotifyId}
+                      className="group flex items-center justify-between p-3 bg-white/5 rounded-xl border border-transparent hover:border-white/10 hover:bg-white/10 transition-all duration-200"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 relative">
+                          <Image
+                            src={track.thumbnails?.medium || track.thumbnails?.small || '/images/placeholder.jpg'}
+                            alt={track.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-white font-medium text-sm truncate">{track.name}</h3>
+                          <p className="text-gray-500 text-xs truncate">{track.artist}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => addToPlaylist(track)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-gray-400 hover:bg-purple-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0"
+                        title="Add to playlist"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {filteredTracks.length === 0 && (
+                    <div className="text-center py-12 text-gray-500 text-sm">
+                      No songs found matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Playlist Panel */}
+              <div className="glass-effect rounded-3xl p-6 sm:p-8 border border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col sticky top-8">
+                 <div className="flex items-center gap-3 mb-6">
+                   <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                      <ListMusic className="w-5 h-5 text-pink-300" />
+                   </div>
+                   <h2 className="text-xl font-bold text-white">Your Mix</h2>
+                   <span className="ml-auto text-xs font-medium px-2 py-1 bg-white/5 rounded-md text-gray-400">
+                     {playlistTracks.length} songs
+                   </span>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-gray-400 text-xs font-medium mb-2 pl-1 uppercase tracking-wider">Playlist Name</label>
+                  <input
+                    type="text"
+                    value={playlistName}
+                    onChange={(e) => setPlaylistName(e.target.value)}
+                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-400/50 focus:bg-white/10 focus:outline-none text-white placeholder-gray-500 transition-all duration-300 text-sm"
+                    placeholder="My Awesome Mix"
+                  />
+                </div>
+
+                <div className="space-y-2 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar min-h-[200px] mb-6">
+                  {playlistTracks.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center py-12 border-2 border-dashed border-white/5 rounded-xl">
+                       <Music className="w-10 h-10 text-gray-600 mb-3" />
+                       <p className="text-gray-500 text-sm">Your playlist is empty</p>
+                       <p className="text-gray-600 text-xs mt-1">Add songs from the search panel</p>
+                    </div>
+                  ) : (
+                    playlistTracks.map((track) => (
+                      <div
+                        key={track.spotifyId}
+                        className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-all duration-200 group"
+                      >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 relative">
+                            <Image
+                              src={track.thumbnails?.small || '/images/placeholder.jpg'}
+                              alt={track.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-white font-medium text-sm truncate">{track.name}</h3>
+                            <p className="text-gray-500 text-xs truncate">{track.artist}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFromPlaylist(track.spotifyId)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                          title="Remove from playlist"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {playlistTracks.length > 0 && (
+                  <div className="pt-6 border-t border-white/5 space-y-4 mt-auto">
+                    {/* Error/Success Messages */}
+                    {saveError && (
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-3 text-red-300 text-xs">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>{saveError}</span>
+                      </div>
+                    )}
+                    
+                    {saveSuccess && (
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center gap-3 text-green-300 text-xs">
+                        <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>{saveSuccess}</span>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => handleSaveToSpotify()}
+                        disabled={isSaving}
+                        className="flex-1 bg-white text-black hover:bg-gray-100 font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                      >
+                        {isSaving ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Music className="w-4 h-4" />
+                            <span>Save to Spotify</span>
+                          </>
+                        )}
+                      </button>
+                      <button 
+                        onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
+                        disabled={!savedPlaylistUrl}
+                        className={`px-4 py-3 rounded-xl border transition-all duration-300 flex items-center justify-center ${
+                          savedPlaylistUrl
+                            ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20'
+                            : 'bg-white/5 border-white/5 text-gray-500 cursor-not-allowed'
+                        }`}
+                        title="Open in Spotify"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
-        </div>
       </div>
     </div>
   )

@@ -2,22 +2,34 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { User, Calendar, Music, Heart, Play, TrendingUp } from 'lucide-react'
-import { SpotifyUser, DashboardOverview } from '@/lib/spotify/dashboard'
+import { User, Calendar, Music, Heart, Play } from 'lucide-react'
+
+interface UserData {
+  name: string
+  realname: string
+  url: string
+  image: string
+  playcount: number
+  registered: Date
+  accountAge: string
+}
+
+interface OverviewData {
+  totalTracks: number
+  totalArtists: number
+  totalListeningTime: number
+  btsPlays: number
+  btsPercentage: number
+  accountAge: string
+}
 
 interface UserProfileProps {
-  user: SpotifyUser
-  overview: DashboardOverview
+  user: UserData
+  overview: OverviewData
   loading?: boolean
 }
 
 export default function UserProfile({ user, overview, loading = false }: UserProfileProps) {
-  const formatDuration = (ms: number): string => {
-    const hours = Math.floor(ms / (1000 * 60 * 60))
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
-    return `${hours}h ${minutes}m`
-  }
-
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
@@ -65,15 +77,15 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
           className="relative"
         >
           <img
-            src={user.images[0]?.url || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'}
-            alt={user.display_name}
+            src={user.image || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'}
+            alt={user.name}
             className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-purple-500/30"
           />
           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
         </motion.div>
-        
+
         <div className="flex-1">
           <motion.h2
             initial={{ opacity: 0, x: -20 }}
@@ -81,25 +93,24 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
             transition={{ delay: 0.3 }}
             className="text-2xl md:text-3xl font-bold text-white mb-2"
           >
-            {user.display_name}
+            {user.name}
           </motion.h2>
+          {user.realname && (
+            <p className="text-gray-400 text-sm mb-2">{user.realname}</p>
+          )}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="flex flex-wrap items-center space-x-4 text-gray-300 text-sm"
+            className="flex flex-wrap items-center gap-3 text-gray-300 text-sm"
           >
             <div className="flex items-center space-x-1">
               <Calendar className="w-4 h-4" />
               <span>Member for {overview.accountAge}</span>
             </div>
             <div className="flex items-center space-x-1">
-              <User className="w-4 h-4" />
-              <span>{formatNumber(user.followers.total)} followers</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <TrendingUp className="w-4 h-4" />
-              <span>{overview.currentStreak} day streak</span>
+              <Music className="w-4 h-4" />
+              <span>{formatNumber(user.playcount)} scrobbles</span>
             </div>
           </motion.div>
         </div>
@@ -140,9 +151,9 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
         >
           <div className="flex items-center justify-between mb-2">
             <Play className="w-5 h-5 text-green-400" />
-            <span className="text-xs text-green-300">Playlists</span>
+            <span className="text-xs text-green-300">Hours</span>
           </div>
-          <p className="text-xl font-bold text-white">{formatNumber(overview.totalPlaylists)}</p>
+          <p className="text-xl font-bold text-white">{formatNumber(overview.totalListeningTime)}h</p>
         </motion.div>
 
         <motion.div
@@ -158,7 +169,7 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
         </motion.div>
       </motion.div>
 
-      {/* Listening Time */}
+      {/* BTS Listening Info */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -167,11 +178,11 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-300">Total Listening Time</p>
-            <p className="text-lg font-bold text-white">{formatDuration(overview.totalListeningTime)}</p>
+            <p className="text-sm text-gray-300">BTS Dedication</p>
+            <p className="text-lg font-bold text-white">{overview.btsPercentage}% of all listening</p>
           </div>
           <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-            <Play className="w-6 h-6 text-white" />
+            <Heart className="w-6 h-6 text-white" />
           </div>
         </div>
       </motion.div>

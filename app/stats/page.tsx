@@ -1,121 +1,114 @@
- 'use client'
+'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { Calendar, TrendingUp, Heart, Play, Music, RefreshCw, AlertCircle } from 'lucide-react'
+import { Calendar, RefreshCw, AlertCircle } from 'lucide-react'
 import UserProfile from '@/components/dashboard/UserProfile'
 import RecentTracks from '@/components/dashboard/RecentTracks'
 import TopArtists from '@/components/dashboard/TopArtists'
 import BTSAnalytics from '@/components/dashboard/BTSAnalytics'
-import SpotifyConnectCard from '@/components/auth/SpotifyConnectCard'
-import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
-import { 
-  fetchDashboardData, 
-  getCachedDashboardData, 
-  cacheDashboardData,
-  SpotifyUser,
-  SpotifyTrack,
-  SpotifyArtist,
-  AudioFeatures,
-  DashboardOverview,
-  BTSAnalytics as BTSAnalyticsType,
-  GenreAnalysis,
-  MoodAnalysis,
-  ListeningPatterns
-} from '@/lib/spotify/dashboard'
+import UsernameInputCard from '@/components/dashboard/UsernameInputCard'
+import { LastFmPeriod } from '@/lib/lastfm/types'
 
 interface DashboardData {
-  userProfile: SpotifyUser
-  overview: DashboardOverview
-  recentTracks: SpotifyTrack[]
-  topArtists: SpotifyArtist[]
-  topTracks: SpotifyTrack[]
-  userPlaylists: SpotifyTrack[]
-  audioFeatures: AudioFeatures[]
-  btsAnalytics: BTSAnalyticsType
-  genreAnalysis: GenreAnalysis[]
-  moodAnalysis: MoodAnalysis[]
-  listeningPatterns: ListeningPatterns
-  recommendations: SpotifyTrack[]
+  userProfile: {
+    name: string
+    realname: string
+    url: string
+    image: string
+    playcount: number
+    registered: Date
+    accountAge: string
+  }
+  overview: {
+    totalTracks: number
+    totalArtists: number
+    totalListeningTime: number
+    btsPlays: number
+    btsPercentage: number
+    accountAge: string
+  }
+  recentTracks: any[]
+  topArtists: any[]
+  topTracks: any[]
+  topAlbums: any[]
+  btsAnalytics: {
+    totalBTSPlays: number
+    favoriteBTSAlbum: string
+    memberPreference: Array<{ member: string; plays: number }>
+    btsTracks: any[]
+    soloTracks: any[]
+  }
+  btsTimeline: any
 }
 
 export default function Stats() {
+  const [username, setUsername] = useState<string>('')
+  const [provider, setProvider] = useState<'lastfm' | 'statsfm'>('lastfm')
   const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [timeRange, setTimeRange] = useState('short_term')
+  const [period, setPeriod] = useState<LastFmPeriod>('overall')
   const [refreshing, setRefreshing] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
-  const { isAuthenticated } = useSpotifyAuth()
 
   const loadDashboardData = useCallback(async () => {
+    if (!username) return
+
     try {
       setLoading(true)
       setError(null)
 
-      if (!userId) {
-        throw new Error('User not authenticated')
+      const response = await fetch('/api/music/dashboard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          provider,
+          period,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch dashboard data')
       }
 
-      // Try to get cached data first
-      const cachedData = await getCachedDashboardData(userId)
-      
-      if (cachedData) {
-        setData(cachedData)
-        setLoading(false)
-        return
-      }
-
-      // Fetch fresh data using backend API
-      const freshData = await fetchDashboardData(userId)
+      const freshData = await response.json()
       setData(freshData)
-      
-      // Cache the data
-      await cacheDashboardData(userId, freshData)
-      
     } catch (err) {
       console.error('Error loading dashboard data:', err)
-      setError('Failed to load dashboard data. Please try again.')
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data. Please try again.')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }, [userId])
+  }, [username, provider, period])
 
   useEffect(() => {
-    if (isAuthenticated && userId) {
+    if (username) {
       loadDashboardData()
     }
-  }, [timeRange, isAuthenticated, userId, loadDashboardData])
+  }, [username, period, loadDashboardData])
+
+  const handleUsernameSubmit = (newUsername: string, newProvider: 'lastfm' | 'statsfm') => {
+    setUsername(newUsername)
+    setProvider(newProvider)
+    setError(null)
+  }
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    try {
-      if (!userId) {
-        throw new Error('User not authenticated')
-      }
-      const freshData = await fetchDashboardData(userId)
-      setData(freshData)
-      await cacheDashboardData(userId, freshData)
-    } catch (err) {
-      setError('Failed to refresh data. Please try again.')
-    } finally {
-      setRefreshing(false)
-    }
+    await loadDashboardData()
   }
 
-  const handleAuthenticated = (newUserId: string) => {
-    setUserId(newUserId)
-    // The useSpotifyAuth hook will automatically handle the authentication status
+  // Show username input if no username is set
+  if (!username) {
+    return <UsernameInputCard onSubmit={handleUsernameSubmit} error={error} />
   }
 
-  // Show authentication screen if not authenticated
-  if (!isAuthenticated) {
-    return <SpotifyConnectCard onAuthSuccess={() => handleAuthenticated('user-123')} />
-  }
-
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="min-h-screen py-8 px-6">
         <div className="max-w-7xl mx-auto">
@@ -167,14 +160,27 @@ export default function Stats() {
             <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-white mb-4">Error Loading Dashboard</h1>
             <p className="text-gray-400 mb-6">{error}</p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={loadDashboardData}
-              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-xl text-white font-medium transition-colors"
-            >
-              Try Again
-            </motion.button>
+            <div className="flex gap-4 justify-center">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setUsername('')
+                  setError(null)
+                }}
+                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-white font-medium transition-colors"
+              >
+                Change Username
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleRefresh}
+                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-xl text-white font-medium transition-colors"
+              >
+                Try Again
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -195,11 +201,20 @@ export default function Stats() {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent">
-            Spotify Dashboard
+            Music Stats Dashboard
           </h1>
           <p className="text-xl text-gray-400">
-            Your personalized music analytics and insights
+            BTS-focused listening analytics from {provider === 'lastfm' ? 'Last.fm' : 'Stats.fm'}
           </p>
+          <button
+            onClick={() => {
+              setUsername('')
+              setData(null)
+            }}
+            className="mt-4 text-sm text-gray-500 hover:text-gray-400 underline"
+          >
+            Change username ({username})
+          </button>
         </motion.div>
 
         {/* Controls */}
@@ -213,18 +228,21 @@ export default function Stats() {
             <div className="flex items-center space-x-4">
               <Calendar className="w-5 h-5 text-purple-400" />
               <span className="text-white font-medium">Time Range:</span>
-              <select 
-                value={timeRange} 
-                onChange={(e) => setTimeRange(e.target.value)}
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as LastFmPeriod)}
                 className="bg-black/80 text-white border border-gray-700 rounded-lg px-3 py-2 focus:border-purple-400 focus:outline-none"
                 aria-label="Time range selection"
               >
-                <option value="short_term">Last 4 Weeks</option>
-                <option value="medium_term">Last 6 Months</option>
-                <option value="long_term">All Time</option>
+                <option value="7day">Last 7 Days</option>
+                <option value="1month">Last Month</option>
+                <option value="3month">Last 3 Months</option>
+                <option value="6month">Last 6 Months</option>
+                <option value="12month">Last Year</option>
+                <option value="overall">All Time</option>
               </select>
             </div>
-            
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -265,17 +283,7 @@ export default function Stats() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
           >
-            {(() => {
-              const counts: Record<string, number> = {}
-              // Count occurrences of each artist from recent tracks
-              for (const t of data.recentTracks) {
-                for (const a of t.artists) {
-                  if (!a.id) continue
-                  counts[a.id] = (counts[a.id] || 0) + 1
-                }
-              }
-              return <TopArtists artists={data.topArtists} playCounts={counts} />
-            })()}
+            <TopArtists artists={data.topArtists} />
           </motion.div>
         </div>
 
@@ -287,130 +295,6 @@ export default function Stats() {
           className="mb-8"
         >
           <BTSAnalytics btsAnalytics={data.btsAnalytics} />
-        </motion.div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Genre Distribution */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20"
-          >
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-              <Music className="mr-2" />
-              Genre Distribution
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={data.genreAnalysis.slice(0, 5)}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="percentage"
-                  label={({ genre, percentage }) => `${genre}: ${percentage}%`}
-                >
-                  {data.genreAnalysis.slice(0, 5).map((entry, i) => (
-                    <Cell key={`cell-${i}`} fill={`hsl(${i * 72}, 70%, 60%)`} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#000000', 
-                    border: '1px solid #6B7280',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
-                  }} 
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </motion.div>
-
-          {/* Mood Analysis */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20"
-          >
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-              <Heart className="mr-2" />
-              Mood Analysis
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.moodAnalysis.slice(0, 8)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis 
-                  dataKey="track" 
-                  stroke="#9CA3AF" 
-                  fontSize={10}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#000000', 
-                    border: '1px solid #6B7280',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
-                  }} 
-                />
-                <Bar dataKey="energy" fill="#8B5CF6" name="Energy" />
-                <Bar dataKey="valence" fill="#EC4899" name="Valence" />
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
-        </div>
-
-        {/* Recommendations */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-          className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20"
-        >
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-            <TrendingUp className="mr-2" />
-            Recommended for You
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data.recommendations.slice(0, 8).map((track, i) => (
-              <motion.div
-                key={track.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 * i }}
-                whileHover={{ scale: 1.05 }}
-                className="group bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300"
-              >
-                <Image
-                  src={track.album.images[0]?.url || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=300&auto=format&fit=crop'}
-                  alt={track.album.name}
-                  width={150}
-                  height={150}
-                  className="w-full aspect-square rounded-lg object-cover mb-3 group-hover:scale-105 transition-transform duration-300"
-                />
-                <h4 className="text-white font-medium truncate">{track.name}</h4>
-                <p className="text-gray-400 text-sm truncate">{track.artists.map((a) => a.name).join(', ')}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-purple-400 text-sm">{track.popularity}%</span>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => window.open(track.external_urls.spotify, '_blank')}
-                    className="text-purple-400 hover:text-purple-300 transition-colors"
-                  >
-                    <Play className="w-4 h-4" />
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
       </div>
     </div>

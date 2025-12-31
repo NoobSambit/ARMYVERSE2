@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { Zap, Coffee, Sun, CloudRain, Heart, Hourglass, Trophy, Feather, Flame, Smile } from 'lucide-react'
 
 interface MoodPillsProps {
   selectedMoods: string[]
@@ -9,16 +10,16 @@ interface MoodPillsProps {
 }
 
 const MOOD_OPTIONS = [
-  { value: 'energetic', label: 'Energetic', emoji: '⚡', color: 'from-red-500 to-orange-500' },
-  { value: 'chill', label: 'Chill', emoji: '😌', color: 'from-blue-500 to-indigo-500' },
-  { value: 'uplifting', label: 'Uplifting', emoji: '✨', color: 'from-yellow-500 to-orange-500' },
-  { value: 'melancholic', label: 'Melancholic', emoji: '🌧️', color: 'from-gray-500 to-blue-500' },
-  { value: 'romantic', label: 'Romantic', emoji: '💕', color: 'from-pink-500 to-rose-500' },
-  { value: 'nostalgic', label: 'Nostalgic', emoji: '🕰️', color: 'from-purple-500 to-indigo-500' },
-  { value: 'confident', label: 'Confident', emoji: '💪', color: 'from-green-500 to-emerald-500' },
-  { value: 'peaceful', label: 'Peaceful', emoji: '🕊️', color: 'from-teal-500 to-blue-500' },
-  { value: 'dramatic', label: 'Dramatic', emoji: '🎭', color: 'from-purple-500 to-pink-500' },
-  { value: 'playful', label: 'Playful', emoji: '🎈', color: 'from-pink-500 to-purple-500' }
+  { value: 'energetic', label: 'Energetic', icon: Zap, color: 'text-yellow-400' },
+  { value: 'chill', label: 'Chill', icon: Coffee, color: 'text-blue-300' },
+  { value: 'uplifting', label: 'Uplifting', icon: Sun, color: 'text-orange-400' },
+  { value: 'melancholic', label: 'Melancholic', icon: CloudRain, color: 'text-gray-400' },
+  { value: 'romantic', label: 'Romantic', icon: Heart, color: 'text-pink-400' },
+  { value: 'nostalgic', label: 'Nostalgic', icon: Hourglass, color: 'text-purple-300' },
+  { value: 'confident', label: 'Confident', icon: Trophy, color: 'text-amber-400' },
+  { value: 'peaceful', label: 'Peaceful', icon: Feather, color: 'text-teal-300' },
+  { value: 'dramatic', label: 'Dramatic', icon: Flame, color: 'text-red-400' },
+  { value: 'playful', label: 'Playful', icon: Smile, color: 'text-pink-300' }
 ]
 
 export default function MoodPills({ selectedMoods, onMoodChange, className = '' }: MoodPillsProps) {
@@ -32,38 +33,40 @@ export default function MoodPills({ selectedMoods, onMoodChange, className = '' 
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <label className="block text-white font-medium mb-2">
-        Mood Selection
-        <span className="text-gray-400 text-sm ml-2">(Optional)</span>
-      </label>
+      {/* Label removed as it is handled by parent */}
       
       <div className="flex flex-wrap gap-2">
-        {MOOD_OPTIONS.map((mood) => (
-          <button
-            key={mood.value}
-            onClick={() => handleMoodToggle(mood.value)}
-            className={`p-3 rounded-xl border-2 transition-all duration-200 flex items-center space-x-2 ${
-              selectedMoods.includes(mood.value)
-                ? `bg-gradient-to-r ${mood.color} border-white text-white shadow-lg`
-                : 'bg-white/10 border-white/20 text-gray-300 hover:border-purple-400/50'
-            }`}
-          >
-            <span className="text-lg">{mood.emoji}</span>
-            <span className="text-sm font-medium">{mood.label}</span>
-          </button>
-        ))}
+        {MOOD_OPTIONS.map((mood) => {
+          const Icon = mood.icon
+          const isSelected = selectedMoods.includes(mood.value)
+          
+          return (
+            <button
+              key={mood.value}
+              onClick={() => handleMoodToggle(mood.value)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 flex items-center gap-2 ${
+                isSelected
+                  ? 'bg-white/10 border-purple-400/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.15)]'
+                  : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5 hover:text-gray-200'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : mood.color}`} />
+              <span>{mood.label}</span>
+            </button>
+          )
+        })}
       </div>
       
       {selectedMoods.length > 0 && (
-        <div className="flex items-center justify-between mt-3 p-3 bg-black/30 rounded-lg backdrop-blur-sm border border-white/20">
-          <span className="text-sm text-gray-300">
-            Selected: {selectedMoods.length} mood{selectedMoods.length !== 1 ? 's' : ''}
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+          <span className="text-xs text-gray-400">
+            {selectedMoods.length} selected
           </span>
           <button
             onClick={() => onMoodChange([])}
-            className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+            className="text-xs text-purple-300 hover:text-purple-200 transition-colors"
           >
-            Clear all
+            Clear
           </button>
         </div>
       )}

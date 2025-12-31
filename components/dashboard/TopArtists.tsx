@@ -4,16 +4,13 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { User, ExternalLink } from 'lucide-react'
-import { SpotifyArtist } from '@/lib/spotify/dashboard'
 
 interface TopArtistsProps {
-  artists: SpotifyArtist[]
+  artists: any[]
   loading?: boolean
-  // Map of artistId to number of times played in recent history
-  playCounts?: Record<string, number>
 }
 
-export default function TopArtists({ artists, loading = false, playCounts = {} }: TopArtistsProps) {
+export default function TopArtists({ artists, loading = false }: TopArtistsProps) {
   const [viewMode, setViewMode] = useState<'list' | 'chart'>('list')
 
   const formatNumber = (num: number): string => {
@@ -24,14 +21,14 @@ export default function TopArtists({ artists, loading = false, playCounts = {} }
 
   const chartData = artists.slice(0, 8).map((artist, index) => ({
     name: artist.name,
-    popularity: artist.popularity,
-    followers: artist.followers.total,
+    playcount: artist.playcount ? parseInt(artist.playcount) : 0,
+    rank: artist.rank || (index + 1),
     color: `hsl(${index * 45}, 70%, 60%)`
   }))
 
   const pieData = artists.slice(0, 5).map((artist, index) => ({
     name: artist.name,
-    value: artist.popularity,
+    value: artist.playcount ? parseInt(artist.playcount) : 0,
     color: `hsl(${index * 72}, 70%, 60%)`
   }))
 
@@ -118,81 +115,79 @@ export default function TopArtists({ artists, loading = false, playCounts = {} }
           >
             {/* Entire list scrolls inside fixed-height area */}
             <div className="max-h-80 sm:max-h-96 overflow-y-auto pr-1 space-y-3">
-            {artists.map((artist, index) => (
-              <motion.div
-                key={artist.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                className="group flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-xl hover:bg-white/5 transition-all duration-300"
-              >
-                {/* Rank */}
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {index + 1}
-                  </div>
-                </div>
+            {artists.map((artist, index) => {
+              const imageUrl = artist.image || artist.images?.[0]?.url || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=60&h=60'
+              const playcount = artist.playcount ? parseInt(artist.playcount) : 0
+              const rank = artist.rank || (index + 1)
 
-                {/* Artist Image */}
-                <div className="relative">
-                  <img
-                    src={artist.images[0]?.url || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=60&h=60'}
-                    alt={artist.name}
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <ExternalLink className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-
-                {/* Artist Info */}
-                <div className="flex-1 min-w-0">
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.1 + 0.2 }}
-                    className="text-white font-medium truncate text-sm sm:text-base"
-                  >
-                    {artist.name}
-                  </motion.p>
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.1 + 0.3 }}
-                    className="text-gray-400 text-xs sm:text-sm truncate"
-                  >
-                    {artist.genres.slice(0, 2).join(', ')}
-                  </motion.p>
-                </div>
-
-                {/* Stats */}
-                <div className="flex items-center space-x-3 sm:space-x-4 text-xs sm:text-sm">
-                  <div className="text-center">
-                    <p className="text-purple-400 font-medium">{artist.popularity}%</p>
-                    <p className="text-gray-500 text-xs">Popularity</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-pink-400 font-medium">{formatNumber(artist.followers.total)}</p>
-                    <p className="text-gray-500 text-xs">Followers</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-green-400 font-medium">{playCounts[artist.id] ?? 0}</p>
-                    <p className="text-gray-500 text-xs">Plays</p>
-                  </div>
-                </div>
-
-                {/* Action */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => window.open(artist.external_urls.spotify, '_blank')}
-                  className="text-purple-400 hover:text-purple-300 transition-colors"
+              return (
+                <motion.div
+                  key={artist.url || artist.id || artist.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="group flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-xl hover:bg-white/5 transition-all duration-300"
                 >
-                  <ExternalLink className="w-4 h-4" />
-                </motion.button>
-              </motion.div>
-            ))}
+                  {/* Rank */}
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {rank}
+                    </div>
+                  </div>
+
+                  {/* Artist Image */}
+                  <div className="relative">
+                    <img
+                      src={imageUrl}
+                      alt={artist.name}
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <ExternalLink className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Artist Info */}
+                  <div className="flex-1 min-w-0">
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.05 + 0.1 }}
+                      className="text-white font-medium truncate text-sm sm:text-base"
+                    >
+                      {artist.name}
+                    </motion.p>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.05 + 0.15 }}
+                      className="text-gray-400 text-xs sm:text-sm truncate"
+                    >
+                      {formatNumber(playcount)} plays
+                    </motion.p>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex items-center space-x-3 sm:space-x-4 text-xs sm:text-sm">
+                    <div className="text-center">
+                      <p className="text-purple-400 font-medium">{formatNumber(playcount)}</p>
+                      <p className="text-gray-500 text-xs">Scrobbles</p>
+                    </div>
+                  </div>
+
+                  {/* Action */}
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => window.open(artist.url || artist.external_urls?.lastfm, '_blank')}
+                    className="text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </motion.button>
+                </motion.div>
+              )
+            })}
             </div>
           </motion.div>
         ) : (
@@ -208,24 +203,24 @@ export default function TopArtists({ artists, loading = false, playCounts = {} }
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#9CA3AF" 
+                  <XAxis
+                    dataKey="name"
+                    stroke="#9CA3AF"
                     fontSize={12}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis stroke="#9CA3AF" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
                       border: '1px solid #6B7280',
                       borderRadius: '8px',
                       color: '#F9FAFB'
-                    }} 
+                    }}
                   />
-                  <Bar dataKey="popularity" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="playcount" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Scrobbles" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -241,19 +236,19 @@ export default function TopArtists({ artists, loading = false, playCounts = {} }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}%`}
+                    label={({ name, value }) => `${name}: ${formatNumber(value)}`}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
                       border: '1px solid #6B7280',
                       borderRadius: '8px',
                       color: '#F9FAFB'
-                    }} 
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>

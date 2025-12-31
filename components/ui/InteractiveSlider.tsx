@@ -58,40 +58,38 @@ export default function InteractiveSlider({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <div className="flex items-center justify-between">
-        <label className="block text-white font-medium">{label}</label>
-        <span className="text-pink-400 font-semibold">{value} songs</span>
-      </div>
+      {label && (
+        <div className="flex items-center justify-between">
+          <label className="block text-white font-medium">{label}</label>
+          <span className="text-purple-300 font-semibold text-sm">{value} songs</span>
+        </div>
+      )}
       
-      <div className="relative">
+      {!label && (
+         <div className="flex justify-end mb-1">
+            <span className="text-white font-medium text-sm bg-white/10 px-2 py-0.5 rounded-md border border-white/5">{value} songs</span>
+         </div>
+      )}
+      
+      <div className="relative py-2">
         <div
           ref={sliderRef}
-          className="h-4 bg-white/10 rounded-full cursor-pointer relative border border-white/20 backdrop-blur-sm"
+          className="h-2 bg-white/5 rounded-full cursor-pointer relative border border-white/10"
           onMouseDown={handleMouseDown}
         >
-          {/* Track */}
-          <div className="absolute inset-0 bg-white/10 rounded-full backdrop-blur-sm" />
-          
           {/* Progress */}
           <div 
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full transition-all duration-200 shadow-lg"
+            className="absolute inset-y-0 left-0 bg-purple-500 rounded-full transition-all duration-75"
             style={{ width: `${percentage}%` }}
           />
           
           {/* Thumb */}
           <div
-            className={`absolute top-1/2 w-6 h-6 bg-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 ${
-              isDragging ? 'scale-110 shadow-xl ring-2 ring-purple-400' : 'hover:scale-105'
+            className={`absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 border-2 border-purple-500 ${
+              isDragging ? 'scale-125 ring-2 ring-purple-500/30' : 'hover:scale-110'
             }`}
             style={{ left: `${percentage}%` }}
           />
-        </div>
-        
-        {/* Tick marks */}
-        <div className="flex justify-between mt-2 text-xs text-gray-400">
-          {[min, Math.round((min + max) / 2), max].map((tick) => (
-            <span key={tick}>{tick}</span>
-          ))}
         </div>
       </div>
     </div>

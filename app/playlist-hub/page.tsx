@@ -13,14 +13,15 @@ import {
   Target,
   TrendingUp,
   Shield,
-  CheckCircle
+  CheckCircle,
+  Music
 } from 'lucide-react'
 import Link from 'next/link'
 import SpotifyAuth from '@/components/auth/SpotifyAuth'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
 interface PlaylistFeature {
-  icon: React.ReactNode
+  icon: React.ElementType
   title: string
   description: string
   color: string
@@ -36,55 +37,55 @@ export default function PlaylistHub() {
 
   const aiFeatures: PlaylistFeature[] = [
     {
-      icon: <Brain className="w-6 h-6" />,
-      title: "AI-Powered Generation",
-      description: "Create playlists using advanced AI that understands your mood, preferences, and BTS favorites",
-      color: "from-purple-500 to-pink-500"
+      icon: Brain,
+      title: "AI Generation",
+      description: "Smart playlists that understand your mood and preferences",
+      color: "text-purple-400"
     },
     {
-      icon: <Target className="w-6 h-6" />,
-      title: "Mood-Based Creation",
-      description: "Generate playlists based on specific moods like happy, sad, energetic, or relaxed",
-      color: "from-blue-500 to-cyan-500"
+      icon: Target,
+      title: "Mood Based",
+      description: "Curated for specific vibes, from energetic to melancholic",
+      color: "text-blue-400"
     },
     {
-      icon: <Users className="w-6 h-6" />,
-      title: "Member-Focused",
-      description: "Create playlists featuring specific BTS members or their solo work",
-      color: "from-green-500 to-emerald-500"
+      icon: Users,
+      title: "Member Focus",
+      description: "Playlists highlighting specific members or units",
+      color: "text-green-400"
     },
     {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: "Era-Based Selection",
-      description: "Generate playlists from specific BTS eras and albums",
-      color: "from-orange-500 to-red-500"
+      icon: TrendingUp,
+      title: "Era Selection",
+      description: "Journey through specific albums and time periods",
+      color: "text-orange-400"
     }
   ]
 
   const customFeatures: PlaylistFeature[] = [
     {
-      icon: <Search className="w-6 h-6" />,
-      title: "Advanced Search",
-      description: "Search through the entire BTS discography with filters and sorting options",
-      color: "from-indigo-500 to-purple-500"
+      icon: Search,
+      title: "Deep Search",
+      description: "Filter through the complete discography",
+      color: "text-indigo-400"
     },
     {
-      icon: <Plus className="w-6 h-6" />,
+      icon: Plus,
       title: "Manual Curation",
-      description: "Hand-pick your favorite tracks and create the perfect playlist",
-      color: "from-pink-500 to-rose-500"
+      description: "Hand-pick tracks for your perfect mix",
+      color: "text-pink-400"
     },
     {
-      icon: <Palette className="w-6 h-6" />,
-      title: "Custom Organization",
-      description: "Organize tracks by album, year, mood, or any criteria you prefer",
-      color: "from-teal-500 to-cyan-500"
+      icon: Palette,
+      title: "Organization",
+      description: "Sort by album, year, or custom criteria",
+      color: "text-teal-400"
     },
     {
-      icon: <Shield className="w-6 h-6" />,
-      title: "Quality Control",
-      description: "Ensure every track meets your standards with detailed track information",
-      color: "from-yellow-500 to-orange-500"
+      icon: Shield,
+      title: "Quality Audio",
+      description: "High-quality track metadata and info",
+      color: "text-yellow-400"
     }
   ]
 
@@ -109,229 +110,169 @@ export default function PlaylistHub() {
     }
   }
 
-  const cardVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    },
-    hover: {
-      scale: 1.05,
-      transition: {
-        duration: 0.2
-      }
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-950">
-      {/* Header */}
-      <motion.div 
-        className="relative overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
-        {/* Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-purple-700/10 rounded-full blur-3xl"></div>
-        </div>
+    <div className="min-h-screen page-gradient relative overflow-hidden">
+      {/* Subtle background glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-pink-900/10 rounded-full blur-[100px]"></div>
+      </div>
 
-        <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Main Header */}
-            <motion.div 
-              className="text-center mb-16"
-              variants={itemVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <motion.h1 
-                className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 bg-clip-text text-transparent"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-              >
-                Playlist Hub
-              </motion.h1>
-              <motion.p 
-                className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-              >
-                Create the perfect BTS playlist with AI assistance or manual curation. 
-                Connect your Spotify account to save and sync your playlists.
-              </motion.p>
-
-              {/* Spotify Auth Section */}
-              {!isAuthenticated ? (
-                <motion.div
-                  className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/30 max-w-md mx-auto"
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <div className="text-center mb-6">
-                    <Heart className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      Connect to Spotify
-                    </h3>
-                    <p className="text-gray-400 text-sm">
-                      Link your account to save playlists and access your library
-                    </p>
-                  </div>
-                  <SpotifyAuth onAuthSuccess={handleAuthenticated} />
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="bg-green-500/20 backdrop-blur-lg rounded-2xl p-6 border border-green-500/30 max-w-md mx-auto"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="text-center">
-                    <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                    <h3 className="text-lg font-semibold text-white mb-1">
-                      Connected to Spotify
-                    </h3>
-                    <p className="text-gray-400 text-sm">
-                      Your account is linked and ready to use
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Main Content */}
-      <div className="px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="max-w-7xl mx-auto">
-          {/* AI Features Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-16">
           <motion.div
-            className="mb-16"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <motion.h2 
-              className="text-3xl md:text-4xl font-bold text-white mb-8 text-center"
-              variants={itemVariants}
-            >
-              AI-Powered Features
-            </motion.h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {aiFeatures.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300"
-                  variants={cardVariants}
-                  whileHover="hover"
-                >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4`}>
-                    <div className="text-white">
-                      {feature.icon}
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
+              Playlist Hub
+            </h1>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto font-light">
+              Your command center for BTS sonic experiences
+            </p>
           </motion.div>
 
-          {/* Manual Features Section */}
+          {/* Spotify Status - Compact */}
           <motion.div
-            className="mb-16"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-8 flex justify-center"
           >
-            <motion.h2 
-              className="text-3xl md:text-4xl font-bold text-white mb-8 text-center"
-              variants={itemVariants}
-            >
-              Manual Curation Tools
-            </motion.h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {customFeatures.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  className="bg-black/50 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300"
-                  variants={cardVariants}
-                  whileHover="hover"
-                >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4`}>
-                    <div className="text-white">
-                      {feature.icon}
+            {!isAuthenticated ? (
+              <div className="glass-effect rounded-2xl p-6 border border-white/10 max-w-sm w-full bg-black/40 backdrop-blur-xl">
+                 <div className="flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                        <Music className="w-5 h-5 text-green-500" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-white font-medium">Connect Spotify</h3>
+                        <p className="text-xs text-gray-400">Sync your creations instantly</p>
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* CTA Section */}
-          <motion.div
-            className="text-center"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.div
-              className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20"
-              variants={itemVariants}
-            >
-              <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-6" />
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Ready to Create Your Perfect Playlist?
-              </h2>
-              <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-                Choose between AI-powered generation or manual curation to create the ultimate BTS playlist experience.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/ai-playlist">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg transition-all duration-300 flex items-center"
-                  >
-                    <Brain className="w-5 h-5 mr-2" />
-                    AI Playlist Generator
-                  </motion.button>
-                </Link>
-                <Link href="/create-playlist">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-black/50 hover:bg-black/70 text-white font-semibold py-3 px-8 rounded-full shadow-lg border-2 border-purple-400/30 hover:border-purple-300/50 transition-all duration-300 flex items-center"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Manual Playlist Creator
-                  </motion.button>
-                </Link>
+                    <div className="w-full">
+                       <SpotifyAuth onAuthSuccess={handleAuthenticated} />
+                    </div>
+                 </div>
               </div>
-            </motion.div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium">
+                <CheckCircle className="w-4 h-4" />
+                <span>Connected to Spotify</span>
+              </div>
+            )}
           </motion.div>
         </div>
+
+        {/* Feature Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+           {/* AI Features */}
+           <motion.div
+             variants={containerVariants}
+             initial="hidden"
+             animate="visible"
+             className="space-y-6"
+           >
+             <div className="flex items-center justify-between mb-4 px-2">
+               <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                 <Sparkles className="w-6 h-6 text-purple-400" />
+                 AI Powered
+               </h2>
+               <Link href="/ai-playlist">
+                 <span className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors cursor-pointer">
+                   Launch Generator &rarr;
+                 </span>
+               </Link>
+             </div>
+             
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {aiFeatures.map((feature, index) => {
+                 const Icon = feature.icon
+                 return (
+                   <motion.div
+                     key={index}
+                     variants={itemVariants}
+                     className="glass-effect p-6 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 group"
+                   >
+                     <Icon className={`w-8 h-8 ${feature.color} mb-4 group-hover:scale-110 transition-transform`} />
+                     <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                     <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
+                   </motion.div>
+                 )
+               })}
+             </div>
+           </motion.div>
+
+           {/* Manual Tools */}
+           <motion.div
+             variants={containerVariants}
+             initial="hidden"
+             animate="visible"
+             className="space-y-6"
+           >
+             <div className="flex items-center justify-between mb-4 px-2">
+               <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                 <Music className="w-6 h-6 text-pink-400" />
+                 Manual Creation
+               </h2>
+               <Link href="/create-playlist">
+                 <span className="text-sm font-medium text-pink-400 hover:text-pink-300 transition-colors cursor-pointer">
+                   Open Creator &rarr;
+                 </span>
+               </Link>
+             </div>
+             
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {customFeatures.map((feature, index) => {
+                 const Icon = feature.icon
+                 return (
+                   <motion.div
+                     key={index}
+                     variants={itemVariants}
+                     className="glass-effect p-6 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 group"
+                   >
+                     <Icon className={`w-8 h-8 ${feature.color} mb-4 group-hover:scale-110 transition-transform`} />
+                     <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                     <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
+                   </motion.div>
+                 )
+               })}
+             </div>
+           </motion.div>
+        </div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center"
+        >
+          <div className="glass-effect rounded-3xl p-8 sm:p-12 border border-white/10 bg-black/40 backdrop-blur-xl max-w-4xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Start Curating</h2>
+            <p className="text-gray-400 mb-8 max-w-xl mx-auto">
+              Choose your path to the perfect playlist.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link href="/ai-playlist" className="w-full sm:w-auto">
+                <button className="w-full bg-white text-black hover:bg-gray-100 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  AI Generator
+                </button>
+              </Link>
+              <Link href="/create-playlist" className="w-full sm:w-auto">
+                <button className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 px-8 rounded-xl border border-white/10 transition-all duration-300 flex items-center justify-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Manual Creator
+                </button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   )
