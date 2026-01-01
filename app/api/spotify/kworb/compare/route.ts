@@ -10,8 +10,13 @@ function formatDateKey(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
 }
 
-function compareSnapshots(current: any, previous: any | null): ChangeData | null {
-  if (!previous) return null
+function compareSnapshots(
+  current: any,
+  previous: any | null
+): ChangeData | null {
+  if (!previous) {
+    return null
+  }
 
   const changes: ChangeData = {
     songsByArtist: {},
@@ -23,10 +28,12 @@ function compareSnapshots(current: any, previous: any | null): ChangeData | null
     monthlyListeners: {}
   }
 
+  // Compare songsByArtist totals
   if (Array.isArray(current.songsByArtist)) {
     current.songsByArtist.forEach((currentGroup: any) => {
       const artist = currentGroup.artist
       const prevGroup = previous.songsByArtist?.find((g: any) => g.artist === artist)
+
       if (prevGroup) {
         changes.songsByArtist[artist] = {
           streamsChange: (currentGroup.totals?.streams || 0) - (prevGroup.totals?.streams || 0),
@@ -37,32 +44,45 @@ function compareSnapshots(current: any, previous: any | null): ChangeData | null
     })
   }
 
+  // Compare artistsAllTime rankings
   if (Array.isArray(current.artistsAllTime)) {
     current.artistsAllTime.forEach((currentRank: any) => {
       const artist = currentRank.artist
       const prevRank = previous.artistsAllTime?.find((r: any) => r.artist === artist)
+
       if (prevRank) {
-        changes.artistsAllTime[artist] = { rankChange: prevRank.rank - currentRank.rank }
+        // Positive change = rank improved (lower number)
+        changes.artistsAllTime[artist] = {
+          rankChange: prevRank.rank - currentRank.rank
+        }
       }
     })
   }
 
+  // Compare monthlyListeners rankings
   if (Array.isArray(current.monthlyListeners)) {
     current.monthlyListeners.forEach((currentRank: any) => {
       const artist = currentRank.artist
       const prevRank = previous.monthlyListeners?.find((r: any) => r.artist === artist)
+
       if (prevRank) {
-        changes.monthlyListeners[artist] = { rankChange: prevRank.rank - currentRank.rank }
+        // Positive change = rank improved (lower number)
+        changes.monthlyListeners[artist] = {
+          rankChange: prevRank.rank - currentRank.rank
+        }
       }
     })
   }
 
+  // Compare daily200 streams and ranks
   if (Array.isArray(current.daily200)) {
     current.daily200.forEach((currentEntry: any) => {
+      // Create a unique key using rank + name or artist
       const key = `${currentEntry.rank}-${currentEntry.name || currentEntry.artist}`
       const prevEntry = previous.daily200?.find((r: any) =>
         r.name === currentEntry.name || r.artist === currentEntry.artist
       )
+
       if (prevEntry) {
         changes.daily200[key] = {
           rankChange: prevEntry.rank - currentEntry.rank,
@@ -75,59 +95,65 @@ function compareSnapshots(current: any, previous: any | null): ChangeData | null
   return changes
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const includeChanges = searchParams.get('includeChanges') === 'true'
-
     await connect()
-    const snapshot = await KworbSnapshot.findOne().sort({ dateKey: -1 }).lean() as any
 
-    if (!snapshot) {
-      return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
+    // Get current snapshot
+    const current = await KworbSnapshot.findOne()
+      .sort({ dateKey: -1 })
+      .lean() as any
+
+    if (!current) {
+      return NextResponse.json(
+        { ok: false, error: 'No snapshots found' },
+        { status: 404 }
+      )
     }
 
-    if (includeChanges) {
-      const currentDate = new Date(snapshot.dateKey as string)
+    const currentDate = new Date(current.dateKey as string)
 
-      const date24h = new Date(currentDate)
-      date24h.setDate(date24h.getDate() - 1)
-      const dateKey24h = formatDateKey(date24h)
+    // Calculate target dates
+    const date24h = new Date(currentDate)
+    date24h.setDate(date24h.getDate() - 1)
+    const dateKey24h = formatDateKey(date24h)
 
-      const date7d = new Date(currentDate)
-      date7d.setDate(date7d.getDate() - 7)
-      const dateKey7d = formatDateKey(date7d)
+    const date7d = new Date(currentDate)
+    date7d.setDate(date7d.getDate() - 7)
+    const dateKey7d = formatDateKey(date7d)
 
-      const [snapshot24h, snapshot7d] = await Promise.all([
-        KworbSnapshot.findOne({ dateKey: dateKey24h }).lean() as Promise<any>,
-        KworbSnapshot.findOne({ dateKey: dateKey7d }).lean() as Promise<any>
-      ])
+    // Fetch historical snapshots
+    const [snapshot24h, snapshot7d] = await Promise.all([
+      KworbSnapshot.findOne({ dateKey: dateKey24h }).lean() as Promise<any>,
+      KworbSnapshot.findOne({ dateKey: dateKey7d }).lean() as Promise<any>
+    ])
 
-      const changes24h = compareSnapshots(snapshot, snapshot24h)
-      const changes7d = compareSnapshots(snapshot, snapshot7d)
+    // Calculate changes
+    const changes24h = compareSnapshots(current, snapshot24h)
+    const changes7d = compareSnapshots(current, snapshot7d)
 
-      return NextResponse.json({
-        ok: true,
-        snapshot,
-        changes24h,
-        changes7d,
-        meta: {
-          currentDate: snapshot.dateKey,
-          date24h: snapshot24h?.dateKey || null,
-          date7d: snapshot7d?.dateKey || null
-        }
-      }, {
-        headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=86400' }
-      })
-    }
-
-    return NextResponse.json({ ok: true, snapshot }, {
-      headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=86400' }
+    return NextResponse.json({
+      ok: true,
+      current,
+      snapshot24h,
+      snapshot7d,
+      changes24h,
+      changes7d,
+      meta: {
+        currentDate: current.dateKey,
+        date24h: snapshot24h?.dateKey || null,
+        date7d: snapshot7d?.dateKey || null
+      }
+    }, {
+      headers: {
+        'Cache-Control': 's-maxage=3600, stale-while-revalidate=86400'
+      }
     })
   } catch (err: any) {
-    console.error('Kworb latest error:', err)
-    return NextResponse.json({ ok: false, error: String(err?.message || err) }, { status: 500 })
+    console.error('Kworb compare error:', err)
+    return NextResponse.json(
+      { ok: false, error: String(err?.message || err) },
+      { status: 500 }
+    )
   }
 }
-
-

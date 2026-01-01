@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { User, Calendar, Music, Heart, Play } from 'lucide-react'
+import { Calendar, Music, Crown, Clock, Trophy, Play } from 'lucide-react'
 
 interface UserData {
   name: string
@@ -33,31 +33,20 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num.toString()
+    return num.toLocaleString()
   }
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-black/40 backdrop-blur-lg rounded-3xl p-6 border border-purple-500/30"
-      >
-        <div className="animate-pulse">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-16 h-16 bg-gray-700 rounded-full"></div>
-            <div className="flex-1">
-              <div className="h-6 bg-gray-700 rounded mb-2"></div>
-              <div className="h-4 bg-gray-700 rounded w-2/3"></div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-700 h-20 rounded-lg"></div>
-            ))}
+      <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-8 border border-white/5 animate-pulse">
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 bg-gray-800 rounded-full"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-8 bg-gray-800 rounded w-48"></div>
+            <div className="h-4 bg-gray-800 rounded w-24"></div>
           </div>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
@@ -66,126 +55,112 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-black/40 backdrop-blur-lg rounded-3xl p-6 border border-purple-500/30"
+      className="bg-[#1A103C]/40 backdrop-blur-2xl rounded-3xl p-6 md:p-10 border border-white/5 relative overflow-hidden group"
     >
-      {/* User Info */}
-      <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-          className="relative"
-        >
-          <img
-            src={user.image || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'}
-            alt={user.name}
-            className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-purple-500/30"
-          />
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-          </div>
-        </motion.div>
+      {/* Background Gradient Blob */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl group-hover:bg-purple-600/30 transition-colors duration-700 pointer-events-none" />
 
-        <div className="flex-1">
-          <motion.h2
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-2xl md:text-3xl font-bold text-white mb-2"
-          >
-            {user.name}
-          </motion.h2>
-          {user.realname && (
-            <p className="text-gray-400 text-sm mb-2">{user.realname}</p>
-          )}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex flex-wrap items-center gap-3 text-gray-300 text-sm"
-          >
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-4 h-4" />
-              <span>Member for {overview.accountAge}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Music className="w-4 h-4" />
-              <span>{formatNumber(user.playcount)} scrobbles</span>
-            </div>
-          </motion.div>
+      <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 relative z-10">
+        
+        {/* Profile Info */}
+        <div className="flex flex-col items-center text-center lg:items-start lg:text-left shrink-0">
+          <div className="relative mb-4">
+             <motion.div
+               initial={{ scale: 0 }}
+               animate={{ scale: 1 }}
+               transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+               className="p-1 rounded-full bg-gradient-to-br from-purple-500 to-pink-500"
+             >
+                <img
+                  src={user.image || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'}
+                  alt={user.name}
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-[#0F0720]"
+                />
+             </motion.div>
+             <div className="absolute -bottom-2 -right-2 bg-[#0F0720] rounded-full p-1.5 border border-white/10">
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-[10px] font-bold text-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                  <span className="font-display">LVL 42</span>
+                </div>
+             </div>
+          </div>
+          
+          <h2 className="text-3xl font-bold text-white mb-1">{user.name}</h2>
+          <div className="flex items-center gap-2 text-purple-300 text-sm font-medium bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
+            <Crown className="w-3 h-3" />
+            <span>Pro Member</span>
+          </div>
+          <p className="text-gray-400 text-sm mt-3 flex items-center gap-2">
+             <Calendar className="w-3 h-3" />
+             Joined {new Date(user.registered).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+          </p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+           <StatCard 
+             icon={Music} 
+             label="Total Scrobbles" 
+             value={formatNumber(user.playcount)} 
+             color="purple" 
+             delay={0.2}
+           />
+           <StatCard 
+             icon={Trophy} 
+             label="Top Artist" 
+             value="BTS" 
+             subValue={`${overview.btsPercentage}%`} 
+             color="pink" 
+             delay={0.3}
+           />
+           <StatCard 
+             icon={Clock} 
+             label="Minutes Streamed" 
+             value={formatNumber(Math.round(overview.totalListeningTime * 60))} 
+             color="blue" 
+             delay={0.4}
+           />
+           <StatCard 
+             icon={Play} 
+             label="Total Tracks" 
+             value={formatNumber(overview.totalTracks)} 
+             color="green" 
+             delay={0.5}
+           />
         </div>
       </div>
+    </motion.div>
+  )
+}
 
-      {/* Stats Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
-      >
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <Music className="w-5 h-5 text-purple-400" />
-            <span className="text-xs text-purple-300">Tracks</span>
-          </div>
-          <p className="text-xl font-bold text-white">{formatNumber(overview.totalTracks)}</p>
-        </motion.div>
+function StatCard({ icon: Icon, label, value, subValue, color, delay }: { icon: any, label: string, value: string, subValue?: string, color: 'purple' | 'pink' | 'blue' | 'green', delay: number }) {
+  const colors = {
+    purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+    pink: 'bg-pink-500/10 border-pink-500/20 text-pink-400',
+    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+    green: 'bg-green-500/10 border-green-500/20 text-green-400',
+  }
 
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-gradient-to-br from-pink-500/20 to-pink-600/20 backdrop-blur-sm rounded-2xl p-4 border border-pink-500/30"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <User className="w-5 h-5 text-pink-400" />
-            <span className="text-xs text-pink-300">Artists</span>
-          </div>
-          <p className="text-xl font-bold text-white">{formatNumber(overview.totalArtists)}</p>
-        </motion.div>
+  const iconColors = {
+    purple: 'text-purple-400',
+    pink: 'text-pink-400',
+    blue: 'text-blue-400',
+    green: 'text-green-400',
+  }
 
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-gradient-to-br from-green-500/20 to-green-600/20 backdrop-blur-sm rounded-2xl p-4 border border-green-500/30"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <Play className="w-5 h-5 text-green-400" />
-            <span className="text-xs text-green-300">Hours</span>
-          </div>
-          <p className="text-xl font-bold text-white">{formatNumber(overview.totalListeningTime)}h</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-gradient-to-br from-red-500/20 to-red-600/20 backdrop-blur-sm rounded-2xl p-4 border border-red-500/30"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <Heart className="w-5 h-5 text-red-400" />
-            <span className="text-xs text-red-300">BTS Plays</span>
-          </div>
-          <p className="text-xl font-bold text-white">{formatNumber(overview.btsPlays)}</p>
-          <p className="text-xs text-red-300">{overview.btsPercentage}% of total</p>
-        </motion.div>
-      </motion.div>
-
-      {/* BTS Listening Info */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="mt-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-4 border border-purple-500/20"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-300">BTS Dedication</p>
-            <p className="text-lg font-bold text-white">{overview.btsPercentage}% of all listening</p>
-          </div>
-          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-            <Heart className="w-6 h-6 text-white" />
-          </div>
-        </div>
-      </motion.div>
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      whileHover={{ y: -5 }}
+      className={`flex flex-col items-center justify-center p-6 rounded-2xl border ${colors[color]} backdrop-blur-md hover:bg-opacity-20 transition-all`}
+    >
+      <Icon className={`w-6 h-6 mb-3 ${iconColors[color]}`} />
+      <span className="text-2xl md:text-3xl font-bold text-white mb-1">{value}</span>
+      <span className="text-xs text-gray-400 uppercase tracking-wider">{label}</span>
+      {subValue && (
+        <span className={`text-xs font-bold mt-1 ${iconColors[color]}`}>{subValue}</span>
+      )}
     </motion.div>
   )
 }

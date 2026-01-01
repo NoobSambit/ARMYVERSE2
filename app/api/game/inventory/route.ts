@@ -55,7 +55,11 @@ export async function GET(request: NextRequest) {
     const count = await InventoryItem.countDocuments({ userId: user.uid })
     const nextCursor = skip + limit < count ? String(skip + limit) : undefined
 
-    return NextResponse.json({ items: mapped, ...(nextCursor ? { nextCursor } : {}) })
+    return NextResponse.json({ 
+      items: mapped, 
+      total: count,
+      ...(nextCursor ? { nextCursor } : {}) 
+    })
   } catch (error) {
     console.error('Inventory error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

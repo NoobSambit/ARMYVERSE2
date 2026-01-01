@@ -61,7 +61,7 @@ export default function GameHub() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-fuchsia-400 to-rose-400 bg-clip-text text-transparent mb-2">
-          Welcome back to Boraverse
+          Welcome back to Boraland
         </h1>
         <p className="text-white/70">Ready for your next quiz? Let&apos;s collect some photocards!</p>
       </div>
@@ -99,7 +99,7 @@ export default function GameHub() {
 
       {/* Main Actions */}
       <div className="text-center mb-8">
-        <Link href="/boraverse/play" className="inline-block px-8 py-4 rounded-2xl bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] text-black font-semibold text-lg shadow-[0_10px_30px_rgba(129,0,255,0.15)] hover:translate-y-0.5 transition-all duration-200 mb-6">
+        <Link href="/boraland/play" className="inline-block px-8 py-4 rounded-2xl bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] text-black font-semibold text-lg shadow-[0_10px_30px_rgba(129,0,255,0.15)] hover:translate-y-0.5 transition-all duration-200 mb-6">
           Start Quiz
         </Link>
 
@@ -110,28 +110,28 @@ export default function GameHub() {
 
       {/* Navigation Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Link href="/boraverse/inventory" className="group">
+        <Link href="/boraland/inventory" className="group">
           <div className="rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-4 text-center hover:bg-white/10 transition-colors">
             <div className="text-2xl mb-2">🖼️</div>
             <div className="font-semibold text-white">Inventory</div>
             <div className="text-xs text-white/60">View collection</div>
           </div>
         </Link>
-        <Link href="/boraverse/leaderboard" className="group">
+        <Link href="/boraland/leaderboard" className="group">
           <div className="rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-4 text-center hover:bg-white/10 transition-colors">
             <div className="text-2xl mb-2">🏆</div>
             <div className="font-semibold text-white">Leaderboard</div>
             <div className="text-xs text-white/60">See rankings</div>
           </div>
         </Link>
-        <Link href="/boraverse/mastery" className="group">
+        <Link href="/boraland/mastery" className="group">
           <div className="rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-4 text-center hover:bg-white/10 transition-colors">
             <div className="text-2xl mb-2">⭐</div>
             <div className="font-semibold text-white">Mastery</div>
             <div className="text-xs text-white/60">Track progress</div>
           </div>
         </Link>
-        <Link href="/boraverse/quests" className="group">
+        <Link href="/boraland/quests" className="group">
           <div className="rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-4 text-center hover:bg-white/10 transition-colors">
             <div className="text-2xl mb-2">📋</div>
             <div className="font-semibold text-white">Quests</div>

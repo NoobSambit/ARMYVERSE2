@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
-import QuestsView from '@/components/boraverse/QuestsView'
+import CraftView from '@/components/boraland/CraftView'
 
 export default function Page() {
   const { user } = useAuth()
@@ -14,7 +14,7 @@ export default function Page() {
   useEffect(() => {
     if (user === null) {
       showToast('warning', 'Sign in to save rewards and access your collection')
-      router.push('/boraverse')
+      router.push('/boraland')
     }
   }, [user, router, showToast])
 
@@ -30,7 +30,7 @@ export default function Page() {
     return null
   }
 
-  return <QuestsView />
+  return <CraftView />
 }
 
 

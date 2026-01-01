@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
-import LeaderboardList from '@/components/boraverse/LeaderboardList'
+import LeaderboardList from '@/components/boraland/LeaderboardList'
 
 export default function Page() {
   const { user } = useAuth()
@@ -14,7 +14,7 @@ export default function Page() {
   useEffect(() => {
     if (user === null) {
       showToast('warning', 'Sign in to save rewards and access your collection')
-      router.push('/boraverse')
+      router.push('/boraland')
     }
   }, [user, router, showToast])
 

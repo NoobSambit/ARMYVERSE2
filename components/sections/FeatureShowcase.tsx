@@ -36,9 +36,9 @@ export default function FeatureShowcase() {
     },
     {
       icon: Gamepad2,
-      title: 'Boraverse (Games)',
+      title: 'Boraland (Games)',
       description: 'Quizzes, mastery, and weekly leaderboards.',
-      href: '/boraverse',
+      href: '/boraland',
       delay: 240,
       accentColor: '#312e81'
     },

@@ -171,10 +171,10 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
             </>
           ) : (
             <>
-              <Link href="/boraverse/inventory" className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] text-black font-semibold">
+              <Link href="/boraland/inventory" className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] text-black font-semibold">
                 View in Inventory
               </Link>
-              <Link href="/boraverse/play" className="px-4 py-2 rounded-xl border border-[#3b1a52]/60 text-white/90">
+              <Link href="/boraland/play" className="px-4 py-2 rounded-xl border border-[#3b1a52]/60 text-white/90">
                 Play Again
               </Link>
               <button onClick={doShare} disabled={sharing} className="px-4 py-2 rounded-xl border border-[#3b1a52]/60 text-white/90">

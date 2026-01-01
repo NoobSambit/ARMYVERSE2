@@ -83,11 +83,11 @@ export default function HeroV2() {
           {/* LEFT COLUMN: Logo + Title + CTAs */}
           <div className="flex flex-col items-center text-center relative lg:mt-24">
             {/* Logo */}
-            <div 
+            <div
               className="relative w-full max-w-[280px] sm:max-w-[380px] lg:max-w-lg aspect-square -mb-20 lg:absolute lg:top-0 lg:left-1/2 lg:transform lg:-translate-x-1/2 lg:-translate-y-56 lg:w-[529px] lg:max-w-none"
             >
               <Image
-                src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png"
+                src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1767245893/armyverse_logo_1_woqztj.png"
                 alt="ARMYVERSE logo"
                 fill
                 priority
@@ -134,9 +134,9 @@ export default function HeroV2() {
 
               {/* Secondary CTAs - Ghost buttons */}
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 justify-center w-full sm:w-auto text-xs">
-                <a href="/boraverse" className="btn-glass-ghost text-sm px-3 h-9">
+                <a href="/boraland" className="btn-glass-ghost text-sm px-3 h-9">
                   <Gamepad2 className="w-4 h-4" />
-                  <span>Play Boraverse</span>
+                  <span>Play Boraland</span>
                 </a>
                 <a href="/stats" className="btn-glass-ghost text-sm px-3 h-9">
                   <BarChart3 className="w-4 h-4" />

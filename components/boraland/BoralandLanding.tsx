@@ -55,7 +55,7 @@ const rarityConfig = {
   }
 }
 
-export default function BoraverseLanding() {
+export default function BoralandLanding() {
   const [demoMode, setDemoMode] = useState(false)
   const [photocards, setPhotocards] = useState<PhotocardPreview[]>([])
   const [loading, setLoading] = useState(true)
@@ -129,7 +129,7 @@ export default function BoraverseLanding() {
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="text-xl font-bold bg-gradient-to-r from-fuchsia-400 via-purple-400 to-rose-400 bg-clip-text text-transparent">
-                Boraverse Demo
+                Boraland Demo
               </div>
               <button
                 onClick={() => setDemoMode(false)}
@@ -167,7 +167,7 @@ export default function BoraverseLanding() {
             
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 relative">
               <span className="bg-gradient-to-r from-fuchsia-400 via-purple-400 to-rose-400 bg-clip-text text-transparent animate-fade-up">
-                Boraverse
+                Boraland
               </span>
             </h1>
             
@@ -266,7 +266,7 @@ export default function BoraverseLanding() {
               How It Works
             </h2>
             <p className="text-lg text-white/70 max-w-2xl mx-auto">
-              Six powerful ways to engage, collect, and compete in the Boraverse
+              Six powerful ways to engage, collect, and compete in Boraland
             </p>
           </div>
           

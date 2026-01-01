@@ -21,7 +21,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-[#0F0720]">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -33,7 +33,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mb-4"
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mb-4 shadow-lg shadow-purple-900/40"
           >
             <Music className="w-8 h-8 text-white" />
           </motion.div>
@@ -50,9 +50,13 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20"
+          className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-white/10 relative overflow-hidden"
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Decorative gradients */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             {/* Provider Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-3">
@@ -66,8 +70,8 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
                   onClick={() => setProvider('lastfm')}
                   className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
                     provider === 'lastfm'
-                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                      : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/20'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
                   }`}
                 >
                   Last.fm
@@ -79,8 +83,8 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
                   onClick={() => setProvider('statsfm')}
                   className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
                     provider === 'statsfm'
-                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                      : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/20'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
                   }`}
                 >
                   Stats.fm
@@ -103,7 +107,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder={provider === 'lastfm' ? 'e.g., armyforever' : 'e.g., bts_fan_123'}
-                  className="block w-full pl-10 pr-3 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                  className="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-colors"
                   required
                 />
               </div>
@@ -131,7 +135,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
               type="submit"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-lg shadow-purple-900/30"
             >
               View Stats
               <ArrowRight className="w-5 h-5" />
@@ -139,7 +143,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
           </form>
 
           {/* Info Section */}
-          <div className="mt-6 pt-6 border-t border-gray-800">
+          <div className="mt-6 pt-6 border-t border-white/10 relative z-10">
             <h3 className="text-sm font-medium text-gray-300 mb-3">About This Dashboard</h3>
             <ul className="space-y-2 text-xs text-gray-400">
               <li className="flex items-start gap-2">
@@ -162,7 +166,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
           </div>
 
           {/* Example Usernames */}
-          <div className="mt-4 p-3 bg-purple-500/5 rounded-lg">
+          <div className="mt-4 p-3 bg-purple-500/5 rounded-lg border border-purple-500/10 relative z-10">
             <p className="text-xs text-gray-500">
               Don&apos;t have an account? Create one at{' '}
               <a

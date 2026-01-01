@@ -14,6 +14,8 @@ export type RankRow = {
   name?: string
   streams?: number
   listeners?: number
+  daily?: number // Daily gain for artistsAllTime
+  dailyChange?: number // Daily +/- for monthlyListeners
   url?: string
 }
 

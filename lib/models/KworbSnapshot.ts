@@ -8,7 +8,8 @@ const KworbSnapshotSchema = new Schema({
   albums: [{}],
   daily200: [{}],
   artistsAllTime: [{}],
-  monthlyListeners: [{}]
+  monthlyListeners: [{}],
+  artistMetadata: [{}]
 }, { timestamps: true })
 
 export default mongoose.models.KworbSnapshot || mongoose.model('KworbSnapshot', KworbSnapshotSchema)

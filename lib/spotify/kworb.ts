@@ -237,7 +237,20 @@ export async function fetchBtsAlbums() {
   return groups
 }
 
-const MEMBERS = ['BTS','Jimin','Jungkook','V','RM','Suga','J-Hope','Jin']
+const MEMBERS = ['BTS','Jimin','Jungkook','RM','Suga','J-Hope','Jin','Agust D']
+const V_EXACT = 'V' // Special handling for V to avoid false matches
+
+// Helper to check if artist is a BTS member
+const isBTSMember = (artistName: string): boolean => {
+  if (!artistName) return false
+  const name = artistName.trim()
+
+  // Exact match for V (avoid matching "Dei V", "L.V.", etc.)
+  if (name === V_EXACT) return true
+
+  // Check other members with word boundaries
+  return MEMBERS.some(m => new RegExp(`\\b${m}\\b`, 'i').test(name))
+}
 
 export async function fetchDaily200Positions() {
   const html = await fetchHTML('https://kworb.net/spotify/country/global_daily.html')
@@ -245,13 +258,26 @@ export async function fetchDaily200Positions() {
   const rows: any[] = []
   $('table tr').each((_, tr) => {
     const t = $(tr).find('td')
-    if (t.length < 5) return
+    if (t.length < 6) return
     const rank = num($(t[0]).text())
-    const name = $(t[1]).text().trim()
-    const artist = $(t[2]).text().trim()
+    // Column 2 contains "Artist and Title" combined, need to parse it
+    const artistAndTitle = $(t[2]).text().trim()
+    const streams = num($(t[5]).text())
     if (!rank) return
-    if (MEMBERS.some(m => new RegExp(`\\b${m}\\b`, 'i').test(artist) || new RegExp(`\\b${m}\\b`, 'i').test(name))) {
-      rows.push({ rank, artist, name })
+    // Try to extract artist and track name from the combined column
+    // Format is usually "Artist - Track" but can vary
+    let artist = ''
+    let name = ''
+    if (artistAndTitle.includes(' - ')) {
+      const parts = artistAndTitle.split(' - ')
+      name = parts[0].trim()
+      artist = parts.slice(1).join(' - ').trim()
+    } else {
+      name = artistAndTitle
+      artist = artistAndTitle
+    }
+    if (isBTSMember(artist) || isBTSMember(name) || isBTSMember(artistAndTitle)) {
+      rows.push({ rank, artist, name, streams })
     }
   })
   return rows
@@ -261,14 +287,19 @@ export async function fetchMostStreamedArtists() {
   const html = await fetchHTML('https://kworb.net/spotify/artists.html')
   const $ = cheerio.load(html)
   const rows: any[] = []
+  let currentRank = 0
   $('table tr').each((_, tr) => {
     const t = $(tr).find('td')
-    if (t.length < 4) return
-    const rank = num($(t[0]).text())
-    const artist = $(t[1]).text().trim()
-    const url = $(t[1]).find('a').attr('href') ? 'https://kworb.net/spotify/' + $(t[1]).find('a').attr('href') : undefined
-    const streams = num($(t[2]).text())
-    if (rank && artist) rows.push({ rank, artist, streams, url })
+    if (t.length < 3) return
+    currentRank++
+    const artist = $(t[0]).text().trim()
+    const url = $(t[0]).find('a').attr('href') ? 'https://kworb.net/spotify/' + $(t[0]).find('a').attr('href') : undefined
+    const streams = num($(t[1]).text())
+    const daily = num($(t[2]).text())
+    // Only include BTS and members
+    if (artist && isBTSMember(artist)) {
+      rows.push({ rank: currentRank, artist, streams, daily, url })
+    }
   })
   return rows
 }
@@ -284,7 +315,11 @@ export async function fetchMonthlyListeners() {
     const artist = $(t[1]).text().trim()
     const url = $(t[1]).find('a').attr('href') ? 'https://kworb.net/spotify/' + $(t[1]).find('a').attr('href') : undefined
     const listeners = num($(t[2]).text())
-    if (rank && artist) rows.push({ rank, artist, listeners, url })
+    const dailyChange = num($(t[3]).text()) // Daily +/- column
+    // Only include BTS and members
+    if (rank && artist && isBTSMember(artist)) {
+      rows.push({ rank, artist, listeners, dailyChange, url })
+    }
   })
   return rows
 }

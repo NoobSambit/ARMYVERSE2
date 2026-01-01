@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import KworbSnapshot from '@/lib/models/KworbSnapshot'
 import { fetchBtsSongs, fetchBtsAlbums, fetchDaily200Positions, fetchMostStreamedArtists, fetchMonthlyListeners } from '@/lib/spotify/kworb'
+import { fetchArtistMetadata } from '@/lib/spotify/fetchArtistMetadata'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -15,12 +16,38 @@ async function runJob() {
   const d = new Date()
   const dateKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`
 
+  // Extract all unique artist names for metadata fetching
+  const artistNames = new Set<string>()
+  if (Array.isArray(songsByArtist)) {
+    songsByArtist.forEach((g: any) => {
+      if (g.artist) artistNames.add(g.artist)
+    })
+  }
+  if (Array.isArray(albumsByArtist)) {
+    albumsByArtist.forEach((g: any) => {
+      if (g.artist) artistNames.add(g.artist)
+    })
+  }
+
+  // Fetch artist metadata from Spotify API
+  let artistMetadata = {}
+  if (artistNames.size > 0) {
+    try {
+      artistMetadata = await fetchArtistMetadata(Array.from(artistNames))
+      console.log(`Fetched metadata for ${Object.keys(artistMetadata).length} artists`)
+    } catch (err) {
+      console.error('Failed to fetch artist metadata:', err)
+      // Continue with update even if metadata fetch fails
+    }
+  }
+
   const update: any = { dateKey }
   if (Array.isArray(songsByArtist) && songsByArtist.length) update.songsByArtist = songsByArtist
   if (Array.isArray(albumsByArtist) && albumsByArtist.length) update.albumsByArtist = albumsByArtist
   if (Array.isArray(daily200) && daily200.length) update.daily200 = daily200
   if (Array.isArray(artistsAllTime) && artistsAllTime.length) update.artistsAllTime = artistsAllTime
   if (Array.isArray(monthlyListeners) && monthlyListeners.length) update.monthlyListeners = monthlyListeners
+  if (Object.keys(artistMetadata).length > 0) update.artistMetadata = artistMetadata
 
   await KworbSnapshot.findOneAndUpdate(
     { dateKey },

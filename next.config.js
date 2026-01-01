@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    // Only ignore type errors if you want to bypass type checking during builds
+    ignoreBuildErrors: false,
+  },
   images: {
     remotePatterns: [
       {

@@ -2,12 +2,30 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { User, ExternalLink } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { ExternalLink, BarChart2, List } from 'lucide-react'
 
 interface TopArtistsProps {
   artists: any[]
   loading?: boolean
+}
+
+// Helper to extract image URL from Last.fm array or string
+const getImageUrl = (image: any, fallback: string = ''): string => {
+  if (!image) return fallback
+  if (typeof image === 'string') return image
+  if (Array.isArray(image)) {
+    // Try to get extralarge, then large, then medium
+    const sizes = ['extralarge', 'large', 'medium', 'small']
+    for (const size of sizes) {
+      const img = image.find((i: any) => i.size === size)
+      if (img && img['#text']) return img['#text']
+    }
+    // Fallback to last item (usually largest) or first
+    const last = image[image.length - 1]
+    if (last && last['#text']) return last['#text']
+  }
+  return fallback
 }
 
 export default function TopArtists({ artists, loading = false }: TopArtistsProps) {
@@ -16,38 +34,19 @@ export default function TopArtists({ artists, loading = false }: TopArtistsProps
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num.toString()
+    return num.toLocaleString()
   }
 
   const chartData = artists.slice(0, 8).map((artist, index) => ({
     name: artist.name,
     playcount: artist.playcount ? parseInt(artist.playcount) : 0,
     rank: artist.rank || (index + 1),
-    color: `hsl(${index * 45}, 70%, 60%)`
-  }))
-
-  const pieData = artists.slice(0, 5).map((artist, index) => ({
-    name: artist.name,
-    value: artist.playcount ? parseInt(artist.playcount) : 0,
-    color: `hsl(${index * 72}, 70%, 60%)`
   }))
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-black/40 backdrop-blur-lg rounded-3xl p-6 border border-purple-500/30"
-      >
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-700 rounded mb-6 w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-gray-700 h-32 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
+      <div className="bg-black/20 backdrop-blur-xl rounded-3xl p-6 border border-white/5 animate-pulse min-h-[400px]">
+      </div>
     )
   }
 
@@ -56,50 +55,40 @@ export default function TopArtists({ artists, loading = false }: TopArtistsProps
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-black/40 backdrop-blur-lg rounded-3xl p-6 border border-purple-500/30"
+      className="bg-black/20 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-white/5"
     >
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-6 space-y-3 md:space-y-0">
-        <motion.h3
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="text-xl font-bold text-white flex items-center space-x-2"
-        >
-          <User className="w-5 h-5 text-purple-400" />
-          <span>Top Artists</span>
-        </motion.h3>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div className="flex items-center gap-3">
+           <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2 rounded-xl border border-white/5">
+              <BarChart2 className="w-6 h-6 text-purple-400" />
+           </div>
+           <div>
+             <h3 className="text-xl font-bold text-white">Top Artists</h3>
+             <p className="text-xs text-gray-400">Your most played artists</p>
+           </div>
+        </div>
 
-        <div className="flex items-center space-x-4">
-          {/* View Mode Toggle */}
-          <div className="flex bg-gray-800/50 rounded-lg p-1">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-purple-500 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              List
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setViewMode('chart')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'chart'
-                  ? 'bg-purple-500 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Chart
-            </motion.button>
-          </div>
-
-          {/* View More Button for list mode */}
-          {/* No show more/less. The list below is scrollable. */}
+        {/* View Mode Toggle */}
+        <div className="flex bg-black/40 rounded-xl p-1 border border-white/5 self-start md:self-auto">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-all duration-300 ${
+              viewMode === 'list' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'
+            }`}
+            title="List View"
+          >
+            <List className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('chart')}
+            className={`p-2 rounded-lg transition-all duration-300 ${
+              viewMode === 'chart' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'
+            }`}
+            title="Chart View"
+          >
+            <BarChart2 className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -108,169 +97,98 @@ export default function TopArtists({ artists, loading = false }: TopArtistsProps
         {viewMode === 'list' ? (
           <motion.div
             key="list"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-3"
+            exit={{ opacity: 0, y: -10 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-3"
           >
-            {/* Entire list scrolls inside fixed-height area */}
-            <div className="max-h-80 sm:max-h-96 overflow-y-auto pr-1 space-y-3">
-            {artists.map((artist, index) => {
-              const imageUrl = artist.image || artist.images?.[0]?.url || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=60&h=60'
+            {artists.slice(0, 10).map((artist, index) => {
+              // Extract image using helper
+              const imageUrl = getImageUrl(artist.image, 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=60&h=60')
+              
               const playcount = artist.playcount ? parseInt(artist.playcount) : 0
               const rank = artist.rank || (index + 1)
 
               return (
                 <motion.div
                   key={artist.url || artist.id || artist.name}
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  whileHover={{ scale: 1.02 }}
-                  className="group flex items-center space-x-3 sm:space-x-4 p-2 sm:p-3 rounded-xl hover:bg-white/5 transition-all duration-300"
+                  className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/5 transition-all duration-300"
                 >
-                  {/* Rank */}
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {rank}
-                    </div>
+                  <div className="flex-shrink-0 w-8 text-center font-bold text-gray-500 group-hover:text-purple-400 transition-colors">
+                    #{rank}
                   </div>
 
-                  {/* Artist Image */}
                   <div className="relative">
                     <img
                       src={imageUrl}
                       alt={artist.name}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-white/5 group-hover:border-purple-500/50 transition-colors"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=60&h=60'
+                      }}
                     />
-                    <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ExternalLink className="w-4 h-4 text-white" />
-                    </div>
                   </div>
 
-                  {/* Artist Info */}
                   <div className="flex-1 min-w-0">
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.05 + 0.1 }}
-                      className="text-white font-medium truncate text-sm sm:text-base"
-                    >
-                      {artist.name}
-                    </motion.p>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.05 + 0.15 }}
-                      className="text-gray-400 text-xs sm:text-sm truncate"
-                    >
-                      {formatNumber(playcount)} plays
-                    </motion.p>
+                    <p className="text-white font-medium truncate">{artist.name}</p>
+                    <p className="text-purple-400 text-xs font-bold">{formatNumber(playcount)} <span className="text-gray-500 font-normal">plays</span></p>
                   </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center space-x-3 sm:space-x-4 text-xs sm:text-sm">
-                    <div className="text-center">
-                      <p className="text-purple-400 font-medium">{formatNumber(playcount)}</p>
-                      <p className="text-gray-500 text-xs">Scrobbles</p>
-                    </div>
-                  </div>
-
-                  {/* Action */}
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                  <button
                     onClick={() => window.open(artist.url || artist.external_urls?.lastfm, '_blank')}
-                    className="text-purple-400 hover:text-purple-300 transition-colors"
+                    className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-white transition-opacity p-2"
                   >
                     <ExternalLink className="w-4 h-4" />
-                  </motion.button>
+                  </button>
                 </motion.div>
               )
             })}
-            </div>
           </motion.div>
         ) : (
           <motion.div
             key="chart"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-8"
           >
-            {/* Bar Chart */}
-            <div className="h-64">
+            <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <BarChart data={chartData} margin={{ bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                   <XAxis
                     dataKey="name"
                     stroke="#9CA3AF"
-                    fontSize={12}
+                    fontSize={11}
                     angle={-45}
                     textAnchor="end"
-                    height={80}
+                    interval={0}
                   />
-                  <YAxis stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" fontSize={11} tickFormatter={formatNumber} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #6B7280',
-                      borderRadius: '8px',
+                      backgroundColor: '#0F0720',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px',
                       color: '#F9FAFB'
                     }}
+                    cursor={{ fill: 'rgba(139, 92, 246, 0.1)' }}
                   />
-                  <Bar dataKey="playcount" fill="#8B5CF6" radius={[4, 4, 0, 0]} name="Scrobbles" />
+                  <Bar 
+                    dataKey="playcount" 
+                    fill="#8B5CF6" 
+                    radius={[4, 4, 0, 0]} 
+                    name="Scrobbles"
+                  />
                 </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Pie Chart */}
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${formatNumber(value)}`}
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1F2937',
-                      border: '1px solid #6B7280',
-                      borderRadius: '8px',
-                      color: '#F9FAFB'
-                    }}
-                  />
-                </PieChart>
               </ResponsiveContainer>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Hide legacy inline expand button; handled by header View More */}
-
-      {/* Empty State */}
-      {artists.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-8"
-        >
-          <User className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-          <p className="text-gray-400">No top artists found</p>
-          <p className="text-gray-500 text-sm">Start listening to see your top artists</p>
-        </motion.div>
-      )}
     </motion.div>
   )
 }

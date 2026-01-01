@@ -72,8 +72,6 @@ export default function Navbar() {
 
   const isActive = (path: string) => pathname === path
 
-  
-
   return (
     <nav className={`sticky top-0 z-50 backdrop-blur-md bg-gradient-to-b from-[#1a082a]/90 to-[#0b0310]/80 border-b border-[#3b1a52]/60`} aria-label="Primary Navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -81,7 +79,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="relative w-[2.4rem] h-[2.4rem] lg:w-12 lg:h-12 rounded">
-              <Image src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png" alt="ARMYVERSE" fill sizes="(max-width:1024px) 40px, 48px" className="object-contain rounded" />
+              <Image src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1767245893/armyverse_logo_1_woqztj.png" alt="ARMYVERSE" fill sizes="(max-width:1024px) 40px, 48px" className="object-contain rounded" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] bg-clip-text text-transparent select-none">
               ARMYVERSE

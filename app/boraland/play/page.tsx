@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
-import QuizScreen from '@/components/boraverse/QuizScreen'
+import QuizScreen from '@/components/boraland/QuizScreen'
 
 export default function Page() {
   const { user } = useAuth()
@@ -15,7 +15,7 @@ export default function Page() {
     if (user === null) {
       // User is not authenticated
       showToast('warning', 'Sign in to save rewards and access your collection')
-      router.push('/boraverse')
+      router.push('/boraland')
     }
   }, [user, router, showToast])
 

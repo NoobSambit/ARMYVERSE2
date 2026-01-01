@@ -1,156 +1,211 @@
-import React from 'react'
+'use client'
 
-async function getData() {
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/spotify/kworb/latest`
-  const res = await fetch(url || '/api/spotify/kworb/latest', { cache: 'no-store' })
-  if (!res.ok) return null
-  return res.json()
-}
+import React, { useState, useEffect } from 'react'
+import { Music, Disc3, TrendingUp, Users } from 'lucide-react'
+import SpotifyAnalyticsHeader from '@/components/spotify/SpotifyAnalyticsHeader'
+import StatCard from '@/components/spotify/StatCard'
+import ArtistSongCard from '@/components/spotify/ArtistSongCard'
+import RankingTable from '@/components/spotify/RankingTable'
+import { SnapshotComparison } from '@/lib/spotify/kworbSnapshotTypes'
 
-export default async function SpotifyAnalyticsPage() {
-  const data = await getData()
-  const snap = data?.snapshot
-  if (!snap) return <div className="text-white">No data yet. Check back after the daily update.</div>
+export default function SpotifyAnalyticsPage() {
+  const [data, setData] = useState<SnapshotComparison | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [expandedArtists, setExpandedArtists] = useState<Set<string>>(new Set())
 
-  const fmt = (n?: number) => (typeof n === 'number' ? n.toLocaleString() : '-')
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/spotify/kworb/latest?includeChanges=true', {
+        cache: 'no-store'
+      })
+      const json = await res.json()
 
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Spotify Analytics (Kworb)</h1>
-        <div className="text-sm text-white/70">Last update: {snap.dateKey} • Source: <a className="underline" href="https://kworb.net/spotify/">kworb.net</a></div>
+      if (json.ok) {
+        setData(json)
+        // Auto-expand first artist if data exists
+        if (json.snapshot?.songsByArtist?.length > 0) {
+          setExpandedArtists(new Set([json.snapshot.songsByArtist[0].artist]))
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch data:', err)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    fetchData()
+  }
+
+  const handleExport = () => {
+    // Mock export functionality
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `spotify-analytics-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const toggleArtist = (artist: string) => {
+    setExpandedArtists(prev => {
+      const next = new Set(prev)
+      if (next.has(artist)) {
+        next.delete(artist)
+      } else {
+        next.add(artist)
+      }
+      return next
+    })
+  }
+
+  if (loading || !data) {
+    return (
+      <div className="p-6 md:p-8">
+        <SpotifyAnalyticsHeader />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map(i => (
+            <StatCard key={i} title="" value={0} loading />
+          ))}
+        </div>
+        <div className="text-white/50 text-center mt-20">Loading analytics...</div>
       </div>
+    )
+  }
 
-      {/* Overview */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card title="Total Songs" value={snap.songs?.length || 0} />
-        <Card title="Total Albums" value={snap.albums?.length || 0} />
-        <Card title="Daily 200 Entries" value={snap.daily200?.length || 0} />
-        <Card title="Artists List Count" value={snap.artistsAllTime?.length || 0} />
+  const snap = data.snapshot
+  const changes24h = data.changes24h
+  const changes7d = data.changes7d
+
+  // Get artist metadata
+  const artistMetadata = (snap.artistMetadata as any) || {}
+
+  return (
+    <div className="p-6 md:p-10 space-y-10">
+      {/* Header */}
+      <SpotifyAnalyticsHeader
+        lastUpdated={snap.dateKey}
+        onRefresh={handleRefresh}
+        onExport={handleExport}
+        refreshing={refreshing}
+      />
+
+      {/* Top Statistics Cards */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Songs"
+          value={snap.songs?.length || 0}
+          change24h={changes24h?.totalSongs}
+          change7d={changes7d?.totalSongs}
+          variant="purple"
+        />
+        <StatCard
+          title="Total Albums"
+          value={snap.albums?.length || 0}
+          change24h={changes24h?.totalAlbums}
+          change7d={changes7d?.totalAlbums}
+          variant="blue"
+        />
+        <StatCard
+          title="Daily 200 Entries"
+          value={snap.daily200?.length || 0}
+          change24h={changes24h?.daily200Entries}
+          change7d={changes7d?.daily200Entries}
+          variant="pink"
+        />
+        <StatCard
+          title="Artists Listed"
+          value={snap.songsByArtist?.length || 0}
+          variant="gray"
+        />
       </section>
 
-      {/* Songs grouped by artist */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">BTS & Members — Songs Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(snap.songsByArtist || snap.songs || []).map((g: any) => (
-            <details key={g.artist} className="group rounded-xl border border-white/10 bg-white/5">
-              <summary className="cursor-pointer select-none p-4 text-white flex items-center justify-between">
-                <div>
-                  <div className="font-semibold">{g.artist}</div>
-                  <div className="text-sm text-white/70">Streams: {fmt(g.totals?.streams)} • Daily: {fmt(g.totals?.daily)} • Tracks: {fmt(g.totals?.tracks)}</div>
-                </div>
-                <a href={g.pageUrl} className="underline text-sm" target="_blank">Source</a>
-              </summary>
-              <div className="p-4 pt-0">
-                <Table
-                  headers={["Track", "Total Streams", "Daily Gain"]}
-                  rows={(g.songs || []).map((r: any) => [
-                    r.url ? <a className="underline" href={r.url}>{r.name}</a> : r.name,
-                    fmt(r.totalStreams),
-                    fmt(r.dailyGain)
-                  ])}
-                />
-              </div>
-            </details>
+      {/* Songs by Artist */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+           <Disc3 className="w-5 h-5 text-purple-400" />
+           <h2 className="text-xl font-bold text-white">Songs by Artist</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {snap.songsByArtist?.map((group: any) => (
+            <ArtistSongCard
+              key={group.artist}
+              artist={group.artist}
+              imageUrl={artistMetadata[group.artist]?.imageUrl}
+              pageUrl={group.pageUrl}
+              totals={group.totals}
+              songs={group.songs || []}
+              changes24h={changes24h?.songsByArtist[group.artist]}
+              changes7d={changes7d?.songsByArtist[group.artist]}
+              expanded={expandedArtists.has(group.artist)}
+              onToggle={() => toggleArtist(group.artist)}
+            />
           ))}
         </div>
       </section>
 
-      {/* Albums grouped by artist */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">BTS & Members — Albums Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(snap.albumsByArtist || snap.albums || []).map((g: any) => (
-            <details key={g.artist} className="group rounded-xl border border-white/10 bg-white/5">
-              <summary className="cursor-pointer select-none p-4 text-white flex items-center justify-between">
-                <div>
-                  <div className="font-semibold">{g.artist}</div>
-                  <div className="text-sm text-white/70">Streams: {fmt(g.totals?.streams)} • Daily: {fmt(g.totals?.daily)} • Albums: {fmt(g.totals?.tracks)}</div>
-                </div>
-                <a href={g.pageUrl} className="underline text-sm" target="_blank">Source</a>
-              </summary>
-              <div className="p-4 pt-0">
-                <Table
-                  headers={["Album", "Total Streams", "Daily Gain"]}
-                  rows={(g.albums || []).map((r: any) => [
-                    r.url ? <a className="underline" href={r.url}>{r.name}</a> : r.name,
-                    fmt(r.totalStreams),
-                    fmt(r.dailyGain)
-                  ])}
-                />
-              </div>
-            </details>
-          ))}
+      {/* Global Daily Top 200 */}
+      <section className="space-y-6">
+         <div className="flex items-center gap-3">
+           <TrendingUp className="w-5 h-5 text-purple-400" />
+           <h2 className="text-xl font-bold text-white">Global Daily Top 200</h2>
         </div>
-      </section>
-
-      {/* Daily 200 */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold text-white">Global Daily Top 200 (BTS & Members)</h2>
-        <Table
-          headers={['Rank', 'Artist', 'Track']}
-          rows={(snap.daily200 || []).map((r: any) => [r.rank, r.artist, r.name || '-'])}
+        <RankingTable
+          title="Global Daily Top 200 (BTS & Members)"
+          headers={['Rank', 'Artist/Track', 'Streams']}
+          rows={snap.daily200 || []}
+          changes24h={changes24h?.daily200}
+          changes7d={changes7d?.daily200}
+          showStreamChanges={true}
+          maxRows={10}
         />
       </section>
 
-      {/* Global Ranks */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold text-white">Most Streamed Artists (All Time)</h2>
-        <Table
-          headers={['Rank', 'Artist', 'Streams']}
-          rows={(snap.artistsAllTime || []).slice(0, 50).map((r: any) => [
-            r.rank,
-            r.url ? <a className="underline" href={r.url}>{r.artist}</a> : r.artist,
-            fmt(r.streams)
-          ])}
-        />
-      </section>
+      {/* Bottom Section: Split View */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Most Streamed Artists (All Time) */}
+        <section className="space-y-6">
+           <div className="flex items-center gap-3">
+             <Music className="w-5 h-5 text-purple-400" />
+             <h2 className="text-xl font-bold text-white">Most Streamed Artists (All Time)</h2>
+          </div>
+          <RankingTable
+            title="Most Streamed Artists"
+            headers={['Rank', 'Artist', 'Streams', 'Daily']}
+            rows={snap.artistsAllTime || []}
+            changes24h={changes24h?.artistsAllTime}
+            changes7d={changes7d?.artistsAllTime}
+            maxRows={20}
+          />
+        </section>
 
-      {/* Monthly Listeners */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold text-white">Monthly Listener Rankings</h2>
-        <Table
-          headers={['Rank', 'Artist', 'Listeners']}
-          rows={(snap.monthlyListeners || []).slice(0, 50).map((r: any) => [
-            r.rank,
-            r.url ? <a className="underline" href={r.url}>{r.artist}</a> : r.artist,
-            fmt(r.listeners)
-          ])}
-        />
-      </section>
+        {/* Monthly Listener Rankings */}
+        <section className="space-y-6">
+           <div className="flex items-center gap-3">
+             <Users className="w-5 h-5 text-purple-400" />
+             <h2 className="text-xl font-bold text-white">Monthly Listener Rankings</h2>
+          </div>
+          <RankingTable
+            title="Monthly Listener Rankings"
+            headers={['Rank', 'Artist', 'Listeners', 'Daily +/-']}
+            rows={snap.monthlyListeners || []}
+            changes24h={changes24h?.monthlyListeners}
+            changes7d={changes7d?.monthlyListeners}
+            maxRows={20}
+          />
+        </section>
+      </div>
     </div>
   )
 }
-
-function Card({ title, value }: { title: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/10 p-4 text-white">
-      <div className="text-sm text-white/70">{title}</div>
-      <div className="text-2xl font-bold">{value?.toLocaleString?.() ?? value}</div>
-    </div>
-  )
-}
-
-function Table({ headers, rows }: { headers: string[]; rows: any[][] }) {
-  return (
-    <div className="overflow-x-auto border border-white/10 rounded-xl">
-      <table className="min-w-full text-sm text-white">
-        <thead className="bg-white/10">
-          <tr>
-            {headers.map(h => <th key={h} className="px-3 py-2 text-left font-semibold">{h}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i} className="border-t border-white/10">
-              {r.map((c, j) => <td key={j} className="px-3 py-2">{c}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-

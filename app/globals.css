@@ -1184,3 +1184,18 @@
     animation: none !important;
   }
 }
+
+/* Custom styles for Boraverse Dashboard */
+.bora-glass-panel {
+    background: rgba(15, 7, 32, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+.bora-scanline {
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+    background-size: 100% 4px;
+    pointer-events: none;
+}
+.bora-neon-glow {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+}
