@@ -9,7 +9,10 @@ export interface IUserGameState {
   }
   streak: {
     dailyCount: number
+    weeklyCount: number
     lastPlayAt: Date | null
+    lastDailyQuestCompletionAt: Date | null
+    lastWeeklyQuestCompletionAt: Date | null
   }
   dust: number
   xp: number
@@ -17,6 +20,12 @@ export interface IUserGameState {
   limits: {
     quizStartsToday: number
     dateKey: string
+  }
+  badges: {
+    lastDailyStreakMilestone: number
+    lastWeeklyStreakMilestone: number
+    dailyStreakMilestoneCount: number // How many times reached 10-day streak
+    weeklyStreakMilestoneCount: number // How many times reached 10-week streak
   }
 }
 
@@ -28,7 +37,10 @@ const userGameStateSchema = new mongoose.Schema<IUserGameState>({
   },
   streak: {
     dailyCount: { type: Number, default: 0 },
-    lastPlayAt: { type: Date, default: null }
+    weeklyCount: { type: Number, default: 0 },
+    lastPlayAt: { type: Date, default: null },
+    lastDailyQuestCompletionAt: { type: Date, default: null },
+    lastWeeklyQuestCompletionAt: { type: Date, default: null }
   },
   dust: { type: Number, default: 0 },
   xp: { type: Number, default: 0 },
@@ -36,6 +48,12 @@ const userGameStateSchema = new mongoose.Schema<IUserGameState>({
   limits: {
     quizStartsToday: { type: Number, default: 0 },
     dateKey: { type: String, default: '' }
+  },
+  badges: {
+    lastDailyStreakMilestone: { type: Number, default: 0 },
+    lastWeeklyStreakMilestone: { type: Number, default: 0 },
+    dailyStreakMilestoneCount: { type: Number, default: 0 },
+    weeklyStreakMilestoneCount: { type: Number, default: 0 }
   }
 })
 

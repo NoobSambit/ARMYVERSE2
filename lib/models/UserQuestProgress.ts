@@ -7,6 +7,14 @@ const userQuestProgressSchema = new mongoose.Schema({
   progress: { type: Number, default: 0 },
   completed: { type: Boolean, default: false },
   claimed: { type: Boolean, default: false },
+  streamingBaseline: {
+    tracks: [{
+      trackName: { type: String },
+      artistName: { type: String },
+      initialCount: { type: Number }
+    }],
+    timestamp: { type: Date }
+  },
   updatedAt: { type: Date, default: Date.now }
 })
 

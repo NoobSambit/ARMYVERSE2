@@ -1,0 +1,90 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { connect } from '@/lib/db/mongoose'
+import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { User } from '@/lib/models/User'
+import { getLastFmClient } from '@/lib/lastfm/client'
+
+export const runtime = 'nodejs'
+
+const Schema = z.object({
+  lastfmUsername: z.string().min(1).optional(),
+  statsfmUsername: z.string().min(1).optional()
+})
+
+/**
+ * PATCH /api/user/integrations
+ * Save Last.fm/Stats.fm username
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await verifyFirebaseToken(request)
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    await connect()
+
+    const body = await request.json().catch(() => ({}))
+    const input = Schema.safeParse(body)
+    if (!input.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+
+    const updates: any = {}
+
+    // Verify Last.fm username exists
+    if (input.data.lastfmUsername) {
+      try {
+        const client = getLastFmClient()
+        await client.getUserInfo(input.data.lastfmUsername)
+
+        updates['integrations.lastfm'] = {
+          username: input.data.lastfmUsername,
+          connectedAt: new Date(),
+          verified: true
+        }
+      } catch (err) {
+        return NextResponse.json({ error: 'Last.fm user not found' }, { status: 404 })
+      }
+    }
+
+    if (input.data.statsfmUsername) {
+      updates['integrations.statsfm'] = {
+        username: input.data.statsfmUsername,
+        connectedAt: new Date(),
+        verified: false // manual verification for now
+      }
+    }
+
+    await User.findOneAndUpdate(
+      { firebaseUid: user.uid },
+      { $set: updates },
+      { upsert: false }
+    )
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Integration update error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+/**
+ * GET /api/user/integrations
+ * Get user's integration status
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const user = await verifyFirebaseToken(request)
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    await connect()
+
+    const userData = await User.findOne({ firebaseUid: user.uid }).lean() as any
+
+    return NextResponse.json({
+      lastfm: userData?.integrations?.lastfm || null,
+      statsfm: userData?.integrations?.statsfm || null
+    })
+  } catch (error) {
+    console.error('Integration fetch error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

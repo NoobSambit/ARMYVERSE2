@@ -7,11 +7,24 @@ export interface IQuestDefinition {
   period: 'daily' | 'weekly'
   goalType: string
   goalValue: number
+  streamingMeta?: {
+    trackTargets?: Array<{
+      trackName: string
+      artistName: string
+      count: number
+    }>
+    albumTargets?: Array<{
+      albumName: string
+      trackCount: number
+    }>
+  }
   reward: {
     dust: number
+    xp?: number
     ticket?: {
       rarityMin: 'rare' | 'epic' | 'legendary'
     }
+    badgeId?: mongoose.Types.ObjectId
   }
   active: boolean
 }
@@ -22,11 +35,24 @@ const questDefinitionSchema = new mongoose.Schema<IQuestDefinition>({
   period: { type: String, enum: ['daily', 'weekly'], required: true },
   goalType: { type: String, required: true },
   goalValue: { type: Number, required: true },
+  streamingMeta: {
+    trackTargets: [{
+      trackName: { type: String },
+      artistName: { type: String },
+      count: { type: Number }
+    }],
+    albumTargets: [{
+      albumName: { type: String },
+      trackCount: { type: Number }
+    }]
+  },
   reward: {
     dust: { type: Number, default: 0 },
+    xp: { type: Number, default: 0 },
     ticket: {
       rarityMin: { type: String, enum: ['rare', 'epic', 'legendary'], default: undefined }
-    }
+    },
+    badgeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Badge', default: undefined }
   },
   active: { type: Boolean, default: true }
 })

@@ -212,6 +212,16 @@ const profileSchema = new mongoose.Schema({
       accessToken: { type: String },
       expiresAt: { type: Date },
       updatedAt: { type: Date }
+    },
+    lastfm: {
+      username: { type: String, trim: true, index: true },
+      connectedAt: { type: Date },
+      verified: { type: Boolean, default: false }
+    },
+    statsfm: {
+      username: { type: String, trim: true },
+      connectedAt: { type: Date },
+      verified: { type: Boolean, default: false }
     }
   },
   pending: {
@@ -302,6 +312,16 @@ const userSchema = new mongoose.Schema({
       displayName: { type: String },
       avatarUrl: { type: String },
       updatedAt: { type: Date }
+    },
+    lastfm: {
+      username: { type: String, trim: true, index: true },
+      connectedAt: { type: Date },
+      verified: { type: Boolean, default: false }
+    },
+    statsfm: {
+      username: { type: String, trim: true },
+      connectedAt: { type: Date },
+      verified: { type: Boolean, default: false }
     }
   },
   pending: {

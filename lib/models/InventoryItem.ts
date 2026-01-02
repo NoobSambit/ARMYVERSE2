@@ -7,11 +7,12 @@ const inventoryItemSchema = new mongoose.Schema({
   source: {
     type: {
       type: String,
-      enum: ['quiz'],
+      enum: ['quiz', 'quest_streaming', 'quest_quiz', 'craft', 'event'],
       required: true,
       default: 'quiz'
     },
-    sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuizSession' }
+    sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuizSession' },
+    questCode: { type: String }
   }
 })
 
