@@ -27,7 +27,7 @@ export default function TopSongs({ songs }: TopSongsProps) {
             key={i}
             className="bg-[#2e2249] rounded-xl p-3 flex items-center gap-4 hover:bg-white/5 transition-colors group cursor-pointer border border-transparent hover:border-white/5"
           >
-            <div className="relative h-16 w-16 min-w-[64px] rounded-lg overflow-hidden">
+            <div className="relative h-16 w-16 min-w-[64px] rounded-xl overflow-hidden">
               <img 
                 src={song.coverUrl} 
                 alt={song.title}

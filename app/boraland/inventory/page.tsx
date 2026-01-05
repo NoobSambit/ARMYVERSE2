@@ -8,11 +8,29 @@ import { apiFetch } from '@/lib/client/api'
 import BoralandHeader from '@/components/boraland/BoralandHeader'
 import CommandCenter from '@/components/boraland/CommandCenter'
 import InventoryGrid from '@/components/boraland/InventoryGrid'
+import BadgesGrid from '@/components/boraland/BadgesGrid'
 
 // Types aligned with API responses
 type ItemCard = { member: string; era: string; set: string; rarity: 'common'|'rare'|'epic'|'legendary' | null | undefined; publicId: string; imageUrl: string }
 type Item = { id: string; acquiredAt: string; card: ItemCard }
 type ApiItem = Omit<Item, 'card'> & { card: ItemCard | null }
+
+type BadgeItem = {
+  id: string
+  badge: {
+    code: string
+    name: string
+    description: string
+    icon: string
+    rarity: 'common' | 'rare' | 'epic' | 'legendary'
+    type: string
+  }
+  earnedAt: string
+  metadata?: {
+    streakCount?: number
+    milestoneNumber?: number
+  }
+}
 
 const hasCard = (item: ApiItem): item is Item => Boolean(item.card)
 
@@ -24,6 +42,9 @@ export default function Page() {
   // Tab State for Header
   const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
 
+  // View State (Cards or Badges)
+  const [view, setView] = useState<'cards' | 'badges'>('cards')
+
   // Inventory State
   const [items, setItems] = useState<Item[]>([])
   const [cursor, setCursor] = useState<string | null>(null)
@@ -32,6 +53,12 @@ export default function Page() {
   const [totalCount, setTotalCount] = useState(0)
   const loadedOnceRef = useRef(false)
   const [, setUserXp] = useState(0)
+
+  // Badges State
+  const [badges, setBadges] = useState<BadgeItem[]>([])
+  const [badgesLoading, setBadgesLoading] = useState(false)
+  const [badgesError, setBadgesError] = useState<string | null>(null)
+  const [badgesTotalCount, setBadgesTotalCount] = useState(0)
 
   // Derived Stats
   const uniqueCount = new Set(items.map(i => i.card.publicId)).size // Approximate uniqueness by publicId
@@ -71,15 +98,30 @@ export default function Page() {
     }
   }
 
+  // Load Badges Data
+  const loadBadges = async () => {
+    setBadgesLoading(true)
+    setBadgesError(null)
+    try {
+      const res = await apiFetch('/api/game/badges')
+      setBadges(res.badges || [])
+      setBadgesTotalCount(res.badges?.length || 0)
+    } catch (e: any) {
+      setBadgesError(e?.message || 'Failed to load badges')
+    } finally {
+      setBadgesLoading(false)
+    }
+  }
+
   // Load User XP for Header
   const loadUserStats = async () => {
       try {
           const state = await apiFetch('/api/game/state')
           setUserXp(state?.totalXp || 0)
-          
+
           // Get total count separately if needed, or rely on inventory load
           const inventoryRes = await apiFetch('/api/game/inventory?limit=1')
-          setTotalCount(inventoryRes?.total || 0) // Assuming API was updated to return total, strictly based on previous context it returned items. 
+          setTotalCount(inventoryRes?.total || 0) // Assuming API was updated to return total, strictly based on previous context it returned items.
           // Let's check api/game/inventory/route.ts -> It returns items and nextCursor.
           // Wait, I read the route file. It does NOT return total count in the response body top level.
           // It calculates `count` for pagination but doesn't return it as `total`.
@@ -88,7 +130,7 @@ export default function Page() {
           // Actually, looking at `app/boraland/page.tsx` earlier, I used `res?.total` from `/api/game/inventory?limit=1`.
           // Let me double check if I missed where `total` is added to the response in `route.ts`.
           // ... `const count = await InventoryItem.countDocuments(...)` ... `return NextResponse.json({ items: mapped, ...(nextCursor ? { nextCursor } : {}) })`
-          // It seems `total` is NOT returned in the current `route.ts`. 
+          // It seems `total` is NOT returned in the current `route.ts`.
           // I should fix the API route to return `total` as well to make the UI accurate.
       } catch (e) {}
   }
@@ -103,6 +145,7 @@ export default function Page() {
     if (user && !loadedOnceRef.current) {
         loadedOnceRef.current = true
         load(null)
+        loadBadges()
         loadUserStats()
     }
   }, [user, router, showToast])
@@ -127,17 +170,59 @@ export default function Page() {
 
         <main className="flex-grow z-10 p-4 lg:p-6 flex flex-col lg:flex-row gap-6 h-[calc(100vh-4rem)]">
             <CommandCenter />
-            
-            <InventoryGrid 
-                items={items}
-                loading={loading}
-                error={error}
-                cursor={cursor}
-                loadMore={load}
-                totalCount={totalCount || items.length} // Fallback to loaded count if total fetch fails/not implemented
-                uniqueCount={uniqueCount}
-                rareCount={rareCount}
-            />
+
+            <div className="flex-grow flex flex-col gap-4">
+              {/* View Toggle */}
+              <div className="flex items-center gap-2 bora-glass-panel rounded-xl p-1 w-fit">
+                <button
+                  onClick={() => setView('cards')}
+                  className={`px-6 py-2 rounded-xl text-sm font-medium transition-all ${
+                    view === 'cards'
+                      ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">style</span>
+                    Photocards
+                  </span>
+                </button>
+                <button
+                  onClick={() => setView('badges')}
+                  className={`px-6 py-2 rounded-xl text-sm font-medium transition-all ${
+                    view === 'badges'
+                      ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">military_tech</span>
+                    Badges
+                  </span>
+                </button>
+              </div>
+
+              {/* Conditional Rendering */}
+              {view === 'cards' ? (
+                <InventoryGrid
+                  items={items}
+                  loading={loading}
+                  error={error}
+                  cursor={cursor}
+                  loadMore={load}
+                  totalCount={totalCount || items.length}
+                  uniqueCount={uniqueCount}
+                  rareCount={rareCount}
+                />
+              ) : (
+                <BadgesGrid
+                  badges={badges}
+                  loading={badgesLoading}
+                  error={badgesError}
+                  totalCount={badgesTotalCount}
+                />
+              )}
+            </div>
         </main>
     </div>
   )

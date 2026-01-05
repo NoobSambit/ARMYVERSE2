@@ -273,7 +273,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg"
+          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
         >
           <AlertCircle className="w-5 h-5 text-red-400" />
           <p className="text-red-400 text-sm">{error}</p>
@@ -287,7 +287,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
           <h3 className="text-lg font-semibold text-white">Spotify Connection</h3>
         </div>
         
-        <div className="p-6 bg-black/20 rounded-lg border border-gray-700">
+        <div className="p-6 bg-black/20 rounded-xl border border-gray-700">
           {spotifyStatus.loading ? (
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
@@ -315,13 +315,13 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
               <div className="flex gap-3">
                 <button
                   onClick={connectSpotify}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors"
                 >
                   Reconnect
                 </button>
                 <button
                   onClick={disconnectSpotify}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
                 >
                   Disconnect
                 </button>
@@ -340,7 +340,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
               
               <button
                 onClick={connectSpotify}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors"
               >
                 Connect Spotify
               </button>
@@ -356,7 +356,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
           <h3 className="text-lg font-semibold text-white">Bring your own Spotify app</h3>
         </div>
 
-        <div className="p-6 bg-black/20 rounded-lg border border-gray-700 space-y-4">
+        <div className="p-6 bg-black/20 rounded-xl border border-gray-700 space-y-4">
           {spotifyStatus.mode === 'byo' ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -369,7 +369,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
               <div className="flex gap-3">
                 <button
                   onClick={disconnectBYO}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
                 >
                   Disconnect personal Spotify
                 </button>
@@ -378,7 +378,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
           ) : (
             <>
               {byo.error && (
-                <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                   <AlertCircle className="w-5 h-5 text-red-400" />
                   <p className="text-red-400 text-sm">{byo.error}</p>
                 </div>
@@ -390,7 +390,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                     type="text"
                     value={byo.clientId}
                     onChange={(e) => setByo(prev => ({ ...prev, clientId: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
                     placeholder="your-client-id"
                   />
                 </div>
@@ -400,7 +400,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                     type="password"
                     value={byo.clientSecret}
                     onChange={(e) => setByo(prev => ({ ...prev, clientSecret: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
                     placeholder="your-client-secret (leave empty to use PKCE)"
                   />
                 </div>
@@ -412,7 +412,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                 <button
                   onClick={submitBYO}
                   disabled={byo.busy || !byo.clientId}
-                  className={`px-4 py-2 rounded-lg transition-colors ${byo.busy || !byo.clientId ? 'bg-gray-700 text-gray-400' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                  className={`px-4 py-2 rounded-xl transition-colors ${byo.busy || !byo.clientId ? 'bg-gray-700 text-gray-400' : 'bg-green-600 hover:bg-green-700 text-white'}`}
                 >
                   {byo.busy ? 'Preparing…' : 'Connect personal Spotify'}
                 </button>
@@ -450,7 +450,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                       type="url"
                       value={currentUrl}
                       onChange={(e) => handleUrlChange(platform.id, e.target.value)}
-                      className={`w-full px-4 py-3 rounded-lg bg-black/40 border text-white placeholder-gray-500 focus:outline-none transition-colors ${
+                      className={`w-full px-4 py-3 rounded-xl bg-black/40 border text-white placeholder-gray-500 focus:outline-none transition-colors ${
                         hasError ? 'border-red-500' : 'border-gray-700 focus:border-purple-500'
                       }`}
                       placeholder={platform.placeholder}
@@ -482,7 +482,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                       <button
                         type="button"
                         onClick={() => handleVisibilityChange(platform.id, !isVisible)}
-                        className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm transition-colors ${
+                        className={`flex items-center gap-2 px-3 py-1 rounded-xl text-sm transition-colors ${
                           isVisible
                             ? 'bg-green-600/20 text-green-400'
                             : 'bg-gray-700 text-gray-400'
@@ -512,7 +512,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
       </div>
 
       {/* Help Text */}
-      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
         <h4 className="text-blue-300 font-medium mb-2">About Social Links</h4>
         <ul className="text-blue-300/80 text-sm space-y-1">
           <li>• Links are validated and formatted automatically</li>
@@ -523,7 +523,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
       </div>
 
       {/* Connection Status Summary */}
-      <div className="p-4 bg-gray-800/50 rounded-lg">
+      <div className="p-4 bg-gray-800/50 rounded-xl">
         <h4 className="text-white font-medium mb-3">Connection Summary</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">

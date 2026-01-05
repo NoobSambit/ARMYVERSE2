@@ -47,7 +47,7 @@ export default function Toast({ type, message, isVisible, onClose, duration = 50
   return (
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-2">
       <div className={`
-        flex items-center space-x-3 p-4 rounded-lg border backdrop-blur-sm shadow-lg
+        flex items-center space-x-3 p-4 rounded-xl border backdrop-blur-sm shadow-lg
         ${toastStyles[type]}
         ${isAnimating ? 'animate-in slide-in-from-right-2' : 'animate-out slide-out-to-right-2'}
       `}>

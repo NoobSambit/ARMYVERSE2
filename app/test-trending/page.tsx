@@ -41,7 +41,7 @@ export default function TestTrendingPage() {
       <h1 className="text-3xl font-bold mb-8">Trending Section Debug Page</h1>
 
       {/* Debug Info */}
-      <section className="mb-8 bg-gray-800 p-6 rounded-lg">
+      <section className="mb-8 bg-gray-800 p-6 rounded-xl">
         <h2 className="text-xl font-bold mb-4">Database Status</h2>
         <div className="space-y-2 font-mono text-sm">
           <div>
@@ -66,7 +66,7 @@ export default function TestTrendingPage() {
       </section>
 
       {/* Spotify Data */}
-      <section className="mb-8 bg-gray-800 p-6 rounded-lg">
+      <section className="mb-8 bg-gray-800 p-6 rounded-xl">
         <h2 className="text-xl font-bold mb-4">Spotify API Response</h2>
         <div className="font-mono text-xs bg-gray-900 p-4 rounded overflow-auto max-h-96">
           <pre>{JSON.stringify(spotifyData, null, 2)}</pre>
@@ -74,7 +74,7 @@ export default function TestTrendingPage() {
       </section>
 
       {/* YouTube Data */}
-      <section className="mb-8 bg-gray-800 p-6 rounded-lg">
+      <section className="mb-8 bg-gray-800 p-6 rounded-xl">
         <h2 className="text-xl font-bold mb-4">YouTube API Response</h2>
         <div className="font-mono text-xs bg-gray-900 p-4 rounded overflow-auto max-h-96">
           <pre>{JSON.stringify(youtubeData, null, 2)}</pre>
@@ -82,7 +82,7 @@ export default function TestTrendingPage() {
       </section>
 
       {/* Quick Actions */}
-      <section className="bg-gray-800 p-6 rounded-lg">
+      <section className="bg-gray-800 p-6 rounded-xl">
         <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
         <div className="space-y-2">
           <button

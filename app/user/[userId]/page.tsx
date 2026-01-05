@@ -134,7 +134,7 @@ export default function UserProfilePage() {
           <p className="text-gray-300 mb-6">{error}</p>
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg mx-auto transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl mx-auto transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Go Back
@@ -186,7 +186,7 @@ export default function UserProfilePage() {
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 px-3 py-2 hover:bg-white/10 rounded-lg text-gray-300 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-3 py-2 hover:bg-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -208,7 +208,7 @@ export default function UserProfilePage() {
         >
           {/* Banner */}
           {profile.bannerUrl && (
-            <div className="relative h-48 rounded-lg overflow-hidden -mx-8 -mt-8 mb-8">
+            <div className="relative h-48 rounded-xl overflow-hidden -mx-8 -mt-8 mb-8">
               <Image
                 src={profile.bannerUrl}
                 alt="Profile banner"
@@ -259,7 +259,7 @@ export default function UserProfilePage() {
           
           {/* Bio */}
           {profile.bio && (
-            <div className="bg-black/20 rounded-lg p-6">
+            <div className="bg-black/20 rounded-xl p-6">
               <p className="text-gray-300 leading-relaxed">
                 {profile.bio}
               </p>
@@ -343,7 +343,7 @@ export default function UserProfilePage() {
               
               {profile.topSong && (
                 <div 
-                  className="flex items-center gap-4 p-4 rounded-lg" 
+                  className="flex items-center gap-4 p-4 rounded-xl" 
                   style={{ 
                     backgroundColor: withAlpha(accentColor, 0.08), 
                     border: `1px solid ${withAlpha(accentColor, 0.18)}` 
@@ -363,7 +363,7 @@ export default function UserProfilePage() {
               
               {profile.topAlbum && (
                 <div 
-                  className="flex items-center gap-4 p-4 rounded-lg" 
+                  className="flex items-center gap-4 p-4 rounded-xl" 
                   style={{ 
                     backgroundColor: withAlpha(accentColor, 0.08), 
                     border: `1px solid ${withAlpha(accentColor, 0.18)}` 
@@ -408,7 +408,7 @@ export default function UserProfilePage() {
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors group"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl transition-colors group"
                       style={{
                         backgroundColor: withAlpha(accentColor, 0.08),
                         border: `1px solid ${withAlpha(accentColor, 0.15)}`

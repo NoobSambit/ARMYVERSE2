@@ -21,7 +21,7 @@ export default function ActivityChart() {
           <h3 className="text-white font-bold text-lg">Listening Activity</h3>
           <p className="text-[#a290cb] text-xs">Last 30 Days • Global Audience</p>
         </div>
-        <select className="bg-[#151022] border-none text-xs text-white rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-[#895af6] cursor-pointer outline-none">
+        <select className="bg-[#151022] border-none text-xs text-white rounded-xl px-3 py-1.5 focus:ring-1 focus:ring-[#895af6] cursor-pointer outline-none">
           <option>Streams</option>
           <option>Listeners</option>
         </select>

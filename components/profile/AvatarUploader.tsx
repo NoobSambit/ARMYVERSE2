@@ -240,7 +240,7 @@ export default function AvatarUploader({ currentUrl, onUpload, loading = false }
           type="button"
           onClick={handleClick}
           disabled={uploading || loading}
-          className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
+          className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl transition-colors text-sm"
         >
           <Upload className="w-4 h-4" />
           {uploading ? 'Uploading...' : 'Upload'}
@@ -251,7 +251,7 @@ export default function AvatarUploader({ currentUrl, onUpload, loading = false }
             type="button"
             onClick={handleRemove}
             disabled={uploading || loading}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-xl transition-colors text-sm"
           >
             <X className="w-4 h-4" />
             Remove
@@ -266,7 +266,7 @@ export default function AvatarUploader({ currentUrl, onUpload, loading = false }
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
+            className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl"
           >
             <AlertCircle className="w-4 h-4 text-red-400" />
             <p className="text-red-400 text-sm">{error}</p>

@@ -38,14 +38,14 @@ export default function FilterBar({ filters, allTags = [] }: FilterBarProps) {
 					<div className="relative">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
 						<input aria-label="Search"
-							className="w-full pl-10 pr-3 py-2 rounded-lg bg-black/70 border border-gray-700 text-white placeholder:text-gray-400"
+							className="w-full pl-10 pr-3 py-2 rounded-xl bg-black/70 border border-gray-700 text-white placeholder:text-gray-400"
 							value={state.q}
 							onChange={(e) => set({ q: e.target.value, sort: e.target.value ? 'relevance' : state.sort })}
 							onKeyDown={(e) => { if (e.key === 'Enter') track('search_submitted', { q: state.q }) }}
 							placeholder="Search posts, tags, authors..." />
 					</div>
 					<select aria-label="Sort"
-						className="px-3 py-2 rounded-lg bg-black/40 border border-[#A78BFA1A] text-white"
+						className="px-3 py-2 rounded-xl bg-black/40 border border-[#A78BFA1A] text-white"
 						value={state.sort}
 						onChange={(e) => set({ sort: e.target.value as SortOption })}>
 						{SORTS.map(s => (

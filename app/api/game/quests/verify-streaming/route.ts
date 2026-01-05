@@ -18,26 +18,38 @@ export async function POST(request: NextRequest) {
 
     await connect()
 
-    // Get Last.fm username
+    // Get streaming service username
     const userData = await User.findOne({ firebaseUid: user.uid }).lean() as any
     const lastfmUsername = userData?.integrations?.lastfm?.username
+    const statsfmUsername = userData?.integrations?.statsfm?.username
 
-    if (!lastfmUsername) {
-      return NextResponse.json({ error: 'Last.fm not connected' }, { status: 400 })
+    // Check if at least one service is connected
+    if (!lastfmUsername && !statsfmUsername) {
+      return NextResponse.json({
+        error: 'No streaming service connected. Please connect Last.fm or Stats.fm to verify your progress.',
+        needsConnection: true
+      }, { status: 400 })
     }
 
+    // Prefer Last.fm if available (more accurate for quest tracking)
+    const usernameToVerify = lastfmUsername || statsfmUsername
+
     // Verify all streaming quests
-    await verifyAllStreamingQuests(user.uid, lastfmUsername)
+    await verifyAllStreamingQuests(user.uid, usernameToVerify)
 
     // Return updated quests
     const quests = await getUserQuests(user.uid)
 
     return NextResponse.json({
       success: true,
+      message: `Verified using ${lastfmUsername ? 'Last.fm' : 'Stats.fm'}`,
       quests: quests.filter(q => q.goalType.startsWith('stream:'))
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Streaming verification error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({
+      error: error.message || 'Failed to verify streaming progress. Please try again.',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 })
   }
 }

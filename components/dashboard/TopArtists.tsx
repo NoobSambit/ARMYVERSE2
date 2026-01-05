@@ -73,7 +73,7 @@ export default function TopArtists({ artists, loading = false }: TopArtistsProps
         <div className="flex bg-black/40 rounded-xl p-1 border border-white/5 self-start md:self-auto">
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-lg transition-all duration-300 ${
+            className={`p-2 rounded-xl transition-all duration-300 ${
               viewMode === 'list' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'
             }`}
             title="List View"
@@ -82,7 +82,7 @@ export default function TopArtists({ artists, loading = false }: TopArtistsProps
           </button>
           <button
             onClick={() => setViewMode('chart')}
-            className={`p-2 rounded-lg transition-all duration-300 ${
+            className={`p-2 rounded-xl transition-all duration-300 ${
               viewMode === 'chart' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'
             }`}
             title="Chart View"

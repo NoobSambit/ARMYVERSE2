@@ -1,9 +1,16 @@
-import HeroV2 from '@/components/sections/HeroV2'
-import NewTrendingSection from '@/components/trending/NewTrendingSection'
+import Hero from '@/components/landing/Hero'
+import StatsWidget from '@/components/landing/StatsWidget'
+import FeatureGrid from '@/components/landing/FeatureGrid'
+import Ticker from '@/components/landing/Ticker'
+import BoralandTeaser from '@/components/landing/BoralandTeaser'
+import TrendingWidget from '@/components/landing/TrendingWidget'
+import StatsPreview from '@/components/landing/StatsPreview'
+import AiPlaylistWidget from '@/components/landing/AiPlaylistWidget'
+import KworbWidget from '@/components/landing/KworbWidget'
+import MemberSpotlight from '@/components/landing/MemberSpotlight'
+import CommunityWidget from '@/components/landing/CommunityWidget'
 import Footer from '@/components/layout/Footer'
 import FloatingConnect from '@/components/auth/FloatingConnect'
-import StreamingCTA from '@/components/sections/StreamingCTA'
-import Link from 'next/link'
 
 export default async function Home() {
   const jsonLd = {
@@ -17,55 +24,36 @@ export default async function Home() {
       'query-input': 'required name=search_term_string',
     },
   }
-  // Fetch latest Kworb snapshot for homepage status card (no scraping here)
-  let snap: any = null
-  try {
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/spotify/kworb/latest`
-    const res = await fetch(url || '/api/spotify/kworb/latest', { cache: 'no-store' })
-    if (res.ok) {
-      const data = await res.json()
-      snap = data?.snapshot || null
-    }
-  } catch {}
 
   return (
-    <div className="min-h-screen page-gradient">
+    <div className="relative flex min-h-screen w-full flex-col bg-background-dark text-white font-display overflow-x-hidden selection:bg-primary selection:text-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      {/* Enhanced Hero Section with Features */}
-      <HeroV2 />
-
-      {/* Spotify Analytics (Kworb) quick status */}
-      <section id="spotify-kworb" className="py-12 sm:py-16 px-4 relative">
-        <div className="absolute inset-0 -z-10 section-gradients"></div>
-        <div className="section-top-fade" />
-        <div className="max-w-7xl mx-auto">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
-              <div className="text-sm text-white/70">Spotify Analytics (Kworb)</div>
-              <div className="text-base">
-                {snap
-                  ? (<span>Last update: {snap.dateKey} • Songs: {snap.songs?.length || 0} • Albums: {snap.albums?.length || 0}</span>)
-                  : (<span>No data yet. Trigger the daily cron to populate.</span>)}
-              </div>
-            </div>
-            <Link href="/spotify" className="underline font-semibold">Open Dashboard →</Link>
-          </div>
+      
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 bg-aurora pointer-events-none opacity-40"></div>
+      <div className="fixed inset-0 z-0 bg-noise pointer-events-none opacity-50 mix-blend-overlay"></div>
+      {/* Top Sphere Glow */}
+      <div className="fixed top-[-20%] left-[20%] w-[600px] h-[600px] bg-primary rounded-full blur-[150px] opacity-20 z-0 pointer-events-none"></div>
+      
+      {/* Main Content */}
+      <main className="relative z-10 flex-1 px-4 py-8 lg:px-10 max-w-[1400px] mx-auto w-full flex flex-col gap-8">
+        <Hero />
+        
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[minmax(180px,auto)]">
+          <StatsWidget />
+          <FeatureGrid />
+          <Ticker />
+          <BoralandTeaser />
+          <TrendingWidget />
+          <StatsPreview />
+          <AiPlaylistWidget />
+          <KworbWidget />
+          <MemberSpotlight />
+          <CommunityWidget />
         </div>
-      </section>
-
-      {/* Trending Section */}
-      <section id="trending" className="py-12 sm:py-16 px-4 relative">
-        <div className="absolute inset-0 -z-10 section-gradients"></div>
-        <div className="section-top-fade" />
-        <NewTrendingSection />
-      </section>
-
-      {/* CTA banner */}
-      <div className="py-8 sm:py-10 relative">
-        <div className="absolute inset-0 -z-10 section-gradients"></div>
-        <StreamingCTA />
-      </div>
-
+      </main>
+      
       <Footer />
       <FloatingConnect />
     </div>

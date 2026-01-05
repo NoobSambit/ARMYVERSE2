@@ -152,8 +152,8 @@ export interface LastFmUserResponse {
 
 export interface LastFmRecentTracksResponse {
   recenttracks: {
-    track: LastFmTrack[]
-    '@attr': {
+    track: LastFmTrack[] | LastFmTrack | undefined // Can be array, single object, or undefined
+    '@attr'?: {
       user: string
       totalPages: string
       page: string
@@ -165,8 +165,8 @@ export interface LastFmRecentTracksResponse {
 
 export interface LastFmTopTracksResponse {
   toptracks: {
-    track: LastFmTopTrack[]
-    '@attr': {
+    track: LastFmTopTrack[] | LastFmTopTrack | undefined // Can be array, single object, or undefined
+    '@attr'?: {
       user: string
       totalPages: string
       page: string

@@ -16,6 +16,10 @@ export interface IQuestDefinition {
     albumTargets?: Array<{
       albumName: string
       trackCount: number
+      tracks?: Array<{
+        name: string
+        artist: string
+      }>
     }>
   }
   reward: {
@@ -43,7 +47,11 @@ const questDefinitionSchema = new mongoose.Schema<IQuestDefinition>({
     }],
     albumTargets: [{
       albumName: { type: String },
-      trackCount: { type: Number }
+      trackCount: { type: Number },
+      tracks: [{
+        name: { type: String },
+        artist: { type: String }
+      }]
     }]
   },
   reward: {

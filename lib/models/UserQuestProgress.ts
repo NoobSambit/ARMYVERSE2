@@ -15,6 +15,12 @@ const userQuestProgressSchema = new mongoose.Schema({
     }],
     timestamp: { type: Date }
   },
+  // Track individual progress for each track/album target
+  trackProgress: {
+    type: Map,
+    of: Number,
+    default: () => new Map()
+  },
   updatedAt: { type: Date, default: Date.now }
 })
 

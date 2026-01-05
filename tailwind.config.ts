@@ -6,6 +6,7 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -15,13 +16,24 @@ const config: Config = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
+          DEFAULT: '#9054f8',
           foreground: 'hsl(var(--primary-foreground))',
+          dark: '#7a42d9',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
+          DEFAULT: '#302249',
           foreground: 'hsl(var(--secondary-foreground))',
         },
+        "accent-green": "#1db954",
+        "accent-pink": "#ff0055",
+        "background-light": "#f6f5f8",
+        "background-dark": "#161022",
+        "glass-border": "rgba(255, 255, 255, 0.08)",
+        "glass-surface": "rgba(30, 30, 40, 0.6)",
+        "surface-dark": "#1e162e",
+        "surface-light": "#2a213a",
+        "border-dark": "#36294b",
+        "text-muted": "#a58fcc",
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
@@ -51,15 +63,17 @@ const config: Config = {
         "bora-primary": "#8B5CF6",
         "bora-primary-dark": "#6D28D9",
         "background-deep": "#030014",
+        "surface-lighter": "#2D2645",
         "panel-dark": "#0F0720",
         "panel-border": "#2E1065",
         "accent-neon": "#A855F7",
         "accent-cyan": "#06B6D4",
-        "accent-pink": "#F472B6",
       },
       backgroundImage: {
         'grid-pattern': "linear-gradient(to right, #1e1b4b 1px, transparent 1px), linear-gradient(to bottom, #1e1b4b 1px, transparent 1px)",
         'cyber-gradient': "linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(15, 7, 32, 0.9) 100%)",
+        'aurora': 'linear-gradient(130deg, #171023 0%, #302249 50%, #171023 100%)',
+        'noise': 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\' opacity=\'0.05\'/%3E%3C/svg%3E")',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -67,12 +81,15 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Orbitron', 'sans-serif'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-plus-jakarta-sans)', 'sans-serif'],
+        body: ['var(--font-noto-sans)', 'sans-serif'],
       },
       animation: {
         blob: 'blob 7s infinite',
         'spin-slow': 'spin 3s linear infinite',
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'marquee': 'marquee 25s linear infinite',
       },
       keyframes: {
         blob: {
@@ -89,9 +106,13 @@ const config: Config = {
             transform: 'translate(0px, 0px) scale(1)',
           },
         },
+        marquee: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        }
       },
     },
   },
-  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
+  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography'), require('@tailwindcss/forms'), require('@tailwindcss/container-queries')],
 }
-export default config 
+export default config

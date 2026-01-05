@@ -96,15 +96,15 @@
   }
 
   .btn-secondary {
-    @apply bg-black/80 hover:bg-gray-900/80 text-white font-medium py-2 px-4 rounded-lg border border-gray-700/80 hover:border-purple-500/50 transition-all duration-200 backdrop-blur-sm;
+    @apply bg-black/80 hover:bg-gray-900/80 text-white font-medium py-2 px-4 rounded-xl border border-gray-700/80 hover:border-purple-500/50 transition-all duration-200 backdrop-blur-sm;
   }
 
   .input-field {
-    @apply w-full p-3 bg-black/80 border border-gray-700/80 rounded-xl focus:border-purple-400 focus:outline-none text-white placeholder-gray-400 transition-all duration-200 backdrop-blur-sm;
+    @apply w-full p-3 bg-black/80 border border-gray-700/80 rounded-2xl focus:border-purple-400 focus:outline-none text-white placeholder-gray-400 transition-all duration-200 backdrop-blur-sm;
   }
 
   .card-surface {
-    @apply bg-black/90 rounded-2xl p-6 border border-gray-800/80 backdrop-blur-sm shadow-xl;
+    @apply bg-black/90 rounded-3xl p-6 border border-gray-800/80 backdrop-blur-sm shadow-xl;
   }
 
   .text-gradient {
@@ -112,7 +112,7 @@
   }
 
   .pill-tag {
-    @apply px-4 py-2 rounded-full border border-gray-700/80 bg-black/80 text-gray-300 hover:bg-gray-900/80 hover:border-purple-500/50 transition-all duration-200 cursor-pointer backdrop-blur-sm;
+    @apply px-4 py-2 rounded-2xl border border-gray-700/80 bg-black/80 text-gray-300 hover:bg-gray-900/80 hover:border-purple-500/50 transition-all duration-200 cursor-pointer backdrop-blur-sm;
   }
 
   .pill-tag-selected {
@@ -285,6 +285,31 @@
   background: var(--color-primary-dark);
 }
 
+/* Custom scrollbar for quest lists */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}
+
+/* Firefox scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.3) rgba(255, 255, 255, 0.03);
+}
+
 /* Page-wide dark purple gradient background helper */
 .page-gradient {
   /* Seamless dark purple to black gradient - no visible seams */
@@ -393,9 +418,13 @@
   }
 }
 
-/* Glass panel helper */
+/* Glass panel helper - Updated to match Variant 2 Design */
 .glass-panel {
-	@apply bg-[#0f0b16]/80 backdrop-blur-md border border-[#4c1d9520] rounded-xl;
+    background: rgba(20, 20, 25, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* Soft pill button and pulse */
@@ -1198,4 +1227,125 @@
 }
 .bora-neon-glow {
     box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+}
+
+/* Bento cell animations for AI Playlist page */
+.bento-cell {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.bento-cell:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: 0 10px 40px -10px rgba(138, 43, 226, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* AI Playlist Specific Styles from Design */
+:root {
+    --bts-purple: #8A2BE2;
+    --bts-pastel: #C8A2C8;
+    --neon-glow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+.noise-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.05;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDFNPRX7CEfJztSggIlrZC7JQ_wRnevgxSlDOUiPacBG3iIYGOnqJyCiKRjC4_Sd10lkT9D6jy4rCOZpKG12Kr6pFtW5Gnx8SoX3KbtNE1hLk4EanSTqZeXIjj7y9l4VuH4D2udIp3hsnW3N-bKYDb-2jeyIZcZjpz0cgoxu7pTTWVRbRlPp23UL6YLa9QU1Mg0w6-6M-ZZJgC0dBObKX1K2psP_ks4VtIBVASAJNfcw2yllBOrr53ewcQU6IGB_Z7BpXfqIUkdLQ4);
+}
+
+.aurora-blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    opacity: 0.4;
+    animation: float-blob 10s infinite ease-in-out;
+}
+
+@keyframes float-blob {
+    0%, 100% {
+        transform: translate(0, 0);
+    } 
+    50% {
+        transform: translate(-20px, 20px);
+    }
+}
+
+
+.glass-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+    border-color: var(--bts-purple);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+    outline: none;
+}
+
+.conic-dial {
+    background: conic-gradient(#8b5cf6 0% 40%, #ec4899 40% 70%, #3b82f6 70% 100%);
+}
+
+/* Dark-themed select dropdown styling */
+select.era-select {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    color: rgb(209, 213, 219) !important; /* text-gray-300 */
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0.75rem !important; /* rounded-xl */
+    border: 1px solid rgba(255, 255, 255, 0.05) !important; /* Very subtle border */
+}
+
+select.era-select::-ms-expand {
+    display: none;
+}
+
+/* Style options for dark theme */
+select.era-select option {
+    background-color: rgba(20, 20, 25, 0.98) !important;
+    color: rgb(209, 213, 219) !important; /* text-gray-300 */
+    padding: 10px 12px;
+    border: none;
+}
+
+/* Selected option styling */
+select.era-select option:checked {
+    background: linear-gradient(to right, rgba(139, 92, 246, 0.4), rgba(168, 85, 247, 0.3)) !important;
+    color: white !important;
+    font-weight: 500;
+}
+
+/* Hover state for options (limited browser support) */
+select.era-select option:hover {
+    background-color: rgba(139, 92, 246, 0.3) !important;
+    color: white !important;
+}
+
+/* Focus state for the select element - subtle */
+select.era-select:focus {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important; /* Subtle border on focus */
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 10px rgba(138, 43, 226, 0.15) !important; /* Subtle glow */
+    outline: none !important;
+}
+
+/* General select styling fallback */
+select {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    color: rgb(209, 213, 219) !important;
+}
+
+select option {
+    background-color: rgba(20, 20, 25, 0.98) !important;
+    color: rgb(209, 213, 219) !important;
 }

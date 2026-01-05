@@ -56,7 +56,33 @@ export async function getUserQuests(userId: string) {
     const progress = prog?.progress || 0
     const completed = progress >= q.goalValue
     const claimed = prog?.claimed || false
-    return { code: q.code, title: q.title, period: q.period, goalType: q.goalType, goalValue: q.goalValue, progress, completed, claimed, reward: q.reward }
+
+    // For streaming quests, include streamingMeta and trackProgress
+    const result: any = {
+      code: q.code,
+      title: q.title,
+      period: q.period,
+      goalType: q.goalType,
+      goalValue: q.goalValue,
+      progress,
+      completed,
+      claimed,
+      reward: q.reward
+    }
+
+    if (q.streamingMeta) {
+      result.streamingMeta = q.streamingMeta
+      // Convert Map to plain object if it exists
+      if (prog?.trackProgress) {
+        result.trackProgress = prog.trackProgress instanceof Map
+          ? Object.fromEntries(prog.trackProgress)
+          : prog.trackProgress
+      } else {
+        result.trackProgress = {}
+      }
+    }
+
+    return result
   })
   return results
 }

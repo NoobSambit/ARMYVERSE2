@@ -44,7 +44,7 @@ export default function MoodPills({ selectedMoods, onMoodChange, className = '' 
             <button
               key={mood.value}
               onClick={() => handleMoodToggle(mood.value)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all duration-200 flex items-center gap-2 ${
+              className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all duration-200 flex items-center gap-2 ${
                 isSelected
                   ? 'bg-white/10 border-purple-400/50 text-white shadow-[0_0_15px_rgba(168,85,247,0.15)]'
                   : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5 hover:text-gray-200'

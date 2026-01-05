@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Home, Music } from 'lucide-react'
+import { Home } from 'lucide-react'
 
 export default function MobileQuickActions() {
   return (
@@ -10,11 +10,6 @@ export default function MobileQuickActions() {
         <Link href="/" className="inline-flex items-center gap-1 text-white/90 hover:text-white" aria-label="Home">
           <Home className="w-5 h-5" />
           <span className="text-sm">Home</span>
-        </Link>
-        <span className="h-5 w-px bg-white/10" />
-        <Link href="/playlist-hub" className="inline-flex items-center gap-1 text-white/90 hover:text-white" aria-label="Playlists">
-          <Music className="w-5 h-5" />
-          <span className="text-sm">Playlists</span>
         </Link>
         {/* Connect removed */}
       </div>

@@ -97,7 +97,7 @@ export default function NewTrendingSection() {
         <div className="bg-white/6 backdrop-blur-md rounded-xl p-1 border border-white/10">
           <button
             onClick={() => setCategory('ot7')}
-            className={`px-6 py-3 rounded-lg transition-all font-semibold ${
+            className={`px-6 py-3 rounded-xl transition-all font-semibold ${
               category === 'ot7'
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                 : 'text-white/70 hover:text-white'
@@ -108,7 +108,7 @@ export default function NewTrendingSection() {
           </button>
           <button
             onClick={() => setCategory('solo')}
-            className={`px-6 py-3 rounded-lg transition-all font-semibold ${
+            className={`px-6 py-3 rounded-xl transition-all font-semibold ${
               category === 'solo'
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                 : 'text-white/70 hover:text-white'

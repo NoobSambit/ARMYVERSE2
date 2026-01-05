@@ -104,18 +104,18 @@ export default function PostCard({ post, variant = 'grid' }: PostCardProps) {
 					</button>
 					{menuOpen && (
 						<div role="menu" className="mt-2 w-56 rounded-xl bg-[#0B0912]/95 border border-white/10 shadow-2xl p-1 text-white">
-							<Link href={`/blogs/${post._id}/edit`} className="block px-3 py-2 rounded-lg hover:bg-white/10 text-white">Edit</Link>
-							<button className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 flex items-center gap-2 text-white" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const publish = confirm('Publish this post?'); if (!publish) return; await fetch(`/api/blogs/${post._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'published' }) }); track('blog_published', { id: post._id }); setMenuOpen(false) }}>
+							<Link href={`/blogs/${post._id}/edit`} className="block px-3 py-2 rounded-xl hover:bg-white/10 text-white">Edit</Link>
+							<button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 flex items-center gap-2 text-white" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const publish = confirm('Publish this post?'); if (!publish) return; await fetch(`/api/blogs/${post._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'published' }) }); track('blog_published', { id: post._id }); setMenuOpen(false) }}>
 								<Upload className="w-4 h-4" /> Publish
 							</button>
-							<button className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 flex items-center gap-2 text-white" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const unpub = confirm('Unpublish this post?'); if (!unpub) return; await fetch(`/api/blogs/${post._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'draft' }) }); track('blog_unpublished', { id: post._id }); setMenuOpen(false) }}>
+							<button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 flex items-center gap-2 text-white" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); const unpub = confirm('Unpublish this post?'); if (!unpub) return; await fetch(`/api/blogs/${post._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'draft' }) }); track('blog_unpublished', { id: post._id }); setMenuOpen(false) }}>
 								<CircleSlash className="w-4 h-4" /> Unpublish
 							</button>
-							<button className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 flex items-center gap-2 text-white" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (post.isDeleted) { await fetch(`/api/blogs/${post._id}/restore`, { method: 'POST' }); track('blog_restored', { id: post._id }) } else { await fetch(`/api/blogs/${post._id}`, { method: 'DELETE' }); track('blog_deleted', { id: post._id }) } setMenuOpen(false) }}>
+							<button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 flex items-center gap-2 text-white" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (post.isDeleted) { await fetch(`/api/blogs/${post._id}/restore`, { method: 'POST' }); track('blog_restored', { id: post._id }) } else { await fetch(`/api/blogs/${post._id}`, { method: 'DELETE' }); track('blog_deleted', { id: post._id }) } setMenuOpen(false) }}>
 								{post.isDeleted ? <RotateCcw className="w-4 h-4" /> : null}
 								{post.isDeleted ? 'Restore' : 'Delete'}
 							</button>
-							<button className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 flex items-center gap-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCollectionsOpen(v => !v) }}>
+							<button className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 flex items-center gap-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCollectionsOpen(v => !v) }}>
 								<PlusCircle className="w-4 h-4" /> Add to collection
 							</button>
 							{collectionsOpen && (
@@ -123,7 +123,7 @@ export default function PostCard({ post, variant = 'grid' }: PostCardProps) {
 									{myCollections.length === 0 ? (
 										<div className="px-3 py-2 text-xs text-gray-400">No collections yet</div>
 									) : myCollections.map(c => (
-										<button key={c.slug} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); await fetch(`/api/collections/${encodeURIComponent(c.slug)}/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add', postId: post._id }) }); track('blog_added_to_collection', { id: post._id, collection: c.slug }); setMenuOpen(false); setCollectionsOpen(false) }}>{c.title}</button>
+										<button key={c.slug} className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10" onClick={async (e) => { e.preventDefault(); e.stopPropagation(); await fetch(`/api/collections/${encodeURIComponent(c.slug)}/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add', postId: post._id }) }); track('blog_added_to_collection', { id: post._id, collection: c.slug }); setMenuOpen(false); setCollectionsOpen(false) }}>{c.title}</button>
 									))}
 								</div>
 							)}

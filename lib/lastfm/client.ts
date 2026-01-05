@@ -132,9 +132,13 @@ export class LastFmClient {
 
     const response = await this.fetchWithRateLimit<LastFmRecentTracksResponse>(params)
 
+    // Ensure tracks is always an array (Last.fm returns object for single track, undefined for no tracks)
+    const tracksRaw = response.recenttracks.track
+    const tracks = !tracksRaw ? [] : Array.isArray(tracksRaw) ? tracksRaw : [tracksRaw]
+
     return {
-      tracks: response.recenttracks.track,
-      total: parseInt(response.recenttracks['@attr'].total),
+      tracks,
+      total: parseInt(response.recenttracks['@attr']?.total || '0'),
     }
   }
 
@@ -150,9 +154,13 @@ export class LastFmClient {
       page: options.page || 1,
     })
 
+    // Ensure tracks is always an array
+    const tracksRaw = response.toptracks.track
+    const tracks = !tracksRaw ? [] : Array.isArray(tracksRaw) ? tracksRaw : [tracksRaw]
+
     return {
-      tracks: response.toptracks.track,
-      total: parseInt(response.toptracks['@attr'].total),
+      tracks,
+      total: parseInt(response.toptracks['@attr']?.total || '0'),
     }
   }
 

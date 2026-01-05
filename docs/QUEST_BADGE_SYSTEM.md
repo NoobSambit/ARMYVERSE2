@@ -1,7 +1,7 @@
 # Quest & Badge System Documentation
 
 **Last Updated:** January 2, 2026
-**Version:** 1.0.0
+**Version:** 1.1.0
 
 ---
 
@@ -10,12 +10,13 @@
 1. [System Overview](#system-overview)
 2. [Quest Types](#quest-types)
 3. [Badge System](#badge-system)
-4. [Implementation Details](#implementation-details)
-5. [Manual Setup Required](#manual-setup-required)
-6. [API Endpoints](#api-endpoints)
-7. [Database Models](#database-models)
-8. [Cron Jobs](#cron-jobs)
-9. [Future Enhancements](#future-enhancements)
+4. [UI Integration Guide](#ui-integration-guide)
+5. [Implementation Details](#implementation-details)
+6. [Manual Setup Required](#manual-setup-required)
+7. [API Endpoints](#api-endpoints)
+8. [Database Models](#database-models)
+9. [Cron Jobs](#cron-jobs)
+10. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -196,6 +197,141 @@ Badges are awarded in this order:
 - [x] Cron jobs configured
 - [x] Type checking passing
 
+---
+
+## UI Integration Guide
+
+This section provides a comprehensive guide for building quest UI components.
+
+### Essential API Calls
+
+For a complete quest page, you need these API calls:
+
+1. **`GET /api/game/state`** - User stats, streaks, next milestones, potential rewards, latest badges
+2. **`GET /api/game/quests`** - All active quests with progress
+3. **`POST /api/game/quests/verify-streaming`** - Update streaming progress from Last.fm
+4. **`POST /api/game/quests/claim`** - Claim completed quest rewards
+
+### Key Data Mappings
+
+| UI Element | API Endpoint | Field Path | Example |
+|------------|--------------|------------|---------|
+| Current Daily Streak | `/api/game/state` | `streaks.daily.current` | `12` |
+| Days to Next Milestone | `/api/game/state` | `streaks.daily.daysRemaining` | `8` |
+| Next Milestone Badge | `/api/game/state` | `potentialRewards.dailyMilestoneBadge` | Badge object |
+| Dust Balance | `/api/game/state` | `dust` | `2450` |
+| Total XP | `/api/game/state` | `totalXp` | `12040` |
+| Latest Badges | `/api/game/state` | `latestBadges[]` | Array of 4 badges |
+| Quest Progress | `/api/game/quests` | `quests[].progress` | `15` |
+| Quest Goal | `/api/game/quests` | `quests[].goalValue` | `25` |
+| Quest Rewards | `/api/game/quests` | `quests[].reward` | `{dust: 50, xp: 20}` |
+
+### Example: Streak Display Component
+
+```typescript
+// Fetch data
+const { streaks, potentialRewards } = await fetch('/api/game/state').then(r => r.json())
+
+// Render
+<StreakCard>
+  <Icon>🔥</Icon>
+  <Current>{streaks.daily.current}</Current>
+  <NextBonus>Next bonus: {streaks.daily.daysRemaining} Days</NextBonus>
+
+  {/* Preview next reward */}
+  {potentialRewards.dailyMilestoneBadge && (
+    <Preview>
+      <BadgeIcon>{potentialRewards.dailyMilestoneBadge.icon}</BadgeIcon>
+      <span>At {potentialRewards.dailyMilestoneBadge.atStreak} days</span>
+    </Preview>
+  )}
+</StreakCard>
+```
+
+### Example: Quest Card Component
+
+```typescript
+const { quests } = await fetch('/api/game/quests').then(r => r.json())
+
+quests.map(quest => (
+  <QuestCard key={quest.code}>
+    <Title>{quest.title}</Title>
+
+    {/* Progress bar */}
+    <ProgressBar value={quest.progress} max={quest.goalValue} />
+    <ProgressText>{quest.progress} / {quest.goalValue}</ProgressText>
+
+    {/* Streaming targets (if streaming quest) */}
+    {quest.streamingMeta?.trackTargets?.map(track => (
+      <Target key={track.trackName}>
+        {track.trackName} - {track.artistName} ({track.count}x)
+      </Target>
+    ))}
+
+    {/* Rewards */}
+    <Rewards>
+      <span>+{quest.reward.dust} Dust</span>
+      <span>+{quest.reward.xp} XP</span>
+    </Rewards>
+
+    {/* Claim button */}
+    <ClaimButton
+      disabled={!quest.completed || quest.claimed}
+      onClick={() => claimQuest(quest.code)}
+    >
+      {quest.claimed ? 'Claimed ✓' : quest.completed ? 'Claim Reward' : 'Incomplete'}
+    </ClaimButton>
+  </QuestCard>
+))
+```
+
+### Example: Claim Quest Function
+
+```typescript
+async function claimQuest(code: string) {
+  const res = await fetch('/api/game/quests/claim', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${firebaseToken}`
+    },
+    body: JSON.stringify({ code })
+  })
+
+  const data = await res.json()
+
+  // Show notifications
+  if (data.allQuestsCompleted) {
+    toast.success('🎉 All quests completed! Streak updated!')
+  }
+
+  if (data.badgesAwarded?.length > 0) {
+    data.badgesAwarded.forEach(badge => {
+      toast.success(`🏆 Badge Earned: ${badge}`)
+    })
+  }
+
+  if (data.photocardAwarded) {
+    showPhotocardModal(data.photocardAwarded)
+  }
+
+  // Refresh data
+  await Promise.all([
+    refetchGameState(),
+    refetchQuests()
+  ])
+}
+```
+
+### Recommended Refresh Strategy
+
+- **On mount:** Fetch both `/api/game/state` and `/api/game/quests`
+- **After claim:** Refresh both endpoints (streak and quests may have updated)
+- **After verify streaming:** Refresh `/api/game/quests` only
+- **Periodic:** Poll `/api/game/quests/verify-streaming` every 3-5 minutes while user is active
+
+---
+
 ### 🔴 REQUIRED: Manual Actions
 
 #### 1. Seed the Badge Database
@@ -358,13 +494,80 @@ Verify streaming progress from Last.fm.
 **Response:**
 ```json
 {
+  "success": true,
   "quests": [...]
 }
 ```
 
+### GET `/api/game/state`
+
+**✨ Enhanced endpoint** - Get comprehensive user game state including streaks, next milestones, potential rewards, and latest badges.
+
+**Authentication:** Required (Firebase token)
+
+**Response:**
+```json
+{
+  "dust": 2450,
+  "totalXp": 12040,
+  "level": 1,
+  "streaks": {
+    "daily": {
+      "current": 12,
+      "nextMilestone": 20,
+      "daysRemaining": 8
+    },
+    "weekly": {
+      "current": 3,
+      "nextMilestone": 10,
+      "weeksRemaining": 7
+    }
+  },
+  "potentialRewards": {
+    "dailyMilestoneBadge": {
+      "code": "daily_milestone_2",
+      "name": "Persistent Pioneer",
+      "icon": "🏆🏆",
+      "rarity": "epic",
+      "atStreak": 20
+    },
+    "weeklyMilestoneBadge": {
+      "code": "weekly_milestone_1",
+      "name": "Weekly Warrior",
+      "icon": "💫",
+      "rarity": "epic",
+      "atStreak": 10
+    },
+    "dailyPhotocard": { "rarity": "epic" },
+    "weeklyPhotocard": { "rarity": "legendary" }
+  },
+  "latestBadges": [
+    {
+      "code": "daily_streak_2",
+      "name": "Burning Bright",
+      "icon": "🔥🔥",
+      "rarity": "common",
+      "earnedAt": "2026-01-02T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Use Cases:**
+- Display current streak counts
+- Show "Next bonus in X days/weeks"
+- Preview upcoming milestone badge
+- Preview upcoming photocard reward
+- Show recently earned badges
+- Display user's dust, XP, and level
+
 ### GET `/api/game/badges`
 
-Get user's earned badges (if you implement this endpoint).
+Get all user's earned badges.
+
+**Authentication:** Required
+
+**Note:** The `/api/game/state` endpoint already includes the latest 4 badges. Use this endpoint if you need the full badge history.
 
 ---
 

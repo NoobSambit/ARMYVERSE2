@@ -15,7 +15,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 
 ## Features
 
-- **AI-Powered Playlist Generation**: Create personalized BTS playlists using advanced AI
+- **AI-Powered Playlist Generation**: Create personalized BTS playlists using Groq Llama 3.3 70B with seed tracks, genre mixing, flow patterns, and smart templates
 - **Manual Playlist Creation**: Hand-pick your favorite tracks
 - **Spotify Integration**: Connect your account to save and sync playlists
 - **Trending Content**: Discover the hottest BTS content across platforms
@@ -69,7 +69,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, and e
 
 ## Features
 
-- **AI-Powered Playlist Generation**: Create personalized BTS playlists using advanced AI
+- **AI-Powered Playlist Generation**: Create personalized BTS playlists using Groq Llama 3.3 70B with seed tracks, genre mixing, flow patterns, and smart templates
 - **Manual Playlist Creation**: Hand-pick your favorite tracks
 - **Spotify Integration**: Connect your account to save and sync playlists
 - **Trending Content**: Discover the hottest BTS content across platforms
@@ -98,8 +98,18 @@ ARMYVERSE/
 │   │   ├── health/                         # Health check endpoints
 │   │   │   └── route.ts                    # Application health monitoring (GET)
 │   │   ├── playlist/                       # Playlist management APIs
-│   │   │   ├── ai-playlist-enhanced/       # Enhanced AI playlist generation
-│   │   │   │   └── route.ts                # Advanced AI playlist logic with Google Gemini (POST)
+│   │   │   ├── generate-enhanced/          # Enhanced AI playlist generation
+│   │   │   │   └── route.ts                # Advanced AI playlist logic with Groq Llama 3.3 70B (POST)
+│   │   │   ├── seed-tracks/                # BTS song selection for seeds
+│   │   │   │   └── route.ts                # Fetch BTS songs from database (GET)
+│   │   │   ├── ai-inspiration/             # AI prompt suggestions
+│   │   │   │   └── route.ts                # Generate creative prompts (POST)
+│   │   │   ├── configs/                    # Save/load configurations
+│   │   │   │   └── route.ts                # Manage playlist configs (GET, POST, DELETE)
+│   │   │   ├── evolve/                     # Refine existing playlists
+│   │   │   │   └── route.ts                # Evolve playlists with instructions (POST)
+│   │   │   ├── history/                    # Playlist generation history
+│   │   │   │   └── route.ts                # User playlist history (GET)
 │   │   │   ├── export/                     # Playlist export functionality
 │   │   │   │   └── route.ts                # Export to Spotify (POST, GET for debugging)
 │   │   │   ├── generate/                   # Basic playlist generation
@@ -295,7 +305,7 @@ ARMYVERSE/
 - **Styling**: Tailwind CSS, Radix UI components, Framer Motion
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: NextAuth.js, Firebase Auth
-- **External APIs**: Spotify Web API, YouTube Data API v3, Google Gemini AI
+- **External APIs**: Spotify Web API, YouTube Data API v3, Groq Llama 3.3 70B
 - **Rich Text Editor**: Tiptap with extensive extensions
 - **Image Upload**: Cloudinary for image management
 - **Deployment**: Vercel with edge runtime support
@@ -308,7 +318,14 @@ ARMYVERSE/
 - `GET /api/spotify/user/[userId]` - Get user profile data
 
 ### Playlist Management
-- `POST /api/playlist/ai-playlist-enhanced` - Generate AI playlists with Google Gemini
+- `POST /api/playlist/generate-enhanced` - Generate AI playlists with Groq Llama 3.3 70B
+- `GET /api/playlist/seed-tracks` - Fetch BTS songs for seed selection
+- `POST /api/playlist/ai-inspiration` - Get AI-generated prompt suggestions
+- `GET /api/playlist/configs` - Load saved configurations
+- `POST /api/playlist/configs` - Save playlist configuration
+- `DELETE /api/playlist/configs` - Delete saved configuration
+- `POST /api/playlist/evolve` - Refine existing playlist
+- `GET /api/playlist/history` - Get user's playlist history
 - `POST /api/playlist/export` - Export playlists to Spotify
 - `POST /api/playlist/generate` - Create manual playlists
 - `POST /api/playlist/streaming-focused` - Generate streaming-optimized playlists
@@ -346,12 +363,13 @@ ARMYVERSE/
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - MongoDB database (MongoDB Atlas recommended)
 - Spotify Developer Account
 - YouTube Data API v3 key
-- Google AI API key (for Gemini)
+- Groq API key (for Llama 3.3 70B)
 - Cloudinary account (for image uploads)
+- Last.fm API key (for quest streaming verification)
 
 ### Environment Variables
 
@@ -370,8 +388,8 @@ NEXT_PUBLIC_SPOTIFY_REDIRECT_URI="http://localhost:3000/api/spotify/callback"
 YOUTUBE_API_KEY="your-youtube-api-key"
 NEXT_PUBLIC_YT_THUMB_CDN="ytimg.com"
 
-# Google AI (Gemini)
-GOOGLE_AI_API_KEY="your-google-ai-api-key"
+# Groq AI (Llama 3.3 70B)
+GROQ_API_KEY="your-groq-api-key"
 
 # Spotify Scopes
 NEXT_PUBLIC_SPOTIFY_SCOPES="user-read-private user-read-email user-top-read user-read-recently-played playlist-read-private playlist-modify-public playlist-modify-private"
@@ -419,9 +437,16 @@ npm run format       # Format code with Prettier
 ## Key Features Explained
 
 ### AI Playlist Generation
-- Uses Google Gemini AI to analyze user preferences and mood
-- Generates playlists based on BTS eras, members, and emotional themes
-- Integrates with Spotify Web API for track recommendations
+- Uses Groq Llama 3.3 70B Versatile for intelligent playlist creation
+- **Seed Tracks**: Select up to 5 BTS songs to match energy and vibe
+- **Genre Mixing**: Fine-tune mix of Ballad, Hip-Hop, EDM, R&B, Rock, Dance-Pop
+- **Flow Patterns**: Control energy progression (slow-build, wave, consistent, cool-down, random)
+- **Context Optimization**: Optimize for workout, study, party, commute, sleep, or auto
+- **Smart Templates**: 6 pre-configured templates (Gym Beast Mode, Study Focus, Late Night Vibes, etc.)
+- **Personality Quiz**: 6-question quiz that auto-configures all settings
+- **Save/Load Configs**: Persist favorite configurations to database
+- **Playlist Evolution**: Refine existing playlists with natural language
+- **Compare Playlists**: Side-by-side comparison with overlap analysis
 
 ### Blog Platform
 - Rich text editor with Tiptap supporting tables, images, code blocks

@@ -123,7 +123,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
         >
           {/* Banner */}
           {publicProfile.bannerUrl && (
-            <div className="relative h-32 rounded-lg overflow-hidden">
+            <div className="relative h-32 rounded-xl overflow-hidden">
               <Image
                 src={publicProfile.bannerUrl}
                 alt="Profile banner"
@@ -171,7 +171,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
           
           {/* Bio */}
           {publicProfile.bio && (
-            <div className="bg-black/20 rounded-lg p-4">
+            <div className="bg-black/20 rounded-xl p-4">
               <p className="text-gray-300 text-sm leading-relaxed">
                 {publicProfile.bio}
               </p>
@@ -180,7 +180,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
           
           {/* Private Profile Notice */}
           {isPrivate && (
-            <div className="bg-black/20 rounded-lg p-6 text-center">
+            <div className="bg-black/20 rounded-xl p-6 text-center">
               <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <h4 className="text-white font-medium mb-2">Private Profile</h4>
               <p className="text-gray-400 text-sm">
@@ -265,7 +265,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
               <h4 className="text-sm font-medium text-gray-400">Current Favorites</h4>
               
               {publicProfile.topSong && (
-                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: withAlpha(accentColor, 0.08), border: `1px solid ${withAlpha(accentColor, 0.18)}` }}>
+                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: withAlpha(accentColor, 0.08), border: `1px solid ${withAlpha(accentColor, 0.18)}` }}>
                   <Music className="w-5 h-5" style={{ color: accentText }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">
@@ -279,7 +279,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
               )}
               
               {publicProfile.topAlbum && (
-                <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: withAlpha(accentColor, 0.08), border: `1px solid ${withAlpha(accentColor, 0.18)}` }}>
+                <div className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: withAlpha(accentColor, 0.08), border: `1px solid ${withAlpha(accentColor, 0.18)}` }}>
                   <Music className="w-5 h-5" style={{ color: accentText }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">
@@ -319,7 +319,7 @@ export default function ProfilePreview({ profile }: ProfilePreviewProps) {
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors group"
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors group"
                       style={{
                         backgroundColor: withAlpha(accentColor, 0.08),
                         border: `1px solid ${withAlpha(accentColor, 0.15)}`

@@ -8,13 +8,13 @@ import { getLastFmClient } from '@/lib/lastfm/client'
 export const runtime = 'nodejs'
 
 const Schema = z.object({
-  lastfmUsername: z.string().min(1).optional(),
-  statsfmUsername: z.string().min(1).optional()
+  lastfmUsername: z.string().min(1).optional().nullable(),
+  statsfmUsername: z.string().min(1).optional().nullable()
 })
 
 /**
  * PATCH /api/user/integrations
- * Save Last.fm/Stats.fm username
+ * Save or disconnect Last.fm/Stats.fm username
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -28,36 +28,56 @@ export async function PATCH(request: NextRequest) {
     if (!input.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
 
     const updates: any = {}
+    const unsets: any = {}
 
-    // Verify Last.fm username exists
-    if (input.data.lastfmUsername) {
-      try {
-        const client = getLastFmClient()
-        await client.getUserInfo(input.data.lastfmUsername)
+    // Handle Last.fm
+    if ('lastfmUsername' in input.data) {
+      if (input.data.lastfmUsername === null) {
+        // Disconnect
+        unsets['integrations.lastfm'] = ''
+      } else if (input.data.lastfmUsername) {
+        // Connect - verify username exists
+        try {
+          const client = getLastFmClient()
+          await client.getUserInfo(input.data.lastfmUsername)
 
-        updates['integrations.lastfm'] = {
-          username: input.data.lastfmUsername,
-          connectedAt: new Date(),
-          verified: true
+          updates['integrations.lastfm'] = {
+            username: input.data.lastfmUsername,
+            connectedAt: new Date(),
+            verified: true
+          }
+        } catch (err) {
+          return NextResponse.json({ error: 'Last.fm user not found. Please check your username.' }, { status: 404 })
         }
-      } catch (err) {
-        return NextResponse.json({ error: 'Last.fm user not found' }, { status: 404 })
       }
     }
 
-    if (input.data.statsfmUsername) {
-      updates['integrations.statsfm'] = {
-        username: input.data.statsfmUsername,
-        connectedAt: new Date(),
-        verified: false // manual verification for now
+    // Handle Stats.fm
+    if ('statsfmUsername' in input.data) {
+      if (input.data.statsfmUsername === null) {
+        // Disconnect
+        unsets['integrations.statsfm'] = ''
+      } else if (input.data.statsfmUsername) {
+        // Connect (no verification API available for stats.fm)
+        updates['integrations.statsfm'] = {
+          username: input.data.statsfmUsername,
+          connectedAt: new Date(),
+          verified: false
+        }
       }
     }
 
-    await User.findOneAndUpdate(
-      { firebaseUid: user.uid },
-      { $set: updates },
-      { upsert: false }
-    )
+    const updateOps: any = {}
+    if (Object.keys(updates).length > 0) updateOps.$set = updates
+    if (Object.keys(unsets).length > 0) updateOps.$unset = unsets
+
+    if (Object.keys(updateOps).length > 0) {
+      await User.findOneAndUpdate(
+        { firebaseUid: user.uid },
+        updateOps,
+        { upsert: false }
+      )
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

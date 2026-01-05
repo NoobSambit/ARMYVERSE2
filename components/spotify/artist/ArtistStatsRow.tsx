@@ -35,7 +35,7 @@ const StatCard = ({
   <div className="bg-[#2e2249] rounded-xl p-5 border border-white/5 hover:border-[#895af6]/30 transition-colors">
     <div className="flex justify-between items-start mb-2">
       <span className="text-[#a290cb] text-sm font-medium">{title}</span>
-      <div className={`p-1 rounded-lg ${bgClass}`}>
+      <div className={`p-1 rounded-xl ${bgClass}`}>
         <Icon className={`w-5 h-5 ${colorClass}`} />
       </div>
     </div>

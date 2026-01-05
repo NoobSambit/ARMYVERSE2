@@ -122,7 +122,7 @@ export default function ArmyBattlesContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
               <span className="material-symbols-outlined text-white text-2xl">person</span>
             </div>
             <div>
@@ -132,7 +132,7 @@ export default function ArmyBattlesContent() {
           </div>
 
           <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-green-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-green-500 flex items-center justify-center flex-shrink-0">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>

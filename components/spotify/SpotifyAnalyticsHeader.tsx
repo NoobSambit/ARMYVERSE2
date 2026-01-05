@@ -62,7 +62,7 @@ export default function SpotifyAnalyticsHeader({
       <div className="flex items-center gap-3">
         <button
           onClick={onExport}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2A2438] hover:bg-[#352D46] text-white text-sm font-semibold transition-all border border-purple-500/20"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2A2438] hover:bg-[#352D46] text-white text-sm font-semibold transition-all border border-purple-500/20"
         >
           <Download className="w-4 h-4" />
           Export Data
@@ -72,7 +72,7 @@ export default function SpotifyAnalyticsHeader({
           <button
             onClick={onRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Refreshing...' : 'Refresh'}

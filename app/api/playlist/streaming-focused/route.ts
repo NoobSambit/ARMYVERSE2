@@ -14,9 +14,13 @@ interface StreamingFocusRequest {
     fillMode: 'random' | 'album' | 'era'
     albums?: string[]
     era?: string
+    selectedEras?: string[]
   }
   manual?: {
+    gapMode?: 'fixed' | 'dynamic'
     gapCount: number
+    minGap?: number
+    maxGap?: number
     gapSongIds: string[]
   }
 }
@@ -55,8 +59,49 @@ export async function POST(request: Request) {
       minGap = Math.max(1, Number(auto!.minGap ?? 2))
       maxGap = Math.max(minGap, Number(auto!.maxGap ?? 3))
       const fillMode = auto!.fillMode ?? 'random'
+      const selectedEras = auto.selectedEras || []
 
       const query: any = { isBTSFamily: true, spotifyId: { $ne: primaryTrackId } }
+
+      // If specific eras are selected, filter by album names
+      if (selectedEras.length > 0) {
+        // Map era values to album name patterns
+        const albumPatterns = selectedEras.map(era => {
+          switch(era) {
+            case 'proof': return 'Proof'
+            case 'be': return 'BE'
+            case 'mots7': return 'Map of the Soul : 7'
+            case 'motspersona': return 'MAP OF THE SOUL : PERSONA'
+            case 'lyanswer': return 'LOVE YOURSELF 結 \'Answer\''
+            case 'lytear': return 'LOVE YOURSELF 轉 \'Tear\''
+            case 'lyher': return 'LOVE YOURSELF 承 \'Her\''
+            case 'wings': return 'WINGS'
+            case 'ynwa': return 'You Never Walk Alone'
+            case 'hyyh': return 'Young Forever'
+            case 'darkwild': return 'DARK&WILD'
+            case 'skoolluv': return 'Skool Luv Affair'
+            case '2cool4skool': return '2 Cool 4 Skool'
+            case 'golden': return 'GOLDEN'
+            case 'face': return 'FACE'
+            case 'muse': return 'MUSE'
+            case 'layover': return 'Layover'
+            case 'indigo': return 'Indigo'
+            case 'rpwp': return 'Right Place, Wrong Person'
+            case 'jitb': return 'Jack In The Box'
+            case 'hopeworld': return 'Hope World'
+            case 'dday': return 'D-DAY'
+            case 'd2': return 'D-2'
+            case 'agustd': return 'Agust D'
+            case 'astronaut': return 'The Astronaut'
+            default: return era
+          }
+        })
+
+        // Use regex for flexible matching
+        query.$or = albumPatterns.map(pattern => ({
+          album: { $regex: pattern, $options: 'i' }
+        }))
+      }
 
       if (fillMode === 'album' && Array.isArray(auto.albums) && auto.albums.length) {
         query.album = { $in: auto.albums }
@@ -74,7 +119,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'No candidate songs for gap found' }, { status: 400 })
       }
     } else if (mode === 'manual') {
-      gapCountManual = Math.max(1, Number(manual?.gapCount ?? 1))
+      const manualGapMode = manual?.gapMode || 'fixed'
+
+      if (manualGapMode === 'dynamic') {
+        minGap = Math.max(1, Number(manual?.minGap ?? 2))
+        maxGap = Math.max(minGap, Number(manual?.maxGap ?? 4))
+      } else {
+        gapCountManual = Math.max(1, Number(manual?.gapCount ?? 1))
+      }
+
       const ids = Array.isArray(manual?.gapSongIds) ? manual!.gapSongIds : []
       if (!ids.length) {
         return NextResponse.json({ error: 'gapSongIds required for manual mode' }, { status: 400 })
@@ -99,9 +152,18 @@ export async function POST(request: Request) {
       playlist.push(primaryTrack)
       if (playlist.length >= totalLength) break
 
-      let gapSize = mode === 'auto'
-        ? Math.floor(Math.random() * (maxGap - minGap + 1)) + minGap
-        : gapCountManual
+      let gapSize: number
+      if (mode === 'auto') {
+        gapSize = Math.floor(Math.random() * (maxGap - minGap + 1)) + minGap
+      } else {
+        // For manual mode, check if using dynamic or fixed
+        const manualGapMode = manual?.gapMode || 'fixed'
+        if (manualGapMode === 'dynamic') {
+          gapSize = Math.floor(Math.random() * (maxGap - minGap + 1)) + minGap
+        } else {
+          gapSize = gapCountManual
+        }
+      }
 
       for (let i = 0; i < gapSize && playlist.length < totalLength; i++) {
         let pick: any

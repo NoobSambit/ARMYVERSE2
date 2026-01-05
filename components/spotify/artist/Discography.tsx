@@ -31,7 +31,7 @@ export default function Discography({ albums }: DiscographyProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {albums.map((album, i) => (
           <div key={i} className="group cursor-pointer">
-            <div className="aspect-square bg-[#2e2249] rounded-lg overflow-hidden mb-3 relative">
+            <div className="aspect-square bg-[#2e2249] rounded-xl overflow-hidden mb-3 relative">
               <img 
                 src={album.coverUrl} 
                 alt={album.title}

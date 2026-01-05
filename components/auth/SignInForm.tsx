@@ -145,7 +145,7 @@ export default function SignInForm({ embedded = false, hideHeader = false }: Sig
 
             {/* Error Message */}
             {error && (
-              <div className="text-red-400 text-sm text-center bg-red-400/10 border border-red-400/20 rounded-lg p-3">
+              <div className="text-red-400 text-sm text-center bg-red-400/10 border border-red-400/20 rounded-xl p-3">
                 {error}
               </div>
             )}

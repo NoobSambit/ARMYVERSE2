@@ -86,7 +86,8 @@ type BTSType = 'group' | 'solo' | null
 /**
  * Normalizes a string for comparison (lowercase, trim whitespace)
  */
-function normalize(str: string): string {
+function normalize(str: string | undefined | null): string {
+  if (!str) return ''
   return str.toLowerCase().trim()
 }
 
@@ -94,14 +95,16 @@ function normalize(str: string): string {
  * Extracts artist name from various Last.fm track formats
  */
 function getArtistName(track: LastFmTrack | LastFmTopTrack | LastFmWeeklyTrackChart | any): string {
+  if (!track || !track.artist) return ''
+
   if (typeof track.artist === 'string') {
     return track.artist
   }
-  if (typeof track.artist === 'object') {
-    if ('name' in track.artist) {
+  if (typeof track.artist === 'object' && track.artist !== null) {
+    if ('name' in track.artist && track.artist.name) {
       return track.artist.name
     }
-    if ('#text' in track.artist) {
+    if ('#text' in track.artist && track.artist['#text']) {
       return track.artist['#text']
     }
   }

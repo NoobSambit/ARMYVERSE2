@@ -193,7 +193,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg"
+          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
         >
           <AlertCircle className="w-5 h-5 text-red-400" />
           <p className="text-red-400 text-sm">{error}</p>
@@ -239,7 +239,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             type="text"
             value={profile.displayName ?? ''}
             onChange={(e) => handleInputChange('displayName', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
             placeholder="How should ARMY see you?"
             maxLength={40}
           />
@@ -259,7 +259,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
               type="text"
               value={profile.handle || ''}
               onChange={(e) => handleInputChange('handle', e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
               placeholder="your-username"
               maxLength={24}
             />
@@ -297,7 +297,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             type="text"
             value={profile.pronouns || ''}
             onChange={(e) => handleInputChange('pronouns', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
             placeholder="e.g., she/her, they/them"
             maxLength={50}
             list="pronoun-suggestions"
@@ -318,7 +318,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             id="bio"
             value={profile.bio || ''}
             onChange={(e) => handleInputChange('bio', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors resize-none"
             placeholder="Tell ARMY about yourself..."
             rows={3}
             maxLength={160}
@@ -374,7 +374,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             id="biasWrecker"
             value={profile.biasWrecker || ''}
             onChange={(e) => handleInputChange('biasWrecker', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
           >
             <option value="">Select bias wrecker</option>
             {BTS_MEMBERS.map((member) => (
@@ -394,7 +394,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             id="favoriteEra"
             value={profile.favoriteEra || ''}
             onChange={(e) => handleInputChange('favoriteEra', e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
           >
             <option value="">Select favorite era</option>
             {BTS_ERAS.map((era) => (
@@ -414,7 +414,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             id="armySinceYear"
             value={profile.armySinceYear || ''}
             onChange={(e) => handleInputChange('armySinceYear', e.target.value ? parseInt(e.target.value) : null)}
-            className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
           >
             <option value="">Select year</option>
             {Array.from({ length: new Date().getFullYear() - 2012 }, (_, i) => {
@@ -471,7 +471,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
                     setSearchQuery(e.target.value)
                     debouncedSearch(e.target.value, 'track')
                   }}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
                   placeholder="Search for a song..."
                 />
               </div>
@@ -491,7 +491,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
                         setSearchQuery('')
                         setSearchResults([])
                       }}
-                      className="w-full flex items-center gap-3 p-3 bg-black/20 hover:bg-black/40 rounded-lg transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-3 bg-black/20 hover:bg-black/40 rounded-xl transition-colors text-left"
                     >
                       <Music className="w-4 h-4 text-purple-400" />
                       <div className="flex-1 min-w-0">
@@ -508,7 +508,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
               )}
               
               {profile.topSong && (
-                <div className="flex items-center gap-3 p-3 bg-purple-600/20 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-purple-600/20 rounded-xl">
                   <Music className="w-4 h-4 text-purple-400" />
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">
@@ -540,7 +540,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
               type="text"
               value={profile.location || ''}
               onChange={(e) => handleInputChange('location', e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
               placeholder="e.g., Seoul, South Korea"
               maxLength={100}
             />
@@ -555,7 +555,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
               id="language"
               value={profile.language || 'en'}
               onChange={(e) => handleInputChange('language', e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
             >
               <option value="en">English</option>
               <option value="ko">한국어</option>
@@ -577,7 +577,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             <button
               type="button"
               onClick={copyProfileLink}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
             >
               <Copy className="w-4 h-4" />
               Copy Profile Link
@@ -585,7 +585,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
             <button
               type="button"
               onClick={viewPublicProfile}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
               View Public Profile

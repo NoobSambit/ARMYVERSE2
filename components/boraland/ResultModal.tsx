@@ -115,9 +115,9 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
             {showReview && (
               <div id="quiz-review-panel" className="px-4 pb-4">
                 <div className="flex items-center gap-2 text-xs text-white/70 mb-3">
-                  <button onClick={() => setFilter('all')} className={`px-2 py-1 rounded-lg border ${filter==='all'?'border-white/60 text-white':'border-white/20'}`}>All</button>
-                  <button onClick={() => setFilter('correct')} className={`px-2 py-1 rounded-lg border ${filter==='correct'?'border-white/60 text-white':'border-white/20'}`}>Correct</button>
-                  <button onClick={() => setFilter('wrong')} className={`px-2 py-1 rounded-lg border ${filter==='wrong'?'border-white/60 text-white':'border-white/20'}`}>Wrong</button>
+                  <button onClick={() => setFilter('all')} className={`px-2 py-1 rounded-xl border ${filter==='all'?'border-white/60 text-white':'border-white/20'}`}>All</button>
+                  <button onClick={() => setFilter('correct')} className={`px-2 py-1 rounded-xl border ${filter==='correct'?'border-white/60 text-white':'border-white/20'}`}>Correct</button>
+                  <button onClick={() => setFilter('wrong')} className={`px-2 py-1 rounded-xl border ${filter==='wrong'?'border-white/60 text-white':'border-white/20'}`}>Wrong</button>
                 </div>
                 <div className="space-y-3 max-h-80 overflow-auto pr-1">
                   {filteredItems.map((it, idx) => {
@@ -135,7 +135,7 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
                             const userPick = it.userAnswerIndex === cIdx
                             const correct = it.correctIndex === cIdx
                             return (
-                              <li key={cIdx} aria-selected={userPick} className={`px-3 py-2 rounded-lg text-sm ${correct ? 'bg-emerald-600/20 border border-emerald-400/40' : userPick ? 'bg-rose-600/10 border border-rose-400/30' : 'bg-white/5 border border-white/10'}`}>
+                              <li key={cIdx} aria-selected={userPick} className={`px-3 py-2 rounded-xl text-sm ${correct ? 'bg-emerald-600/20 border border-emerald-400/40' : userPick ? 'bg-rose-600/10 border border-rose-400/30' : 'bg-white/5 border border-white/10'}`}>
                                 <span className="text-white/90">{choice}</span>
                                 {correct && <span className="sr-only"> correct answer</span>}
                                 <span className="ml-2 text-xs text-white/70">

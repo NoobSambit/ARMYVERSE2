@@ -36,7 +36,7 @@ export default function TopSongsGrid({ songs, platform }: TopSongsGridProps) {
           <p className="text-xs mt-2 opacity-70">Platform: {platform}</p>
         </div>
         {platform === 'youtube' && (
-          <div className="text-sm text-yellow-400 bg-yellow-400/10 border border-yellow-400/30 rounded-lg p-4 max-w-md mx-auto">
+          <div className="text-sm text-yellow-400 bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-4 max-w-md mx-auto">
             <p className="font-semibold mb-2">💡 First time setup?</p>
             <p className="text-xs text-gray-300">
               Run the YouTube cron job to populate data:<br />
@@ -124,7 +124,7 @@ export default function TopSongsGrid({ songs, platform }: TopSongsGridProps) {
       {remainingSongs.map((song) => (
         <div
           key={song.rank}
-          className="relative group overflow-hidden rounded-lg bg-gradient-to-br from-gray-800/60 to-gray-900/60 border border-gray-700/50 hover:border-gray-600/80 transition-all duration-300"
+          className="relative group overflow-hidden rounded-xl bg-gradient-to-br from-gray-800/60 to-gray-900/60 border border-gray-700/50 hover:border-gray-600/80 transition-all duration-300"
         >
           <div className="relative aspect-square">
             {song.thumbnail ? (
@@ -189,7 +189,7 @@ export default function TopSongsGrid({ songs, platform }: TopSongsGridProps) {
       {[...Array(Math.max(0, 5 - remainingSongs.length))].map((_, i) => (
         <div
           key={`empty-${i}`}
-          className="aspect-square rounded-lg bg-gray-800/30 border border-gray-700/30"
+          className="aspect-square rounded-xl bg-gray-800/30 border border-gray-700/30"
         />
       ))}
     </div>

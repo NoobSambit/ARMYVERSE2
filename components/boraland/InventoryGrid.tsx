@@ -67,22 +67,22 @@ export default function InventoryGrid({
         {/* Filters & Search */}
         <div className="bora-glass-panel rounded-xl p-3 flex flex-col md:flex-row items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide">
-                <button className="bg-bora-primary text-white px-4 py-2 rounded-lg text-sm font-medium shadow-[0_0_10px_rgba(139,92,246,0.3)] whitespace-nowrap">All Cards</button>
-                <button className="bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">Favorites</button>
-                <button className="bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">New Acquisitions</button>
+                <button className="bg-bora-primary text-white px-4 py-2 rounded-xl text-sm font-medium shadow-[0_0_10px_rgba(139,92,246,0.3)] whitespace-nowrap">All Cards</button>
+                <button className="bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap">Favorites</button>
+                <button className="bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap">New Acquisitions</button>
                 <div className="h-6 w-px bg-white/10 mx-2 hidden md:block"></div>
                 <div className="relative group">
-                    <button className="flex items-center gap-1 bg-white/5 text-gray-300 px-3 py-2 rounded-lg text-sm hover:bg-white/10">
+                    <button className="flex items-center gap-1 bg-white/5 text-gray-300 px-3 py-2 rounded-xl text-sm hover:bg-white/10">
                         <span>Member</span> <span className="material-symbols-outlined text-sm">expand_more</span>
                     </button>
                 </div>
                 <div className="relative group">
-                    <button className="flex items-center gap-1 bg-white/5 text-gray-300 px-3 py-2 rounded-lg text-sm hover:bg-white/10">
+                    <button className="flex items-center gap-1 bg-white/5 text-gray-300 px-3 py-2 rounded-xl text-sm hover:bg-white/10">
                         <span>Era</span> <span className="material-symbols-outlined text-sm">expand_more</span>
                     </button>
                 </div>
                 <div className="relative group">
-                    <button className="flex items-center gap-1 bg-white/5 text-gray-300 px-3 py-2 rounded-lg text-sm hover:bg-white/10">
+                    <button className="flex items-center gap-1 bg-white/5 text-gray-300 px-3 py-2 rounded-xl text-sm hover:bg-white/10">
                         <span>Rarity</span> <span className="material-symbols-outlined text-sm">expand_more</span>
                     </button>
                 </div>
@@ -90,9 +90,9 @@ export default function InventoryGrid({
             <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative flex-grow md:flex-grow-0">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-lg">search</span>
-                    <input className="bg-black/30 border border-white/10 text-white text-sm rounded-lg pl-9 pr-4 py-2 focus:ring-1 focus:ring-bora-primary focus:border-bora-primary w-full md:w-64 placeholder-gray-600" placeholder="Search collection..." type="text"/>
+                    <input className="bg-black/30 border border-white/10 text-white text-sm rounded-xl pl-9 pr-4 py-2 focus:ring-1 focus:ring-bora-primary focus:border-bora-primary w-full md:w-64 placeholder-gray-600" placeholder="Search collection..." type="text"/>
                 </div>
-                <button className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white border border-white/5 hover:border-white/20">
+                <button className="p-2 rounded-xl bg-white/5 text-gray-400 hover:text-white border border-white/5 hover:border-white/20">
                     <span className="material-symbols-outlined text-xl">grid_view</span>
                 </button>
             </div>
@@ -134,7 +134,7 @@ export default function InventoryGrid({
                                     }`}>{it.card?.member}</h4>
                                     <p className="text-xs text-gray-400">{it.card?.era}</p>
                                 </div>
-                                <button onClick={() => share(it.id)} className="text-gray-400 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-lg transition-colors backdrop-blur-md">
+                                <button onClick={() => share(it.id)} className="text-gray-400 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-xl transition-colors backdrop-blur-md">
                                     <span className="material-symbols-outlined text-sm">share</span>
                                 </button>
                             </div>

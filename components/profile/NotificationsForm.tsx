@@ -121,7 +121,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg"
+          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
         >
           <p className="text-red-400 text-sm">{error}</p>
         </motion.div>
@@ -140,7 +140,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
         
         <div className="space-y-4">
           {/* In-App Notifications */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-purple-400" />
               <div>
@@ -166,7 +166,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
           </div>
           
           {/* Email Notifications */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-purple-400" />
               <div>
@@ -200,7 +200,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
           <h3 className="text-lg font-semibold text-white">Quiet Hours</h3>
         </div>
         
-        <div className="p-4 bg-black/20 rounded-lg space-y-4">
+        <div className="p-4 bg-black/20 rounded-xl space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-white font-medium">Enable Quiet Hours</h4>
@@ -239,7 +239,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
                     type="time"
                     value={profile.notifications?.quietHours?.start || ''}
                     onChange={(e) => handleQuietHoursChange('start', e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
                   />
                 </div>
                 
@@ -252,7 +252,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
                     type="time"
                     value={profile.notifications?.quietHours?.end || ''}
                     onChange={(e) => handleQuietHoursChange('end', e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
                   id="quietTimezone"
                   value={profile.notifications?.quietHours?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
                   onChange={(e) => handleQuietHoursChange('timezone', e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
                 >
                   {TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>
@@ -308,7 +308,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
                     return (
                       <div
                         key={field.id}
-                        className="flex items-center justify-between p-3 bg-black/20 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-black/20 rounded-xl"
                       >
                         <div>
                           <h5 className="text-white text-sm font-medium">{field.name}</h5>
@@ -338,7 +338,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
       </div>
 
       {/* Notification Summary */}
-      <div className="p-4 bg-gray-800/50 rounded-lg">
+      <div className="p-4 bg-gray-800/50 rounded-xl">
         <h4 className="text-white font-medium mb-3">Notification Summary</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
       </div>
 
       {/* Help Text */}
-      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
         <h4 className="text-blue-300 font-medium mb-2">Notification Tips</h4>
         <ul className="text-blue-300/80 text-sm space-y-1">
           <li>• Quiet hours pause all notifications during the specified time</li>

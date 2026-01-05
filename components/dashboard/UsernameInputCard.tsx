@@ -68,7 +68,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setProvider('lastfm')}
-                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                  className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
                     provider === 'lastfm'
                       ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/20'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
@@ -81,7 +81,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setProvider('statsfm')}
-                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                  className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
                     provider === 'statsfm'
                       ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-900/20'
                       : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
@@ -107,7 +107,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder={provider === 'lastfm' ? 'e.g., armyforever' : 'e.g., bts_fan_123'}
-                  className="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-colors"
+                  className="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-colors"
                   required
                 />
               </div>
@@ -123,7 +123,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg"
+                className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
               >
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-300">{error}</p>
@@ -135,7 +135,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
               type="submit"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-lg shadow-purple-900/30"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-purple-900/30"
             >
               View Stats
               <ArrowRight className="w-5 h-5" />
@@ -166,7 +166,7 @@ export default function UsernameInputCard({ onSubmit, error }: UsernameInputCard
           </div>
 
           {/* Example Usernames */}
-          <div className="mt-4 p-3 bg-purple-500/5 rounded-lg border border-purple-500/10 relative z-10">
+          <div className="mt-4 p-3 bg-purple-500/5 rounded-xl border border-purple-500/10 relative z-10">
             <p className="text-xs text-gray-500">
               Don&apos;t have an account? Create one at{' '}
               <a

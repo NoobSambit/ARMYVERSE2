@@ -1,5 +1,6 @@
 import { QuestDefinition } from '@/lib/models/QuestDefinition'
 import { Track } from '@/lib/models/Track'
+import { Album } from '@/lib/models/Album'
 import { dailyKey, weeklyKey } from './quests'
 
 /**
@@ -57,22 +58,14 @@ export async function selectDailySongs(date = new Date()): Promise<Array<{ track
 /**
  * Select random albums from database for daily quest (2 albums, 1 full stream each)
  */
-export async function selectDailyAlbums(date = new Date()): Promise<Array<{ albumName: string; trackCount: number }>> {
+export async function selectDailyAlbums(date = new Date()): Promise<Array<{ albumName: string; trackCount: number; tracks: Array<{name: string; artist: string}> }>> {
   const seed = dailyKey(date) + '_albums'
 
-  // Get unique albums from BTS tracks
-  const tracks = await Track.find({ isBTSFamily: true }).lean()
-  const albumMap = new Map<string, number>()
-
-  for (const track of tracks) {
-    const count = albumMap.get(track.album) || 0
-    albumMap.set(track.album, count + 1)
-  }
-
-  const albums = Array.from(albumMap.entries()).map(([name, trackCount]) => ({ name, trackCount }))
+  // Fetch BTS albums from database
+  const albums = await Album.find({ isBTSFamily: true }).lean()
 
   if (albums.length === 0) {
-    throw new Error('No BTS albums found in database')
+    throw new Error('No BTS albums found in database. Run: npx tsx scripts/fetch-bts-albums.ts')
   }
 
   // Shuffle and pick 2 albums
@@ -81,7 +74,8 @@ export async function selectDailyAlbums(date = new Date()): Promise<Array<{ albu
 
   return selected.map(a => ({
     albumName: a.name,
-    trackCount: a.trackCount // full album
+    trackCount: a.trackCount,
+    tracks: a.tracks.map((t: any) => ({ name: t.name, artist: t.artist }))
   }))
 }
 
@@ -112,22 +106,14 @@ export async function selectWeeklySongs(date = new Date()): Promise<Array<{ trac
 /**
  * Select random albums from database for weekly quest (10 albums, 1 full stream each)
  */
-export async function selectWeeklyAlbums(date = new Date()): Promise<Array<{ albumName: string; trackCount: number }>> {
+export async function selectWeeklyAlbums(date = new Date()): Promise<Array<{ albumName: string; trackCount: number; tracks: Array<{name: string; artist: string}> }>> {
   const seed = weeklyKey(date) + '_albums'
 
-  // Get unique albums from BTS tracks
-  const tracks = await Track.find({ isBTSFamily: true }).lean()
-  const albumMap = new Map<string, number>()
-
-  for (const track of tracks) {
-    const count = albumMap.get(track.album) || 0
-    albumMap.set(track.album, count + 1)
-  }
-
-  const albums = Array.from(albumMap.entries()).map(([name, trackCount]) => ({ name, trackCount }))
+  // Fetch BTS albums from database
+  const albums = await Album.find({ isBTSFamily: true }).lean()
 
   if (albums.length === 0) {
-    throw new Error('No BTS albums found in database')
+    throw new Error('No BTS albums found in database. Run: npx tsx scripts/fetch-bts-albums.ts')
   }
 
   // Shuffle and pick 10 albums (or all if less than 10)
@@ -136,7 +122,8 @@ export async function selectWeeklyAlbums(date = new Date()): Promise<Array<{ alb
 
   return selected.map(a => ({
     albumName: a.name,
-    trackCount: a.trackCount // full album
+    trackCount: a.trackCount,
+    tracks: a.tracks.map((t: any) => ({ name: t.name, artist: t.artist }))
   }))
 }
 

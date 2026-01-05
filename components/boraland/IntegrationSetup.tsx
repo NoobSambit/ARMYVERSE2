@@ -38,7 +38,7 @@ export default function IntegrationSetup({ onComplete }: { onComplete?: () => vo
         placeholder="Your Last.fm username"
         value={lastfmUsername}
         onChange={(e) => setLastfmUsername(e.target.value)}
-        className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 mb-4"
+        className="w-full px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 mb-4"
       />
 
       {error && <div className="text-rose-300 text-sm mb-4">{error}</div>}
@@ -46,7 +46,7 @@ export default function IntegrationSetup({ onComplete }: { onComplete?: () => vo
       <button
         onClick={handleConnect}
         disabled={loading || !lastfmUsername}
-        className="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] text-black font-semibold disabled:opacity-50"
+        className="w-full px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] text-black font-semibold disabled:opacity-50"
       >
         {loading ? 'Connecting...' : 'Connect Last.fm'}
       </button>

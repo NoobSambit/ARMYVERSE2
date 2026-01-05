@@ -167,7 +167,7 @@ export default function BlogEditor({
       }),
       CodeBlock.configure({
         HTMLAttributes: {
-          class: 'bg-gray-800 rounded-lg p-4 font-mono text-sm overflow-x-auto'
+          class: 'bg-gray-800 rounded-xl p-4 font-mono text-sm overflow-x-auto'
         }
       }),
       TaskList,
@@ -1917,7 +1917,7 @@ export default function BlogEditor({
                 {/* URL Preview */}
                 <div className="container-glass rounded-xl p-4">
                   <h4 className="font-medium text-white mb-2">URL Preview</h4>
-                  <div className="text-purple-300 text-sm font-mono bg-black/20 rounded-lg p-2">
+                  <div className="text-purple-300 text-sm font-mono bg-black/20 rounded-xl p-2">
                     armyverse.app/blogs/{slug || 'untitled'}
                   </div>
                 </div>

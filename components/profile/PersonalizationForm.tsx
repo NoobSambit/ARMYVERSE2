@@ -77,7 +77,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg"
+          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
         >
           <p className="text-red-400 text-sm">{error}</p>
         </motion.div>
@@ -91,7 +91,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
         <button
           type="button"
           onClick={resetPersonalization}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-purple-500/40 text-purple-300 hover:bg-purple-500/10 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-500/40 text-purple-300 hover:bg-purple-500/10 transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
           Reset
@@ -112,7 +112,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
                 key={color.value}
                 type="button"
                 onClick={() => handleInputChange('accentColor', color.value)}
-                className={`relative p-3 rounded-lg border-2 transition-all ${
+                className={`relative p-3 rounded-xl border-2 transition-all ${
                   accentColor === color.value
                     ? 'border-purple-500'
                     : 'border-gray-700 hover:border-gray-600'
@@ -139,14 +139,14 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
                 type="color"
                 value={accentColor}
                 onChange={(e) => handleCustomColorChange(e.target.value)}
-                className="w-12 h-12 rounded-lg border border-gray-700 bg-transparent cursor-pointer"
+                className="w-12 h-12 rounded-xl border border-gray-700 bg-transparent cursor-pointer"
               />
               <input
                 type="text"
                 value={customColor || profile.personalization?.accentColor || accentColor || ''}
                 onChange={(e) => handleCustomColorChange(e.target.value)}
                 placeholder="#8B5CF6"
-                className="flex-1 px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
+                className="flex-1 px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none transition-colors"
               />
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
             max="100"
             value={themeIntensity}
             onChange={(e) => handleInputChange('themeIntensity', parseInt(e.target.value))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            className="w-full h-2 bg-gray-700 rounded-xl appearance-none cursor-pointer slider"
           />
           
           <div className="flex justify-center">
@@ -196,7 +196,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
               key={style.id}
               type="button"
               onClick={() => handleInputChange('backgroundStyle', style.id)}
-              className={`p-4 rounded-lg border-2 transition-all text-left ${
+              className={`p-4 rounded-xl border-2 transition-all text-left ${
                 backgroundStyle === style.id
                   ? 'border-purple-500 bg-purple-500/10'
                   : 'border-gray-700 hover:border-gray-600 bg-black/20'
@@ -222,7 +222,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
               key={style.id}
               type="button"
               onClick={() => handleInputChange('badgeStyle', style.id)}
-              className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+              className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                 badgeStyle === style.id
                   ? 'border-purple-500 bg-purple-500/10'
                   : 'border-gray-700 hover:border-gray-600 bg-black/20'
@@ -236,7 +236,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
       </div>
 
       {/* Live Preview Note */}
-      <div className="p-4 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg">
+      <div className="p-4 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl">
         <p className="text-purple-200 text-sm">
           💡 Adjustments are synced instantly with the preview and saved automatically.
         </p>

@@ -4,6 +4,12 @@ Complete documentation for all features of the ARMYVERSE platform - a comprehens
 
 ## 📚 Documentation Structure
 
+### Quest & Badge System (NEW!)
+Complete guides for the quest and badge system:
+- **[QUICK_START.md](./QUICK_START.md)** - 4-step setup guide (10 minutes)
+- **[QUEST_SYSTEM.md](./QUEST_SYSTEM.md)** - Complete system reference
+- **[QUEST_BADGE_SYSTEM.md](./QUEST_BADGE_SYSTEM.md)** - UI integration guide
+
 ### Features Documentation
 Detailed guides for each feature of the platform:
 - [Authentication](./features/authentication.md) - Firebase Auth & Spotify OAuth
@@ -48,7 +54,14 @@ Detailed guides for each feature of the platform:
 - Protected routes and API endpoints
 
 ### 2. **Playlist Generation**
-- **AI Playlists**: Google Gemini-powered playlist creation based on mood and preferences
+- **AI Playlists**: Groq Llama 3.3 70B-powered playlist creation with advanced customization
+  - Seed track selection from BTS library
+  - 6-genre mix control (Ballad, Hip-Hop, EDM, R&B, Rock, Dance-Pop)
+  - Flow pattern selection (slow-build, consistent, wave, cool-down)
+  - Context optimization (workout, study, party, commute, sleep, auto)
+  - Personality quiz and template gallery
+  - Configuration save/load
+  - Playlist evolution and comparison
 - **Manual Playlists**: Hand-pick tracks with search and filtering
 - **Export to Spotify**: One-click export with error handling
 
@@ -77,7 +90,7 @@ Detailed guides for each feature of the platform:
 - **Photocard Collection**: Earn cards with 4 rarity tiers
 - **Crafting System**: Convert duplicates to Stardust, craft specific cards
 - **Mastery System**: Member/Era XP with milestone rewards
-- **Quest System**: Daily/weekly tasks with rewards
+- **Quest & Badge System**: Daily/weekly streaming quests with complete album requirements, 34 badges, streak tracking
 - **Leaderboard**: Weekly competition with top player rankings
 - **Sharing**: Generate shareable card images with Cloudinary
 
@@ -101,7 +114,7 @@ Detailed guides for each feature of the platform:
 - **Styling**: Tailwind CSS, Radix UI, Framer Motion
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: Firebase Auth, NextAuth.js
-- **External APIs**: Spotify Web API, YouTube Data API, Google Gemini AI
+- **External APIs**: Spotify Web API, YouTube Data API, Groq Llama 3.3 70B
 - **Rich Text**: Tiptap editor
 - **Image Management**: Cloudinary
 - **Deployment**: Vercel with Edge Runtime

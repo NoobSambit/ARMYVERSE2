@@ -131,7 +131,7 @@ export default function CollectionDetailPage() {
                   {data.posts.map((p) => (
                     <div key={p._id} className="relative group">
                       {isOwner && (
-                        <button className="absolute right-2 top-2 z-10 px-2 py-1 text-xs rounded-lg bg-black/50 border border-white/10 text-white hover:bg-white/10" onClick={async () => {
+                        <button className="absolute right-2 top-2 z-10 px-2 py-1 text-xs rounded-xl bg-black/50 border border-white/10 text-white hover:bg-white/10" onClick={async () => {
                           await fetch(`/api/collections/${encodeURIComponent(data.slug)}/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'remove', postId: p._id }) })
                           const res = await fetch(`/api/collections/${encodeURIComponent(slug)}${ownerId ? `?ownerId=${encodeURIComponent(ownerId)}` : ''}`)
                           const json = await res.json()
@@ -197,7 +197,7 @@ export default function CollectionDetailPage() {
                         <div className="text-xs text-gray-400">by {b.author?.name || 'Unknown'}</div>
                         <div className="mt-2 flex items-center justify-between">
                           <span className="text-xs text-gray-500">{new Date(b.createdAt).toLocaleDateString()}</span>
-                          <button className="px-2 py-1 text-xs rounded-lg bg-purple-600 text-white hover:bg-purple-500" onClick={async () => {
+                          <button className="px-2 py-1 text-xs rounded-xl bg-purple-600 text-white hover:bg-purple-500" onClick={async () => {
                             await fetch(`/api/collections/${encodeURIComponent(data!.slug)}/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add', postId: b._id }) })
                             const res = await fetch(`/api/collections/${encodeURIComponent(slug)}${ownerId ? `?ownerId=${encodeURIComponent(ownerId)}` : ''}`)
                             const json = await res.json()

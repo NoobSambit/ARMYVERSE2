@@ -1,15 +1,13 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, User, LogOut } from 'lucide-react'
+import { Menu, X, User, LogOut, Search, Bell, Sparkles } from 'lucide-react'
 import { navItems } from '@/components/layout/nav-data'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from '@/lib/firebase/auth'
 import ProfileModal from '@/components/profile/ProfileModal'
- 
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -73,122 +71,91 @@ export default function Navbar() {
   const isActive = (path: string) => pathname === path
 
   return (
-    <nav className={`sticky top-0 z-50 backdrop-blur-md bg-gradient-to-b from-[#1a082a]/90 to-[#0b0310]/80 border-b border-[#3b1a52]/60`} aria-label="Primary Navigation">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`flex items-center justify-between h-16`}>
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="relative w-[2.4rem] h-[2.4rem] lg:w-12 lg:h-12 rounded">
-              <Image src="https://res.cloudinary.com/dacgtjw7w/image/upload/v1767245893/armyverse_logo_1_woqztj.png" alt="ARMYVERSE" fill sizes="(max-width:1024px) 40px, 48px" className="object-contain rounded" />
+    <div className="sticky top-0 z-50 w-full glass-panel border-b border-glass-border">
+      <header className="layout-container flex h-16 items-center justify-between px-6 lg:px-10 max-w-[1400px] mx-auto">
+        <div className="flex items-center gap-8">
+          <Link href="/" className="flex items-center gap-3 cursor-pointer group">
+            <div className="relative size-8 flex items-center justify-center">
+              <div className="absolute inset-0 bg-primary rounded-xl blur-md opacity-50 group-hover:opacity-100 transition-opacity"></div>
+              <Sparkles className="relative text-white z-10 w-5 h-5" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-[#FF9AD5] to-[#C084FC] bg-clip-text text-transparent select-none">
-              ARMYVERSE
-            </span>
+            <h2 className="text-white text-xl font-bold tracking-tight group-hover:text-primary transition-colors">ARMYVERSE</h2>
           </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navItems.map(({ path, label, icon: Icon }) => (
+          
+          <nav className="hidden md:flex items-center gap-8">
+            {navItems.map(({ path, label }) => (
               <Link
                 key={path}
                 href={path}
-                aria-current={isActive(path) ? 'page' : undefined}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-300 flex items-center space-x-2 relative ${
-                  isActive(path) ? 'text-[#C084FC]' : 'text-gray-300 hover:text-white'
+                className={`text-sm font-medium transition-colors ${
+                  isActive(path) ? 'text-white' : 'text-white/60 hover:text-white'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                <span>{label}</span>
+                {label}
               </Link>
             ))}
-            
-            {/* Auth Buttons */}
-            <div className="ml-4 flex items-center space-x-2">
-              {isAuthenticated && user ? (
-                <div className="flex items-center space-x-2">
-                  <ProfileModal trigger={
-                    <button className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-lg">
-                      <User className="w-4 h-4" />
-                      <span>{profileName || user.displayName || user.email}</span>
-                    </button>
-                  } />
-                  <button
-                    onClick={handleSignOut}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex items-center space-x-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/auth/signup"
-                  className="btn-glass-primary text-sm font-medium"
-                >
-                  Sign Up
-                </Link>
-              )}
-            </div>
-          </div>
+          </nav>
+        </div>
 
-          {/* Mobile menu button */}
+        <div className="flex items-center gap-4">
+          {/* Auth / Profile */}
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-2">
+               <ProfileModal trigger={
+                  <div 
+                    className="size-10 rounded-full bg-cover bg-center border-2 border-primary/30 cursor-pointer hover:border-primary transition-colors bg-gray-700 flex items-center justify-center overflow-hidden" 
+                    style={{ backgroundImage: user.photoURL ? `url('${user.photoURL}')` : undefined }}
+                  >
+                    {!user.photoURL && <span className="text-white font-bold">{profileName?.charAt(0) || 'A'}</span>}
+                  </div>
+               } />
+            </div>
+          ) : (
+             <Link
+                href="/auth/signin"
+                className="h-10 px-4 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-bold flex items-center transition-colors"
+              >
+                Sign In
+              </Link>
+          )}
+
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="bg-black/50 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white transition-colors"
-              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              className="size-10 flex items-center justify-center text-white"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-[#0b0310]/95 backdrop-blur-md border-t border-white/10">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            {navItems.map(({ path, label, icon: Icon }) => (
-              <Link
-                key={path}
-                href={path}
-                onClick={() => setIsOpen(false)}
-                aria-current={isActive(path) ? 'page' : undefined}
-                className={`flex px-3 py-2 rounded-md text-base font-medium transition-all duration-300 items-center space-x-2 relative
-                  ${isActive(path)
-                    ? 'text-[#C084FC] bg-white/10'
-                    : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  }`}
+        <div className="md:hidden glass-panel border-t border-glass-border absolute w-full left-0 top-16 p-4 flex flex-col gap-4">
+          {navItems.map(({ path, label }) => (
+            <Link
+              key={path}
+              href={path}
+              onClick={() => setIsOpen(false)}
+              className={`text-sm font-medium p-2 rounded-xl transition-colors ${
+                isActive(path) ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+           {isAuthenticated && user && (
+              <button
+                onClick={handleSignOut}
+                className="text-sm font-medium p-2 rounded-xl text-red-400 hover:bg-white/5 text-left"
               >
-                <Icon className="w-4 h-4" />
-                <span>{label}</span>
-              </Link>
-            ))}
-            <div className="px-3 py-2">
-              {isAuthenticated && user ? (
-                <button
-                  onClick={handleSignOut}
-                  className="w-full px-3 py-2 rounded-lg text-base font-medium text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 flex items-center justify-center space-x-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
-                </button>
-              ) : (
-                <Link
-                  href="/auth/signup"
-                  onClick={() => setIsOpen(false)}
-                  className="btn-glass-primary text-base font-medium w-full justify-center"
-                >
-                  Sign Up
-                </Link>
-              )}
-            </div>
-          </div>
+                Sign Out
+              </button>
+           )}
         </div>
       )}
-
-      {/* Static subtle bottom border only */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-[#3b1a52] via-[#4a1f66] to-[#3b1a52]" />
-    </nav>
+    </div>
   )
 }

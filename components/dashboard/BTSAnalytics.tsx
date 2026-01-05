@@ -83,7 +83,7 @@ export default function BTSAnalytics({ btsAnalytics, loading = false }: BTSAnaly
             <button
               key={mode}
               onClick={() => setViewMode(mode as any)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 capitalize ${
+              className={`px-4 py-1.5 rounded-xl text-sm font-medium transition-all duration-300 capitalize ${
                 viewMode === mode
                   ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -107,7 +107,7 @@ export default function BTSAnalytics({ btsAnalytics, loading = false }: BTSAnaly
           >
             {/* Super Fan Status Banner */}
             <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/20 rounded-2xl p-6 flex items-start gap-4">
-               <div className="bg-purple-500/20 p-2 rounded-lg shrink-0">
+               <div className="bg-purple-500/20 p-2 rounded-xl shrink-0">
                  <Star className="w-6 h-6 text-purple-400" />
                </div>
                <div>
@@ -152,7 +152,7 @@ export default function BTSAnalytics({ btsAnalytics, loading = false }: BTSAnaly
                       <img 
                         src={topTrackImage}
                         alt={btsAnalytics.btsTracks[0]?.name}
-                        className="w-16 h-16 rounded-lg object-cover"
+                        className="w-16 h-16 rounded-xl object-cover"
                         onError={(e) => {
                           e.currentTarget.src = 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'
                         }}
@@ -170,7 +170,7 @@ export default function BTSAnalytics({ btsAnalytics, loading = false }: BTSAnaly
                  )}
 
                  <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shrink-0">
                         <Crown className="w-8 h-8 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -232,7 +232,7 @@ export default function BTSAnalytics({ btsAnalytics, loading = false }: BTSAnaly
                      <img 
                        src={trackImage}
                        alt={track.name}
-                       className="w-10 h-10 rounded-lg object-cover shrink-0" 
+                       className="w-10 h-10 rounded-xl object-cover shrink-0" 
                        onError={(e) => {
                          e.currentTarget.src = 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=40&h=40'
                        }}

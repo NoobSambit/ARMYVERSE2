@@ -54,7 +54,7 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
           <div className="space-y-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gray-800 rounded-lg"></div>
+                <div className="w-12 h-12 bg-gray-800 rounded-xl"></div>
                 <div className="flex-1">
                   <div className="h-4 bg-gray-800 rounded mb-2 w-3/4"></div>
                   <div className="h-3 bg-gray-800 rounded w-1/2"></div>
@@ -111,14 +111,14 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
                   <img
                     src={imageUrl}
                     alt={albumName}
-                    className="w-12 h-12 rounded-lg object-cover shadow-lg"
+                    className="w-12 h-12 rounded-xl object-cover shadow-lg"
                     onError={(e) => {
                       // Fallback on error
                       e.currentTarget.src = 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=60&h=60'
                     }}
                   />
                   {isNowPlaying ? (
-                    <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center backdrop-blur-[1px]">
+                    <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center backdrop-blur-[1px]">
                       <div className="flex gap-0.5 items-end h-3">
                         <motion.div animate={{ height: [4, 12, 6] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-1 bg-purple-400 rounded-full" />
                         <motion.div animate={{ height: [8, 4, 10] }} transition={{ repeat: Infinity, duration: 0.9 }} className="w-1 bg-purple-400 rounded-full" />
@@ -126,7 +126,7 @@ export default function RecentTracks({ tracks, loading = false }: RecentTracksPr
                       </div>
                     </div>
                   ) : (
-                    <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
+                    <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[1px]">
                       <Play className="w-5 h-5 text-white fill-white" />
                     </div>
                   )}

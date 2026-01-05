@@ -176,7 +176,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg"
+          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
         >
           <p className="text-red-400 text-sm">{error}</p>
         </motion.div>
@@ -199,7 +199,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                 key={option.id}
                 type="button"
                 onClick={() => handleInputChange('visibility', option.id)}
-                className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                   isSelected
                     ? 'border-purple-500 bg-purple-500/10'
                     : 'border-gray-700 hover:border-gray-600 bg-black/20'
@@ -241,7 +241,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
             return (
               <div
                 key={option.id}
-                className="flex items-center justify-between p-4 bg-black/20 rounded-lg"
+                className="flex items-center justify-between p-4 bg-black/20 rounded-xl"
               >
                 <div>
                   <h4 className="text-white font-medium">{option.name}</h4>
@@ -276,7 +276,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
         
         <div className="space-y-4">
           {/* Explicit Content Filter */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
             <div>
               <h4 className="text-white font-medium">Explicit Content Filter</h4>
               <p className="text-gray-400 text-sm">
@@ -299,7 +299,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
           </div>
           
           {/* Allow Mentions */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
             <div>
               <h4 className="text-white font-medium">Allow Mentions</h4>
               <p className="text-gray-400 text-sm">
@@ -322,7 +322,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
           </div>
           
           {/* Allow DMs */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
             <div>
               <h4 className="text-white font-medium">Allow Direct Messages</h4>
               <p className="text-gray-400 text-sm">
@@ -353,7 +353,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
           <h3 className="text-lg font-semibold text-white">Blocked Users</h3>
         </div>
         
-        <div className="p-4 bg-black/20 rounded-lg">
+        <div className="p-4 bg-black/20 rounded-xl">
           <p className="text-gray-400 text-sm mb-3">
             Manage users you&apos;ve blocked from interacting with you
           </p>
@@ -391,7 +391,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
         
         <div className="space-y-4">
           {/* Export Data */}
-          <div className="p-4 bg-black/20 rounded-lg">
+          <div className="p-4 bg-black/20 rounded-xl">
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-white font-medium">Download Your Data</h4>
@@ -402,7 +402,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
               <button
                 onClick={handleExportData}
                 disabled={exporting}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl transition-colors"
               >
                 <Download className="w-4 h-4" />
                 {exporting ? 'Exporting...' : 'Export'}
@@ -411,7 +411,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
           </div>
           
           {/* Delete Account */}
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
             <div className="space-y-4">
               <div>
                 <h4 className="text-red-400 font-medium">Delete Account</h4>
@@ -424,7 +424,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   disabled={deleting}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                   {deleting ? 'Preparing...' : 'Delete Account'}
@@ -440,7 +440,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                       type="text"
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors"
+                      className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors"
                       placeholder="DELETE"
                     />
                   </div>
@@ -449,7 +449,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                     <button
                       onClick={handleDeleteAccount}
                       disabled={!isDeleteEnabled || deleting}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       {deleting ? 'Deleting...' : 'Confirm Delete'}
@@ -459,7 +459,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                         setShowDeleteConfirm(false)
                         setDeleteConfirmText('')
                       }}
-                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
                     >
                       Cancel
                     </button>
@@ -472,7 +472,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Privacy Notice */}
-      <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+      <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
         <h4 className="text-yellow-300 font-medium mb-2">Privacy Notice</h4>
         <ul className="text-yellow-300/80 text-sm space-y-1">
           <li>• Your privacy settings are respected across all ARMYVERSE features</li>

@@ -206,7 +206,7 @@ export default function Stats() {
                 <select
                   value={period}
                   onChange={(e) => setPeriod(e.target.value as LastFmPeriod)}
-                  className="appearance-none bg-black/40 hover:bg-black/60 text-sm text-white border border-white/10 rounded-lg pl-3 pr-8 py-2 focus:border-purple-500/50 focus:outline-none transition-colors cursor-pointer min-w-[140px]"
+                  className="appearance-none bg-black/40 hover:bg-black/60 text-sm text-white border border-white/10 rounded-xl pl-3 pr-8 py-2 focus:border-purple-500/50 focus:outline-none transition-colors cursor-pointer min-w-[140px]"
                 >
                   <option value="7day">Last 7 Days</option>
                   <option value="1month">Last Month</option>
@@ -225,7 +225,7 @@ export default function Stats() {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-lg text-gray-300 hover:text-white transition-colors"
+                className="p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
                 title="Refresh Data"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -238,7 +238,7 @@ export default function Stats() {
                    setUsername('')
                    setData(null)
                  }}
-                 className="p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-lg text-gray-300 hover:text-white transition-colors"
+                 className="p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
                  title="Change User Settings"
                >
                  <Settings className="w-4 h-4" />

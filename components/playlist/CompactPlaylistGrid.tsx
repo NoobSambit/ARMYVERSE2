@@ -26,10 +26,10 @@ const CompactPlaylistGrid: React.FC<Props> = ({ songs, primaryId }) => {
               alt={song.name}
               width={80}
               height={80}
-              className="w-full h-full object-cover rounded-lg group-hover:brightness-110"
+              className="w-full h-full object-cover rounded-xl group-hover:brightness-110"
               priority={idx === 0}
             />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/40 rounded-lg">
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/40 rounded-xl">
               <span className="text-white text-xl">▶️</span>
             </div>
             {primaryId && song.spotifyId === primaryId && (

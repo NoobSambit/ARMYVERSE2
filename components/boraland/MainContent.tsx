@@ -34,7 +34,7 @@ export default function MainContent({ onTabChange }: { pool: PoolInfo | null, on
     </div>
     </div>
     <div className="absolute top-6 right-6 flex flex-col gap-2">
-    <div className="bora-glass-panel px-4 py-2 rounded-lg flex items-center gap-2 text-sm text-gray-300">
+    <div className="bora-glass-panel px-4 py-2 rounded-xl flex items-center gap-2 text-sm text-gray-300">
     <span className="material-symbols-outlined text-accent-cyan text-base">groups</span>
     <span>1,204 Active</span>
     </div>

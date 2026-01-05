@@ -125,15 +125,15 @@ export default function MyBlogsPage() {
             <span className="opacity-50">•</span>
             {tab !== 'trash' ? (
               <>
-                <button onClick={() => batchPublish(true)} className="px-2 py-1 rounded-lg bg-green-600/80 hover:bg-green-600">Publish</button>
-                <button onClick={() => batchPublish(false)} className="px-2 py-1 rounded-lg bg-yellow-600/80 hover:bg-yellow-600">Unpublish</button>
-                <button onClick={batchAddToCollection} className="px-2 py-1 rounded-lg bg-blue-600/80 hover:bg-blue-600">Add to collection</button>
-                <button onClick={batchDelete} className="px-2 py-1 rounded-lg bg-red-600/80 hover:bg-red-600">Delete</button>
+                <button onClick={() => batchPublish(true)} className="px-2 py-1 rounded-xl bg-green-600/80 hover:bg-green-600">Publish</button>
+                <button onClick={() => batchPublish(false)} className="px-2 py-1 rounded-xl bg-yellow-600/80 hover:bg-yellow-600">Unpublish</button>
+                <button onClick={batchAddToCollection} className="px-2 py-1 rounded-xl bg-blue-600/80 hover:bg-blue-600">Add to collection</button>
+                <button onClick={batchDelete} className="px-2 py-1 rounded-xl bg-red-600/80 hover:bg-red-600">Delete</button>
               </>
             ) : (
-              <button onClick={batchRestore} className="px-2 py-1 rounded-lg bg-green-600/80 hover:bg-green-600">Restore</button>
+              <button onClick={batchRestore} className="px-2 py-1 rounded-xl bg-green-600/80 hover:bg-green-600">Restore</button>
             )}
-            <button onClick={clearSelection} className="ml-auto px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20">Clear</button>
+            <button onClick={clearSelection} className="ml-auto px-2 py-1 rounded-xl bg-white/10 hover:bg-white/20">Clear</button>
           </div>
         )}
 

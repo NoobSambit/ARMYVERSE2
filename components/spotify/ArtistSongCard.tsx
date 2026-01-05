@@ -133,7 +133,7 @@ export default function ArtistSongCard({
               {songs.slice(0, 5).map((song, idx) => ( // Show top 5 songs by default in expanded view
                 <div
                   key={idx}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors group"
+                  className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group"
                 >
                   {/* Album Art */}
                   {song.albumArt ? (

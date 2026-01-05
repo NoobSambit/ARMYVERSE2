@@ -227,7 +227,7 @@ export default function BlogViewPage() {
               <img
                 src={blog.coverImage}
                 alt={blog.title}
-                className="w-full h-64 object-cover rounded-lg"
+                className="w-full h-64 object-cover rounded-xl"
               />
             </div>
           )}
@@ -283,7 +283,7 @@ export default function BlogViewPage() {
           <div className="flex items-center space-x-2">
                 <button
                   onClick={() => handleReaction('moved')}
-                  className={`flex items-center px-3 py-2 rounded-lg transition-all ${
+                  className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                     userReactions.includes('moved')
                       ? 'bg-purple-500 text-white'
                       : 'bg-black/50 text-gray-300 hover:bg-gray-700'
@@ -293,7 +293,7 @@ export default function BlogViewPage() {
                 </button>
                 <button
                   onClick={() => handleReaction('loved')}
-                  className={`flex items-center px-3 py-2 rounded-lg transition-all ${
+                  className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                     userReactions.includes('loved')
                       ? 'bg-red-500 text-white'
                       : 'bg-black/50 text-gray-300 hover:bg-gray-700'
@@ -303,7 +303,7 @@ export default function BlogViewPage() {
                 </button>
                 <button
                   onClick={() => handleReaction('surprised')}
-                  className={`flex items-center px-3 py-2 rounded-lg transition-all ${
+                  className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                     userReactions.includes('surprised')
                       ? 'bg-yellow-500 text-white'
                       : 'bg-black/50 text-gray-300 hover:bg-gray-700'
@@ -318,7 +318,7 @@ export default function BlogViewPage() {
               {/* Save */}
               <button
                 onClick={handleSave}
-                className={`flex items-center px-3 py-2 rounded-lg transition-all ${
+                className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                   userSaved
                     ? 'bg-purple-500 text-white'
                     : 'bg-black/50 text-gray-300 hover:bg-gray-700'
@@ -332,14 +332,14 @@ export default function BlogViewPage() {
               <div className="relative">
                 <button
                   onClick={() => setShowShareMenu(!showShareMenu)}
-                  className="flex items-center px-3 py-2 bg-black/50 text-gray-300 rounded-lg hover:bg-gray-700 transition-all"
+                  className="flex items-center px-3 py-2 bg-black/50 text-gray-300 rounded-xl hover:bg-gray-700 transition-all"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </button>
                 
                 {showShareMenu && (
-                  <div className="absolute right-0 top-full mt-2 bg-black/90 backdrop-blur-lg rounded-lg p-2 border border-purple-500/20">
+                  <div className="absolute right-0 top-full mt-2 bg-black/90 backdrop-blur-lg rounded-xl p-2 border border-purple-500/20">
                     <button
                       onClick={shareToTwitter}
                       className="flex items-center w-full px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-all"
@@ -400,13 +400,13 @@ export default function BlogViewPage() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Share your thoughts... 💜"
-              className="w-full px-4 py-3 bg-black/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-black/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none resize-none"
               rows={3}
             />
             <button
               onClick={handleComment}
               disabled={!newComment.trim() || submittingComment}
-              className="mt-2 px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all disabled:opacity-50"
+              className="mt-2 px-6 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-all disabled:opacity-50"
             >
               {submittingComment ? 'Posting...' : 'Post Comment'}
             </button>
@@ -417,7 +417,7 @@ export default function BlogViewPage() {
             {blog.comments.map((comment, index) => (
               <div
                 key={index}
-                className="bg-black/30 rounded-lg p-4 border border-gray-700"
+                className="bg-black/30 rounded-xl p-4 border border-gray-700"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold text-white">{comment.name}</span>

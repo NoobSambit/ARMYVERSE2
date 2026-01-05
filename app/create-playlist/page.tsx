@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState, useCallback, useMemo } from 'react'
-import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle, Sparkles, AudioWaveform as Audio, ListMusic, GripVertical, RotateCw, Minus, Info, Clock } from 'lucide-react'
+import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle, Sparkles, AudioWaveform as Audio, ListMusic, GripVertical, RotateCw, Minus, Info, Clock, SlidersHorizontal, TrendingUp, Edit3 } from 'lucide-react'
 import Image from 'next/image'
-import StreamingFocusForm from '@/components/forms/StreamingFocusForm'
+import Link from 'next/link'
+import StreamingFocusMode from '@/components/streaming/StreamingFocusMode'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
-import Link from 'next/link'
 
 // Track with appearance count for manual curator
 interface TrackWithCount extends SongDoc {
@@ -15,10 +15,10 @@ interface TrackWithCount extends SongDoc {
 
 export default function CreatePlaylist() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [playlistName, setPlaylistName] = useState('My BTS Playlist')
+  const [playlistName, setPlaylistName] = useState('My Gym Playlist')
   const [selectedTracks, setSelectedTracks] = useState<TrackWithCount[]>([])
   const [playlistTracks, setPlaylistTracks] = useState<SongDoc[]>([])
-  const [mode, setMode] = useState<'normal' | 'focus'>('normal')
+  const [mode, setMode] = useState<'manual' | 'streaming'>('manual')
   const [focusResult, setFocusResult] = useState<SongDoc[] | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -36,32 +36,55 @@ export default function CreatePlaylist() {
     track.album.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Calculate total duration (assuming average 3.5 minutes per track appearance)
-  const totalDuration = useMemo(() => {
+  // Calculate total duration, appearances, and diversity
+  const playlistStats = useMemo(() => {
     const totalMinutes = playlistTracks.length * 3.5
     const hours = Math.floor(totalMinutes / 60)
     const minutes = Math.round(totalMinutes % 60)
-    return `${hours.toString().padStart(2, '0')}h${minutes.toString().padStart(2, '0')}m`
-  }, [playlistTracks.length])
+    const duration = `${hours}h ${minutes.toString().padStart(2, '0')}m`
 
-  // Calculate duration for focus result
+    const totalAppearances = selectedTracks.reduce((sum, t) => sum + t.appearances, 0)
+    const uniqueAlbums = new Set(selectedTracks.map(t => t.album)).size
+    const diversity = selectedTracks.length >= 5 && uniqueAlbums >= 3 ? 'High' :
+                      selectedTracks.length >= 3 ? 'Medium' : 'Low'
+
+    return {
+      tracks: playlistTracks.length,
+      duration,
+      appearances: totalAppearances,
+      diversity
+    }
+  }, [playlistTracks, selectedTracks])
+
+  // Calculate shuffle quality and skip risk
+  const playlistQuality = useMemo(() => {
+    if (playlistTracks.length === 0) return { shuffleQuality: 0, skipRisk: 'Low' }
+
+    // Shuffle quality based on diversity and length
+    const uniqueTracks = new Set(playlistTracks.map(t => t.spotifyId)).size
+    const shuffleQuality = Math.min(98, Math.round((uniqueTracks / Math.max(playlistTracks.length, 1)) * 100))
+
+    // Skip risk based on repetition
+    const avgAppearances = playlistTracks.length / Math.max(uniqueTracks, 1)
+    const skipRisk = avgAppearances > 5 ? 'High' : avgAppearances > 3 ? 'Medium' : 'Low'
+
+    return { shuffleQuality, skipRisk }
+  }, [playlistTracks])
+
+  // Focus playlist stats
   const focusDuration = useMemo(() => {
-    if (!focusResult) return '00h00m'
+    if (!focusResult) return '0h 00m'
     const totalMinutes = focusResult.length * 3.5
     const hours = Math.floor(totalMinutes / 60)
     const minutes = Math.round(totalMinutes % 60)
-    return `${hours.toString().padStart(2, '0')}h${minutes.toString().padStart(2, '0')}m`
+    return `${hours}h ${minutes.toString().padStart(2, '0')}m`
   }, [focusResult])
 
   // Add track to selected tracks with appearance count
   const addToSelected = (track: SongDoc) => {
     const existing = selectedTracks.find(t => t.spotifyId === track.spotifyId)
-    if (existing) {
-      // Already exists, don't add again (could increase count if desired)
-      return
-    }
+    if (existing) return
     setSelectedTracks([...selectedTracks, { ...track, appearances: 1 }])
-    // Clear search to show the selected tracks list
     setSearchQuery('')
   }
 
@@ -81,14 +104,30 @@ export default function CreatePlaylist() {
     }))
   }
 
-  // Generate playlist from selected tracks with appearance counts
+  // Set all appearances to same value
+  const setAllAppearances = () => {
+    if (selectedTracks.length === 0) return
+    const value = prompt('Set all tracks to how many appearances?', '1')
+    const num = parseInt(value || '1')
+    if (isNaN(num) || num < 1 || num > 50) return
+    setSelectedTracks(selectedTracks.map(t => ({ ...t, appearances: num })))
+  }
+
+  // Equalize appearances
+  const equalizeAppearances = () => {
+    if (selectedTracks.length === 0) return
+    const total = selectedTracks.reduce((sum, t) => sum + t.appearances, 0)
+    const avg = Math.max(1, Math.round(total / selectedTracks.length))
+    setSelectedTracks(selectedTracks.map(t => ({ ...t, appearances: avg })))
+  }
+
+  // Generate playlist from selected tracks
   const generatePlaylist = useCallback(() => {
     if (selectedTracks.length === 0) {
       setSaveError('Please add some tracks first')
       return
     }
 
-    // Build playlist by repeating tracks according to their appearance count
     const generated: SongDoc[] = []
     selectedTracks.forEach(track => {
       for (let i = 0; i < track.appearances; i++) {
@@ -96,27 +135,29 @@ export default function CreatePlaylist() {
       }
     })
 
-    // Shuffle the generated playlist
     const shuffled = [...generated].sort(() => Math.random() - 0.5)
     setPlaylistTracks(shuffled)
     setSaveError(null)
   }, [selectedTracks])
 
-  // Clear all selected tracks
+  // Reverse playlist
+  const reversePlaylist = () => {
+    setPlaylistTracks([...playlistTracks].reverse())
+  }
+
+  // Clear all
   const clearAll = () => {
     setSelectedTracks([])
     setPlaylistTracks([])
   }
 
-  // Remove track from final playlist
+  // Remove from playlist
   const removeFromPlaylist = (index: number) => {
     setPlaylistTracks(playlistTracks.filter((_, i) => i !== index))
   }
 
   // Drag and drop handlers
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index)
-  }
+  const handleDragStart = (index: number) => setDraggedIndex(index)
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault()
@@ -141,10 +182,8 @@ export default function CreatePlaylist() {
     setDragOverIndex(null)
   }
 
-  // Drag and drop handlers for focus result
-  const handleFocusDragStart = (index: number) => {
-    setFocusDraggedIndex(index)
-  }
+  // Focus drag handlers
+  const handleFocusDragStart = (index: number) => setFocusDraggedIndex(index)
 
   const handleFocusDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault()
@@ -169,7 +208,6 @@ export default function CreatePlaylist() {
     setFocusDragOverIndex(null)
   }
 
-  // Remove track from focus result
   const removeFromFocusResult = (index: number) => {
     if (!focusResult) return
     setFocusResult(focusResult.filter((_, i) => i !== index))
@@ -187,7 +225,6 @@ export default function CreatePlaylist() {
     setSaveSuccess(null)
 
     try {
-      // Try to use user token if connected; otherwise fall back to owner mode
       let accessToken = status?.accessToken || null
       if (!accessToken) {
         const refreshed = await refreshStatus()
@@ -218,7 +255,6 @@ export default function CreatePlaylist() {
       const data = await response.json()
 
       if (!response.ok) {
-        // If we attempted with an invalid/expired user token, refresh and retry once
         if (response.status === 401 && accessToken) {
           const refreshed = await refreshStatus()
           if (refreshed?.accessToken) {
@@ -242,7 +278,6 @@ export default function CreatePlaylist() {
 
       setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
       setSavedPlaylistUrl(data.playlistUrl)
-      // Clear success message after 5 seconds
       setTimeout(() => setSaveSuccess(null), 5000)
     } catch (error) {
       console.error('Error saving playlist:', error)
@@ -253,518 +288,488 @@ export default function CreatePlaylist() {
   }, [playlistName, playlistTracks, status, refreshStatus])
 
   return (
-    <div className="min-h-screen page-gradient relative overflow-hidden">
-      {/* Subtle background glow - luxurious feel */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-pink-900/10 rounded-full blur-[100px]"></div>
+    <div className="flex-grow w-full max-w-[1600px] mx-auto p-4 lg:p-8 flex flex-col gap-6 font-display">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-2">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-white text-3xl md:text-4xl font-extrabold tracking-tight">Create Playlist</h1>
+          <p className="text-text-muted text-base">Manually curate your perfect setlist or generate one with AI.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          {/* Mode Toggle */}
+          <div className="flex h-12 items-center bg-surface-light p-1 rounded-xl w-full sm:w-auto">
+            <button
+              onClick={() => setMode('manual')}
+              className={`flex-1 sm:flex-none h-full px-4 rounded-xl flex items-center justify-center gap-2 transition-all ${
+                mode === 'manual'
+                  ? 'bg-background-dark text-white shadow-sm'
+                  : 'text-text-muted hover:text-white'
+              }`}
+            >
+              <Edit3 className="w-[18px] h-[18px]" />
+              <span className="text-sm font-semibold">Manual</span>
+            </button>
+            <button
+              onClick={() => setMode('streaming')}
+              className={`flex-1 sm:flex-none h-full px-4 rounded-xl flex items-center justify-center gap-2 transition-colors ${
+                mode === 'streaming'
+                  ? 'bg-background-dark text-white shadow-sm'
+                  : 'text-text-muted hover:text-white'
+              }`}
+            >
+              <TrendingUp className="w-[18px] h-[18px]" />
+              <span className="text-sm font-medium">Streaming</span>
+            </button>
+          </div>
+          {/* AI Button */}
+          <Link
+            href="/ai-playlist"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-purple-500 hover:from-primary-dark hover:to-purple-600 text-white px-6 h-12 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 transition-all transform hover:scale-[1.02]"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>AI Generator</span>
+          </Link>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 relative z-10">
-
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-            Create Playlist
-          </h1>
-          <p className="text-gray-400 text-lg font-light mb-8 max-w-2xl mx-auto">
-            Curate your own collection or optimize for streaming
-          </p>
-
-          <div className="flex items-center justify-center gap-2 mb-8 text-sm">
-             <span className="text-gray-500">Want AI assistance?</span>
-             <Link href="/ai-playlist" className="text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 font-medium">
-               <Sparkles className="w-3 h-3" />
-               Try AI Generator
-             </Link>
-          </div>
-
-          {/* Mode Toggle */}
-          <div className="inline-flex p-1 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
-            <button
-              onClick={() => setMode('normal')}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-                mode === 'normal'
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <ListMusic className="w-4 h-4" />
-              Manual Curator
-            </button>
-            <button
-              onClick={() => setMode('focus')}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-                mode === 'focus'
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Audio className="w-4 h-4" />
-              Streaming Focus
-            </button>
-          </div>
-        </div>
-
-        {/* STREAMING FOCUS WORKFLOW */}
-        {mode === 'focus' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
-            {/* Left Panel - Form */}
-            <div className="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col">
-               <StreamingFocusForm onGenerated={(songs) => setFocusResult(songs)} />
+      {/* MANUAL MODE */}
+      {mode === 'manual' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative">
+          {/* LEFT PANEL: Track Selection */}
+          <section className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+            {/* Quick Stats Widget */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-surface-light/50 border border-border-dark p-3 rounded-xl flex flex-col items-center justify-center text-center">
+                <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Tracks</span>
+                <span className="text-xl font-bold text-white">{playlistStats.tracks}</span>
+              </div>
+              <div className="bg-surface-light/50 border border-border-dark p-3 rounded-xl flex flex-col items-center justify-center text-center">
+                <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Duration</span>
+                <span className="text-xl font-bold text-white">{playlistStats.duration}</span>
+              </div>
+              <div className="bg-surface-light/50 border border-border-dark p-3 rounded-xl flex flex-col items-center justify-center text-center">
+                <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Appearances</span>
+                <span className="text-xl font-bold text-white">{playlistStats.appearances}</span>
+              </div>
+              <div className="bg-surface-light/50 border border-border-dark p-3 rounded-xl flex flex-col items-center justify-center text-center">
+                <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Diversity</span>
+                <span className={`text-xl font-bold ${
+                  playlistStats.diversity === 'High' ? 'text-emerald-400' :
+                  playlistStats.diversity === 'Medium' ? 'text-yellow-400' : 'text-red-400'
+                }`}>{playlistStats.diversity}</span>
+              </div>
             </div>
 
-            {/* Right Panel - Generated Playlist */}
-            <div className="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col lg:sticky lg:top-8">
-              {focusResult ? (
-                <>
-                  <div className="mb-4 sm:mb-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                      <h3 className="text-xl sm:text-2xl font-bold text-white">Generated Playlist</h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-400">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>Duration: {focusDuration}</span>
-                      </div>
-                    </div>
-                    <p className="text-gray-400 text-xs sm:text-sm flex items-center gap-2 flex-wrap">
-                      <span className="text-yellow-400">💡</span>
-                      <span>Drag to reorder • Click <Trash2 className="w-3 h-3 inline mx-0.5" /> to delete</span>
-                    </p>
-                  </div>
-
-                  {/* Playlist Name Input */}
-                  <div className="mb-4 sm:mb-6">
-                    <label className="block text-gray-400 text-xs font-medium mb-2 pl-1 uppercase tracking-wider">Playlist Name</label>
+            {/* Main Glass Card */}
+            <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border rounded-2xl p-5 flex flex-col gap-5 min-h-[600px]">
+              {/* Search & Header Section */}
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted w-4 h-4" />
                     <input
+                      className="w-full bg-surface-light border border-border-dark rounded-xl pl-12 pr-4 h-12 text-white placeholder-text-muted focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                      placeholder="Search by song, album, or era..."
                       type="text"
-                      value={playlistName}
-                      onChange={(e) => setPlaylistName(e.target.value)}
-                      className="w-full p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-xl focus:border-purple-400/50 focus:bg-white/10 focus:outline-none text-white placeholder-gray-500 transition-all duration-300 text-sm"
-                      placeholder="My Streaming Playlist"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
+                  <button className="hidden md:flex items-center gap-2 px-4 h-12 rounded-xl bg-surface-light border border-border-dark text-text-muted hover:text-white hover:border-primary/50 transition-all">
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span className="font-medium">Filters</span>
+                  </button>
+                </div>
 
-                  {/* Draggable Playlist */}
-                  <div className="space-y-1.5 flex-1 overflow-y-auto max-h-[400px] sm:max-h-[500px] pr-1 sm:pr-2 custom-scrollbar mb-4 sm:mb-6 min-h-[200px] sm:min-h-[300px]">
-                    {focusResult.map((track, index) => {
-                      const isFocusTrack = focusResult[0] && track.spotifyId === focusResult[0].spotifyId
+                {/* Quick Filters - Collapsible Advanced Filters */}
+                <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-white/5">
+                  <span className="text-xs font-bold text-text-muted uppercase mr-2">Quick Filter:</span>
+                  <button className="px-3 py-1.5 rounded-xl bg-surface-light hover:bg-primary/20 hover:text-primary text-xs font-medium text-text-muted transition-colors border border-transparent hover:border-primary/30">
+                    Album: Proof
+                  </button>
+                  <button className="px-3 py-1.5 rounded-xl bg-surface-light hover:bg-primary/20 hover:text-primary text-xs font-medium text-text-muted transition-colors border border-transparent hover:border-primary/30">
+                    Member: SUGA
+                  </button>
+                  <button className="px-3 py-1.5 rounded-xl bg-surface-light hover:bg-primary/20 hover:text-primary text-xs font-medium text-text-muted transition-colors border border-transparent hover:border-primary/30">
+                    Era: Love Yourself
+                  </button>
+                  <button className="px-3 py-1.5 rounded-xl bg-primary/20 text-primary border border-primary/30 text-xs font-medium transition-colors ml-auto flex items-center gap-1">
+                    Sort: Popularity
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Track List - Scrollable Area */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 max-h-[600px] custom-scrollbar">
+                {searchQuery ? (
+                  // Search results
+                  <>
+                    {filteredTracks.map((track) => {
+                      const isSelected = selectedTracks.find(t => t.spotifyId === track.spotifyId)
                       return (
                         <div
-                          key={`${track.spotifyId}-${index}`}
-                          draggable
-                          onDragStart={() => handleFocusDragStart(index)}
-                          onDragOver={(e) => handleFocusDragOver(e, index)}
-                          onDrop={(e) => handleFocusDrop(e, index)}
-                          onDragEnd={handleFocusDragEnd}
-                          className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border transition-all duration-200 group cursor-move ${
-                            focusDraggedIndex === index
-                              ? 'opacity-50 bg-white/10 border-purple-500/30'
-                              : focusDragOverIndex === index
-                              ? 'bg-purple-500/10 border-purple-500/30'
-                              : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10'
-                          }`}
+                          key={track.spotifyId}
+                          className="group flex items-center gap-4 p-3 rounded-xl bg-surface-light/30 hover:bg-surface-light hover:border-primary/20 border border-transparent transition-all cursor-default"
                         >
-                          <GripVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 group-hover:text-gray-400 flex-shrink-0" />
-                          <div className="w-5 sm:w-6 text-center">
-                            <span className="text-gray-500 text-xs font-medium">{index + 1}</span>
-                          </div>
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 relative">
+                          <div className="size-14 rounded-xl bg-cover bg-center shrink-0 shadow-md relative overflow-hidden">
                             <Image
-                              src={track.thumbnails?.small || '/images/placeholder.jpg'}
+                              src={track.thumbnails?.medium || track.thumbnails?.small || '/images/placeholder.jpg'}
                               alt={track.name}
                               fill
                               className="object-cover"
                             />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Music className="text-white w-5 h-5" />
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-white font-medium text-xs sm:text-sm truncate">{track.name}</h3>
-                            <p className="text-gray-500 text-xs truncate hidden sm:block">{track.artist}</p>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-bold truncate">{track.name}</h4>
+                            <p className="text-text-muted text-sm truncate">{track.artist} • {track.album}</p>
                           </div>
-                          {isFocusTrack && (
-                            <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 bg-green-500/20 border border-green-500/30 text-green-300 rounded-full font-medium flex-shrink-0">
-                              🔥 Focus
-                            </span>
-                          )}
                           <button
-                            onClick={() => removeFromFocusResult(index)}
-                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-gray-600 hover:text-red-400 transition-all duration-200 sm:opacity-0 sm:group-hover:opacity-100"
-                            title="Remove from playlist"
+                            onClick={() => addToSelected(track)}
+                            disabled={!!isSelected}
+                            className={`size-9 rounded-full flex items-center justify-center transition-colors ${
+                              isSelected
+                                ? 'bg-primary/20 text-primary cursor-not-allowed'
+                                : 'hover:bg-primary/20 text-text-muted hover:text-primary'
+                            }`}
                           >
-                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            {isSelected ? (
+                              <CheckCircle className="w-5 h-5" />
+                            ) : (
+                              <Plus className="w-5 h-5" />
+                            )}
                           </button>
                         </div>
                       )
                     })}
-                  </div>
-
-                  {/* Export to Spotify Section */}
-                  <div className="pt-4 sm:pt-6 border-t border-white/5 space-y-3 sm:space-y-4 mt-auto">
-                    {/* Error/Success Messages */}
-                    {saveError && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 text-red-300 text-xs">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>{saveError}</span>
+                    {filteredTracks.length === 0 && (
+                      <div className="text-center py-12 text-text-muted">
+                        No songs found matching &quot;{searchQuery}&quot;
                       </div>
                     )}
-
-                    {saveSuccess && (
-                      <div className="bg-green-500/10 border border-green-500/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 text-green-300 text-xs">
-                        <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>{saveSuccess}</span>
+                  </>
+                ) : (
+                  // Selected tracks with controls
+                  <>
+                    {selectedTracks.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center py-12 border-2 border-dashed border-white/5 rounded-xl">
+                        <Music className="w-12 h-12 text-gray-600 mb-3" />
+                        <p className="text-text-muted">No tracks selected</p>
+                        <p className="text-gray-600 text-sm mt-1">Search and add tracks above</p>
                       </div>
-                    )}
-
-                    <div className="flex gap-2 sm:gap-3">
-                      <button
-                        onClick={() => handleSaveToSpotify(focusResult)}
-                        disabled={isSaving}
-                        className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs sm:text-sm"
-                      >
-                        {isSaving ? (
-                          <>
-                            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            <span className="hidden sm:inline">Creating...</span>
-                            <span className="sm:hidden">Save</span>
-                          </>
-                        ) : (
-                          <>
-                            <Music className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Create Spotify Playlist</span>
-                            <span className="sm:hidden">Save to Spotify</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
-                        disabled={!savedPlaylistUrl}
-                        className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300 flex items-center justify-center ${
-                          savedPlaylistUrl
-                            ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20'
-                            : 'bg-white/5 border-white/5 text-gray-500 cursor-not-allowed'
-                        }`}
-                        title="Open in Spotify"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center py-8 sm:py-12">
-                  <Music className="w-10 h-10 sm:w-12 sm:h-12 text-gray-600 mb-3 sm:mb-4" />
-                  <p className="text-gray-500 text-sm">No playlist generated yet</p>
-                  <p className="text-gray-600 text-xs mt-1">Fill out the form and click generate</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-          {/* MANUAL CREATOR WORKFLOW */}
-          {mode === 'normal' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
-              {/* Left Panel - Selected Tracks with Appearance Counts */}
-              <div className="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col">
-                <div className="mb-4 sm:mb-6">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Selected Tracks ({selectedTracks.length})</h2>
-                  <p className="text-gray-400 text-xs sm:text-sm">Choose tracks and set how many times they appear</p>
-                </div>
-
-                {/* Search Input */}
-                <div className="relative mb-3 sm:mb-4">
-                  <Search className="absolute left-3 sm:left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input
-                    type="text"
-                    placeholder="Search for tracks or albums..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl focus:border-purple-400/50 focus:bg-white/10 focus:outline-none text-white placeholder-gray-500 transition-all duration-300 text-sm"
-                  />
-                </div>
-
-                {/* Pro Tip */}
-                <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg sm:rounded-xl flex items-start gap-2">
-                  <Info className="w-4 h-4 text-purple-300 mt-0.5 flex-shrink-0" />
-                  <p className="text-purple-200 text-[11px] sm:text-xs leading-relaxed">
-                    <span className="font-semibold">Pro tip:</span> For focused tracks, set higher minimum appearances. Example: 25x Track A, 20x Track B, 15x Track C + fillers.
-                  </p>
-                </div>
-
-                {/* Search Results or Selected Tracks */}
-                <div className="space-y-1.5 sm:space-y-2 flex-1 overflow-y-auto max-h-[400px] sm:max-h-[500px] pr-1 sm:pr-2 custom-scrollbar mb-3 sm:mb-4">
-                  {searchQuery ? (
-                    // Show search results when searching
-                    <>
-                      {filteredTracks.map((track) => {
-                        const isSelected = selectedTracks.find(t => t.spotifyId === track.spotifyId)
-                        return (
-                          <div
-                            key={track.spotifyId}
-                            className={`group flex items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl border transition-all duration-200 ${
-                              isSelected
-                                ? 'bg-purple-500/10 border-purple-500/30'
-                                : 'bg-white/5 border-transparent hover:border-white/10 hover:bg-white/10'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 sm:gap-3 overflow-hidden flex-1">
-                              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 relative">
-                                <Image
-                                  src={track.thumbnails?.medium || track.thumbnails?.small || '/images/placeholder.jpg'}
-                                  alt={track.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h3 className="text-white font-medium text-xs sm:text-sm truncate">{track.name}</h3>
-                                <p className="text-gray-500 text-xs truncate hidden sm:block">{track.artist}</p>
-                              </div>
+                    ) : (
+                      selectedTracks.map((track) => (
+                        <div
+                          key={track.spotifyId}
+                          className="group flex items-center gap-4 p-3 rounded-xl bg-surface-light/30 hover:bg-surface-light hover:border-primary/20 border border-transparent transition-all cursor-default"
+                        >
+                          <div className="size-14 rounded-xl bg-cover bg-center shrink-0 shadow-md relative overflow-hidden">
+                            <Image
+                              src={track.thumbnails?.medium || track.thumbnails?.small || '/images/placeholder.jpg'}
+                              alt={track.name}
+                              fill
+                              className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Music className="text-white w-5 h-5" />
                             </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-bold truncate">{track.name}</h4>
+                            <p className="text-text-muted text-sm truncate">{track.artist} • {track.album}</p>
+                          </div>
+
+                          {/* Counter */}
+                          <div className="flex items-center gap-3 bg-background-dark/50 p-1.5 rounded-xl border border-white/5">
                             <button
-                              onClick={() => addToSelected(track)}
-                              disabled={!!isSelected}
-                              className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg transition-all duration-200 flex-shrink-0 ${
-                                isSelected
-                                  ? 'bg-purple-500/20 text-purple-300 cursor-not-allowed'
-                                  : 'bg-white/5 text-gray-400 hover:bg-purple-500 hover:text-white sm:opacity-0 sm:group-hover:opacity-100 sm:transform sm:translate-x-2 sm:group-hover:translate-x-0'
-                              }`}
-                              title={isSelected ? 'Already added' : 'Add to selection'}
+                              onClick={() => updateAppearances(track.spotifyId, -1)}
+                              className="size-8 rounded-md bg-surface-light hover:bg-white/10 text-white flex items-center justify-center transition-colors"
                             >
-                              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="w-4 text-center text-sm font-bold text-white">{track.appearances}</span>
+                            <button
+                              onClick={() => updateAppearances(track.spotifyId, 1)}
+                              className="size-8 rounded-md bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition-colors shadow-lg shadow-primary/20"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                        )
-                      })}
-                      {filteredTracks.length === 0 && (
-                        <div className="text-center py-12 text-gray-500 text-sm">
-                          No songs found matching &quot;{searchQuery}&quot;
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    // Show selected tracks with appearance controls when not searching
-                    <>
-                      {selectedTracks.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center py-8 sm:py-12 border-2 border-dashed border-white/5 rounded-lg sm:rounded-xl">
-                          <Music className="w-9 h-9 sm:w-10 sm:h-10 text-gray-600 mb-2 sm:mb-3" />
-                          <p className="text-gray-500 text-sm">No tracks selected</p>
-                          <p className="text-gray-600 text-xs mt-1">Search and add tracks above</p>
-                        </div>
-                      ) : (
-                        selectedTracks.map((track) => (
-                          <div
-                            key={track.spotifyId}
-                            className="flex items-center justify-between p-2 sm:p-3 bg-white/5 rounded-lg sm:rounded-xl border border-white/5 hover:border-white/10 transition-all duration-200"
+
+                          {/* Remove Action */}
+                          <button
+                            onClick={() => removeFromSelected(track.spotifyId)}
+                            className="size-9 rounded-full hover:bg-red-500/20 text-text-muted hover:text-red-400 flex items-center justify-center transition-colors"
                           >
-                            <div className="flex items-center gap-2 sm:gap-3 overflow-hidden flex-1 min-w-0">
-                              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 relative">
-                                <Image
-                                  src={track.thumbnails?.small || '/images/placeholder.jpg'}
-                                  alt={track.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h3 className="text-white font-medium text-xs sm:text-sm truncate">{track.name}</h3>
-                                <p className="text-gray-500 text-xs truncate hidden sm:block">{track.artist}</p>
-                              </div>
-                            </div>
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </>
+                )}
+              </div>
 
-                            <div className="flex items-center gap-1.5 sm:gap-2 ml-2">
-                              {/* Appearances Counter */}
-                              <div className="flex items-center gap-0.5 sm:gap-1 bg-white/5 rounded-lg border border-white/10 px-0.5 sm:px-1">
-                                <button
-                                  onClick={() => updateAppearances(track.spotifyId, -1)}
-                                  className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-                                  title="Decrease appearances"
-                                >
-                                  <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                </button>
-                                <div className="min-w-[28px] sm:min-w-[32px] text-center">
-                                  <span className="text-white text-xs sm:text-sm font-medium">{track.appearances}</span>
-                                </div>
-                                <button
-                                  onClick={() => updateAppearances(track.spotifyId, 1)}
-                                  className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-                                  title="Increase appearances"
-                                >
-                                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                </button>
-                              </div>
+              {/* Bulk Actions Toolbar */}
+              <div className="flex items-center gap-2 pt-4 border-t border-white/5">
+                <button
+                  onClick={setAllAppearances}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Set All
+                </button>
+                <button
+                  onClick={equalizeAppearances}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                  </svg>
+                  Equalize
+                </button>
+                <button
+                  onClick={reversePlaylist}
+                  disabled={playlistTracks.length === 0}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                  Reverse
+                </button>
+                <div className="flex-1"></div>
+                <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  Import
+                </button>
+              </div>
 
-                              {/* Remove Button */}
-                              <button
-                                onClick={() => removeFromSelected(track.spotifyId)}
-                                className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-all duration-200"
-                                title="Remove from selection"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </>
-                  )}
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={generatePlaylist}
+                  disabled={selectedTracks.length === 0}
+                  className="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RotateCw className="w-4 h-4" />
+                  Update Preview
+                </button>
+                <button
+                  onClick={clearAll}
+                  className="px-6 bg-surface-light hover:bg-surface-light/80 text-white font-medium py-3.5 rounded-xl border border-border-dark transition-all"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* RIGHT PANEL: Generated Playlist */}
+          <aside className="lg:col-span-5 xl:col-span-4 sticky top-6 self-start z-10">
+            <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border rounded-2xl p-5 flex flex-col gap-5 h-[calc(100vh-6rem)] min-h-[500px]">
+              {/* Header with Stats */}
+              <div className="flex flex-col gap-3 pb-4 border-b border-white/5">
+                <div className="flex justify-between items-center mb-1">
+                  <h3 className="text-white font-bold text-lg">Playlist Preview</h3>
+                  <span className={`text-xs font-bold px-2 py-1 rounded ${
+                    playlistTracks.length > 0
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {playlistTracks.length > 0 ? 'Ready to Export' : 'Empty'}
+                  </span>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-white/5">
-                  <button
-                    onClick={generatePlaylist}
-                    disabled={selectedTracks.length === 0}
-                    className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 text-xs sm:text-sm"
-                  >
-                    <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span>{playlistTracks.length > 0 ? 'Re-generate' : 'Generate Playlist'}</span>
-                  </button>
-                  <button
-                    onClick={clearAll}
-                    disabled={selectedTracks.length === 0}
-                    className="px-4 sm:px-6 py-2.5 sm:py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 font-semibold rounded-lg sm:rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
-                  >
-                    Clear All
-                  </button>
+                <div className="flex gap-4">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Shuffle Quality</span>
+                    <div className="w-full bg-surface-light rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-green-400 to-emerald-500 h-full transition-all duration-500"
+                        style={{ width: `${playlistQuality.shuffleQuality}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs font-bold text-white text-right">{playlistQuality.shuffleQuality}%</span>
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1">
+                    <span className="text-[10px] uppercase font-bold text-text-muted tracking-wider">Skip Risk</span>
+                    <div className="w-full bg-surface-light rounded-full h-2 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${
+                          playlistQuality.skipRisk === 'Low' ? 'bg-gradient-to-r from-green-400 to-emerald-500 w-[15%]' :
+                          playlistQuality.skipRisk === 'Medium' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 w-[50%]' :
+                          'bg-gradient-to-r from-red-400 to-red-600 w-[85%]'
+                        }`}
+                      ></div>
+                    </div>
+                    <span className="text-xs font-bold text-white text-right">{playlistQuality.skipRisk}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Right Panel - Final Playlist */}
-              <div className="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col lg:sticky lg:top-8">
-                <div className="mb-4 sm:mb-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                    <h2 className="text-xl sm:text-2xl font-bold text-white">Playlist</h2>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>Duration: {totalDuration}</span>
-                    </div>
-                  </div>
-                  <p className="text-gray-400 text-xs sm:text-sm flex items-center gap-2 flex-wrap">
-                    <span className="text-yellow-400">💡</span>
-                    <span>Drag to reorder • Click <Trash2 className="w-3 h-3 inline mx-0.5" /> to delete</span>
-                  </p>
-                </div>
-
-                <div className="mb-4 sm:mb-6">
-                  <label className="block text-gray-400 text-xs font-medium mb-2 pl-1 uppercase tracking-wider">Playlist Name</label>
+              {/* Playlist Name Input */}
+              <div>
+                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2 block">Playlist Name</label>
+                <div className="relative">
                   <input
+                    className="w-full bg-background-dark/50 border border-border-dark rounded-xl px-4 h-12 text-white font-medium focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
                     type="text"
                     value={playlistName}
                     onChange={(e) => setPlaylistName(e.target.value)}
-                    className="w-full p-2.5 sm:p-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl focus:border-purple-400/50 focus:bg-white/10 focus:outline-none text-white placeholder-gray-500 transition-all duration-300 text-sm"
-                    placeholder="My Awesome Mix"
                   />
+                  <Edit3 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted cursor-pointer hover:text-white w-4 h-4" />
                 </div>
+              </div>
 
-                <div className="space-y-1.5 flex-1 overflow-y-auto max-h-[400px] sm:max-h-[500px] pr-1 sm:pr-2 custom-scrollbar min-h-[200px] sm:min-h-[300px] mb-4 sm:mb-6">
-                  {playlistTracks.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center py-8 sm:py-12 border-2 border-dashed border-white/5 rounded-lg sm:rounded-xl">
-                       <Music className="w-9 h-9 sm:w-10 sm:h-10 text-gray-600 mb-2 sm:mb-3" />
-                       <p className="text-gray-500 text-sm">Your playlist is empty</p>
-                       <p className="text-gray-600 text-xs mt-1">Add tracks and click Re-generate</p>
-                    </div>
-                  ) : (
-                    playlistTracks.map((track, index) => (
-                      <div
-                        key={`${track.spotifyId}-${index}`}
-                        draggable
-                        onDragStart={() => handleDragStart(index)}
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDrop={(e) => handleDrop(e, index)}
-                        onDragEnd={handleDragEnd}
-                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg sm:rounded-xl border transition-all duration-200 group cursor-move ${
-                          draggedIndex === index
-                            ? 'opacity-50 bg-white/10 border-purple-500/30'
-                            : dragOverIndex === index
-                            ? 'bg-purple-500/10 border-purple-500/30'
-                            : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10'
-                        }`}
-                      >
-                        <GripVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 group-hover:text-gray-400 flex-shrink-0" />
-                        <div className="w-5 sm:w-6 text-center">
-                          <span className="text-gray-500 text-xs font-medium">{index + 1}</span>
-                        </div>
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 relative">
-                          <Image
-                            src={track.thumbnails?.small || '/images/placeholder.jpg'}
-                            alt={track.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-white font-medium text-xs sm:text-sm truncate">{track.name}</h3>
-                          <p className="text-gray-500 text-xs truncate hidden sm:block">{track.artist}</p>
-                        </div>
-                        <button
-                          onClick={() => removeFromPlaylist(index)}
-                          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg hover:bg-red-500/10 text-gray-600 hover:text-red-400 transition-all duration-200 sm:opacity-0 sm:group-hover:opacity-100"
-                          title="Remove from playlist"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {playlistTracks.length > 0 && (
-                  <div className="pt-4 sm:pt-6 border-t border-white/5 space-y-3 sm:space-y-4 mt-auto">
-                    {/* Error/Success Messages */}
-                    {saveError && (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 text-red-300 text-xs">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>{saveError}</span>
-                      </div>
-                    )}
-
-                    {saveSuccess && (
-                      <div className="bg-green-500/10 border border-green-500/20 rounded-lg sm:rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 text-green-300 text-xs">
-                        <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>{saveSuccess}</span>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 sm:gap-3">
-                      <button
-                        onClick={() => handleSaveToSpotify()}
-                        disabled={isSaving}
-                        className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-xs sm:text-sm"
-                      >
-                        {isSaving ? (
-                          <>
-                            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            <span className="hidden sm:inline">Creating...</span>
-                            <span className="sm:hidden">Save</span>
-                          </>
-                        ) : (
-                          <>
-                            <Music className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            <span className="hidden sm:inline">Create Spotify Playlist</span>
-                            <span className="sm:hidden">Save to Spotify</span>
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => savedPlaylistUrl && window.open(savedPlaylistUrl, '_blank')}
-                        disabled={!savedPlaylistUrl}
-                        className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border transition-all duration-300 flex items-center justify-center ${
-                          savedPlaylistUrl
-                            ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20'
-                            : 'bg-white/5 border-white/5 text-gray-500 cursor-not-allowed'
-                        }`}
-                        title="Open in Spotify"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </button>
-                    </div>
+              {/* Draggable List - Scrollable */}
+              <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+                {playlistTracks.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center py-12">
+                    <Music className="w-12 h-12 text-gray-600 mb-4" />
+                    <p className="text-text-muted text-sm">No playlist generated yet</p>
+                    <p className="text-gray-600 text-xs mt-1">Add tracks and click Update Preview</p>
                   </div>
+                ) : (
+                  playlistTracks.map((track, index) => (
+                    <div
+                      key={`${track.spotifyId}-${index}`}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
+                      onDragEnd={handleDragEnd}
+                      className={`group flex items-center gap-3 p-2 pr-3 rounded-xl transition-colors border cursor-move ${
+                        draggedIndex === index
+                          ? 'opacity-50 bg-surface-light/50 border-primary/30'
+                          : dragOverIndex === index
+                          ? 'bg-primary/10 border-primary/30'
+                          : 'border-transparent hover:border-white/5 hover:bg-surface-light/50'
+                      }`}
+                    >
+                      <GripVertical className="text-text-muted group-hover:text-white w-4 h-4 flex-shrink-0" />
+                      <span className="text-text-muted text-xs font-mono w-4">{String(index + 1).padStart(2, '0')}</span>
+                      <div className="size-10 rounded bg-cover bg-center shrink-0 relative">
+                        <Image
+                          src={track.thumbnails?.small || '/images/placeholder.jpg'}
+                          alt={track.name}
+                          fill
+                          className="object-cover rounded"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{track.name}</p>
+                        <p className="text-text-muted text-xs truncate">{track.artist}</p>
+                      </div>
+                      <button
+                        onClick={() => removeFromPlaylist(index)}
+                        className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-red-400 transition-opacity"
+                      >
+                        <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))
                 )}
               </div>
+
+              {/* Export Section */}
+              {playlistTracks.length > 0 && (
+                <div className="pt-4 mt-auto border-t border-white/5 flex flex-col gap-3">
+                  {/* Error/Success Messages */}
+                  {saveError && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-3 flex items-center gap-3 text-red-300 text-xs">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{saveError}</span>
+                    </div>
+                  )}
+
+                  {saveSuccess && (
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-3 flex items-center gap-3 text-green-300 text-xs">
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{saveSuccess}</span>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleSaveToSpotify()}
+                    disabled={isSaving}
+                    className="w-full bg-[#1db954] hover:bg-[#1ed760] text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-[#1db954]/20 transition-all flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                    </svg>
+                    <span>{isSaving ? 'Creating...' : 'Export to Spotify'}</span>
+                  </button>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xs text-text-muted">Account:</span>
+                    <span className="text-xs font-semibold text-white">
+                      {status?.displayName || 'Not connected'}
+                    </span>
+                    {savedPlaylistUrl && (
+                      <button
+                        onClick={() => window.open(savedPlaylistUrl, '_blank')}
+                        className="text-xs text-primary hover:text-primary-dark ml-1 underline flex items-center gap-1"
+                      >
+                        Open <ExternalLink className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-      </div>
+          </aside>
+        </div>
+      )}
+
+      {/* STREAMING FOCUS MODE */}
+      {mode === 'streaming' && (
+        <StreamingFocusMode
+          focusResult={focusResult}
+          setFocusResult={setFocusResult}
+          playlistName={playlistName}
+          setPlaylistName={setPlaylistName}
+          focusDuration={focusDuration}
+          isSaving={isSaving}
+          saveError={saveError}
+          saveSuccess={saveSuccess}
+          savedPlaylistUrl={savedPlaylistUrl}
+          handleSaveToSpotify={handleSaveToSpotify}
+          removeFromFocusResult={removeFromFocusResult}
+          focusDraggedIndex={focusDraggedIndex}
+          focusDragOverIndex={focusDragOverIndex}
+          handleFocusDragStart={handleFocusDragStart}
+          handleFocusDragOver={handleFocusDragOver}
+          handleFocusDrop={handleFocusDrop}
+          handleFocusDragEnd={handleFocusDragEnd}
+        />
+      )}
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #161022;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #36294b;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9054f8;
+        }
+      `}</style>
     </div>
   )
 }

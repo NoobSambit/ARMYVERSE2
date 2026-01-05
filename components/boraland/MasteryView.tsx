@@ -47,7 +47,7 @@ export default function MasteryView() {
                 <div>{m.key}</div>
                 <div className="flex items-center gap-3">
                   <div>Lvl {m.level} • {m.xp} xp</div>
-                  <button onClick={() => claim('member', m.key)} className="px-3 py-1 rounded-lg border border-[#3b1a52]/60">Claim</button>
+                  <button onClick={() => claim('member', m.key)} className="px-3 py-1 rounded-xl border border-[#3b1a52]/60">Claim</button>
                 </div>
               </div>
             ))}
@@ -61,7 +61,7 @@ export default function MasteryView() {
                 <div>{e.key}</div>
                 <div className="flex items-center gap-3">
                   <div>Lvl {e.level} • {e.xp} xp</div>
-                  <button onClick={() => claim('era', e.key)} className="px-3 py-1 rounded-lg border border-[#3b1a52]/60">Claim</button>
+                  <button onClick={() => claim('era', e.key)} className="px-3 py-1 rounded-xl border border-[#3b1a52]/60">Claim</button>
                 </div>
               </div>
             ))}

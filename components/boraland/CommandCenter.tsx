@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
-export default function CommandCenter() {
+export default function CommandCenter({ className = "lg:w-64" }: { className?: string }) {
   return (
-    <aside className="w-full lg:w-64 flex flex-col gap-4 shrink-0 overflow-y-auto lg:overflow-visible">
+    <aside className={`w-full ${className} flex flex-col gap-4 shrink-0 overflow-y-auto lg:overflow-visible`}>
     <div className="bora-glass-panel rounded-2xl p-1 flex flex-col gap-1 h-full">
     <div className="p-4 mb-2 border-b border-white/5">
     <h2 className="font-display text-sm text-gray-500 uppercase tracking-widest mb-1">Command Center</h2>
@@ -14,7 +14,7 @@ export default function CommandCenter() {
     <NavItem href="/boraland/quests" icon="assignment_turned_in" label="Quests" subLabel="Daily challenges" color="green" />
 
     <div className="mt-auto p-4 border-t border-white/5">
-    <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 rounded-lg p-3 border border-white/10">
+    <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 rounded-xl p-3 border border-white/10">
     <div className="flex items-center justify-between mb-2">
     <span className="text-xs font-bold text-indigo-300 uppercase">Season 4</span>
     <span className="text-xs text-gray-400">24d left</span>
@@ -84,7 +84,7 @@ function NavItem({ href, icon, label, subLabel, color }: { href: string, icon: s
     return (
         <Link className="group relative flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-all overflow-hidden" href={href}>
         <div className={`absolute inset-0 bg-gradient-to-r ${colorClasses.gradient} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-        <div className={`w-10 h-10 rounded-lg ${colorClasses.bg} flex items-center justify-center ${colorClasses.text} ${colorClasses.hoverText} group-hover:scale-110 transition-all ${colorClasses.shadow}`}>
+        <div className={`w-10 h-10 rounded-xl ${colorClasses.bg} flex items-center justify-center ${colorClasses.text} ${colorClasses.hoverText} group-hover:scale-110 transition-all ${colorClasses.shadow}`}>
         <span className="material-symbols-outlined">{icon}</span>
         </div>
         <div>

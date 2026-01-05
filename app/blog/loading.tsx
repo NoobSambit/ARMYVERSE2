@@ -14,7 +14,7 @@ export default function Loading() {
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{Array.from({ length: 6 }).map((_, i) => (
 						<div key={i} className="rounded-2xl border border-purple-500/20 p-4">
-							<div className="h-40 rounded-lg bg-gray-900/60 animate-pulse" />
+							<div className="h-40 rounded-xl bg-gray-900/60 animate-pulse" />
 							<div className="mt-4 h-5 w-2/3 rounded bg-gray-900/60 animate-pulse" />
 							<div className="mt-2 h-4 w-full rounded bg-gray-900/60 animate-pulse" />
 							<div className="mt-2 h-4 w-5/6 rounded bg-gray-900/60 animate-pulse" />

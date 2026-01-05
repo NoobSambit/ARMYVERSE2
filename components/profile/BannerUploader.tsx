@@ -263,7 +263,7 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
     <div className="space-y-4">
       {/* Upload Area */}
       <div
-        className={`relative w-full h-32 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+        className={`relative w-full h-32 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
           dragActive
             ? 'border-purple-500 bg-purple-500/10'
             : 'border-dashed border-gray-600 hover:border-purple-500/50'
@@ -350,7 +350,7 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
           type="button"
           onClick={handleClick}
           disabled={uploading || loading}
-          className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
+          className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl transition-colors text-sm"
         >
           <Upload className="w-4 h-4" />
           {uploading ? 'Uploading...' : 'Upload'}
@@ -361,7 +361,7 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
             type="button"
             onClick={handleRemove}
             disabled={uploading || loading}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-xl transition-colors text-sm"
           >
             <X className="w-4 h-4" />
             Remove
@@ -376,7 +376,7 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
+            className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl"
           >
             <AlertCircle className="w-4 h-4 text-red-400" />
             <p className="text-red-400 text-sm">{error}</p>
@@ -433,7 +433,7 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
                   <button
                     type="button"
                     onClick={handleCropCancel}
-                    className="rounded-lg bg-gray-700 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-600"
+                    className="rounded-xl bg-gray-700 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-600"
                   >
                     Cancel
                   </button>
@@ -441,7 +441,7 @@ export default function BannerUploader({ currentUrl, onUpload, loading = false }
                     type="button"
                     onClick={handleCropConfirm}
                     disabled={uploading}
-                    className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Save selection
                   </button>
