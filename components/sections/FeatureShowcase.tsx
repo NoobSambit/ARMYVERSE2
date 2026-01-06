@@ -14,6 +14,14 @@ export default function FeatureShowcase() {
       icon: TrendingUp,
       title: 'BTS + Solo Trends',
       description: 'Live charts across Spotify and YouTube.',
+      longDescription: 'Stay updated with real-time trending data for BTS and solo artists across multiple platforms.',
+      features: [
+        'Live Spotify and YouTube streaming charts',
+        'Track popularity trends for BTS group and individual members',
+        'Compare performance across different platforms',
+        'Historical data and trend analysis',
+        'Real-time updates as new data comes in'
+      ],
       href: '/trending',
       delay: 0,
       accentColor: '#4c1d95'
@@ -22,6 +30,14 @@ export default function FeatureShowcase() {
       icon: Sparkles,
       title: 'AI Playlist',
       description: 'Instant mixes from your vibe or activity.',
+      longDescription: 'Generate personalized playlists powered by AI based on your mood, activity, or listening preferences.',
+      features: [
+        'AI-powered playlist generation',
+        'Customize by mood, genre, or activity',
+        'Instant Spotify playlist creation',
+        'Smart song recommendations',
+        'One-click export to your Spotify account'
+      ],
       href: '/ai-playlist',
       delay: 80,
       accentColor: '#be185d'
@@ -30,6 +46,14 @@ export default function FeatureShowcase() {
       icon: Music,
       title: 'Streaming Playlists',
       description: 'Goal-driven sets for comeback streaming.',
+      longDescription: 'Create strategic playlists designed to maximize streaming impact during comebacks and special releases.',
+      features: [
+        'Optimized playlist structure for streaming goals',
+        'Comeback-focused song arrangements',
+        'Goal tracking and progress monitoring',
+        'Community streaming schedules',
+        'Export directly to Spotify'
+      ],
       href: '/create-playlist',
       delay: 160,
       accentColor: '#7c2d12'
@@ -38,6 +62,15 @@ export default function FeatureShowcase() {
       icon: Gamepad2,
       title: 'Boraland (Games)',
       description: 'Quizzes, mastery, and weekly leaderboards.',
+      longDescription: 'Test your ARMY knowledge and compete with others through quizzes, mastery challenges, and leaderboards.',
+      features: [
+        'Interactive quizzes about BTS and members',
+        'Mastery system to track your progress',
+        'Weekly leaderboards and rankings',
+        'Earn badges and achievements',
+        'Compete with ARMY worldwide',
+        'Last.fm integration for streaming quests'
+      ],
       href: '/boraland',
       delay: 240,
       accentColor: '#312e81'
@@ -46,6 +79,15 @@ export default function FeatureShowcase() {
       icon: BarChart3,
       title: 'Streaming Stats',
       description: 'Global performance snapshots and momentum.',
+      longDescription: 'Comprehensive analytics showing global streaming performance, trends, and momentum across platforms.',
+      features: [
+        'Global streaming statistics',
+        'Real-time performance tracking',
+        'Momentum and trend indicators',
+        'Cross-platform analytics',
+        'Historical performance data',
+        'Chart position tracking'
+      ],
       href: '/spotify',
       delay: 320,
       accentColor: '#9d174d'
@@ -54,6 +96,15 @@ export default function FeatureShowcase() {
       icon: UserCircle,
       title: 'Spotify Analytics',
       description: 'Your top artists, habits, and insights.',
+      longDescription: 'Dive deep into your personal Spotify listening habits with detailed analytics and insights.',
+      features: [
+        'Your top artists and tracks',
+        'Listening habit analysis',
+        'Personalized insights and trends',
+        'Genre and mood breakdowns',
+        'Time-based listening patterns',
+        'Compare with global ARMY trends'
+      ],
       href: '/stats',
       delay: 400,
       accentColor: '#6b21a8'
@@ -110,6 +161,8 @@ export default function FeatureShowcase() {
             href={feature.href}
             delay={feature.delay}
             accentColor={feature.accentColor}
+            longDescription={feature.longDescription}
+            features={feature.features}
           />
         ))}
       </div>

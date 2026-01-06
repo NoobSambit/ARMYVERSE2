@@ -26,13 +26,14 @@ export async function GET(
 
     await connect()
 
-    // Find user by firebaseUid, fallback to email (legacy data in blogs/comments)
-    let userDoc = await User.findOne({ firebaseUid: userId }).lean()
-    
-    if (!userDoc && userId.includes('@')) {
-      userDoc = await User.findOne({ email: userId }).lean()
-    }
-    
+    // Find user by firebaseUid or username only (no email lookup for privacy/security)
+    let userDoc = await User.findOne({
+      $or: [
+        { firebaseUid: userId },
+        { username: userId.toLowerCase() }
+      ]
+    }).lean()
+
     console.log('[Profile API] User found:', !!userDoc)
 
     if (!userDoc) {

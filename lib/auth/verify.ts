@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server'
 import { getAuth, DecodedIdToken } from 'firebase-admin/auth'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { verifyToken, type JWTPayload, type AuthUser } from './jwt'
+import { User } from '@/lib/models/User'
+import { connect } from '@/lib/db/mongoose'
 
 // Initialize Firebase Admin SDK once
 if (!getApps().length) {
@@ -43,6 +46,78 @@ export async function verifyFirebaseToken(request: NextRequest): Promise<Decoded
   } catch (error) {
     console.error('Token verification error:', error)
     return null
+  }
+}
+
+/**
+ * Unified authentication verification that supports both Firebase and JWT tokens
+ * Returns a normalized AuthUser object regardless of auth method
+ */
+export async function verifyAuth(request: NextRequest): Promise<AuthUser | null> {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+
+    const token = authHeader.split('Bearer ')[1]
+    
+    // Try Firebase token first
+    try {
+      const firebaseToken = await auth.verifyIdToken(token)
+      return {
+        uid: firebaseToken.uid,
+        username: firebaseToken.email?.split('@')[0] || 'user', // Fallback for Firebase users
+        email: firebaseToken.email,
+        displayName: firebaseToken.name,
+        photoURL: firebaseToken.picture,
+        authType: 'firebase'
+      }
+    } catch (firebaseError) {
+      // If Firebase verification fails, try JWT
+      const jwtPayload = verifyToken(token)
+      if (!jwtPayload) {
+        return null
+      }
+      
+      // Get user details from database for JWT auth
+      await connect()
+      const user = await User.findById(jwtPayload.userId)
+      if (!user) {
+        return null
+      }
+      
+      return {
+        uid: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        displayName: user.name || user.username,
+        photoURL: user.image,
+        authType: 'jwt'
+      }
+    }
+  } catch (error) {
+    console.error('Auth verification error:', error)
+    return null
+  }
+}
+
+/**
+ * Get user from database by auth information
+ * Works with both Firebase and JWT auth
+ */
+export async function getUserFromAuth(authUser: AuthUser) {
+  await connect()
+  
+  if (authUser.authType === 'firebase' && authUser.email) {
+    return await User.findOne({ 
+      $or: [
+        { firebaseUid: authUser.uid },
+        { email: authUser.email }
+      ]
+    })
+  } else {
+    return await User.findOne({ username: authUser.username })
   }
 }
 

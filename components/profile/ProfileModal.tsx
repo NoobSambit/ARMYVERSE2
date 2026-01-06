@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Tabs from '@radix-ui/react-tabs'
-import { X, Save, Eye, EyeOff, Copy } from 'lucide-react'
+import { X, Save, Eye, EyeOff, Link as LinkIcon, User, Palette, Link, Shield, Bell, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { track } from '@/lib/utils/analytics'
 import { getDefaultProfile } from '@/lib/utils/profile'
+import { getAuthToken } from '@/lib/auth/token'
+import { signOut, clearStoredAuth } from '@/lib/firebase/auth'
 import { type AnyBackgroundStyleId } from './backgroundStyles'
-// import { auth } from '@/lib/firebase/config'
 import ProfileForm from './ProfileForm'
 import PersonalizationForm from './PersonalizationForm'
 import ConnectionsForm from './ConnectionsForm'
@@ -96,11 +97,11 @@ interface ProfileData {
 }
 
 const tabs = [
-  { id: 'profile', label: 'Profile', icon: '👤' },
-  { id: 'personalization', label: 'Personalization', icon: '🎨' },
-  { id: 'connections', label: 'Connections', icon: '🔗' },
-  { id: 'privacy', label: 'Privacy & Safety', icon: '🔒' },
-  { id: 'notifications', label: 'Notifications', icon: '🔔' }
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'personalization', label: 'Personalization', icon: Palette },
+  { id: 'connections', label: 'Connections', icon: Link },
+  { id: 'privacy', label: 'Privacy', icon: Shield },
+  { id: 'notifications', label: 'Notifications', icon: Bell }
 ]
 
 export default function ProfileModal({ trigger, defaultTab = 'profile' }: ProfileModalProps) {
@@ -110,7 +111,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showPreview, setShowPreview] = useState(true)
+  const [showPreview, setShowPreview] = useState(true) // Default to true for desktop
   const [isDirty, setIsDirty] = useState(false)
   const [profile, setProfile] = useState<ProfileData>(getDefaultProfile())
   
@@ -125,7 +126,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     setError(null)
     
     try {
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/user/profile', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -136,23 +137,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       }
       
       const { profile: profileData } = await response.json()
-      console.log('API Response:', profileData)
-      // Don't merge with default profile - use saved data directly
       const mergedProfile = profileData || getDefaultProfile()
-      console.log('Merged Profile:', mergedProfile)
-
-      // Migration: map old background styles to new ones (optional - styles work as-is now)
-      // Users can manually switch to new styles, or we auto-migrate on next personalization change
-      if (mergedProfile.personalization?.backgroundStyle) {
-        const currentStyle = mergedProfile.personalization.backgroundStyle
-        const legacyStyles = ['gradient', 'noise', 'bts-motif', 'clean']
-
-        if (legacyStyles.includes(currentStyle)) {
-          console.log(`User has legacy style "${currentStyle}" - will continue to work, migration optional`)
-          // Legacy styles continue to work, no forced migration needed
-        }
-      }
-
       setProfile(mergedProfile)
     } catch (err) {
       console.error('Failed to load profile:', err)
@@ -170,7 +155,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     setError(null)
     
     try {
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
@@ -186,7 +171,6 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       }
       
       const { profile: savedProfile } = await response.json()
-      // Use the saved profile data directly, don't merge with current state
       const mergedProfile = savedProfile || profile
       
       setProfile(mergedProfile)
@@ -218,14 +202,13 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     setProfile(newProfile)
     setIsDirty(true)
     
-    // Auto-save for certain fields - only send the specific updates, not the entire profile
-    const autoSaveFields = ['personalization', 'privacy', 'notifications', 'avatarUrl', 'bannerUrl']
+    // Auto-save for certain fields
+    const autoSaveFields = ['personalization', 'privacy', 'notifications']
     const shouldAutoSave = Object.keys(updates).some(key => 
       autoSaveFields.some(field => key.startsWith(field) || key === field)
     )
     
     if (shouldAutoSave) {
-      // Only send the specific fields that changed, not the entire profile
       debouncedSave(updates)
     }
   }, [profile, debouncedSave])
@@ -249,52 +232,30 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     }
   }, [profile.handle])
 
-  // Focus trap and keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!open) return
+  // Handle logout
+  const handleLogout = useCallback(async () => {
+    try {
+      // Track logout event (ignore if event name is not defined)
+      try {
+        await track('profile_logout' as any, { source: 'profile_modal' })
+      } catch {}
       
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault()
-        if (formRef.current) {
-          formRef.current.requestSubmit()
-        }
+      // Sign out based on auth type
+      if (user?.authType === 'firebase') {
+        await signOut()
+      } else {
+        clearStoredAuth()
       }
       
-      if (e.key === 'Escape') {
-        setOpen(false)
-      }
-      
-      // Tab navigation within modal
-      if (e.key === 'Tab') {
-        const modal = document.querySelector('[role="dialog"]')
-        if (!modal) return
-        
-        const focusableElements = modal.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-        const firstElement = focusableElements[0] as HTMLElement
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
-        
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            e.preventDefault()
-            lastElement?.focus()
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            e.preventDefault()
-            firstElement?.focus()
-          }
-        }
-      }
+      setOpen(false)
+      // Redirect to home page
+      window.location.href = '/'
+    } catch (err) {
+      console.error('Logout failed:', err)
     }
-    
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [open])
+  }, [user])
 
-  // Load profile when modal opens
+  // Initial load
   useEffect(() => {
     if (open && user) {
       loadProfile()
@@ -302,7 +263,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     }
   }, [open, user, loadProfile, activeTab])
 
-  // Reset state when modal closes
+  // Reset state on close
   useEffect(() => {
     if (!open) {
       setIsDirty(false)
@@ -310,14 +271,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     }
   }, [open])
 
-  // Track tab changes
-  useEffect(() => {
-    if (open) {
-      track('profile_tab_changed', { tab: activeTab })
-    }
-  }, [activeTab, open])
-
-  // Cleanup timeout on unmount
+  // Clean up timeout
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
@@ -337,180 +291,222 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       </Dialog.Trigger>
       
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
+        <Dialog.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-200" />
         
         <Dialog.Content 
-          className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-6xl h-[90vh] rounded-2xl border border-purple-500/30 bg-[#150424]/95 shadow-2xl overflow-hidden focus:outline-none"
+          className="fixed z-50 top-[2%] left-[2%] right-[2%] bottom-[2%] max-w-[1600px] mx-auto rounded-[2.5rem] border border-white/10 bg-[#0A0A0A] shadow-2xl overflow-hidden focus:outline-none flex flex-col md:flex-row animate-in zoom-in-95 duration-200"
           aria-labelledby="profile-modal-title"
-          aria-describedby="profile-modal-description"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-purple-500/20">
-            <div className="flex items-center gap-3">
-              <Dialog.Title id="profile-modal-title" className="text-xl font-semibold text-white">
-                Your Profile
-              </Dialog.Title>
-              {isDirty && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="w-2 h-2 bg-orange-500 rounded-full"
-                  title="Unsaved changes"
-                />
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {/* Preview toggle */}
-              <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
-                title={showPreview ? 'Hide preview' : 'Show preview'}
-                aria-label={showPreview ? 'Hide preview' : 'Show preview'}
-              >
-                {showPreview ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+          {/* Left Column - Settings */}
+          <div className="flex-1 flex flex-col min-w-0 h-full md:border-r border-white/10">
+            {/* Header */}
+            <div className="flex items-center justify-between p-8 pb-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-purple-500/20 rounded-2xl">
+                    <User className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <Dialog.Title id="profile-modal-title" className="text-2xl font-bold text-white tracking-tight">
+                    Your Profile
+                  </Dialog.Title>
+                </div>
+                {isDirty && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider ml-14 mt-1"
+                  >
+                    <AlertIcon className="w-3 h-3" />
+                    Unsaved changes
+                  </motion.div>
+                )}
+              </div>
               
-              {/* Copy profile link */}
-              {profile.handle && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl transition-colors md:hidden"
+                >
+                  {showPreview ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+
                 <button
                   onClick={copyProfileLink}
-                  className="p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
-                  title="Copy profile link"
-                  aria-label="Copy profile link"
+                  className="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl transition-colors"
+                  title="Copy Profile Link"
                 >
-                  <Copy className="w-5 h-5" />
+                  <LinkIcon className="w-5 h-5" />
                 </button>
-              )}
-              
-              {/* Save button */}
-              <button
-                onClick={handleSave}
-                disabled={saving || !isDirty}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
-                aria-label={saving ? 'Saving profile' : 'Save profile changes'}
-              >
-                <Save className="w-4 h-4" />
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-              
-              <Dialog.Close className="p-2 text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 rounded" aria-label="Close profile modal">
-                <X className="w-5 h-5" />
-              </Dialog.Close>
-            </div>
-          </div>
-          
-          <Dialog.Description id="profile-modal-description" className="sr-only">
-            Edit your ARMY profile details including display name, avatar, preferences, and privacy settings.
-          </Dialog.Description>
-          
-          {/* Content */}
-          <div className="flex h-full">
-            {/* Main content */}
-            <div className={`flex-1 ${showPreview ? 'lg:w-2/3' : 'w-full'}`}>
-              <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                {/* Tab navigation */}
-                <Tabs.List className="flex border-b border-purple-500/20 px-6" role="tablist">
-                  {tabs.map((tab) => (
-                    <Tabs.Trigger
-                      key={tab.id}
-                      value={tab.id}
-                      className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-purple-500 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-t"
-                      role="tab"
-                      aria-selected={activeTab === tab.id}
-                      aria-controls={`tabpanel-${tab.id}`}
-                      id={`tab-${tab.id}`}
-                    >
-                      <span aria-hidden="true">{tab.icon}</span>
-                      <span className="hidden sm:inline">{tab.label}</span>
-                    </Tabs.Trigger>
-                  ))}
-                </Tabs.List>
+
+                <button
+                  onClick={handleLogout}
+                  className="p-3 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
                 
-                {/* Tab content */}
-                <div className="flex-1 overflow-y-auto p-6">
-                  <form ref={formRef} onSubmit={handleSave} className="h-full">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.2 }}
-                        className="h-full"
-                      >
-                        {activeTab === 'profile' && (
-                          <div id="tabpanel-profile" role="tabpanel" aria-labelledby="tab-profile">
-                            <ProfileForm
-                              profile={profile}
-                              onUpdate={updateProfile}
-                              loading={loading}
-                              error={error}
-                            />
-                          </div>
-                        )}
-                        {activeTab === 'personalization' && (
-                          <div id="tabpanel-personalization" role="tabpanel" aria-labelledby="tab-personalization">
-                            <PersonalizationForm
-                              profile={profile}
-                              onUpdate={updateProfile}
-                              loading={loading}
-                              error={error}
-                            />
-                          </div>
-                        )}
-                        {activeTab === 'connections' && (
-                          <div id="tabpanel-connections" role="tabpanel" aria-labelledby="tab-connections">
-                            <ConnectionsForm
-                              profile={profile}
-                              onUpdate={updateProfile}
-                              loading={loading}
-                              error={error}
-                            />
-                          </div>
-                        )}
-                        {activeTab === 'privacy' && (
-                          <div id="tabpanel-privacy" role="tabpanel" aria-labelledby="tab-privacy">
-                            <PrivacyForm
-                              profile={profile}
-                              onUpdate={updateProfile}
-                              loading={loading}
-                              error={error}
-                            />
-                          </div>
-                        )}
-                        {activeTab === 'notifications' && (
-                          <div id="tabpanel-notifications" role="tabpanel" aria-labelledby="tab-notifications">
-                            <NotificationsForm
-                              profile={profile}
-                              onUpdate={updateProfile}
-                              loading={loading}
-                              error={error}
-                            />
-                          </div>
-                        )}
-                      </motion.div>
-                    </AnimatePresence>
-                  </form>
-                </div>
-              </Tabs.Root>
+                <div className="w-px h-8 bg-white/10 mx-1" />
+
+                <Dialog.Close className="px-5 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl font-bold text-sm transition-colors">
+                  Close
+                </Dialog.Close>
+
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !isDirty}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm shadow-lg shadow-purple-900/20"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
             </div>
-            
-            {/* Preview panel */}
-            {showPreview && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="hidden lg:block w-1/3 border-l border-purple-500/20 bg-[#0f0319]/50"
-              >
-                <ProfilePreview profile={profile} />
-              </motion.div>
-            )}
+
+            <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+              <div className="px-8 pt-2 pb-6">
+                <Tabs.List className="flex gap-2 p-1.5 bg-white/5 rounded-2xl overflow-x-auto no-scrollbar" role="tablist">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon
+                    return (
+                      <Tabs.Trigger
+                        key={tab.id}
+                        value={tab.id}
+                        className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-gray-400 rounded-xl transition-all
+                          hover:text-white hover:bg-white/5
+                          data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg"
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="whitespace-nowrap">{tab.label}</span>
+                      </Tabs.Trigger>
+                    )
+                  })}
+                </Tabs.List>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
+                <form ref={formRef} onSubmit={handleSave} className="max-w-4xl mx-auto w-full py-2">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeTab}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Tabs.Content value="profile" className="outline-none">
+                        <ProfileForm
+                          profile={profile}
+                          onUpdate={updateProfile}
+                          loading={loading}
+                          error={error}
+                        />
+                      </Tabs.Content>
+                      
+                      <Tabs.Content value="personalization" className="outline-none">
+                        <PersonalizationForm
+                          profile={profile}
+                          onUpdate={updateProfile}
+                          loading={loading}
+                          error={error}
+                        />
+                      </Tabs.Content>
+                      
+                      <Tabs.Content value="connections" className="outline-none">
+                        <ConnectionsForm
+                          profile={profile}
+                          onUpdate={updateProfile}
+                          loading={loading}
+                          error={error}
+                        />
+                      </Tabs.Content>
+                      
+                      <Tabs.Content value="privacy" className="outline-none">
+                        <PrivacyForm
+                          profile={profile}
+                          onUpdate={updateProfile}
+                          loading={loading}
+                          error={error}
+                        />
+                      </Tabs.Content>
+                      
+                      <Tabs.Content value="notifications" className="outline-none">
+                        <NotificationsForm
+                          profile={profile}
+                          onUpdate={updateProfile}
+                          loading={loading}
+                          error={error}
+                        />
+                      </Tabs.Content>
+                    </motion.div>
+                  </AnimatePresence>
+                </form>
+              </div>
+            </Tabs.Root>
           </div>
+
+          {/* Right Column - Preview */}
+          {showPreview && (
+            <div className="w-full md:w-[480px] lg:w-[520px] bg-[#0F0F11] border-l border-white/10 flex flex-col h-full absolute md:relative z-20 md:z-auto inset-0 md:inset-auto">
+              {/* Mobile Close Preview */}
+              <button 
+                onClick={() => setShowPreview(false)}
+                className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full md:hidden z-30"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="p-8 border-b border-white/10 flex items-center justify-between bg-[#0F0F11]">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Preview</h3>
+                <div className="px-3 py-1.5 bg-white/5 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-wider border border-white/10">
+                  Public View
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8 bg-[#0F0F11] custom-scrollbar flex flex-col">
+                <div className="flex-1 flex items-center justify-center min-h-[500px]">
+                  <ProfilePreview profile={profile} />
+                </div>
+                
+                <div className="mt-8 flex gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
+                  <div className="shrink-0 pt-0.5">
+                    <AlertIcon className="w-4 h-4 text-yellow-500" />
+                  </div>
+                  <p className="text-xs text-yellow-200/80 leading-relaxed font-medium">
+                    This preview shows how your profile appears to public users. Some private info may be hidden based on your privacy settings.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  )
+}
+
+function AlertIcon({ className }: { className?: string }) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
   )
 }

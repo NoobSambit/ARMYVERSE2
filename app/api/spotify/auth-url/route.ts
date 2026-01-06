@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -26,15 +26,16 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const user = await verifyFirebaseToken(request)
-    if (!user?.email) {
+    const authUser = await verifyAuth(request)
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const nonce = crypto.randomBytes(16).toString('hex')
     const statePayload = {
-      uid: user.uid,
-      email: user.email,
+      uid: authUser.uid,
+      email: authUser.email || authUser.username,
+      username: authUser.username,
       nonce,
       ts: Date.now()
     }

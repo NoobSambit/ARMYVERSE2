@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { buildShareUrl } from '@/lib/cloudinaryShare'
 
@@ -15,7 +15,7 @@ const Schema = z.object({ inventoryItemId: z.string().min(8) })
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connect()
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const item = await InventoryItem.findOne({ _id: input.data.inventoryItemId, userId: user.uid }).populate('cardId')
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     const card: any = (item as any).cardId
-    const text = `${card.member} • ${card.rarity.toUpperCase()} • @${(user.name || user.email || 'user').split('@')[0]}`
+    const text = `${card.member} • ${card.rarity.toUpperCase()} • @${user.displayName || user.username || 'user'}`
     const shareUrl = buildShareUrl({ publicId: card.publicId, text })
     return NextResponse.json({ shareUrl })
   } catch (error) {

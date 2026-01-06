@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
 
@@ -7,15 +7,20 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const authUser = await verifyFirebaseToken(request)
-    if (!authUser?.email) {
+    const authUser = await verifyAuth(request)
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await connect()
 
-    const updateResult = await User.findOneAndUpdate(
-      { email: authUser.email },
+    const user = await getUserFromAuth(authUser)
+    if (!user) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+    }
+
+    const updateResult = await User.findByIdAndUpdate(
+      user._id,
       {
         $unset: {
           'integrations.spotify': ''
@@ -25,7 +30,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (!updateResult) {
-      return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

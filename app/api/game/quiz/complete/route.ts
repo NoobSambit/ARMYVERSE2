@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { QuizSession } from '@/lib/models/QuizSession'
 import { Question } from '@/lib/models/Question'
 import { InventoryItem } from '@/lib/models/InventoryItem'
@@ -33,7 +33,7 @@ const CompleteSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -183,12 +183,9 @@ export async function POST(request: NextRequest) {
     
     // Get user profile data from MongoDB for leaderboard
     const { User } = await import('@/lib/models/User')
-    let userDoc = await User.findOne({ firebaseUid: user.uid }).lean()
-    if (!userDoc && user.email) {
-      userDoc = await User.findOne({ email: user.email }).lean()
-    }
-    const profileDisplayName = (userDoc as any)?.profile?.displayName || user.name || user.email || 'User'
-    const profileAvatarUrl = (userDoc as any)?.profile?.avatarUrl || user.picture || ''
+    const userDoc = await getUserFromAuth(user)
+    const profileDisplayName = (userDoc as any)?.profile?.displayName || user.displayName || user.username || 'User'
+    const profileAvatarUrl = (userDoc as any)?.profile?.avatarUrl || user.photoURL || ''
     
     console.log('[Quiz Complete] Updating leaderboard:', {
       userId: user.uid,

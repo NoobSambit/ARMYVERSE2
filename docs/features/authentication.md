@@ -2,27 +2,47 @@
 
 ## What It Is
 
-ARMYVERSE uses a dual authentication system:
-1. **Firebase Authentication** - For user account management and general app access
-2. **Spotify OAuth** - For music-related features and Spotify API access
+ARMYVERSE uses a flexible multi-method authentication system:
+1. **Username/Password (JWT)** - Privacy-first authentication with optional email
+2. **Firebase Authentication** - Social login (Google, Twitter)
+3. **Spotify OAuth** - For music-related features and Spotify API access
 
 ## How It Works
 
+### Username/Password Authentication (JWT)
+
+JWT-based authentication allows users to create accounts with just a username and password - email is completely optional.
+
+**Features:**
+- Username-only signup (email optional for privacy)
+- Secure password hashing with bcrypt (10 rounds)
+- JWT tokens with 7-day expiration
+- Login with username OR email
+- Rate limiting (5 signups/hour, 10 logins/15min)
+
+**Key Components:**
+- `lib/auth/jwt.ts` - JWT generation, verification, password hashing
+- `lib/auth/verify.ts` - Unified auth verification (JWT + Firebase)
+- `lib/auth/token.ts` - Token utility functions
+- `app/api/auth/signup/route.ts` - Signup endpoint
+- `app/api/auth/signin/route.ts` - Signin endpoint
+- `contexts/AuthContext.tsx` - Global authentication state
+- `components/auth/SignInForm.tsx` - Login interface
+- `components/auth/SignUpForm.tsx` - Registration interface
+
 ### Firebase Authentication
 
-Firebase Auth handles user registration, login, and session management for the entire platform.
+Firebase Auth handles social login for users who prefer OAuth providers.
 
 **Supported Methods:**
-- Email/Password authentication
 - Google Sign-In (OAuth)
-- Session persistence with secure tokens
+- Twitter Sign-In (OAuth)
+- Session persistence with Firebase tokens
 
 **Key Components:**
 - `lib/firebase/auth.ts` - Firebase configuration and auth methods
 - `lib/firebase/config.ts` - Firebase initialization
-- `contexts/AuthContext.tsx` - Global authentication state
-- `components/auth/SignInForm.tsx` - Login interface
-- `components/auth/SignUpForm.tsx` - Registration interface
+- Firebase Admin SDK for server-side token verification
 
 ### Spotify OAuth
 
@@ -49,31 +69,50 @@ playlist-modify-private
 
 ## Workflow
 
-### User Registration Flow
+### Username/Password Registration Flow
 
 ```mermaid
 graph TD
     A[User visits /auth/signup] --> B[Fill registration form]
-    B --> C[Submit to Firebase Auth]
-    C --> D{Success?}
-    D -->|Yes| E[Create user record in MongoDB]
-    E --> F[Redirect to dashboard]
-    D -->|No| G[Show error message]
-    G --> B
+    B[username, password, optional email] --> C[POST /api/auth/signup]
+    C --> D[Validate input with Zod]
+    D --> E[Check username uniqueness]
+    E --> F[Hash password with bcrypt]
+    F --> G[Create user in MongoDB]
+    G --> H[Generate JWT token]
+    H --> I[Return token + user data]
+    I --> J[Store token in localStorage]
+    J --> K[Redirect to dashboard]
 ```
 
-### User Login Flow
+### Username/Password Login Flow
 
 ```mermaid
 graph TD
-    A[User visits /auth/signin] --> B[Enter credentials]
-    B --> C[Submit to Firebase Auth]
-    C --> D{Valid?}
-    D -->|Yes| E[Get Firebase ID token]
-    E --> F[Store token in session]
-    F --> G[Redirect to protected page]
-    D -->|No| H[Show error message]
-    H --> B
+    A[User visits /auth/signin] --> B[Enter username/email + password]
+    B --> C[POST /api/auth/signin]
+    C --> D[Find user by username or email]
+    D --> E[Verify password with bcrypt]
+    E --> F{Valid?}
+    F -->|Yes| G[Generate JWT token]
+    G --> H[Return token + user data]
+    H --> I[Store token in localStorage]
+    I --> J[Redirect to dashboard]
+    F -->|No| K[Return 401 error]
+```
+
+### Social Login Flow (Firebase)
+
+```mermaid
+graph TD
+    A[User clicks Google/Twitter] --> B[Firebase Auth popup]
+    B --> C[User authorizes]
+    C --> D[Get Firebase ID token]
+    D --> E[Store token in session]
+    E --> F[API calls use Firebase token]
+    F --> G[Server verifies with Firebase Admin SDK]
+    G --> H[Get/create user in MongoDB]
+    H --> I[Proceed with request]
 ```
 
 ### Spotify OAuth Flow
@@ -89,11 +128,93 @@ graph TD
     G --> H[Redirect to dashboard with success]
 ```
 
+### Unified Server-Side Authentication
+
+All API routes use a single `verifyAuth()` function that handles both JWT and Firebase tokens seamlessly.
+
+```typescript
+// In any API route
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+
+export async function GET(request: Request) {
+  // Verify authentication (works for both JWT and Firebase)
+  const authUser = await verifyAuth(request)
+
+  // Get full user from database
+  const user = await getUserFromAuth(authUser)
+
+  // Proceed with authenticated request
+  return Response.json({ user })
+}
+```
+
+**How it works:**
+1. Extracts token from `Authorization: Bearer <token>` header
+2. Detects token type (JWT starts with `eyJ`, Firebase is longer)
+3. Verifies JWT signature OR Firebase token via Admin SDK
+4. Returns unified `AuthUser` object with `userId`, `username`, `email`
+5. Database lookup via username, email, or firebaseUid
+
 ## API Reference
+
+### Username/Password Authentication (API Routes)
+
+**Sign Up**
+```bash
+POST /api/auth/signup
+Content-Type: application/json
+
+{
+  "username": "armyfan123",
+  "password": "SecurePass123",
+  "email": "fan@example.com",      # optional
+  "displayName": "ARMY Fan"        # optional
+}
+
+# Response
+{
+  "ok": true,
+  "token": "eyJhbGc...",
+  "user": { "id": "...", "username": "armyfan123", ... }
+}
+```
+
+**Sign In**
+```bash
+POST /api/auth/signin
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "armyfan123",  # can be username OR email
+  "password": "SecurePass123"
+}
+
+# Response
+{
+  "ok": true,
+  "token": "eyJhbGc...",
+  "user": { ... }
+}
+```
 
 ### Firebase Authentication (Client-Side)
 
-**Sign Up**
+**Social Sign In**
+```typescript
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
+import { auth } from '@/lib/firebase/config'
+
+const provider = new GoogleAuthProvider()
+const result = await signInWithPopup(auth, provider)
+const token = await result.user.getIdToken()
+
+// Use token in API calls
+fetch('/api/user/profile', {
+  headers: { 'Authorization': `Bearer ${token}` }
+})
+```
+
+**Sign Up (Email/Password - Legacy)**
 ```typescript
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'

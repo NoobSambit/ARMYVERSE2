@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Bell, Mail, Clock, MessageSquare, Music, BarChart3, Zap } from 'lucide-react'
+import { Bell, Mail, Clock, MessageSquare, Music, BarChart3, Zap, Check } from 'lucide-react'
 
 interface NotificationsChannels { inApp?: boolean; email?: boolean }
 interface NotificationsQuiet { start?: string; end?: string; timezone?: string }
@@ -59,18 +59,9 @@ const NOTIFICATION_CATEGORIES = [
 ]
 
 const TIMEZONES = [
-  'UTC',
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'Europe/London',
-  'Europe/Paris',
-  'Europe/Berlin',
-  'Asia/Tokyo',
-  'Asia/Seoul',
-  'Asia/Shanghai',
-  'Australia/Sydney'
+  'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+  'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+  'Asia/Tokyo', 'Asia/Seoul', 'Asia/Shanghai', 'Australia/Sydney'
 ]
 
 export default function NotificationsForm({ profile, onUpdate, error }: NotificationsFormProps) {
@@ -112,80 +103,77 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
     })
   }, [onUpdate, profile.notifications])
 
-  
-
   return (
-    <div className="space-y-8">
-      {/* Error display */}
+    <div className="space-y-8 animate-in fade-in duration-500">
       {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
-        >
+        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
           <p className="text-red-400 text-sm">{error}</p>
-        </motion.div>
+        </div>
       )}
 
+      {/* Header */}
+      <div>
+         <h2 className="text-xl font-bold text-white flex items-center gap-2">
+           Notifications
+         </h2>
+         <p className="text-sm text-gray-400 mt-1">Control how and when you receive updates.</p>
+      </div>
+
       {/* Delivery Channels */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-6">
           <Bell className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Delivery Channels</h3>
+          <h3 className="text-lg font-bold text-white">Delivery Channels</h3>
         </div>
-        
-        <p className="text-sm text-gray-400">
-          Choose how you want to receive notifications
-        </p>
         
         <div className="space-y-4">
           {/* In-App Notifications */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
-            <div className="flex items-center gap-3">
-              <Bell className="w-5 h-5 text-purple-400" />
+          <div className="flex items-center justify-between p-5 bg-black/20 rounded-2xl border border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 bg-purple-500/10 rounded-xl">
+                <Bell className="w-5 h-5 text-purple-400" />
+              </div>
               <div>
-                <h4 className="text-white font-medium">In-App Notifications</h4>
-                <p className="text-gray-400 text-sm">
-                  Show notifications within ARMYVERSE
-                </p>
+                <h4 className="text-white font-bold text-sm">In-App Notifications</h4>
+                <p className="text-gray-400 text-xs font-medium mt-0.5">Show notifications within ARMYVERSE</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => handleChannelChange('inApp', !profile.notifications?.channels?.inApp)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
+              className={`relative w-12 h-7 rounded-full transition-colors ${
                 profile.notifications?.channels?.inApp ? 'bg-purple-600' : 'bg-gray-700'
               }`}
             >
               <div
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                  profile.notifications?.channels?.inApp ? 'translate-x-7' : 'translate-x-1'
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                  profile.notifications?.channels?.inApp ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
           </div>
           
           {/* Email Notifications */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-purple-400" />
+          <div className="flex items-center justify-between p-5 bg-black/20 rounded-2xl border border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 bg-purple-500/10 rounded-xl">
+                <Mail className="w-5 h-5 text-purple-400" />
+              </div>
               <div>
-                <h4 className="text-white font-medium">Email Notifications</h4>
-                <p className="text-gray-400 text-sm">
-                  Send notifications to your email address
-                </p>
+                <h4 className="text-white font-bold text-sm">Email Notifications</h4>
+                <p className="text-gray-400 text-xs font-medium mt-0.5">Send updates to your email address</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => handleChannelChange('email', !profile.notifications?.channels?.email)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
+              className={`relative w-12 h-7 rounded-full transition-colors ${
                 profile.notifications?.channels?.email ? 'bg-purple-600' : 'bg-gray-700'
               }`}
             >
               <div
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                  profile.notifications?.channels?.email ? 'translate-x-7' : 'translate-x-1'
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                  profile.notifications?.channels?.email ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -194,30 +182,28 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
       </div>
 
       {/* Quiet Hours */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-6">
           <Clock className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Quiet Hours</h3>
+          <h3 className="text-lg font-bold text-white">Quiet Hours</h3>
         </div>
         
-        <div className="p-4 bg-black/20 rounded-xl space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-5 bg-black/20 rounded-2xl border border-white/5">
             <div>
-              <h4 className="text-white font-medium">Enable Quiet Hours</h4>
-              <p className="text-gray-400 text-sm">
-                Pause notifications during specific hours
-              </p>
+              <h4 className="text-white font-bold text-sm">Enable Quiet Hours</h4>
+              <p className="text-gray-400 text-xs font-medium mt-0.5">Pause notifications during specific hours</p>
             </div>
             <button
               type="button"
               onClick={() => setQuietHoursEnabled(!quietHoursEnabled)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
+              className={`relative w-12 h-7 rounded-full transition-colors ${
                 quietHoursEnabled ? 'bg-purple-600' : 'bg-gray-700'
               }`}
             >
               <div
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                  quietHoursEnabled ? 'translate-x-7' : 'translate-x-1'
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                  quietHoursEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -227,52 +213,43 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="space-y-4"
+              className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-5"
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="quietStart" className="block text-sm font-medium text-gray-300 mb-2">
-                    Start Time
-                  </label>
+                  <label htmlFor="quietStart" className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Start Time</label>
                   <input
                     id="quietStart"
                     type="time"
                     value={profile.notifications?.quietHours?.start || ''}
                     onChange={(e) => handleQuietHoursChange('start', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-black/40 border border-white/10 text-white focus:border-purple-500 focus:outline-none transition-colors font-medium"
                   />
                 </div>
-                
                 <div>
-                  <label htmlFor="quietEnd" className="block text-sm font-medium text-gray-300 mb-2">
-                    End Time
-                  </label>
+                  <label htmlFor="quietEnd" className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">End Time</label>
                   <input
                     id="quietEnd"
                     type="time"
                     value={profile.notifications?.quietHours?.end || ''}
                     onChange={(e) => handleQuietHoursChange('end', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
+                    className="w-full px-5 py-3.5 rounded-2xl bg-black/40 border border-white/10 text-white focus:border-purple-500 focus:outline-none transition-colors font-medium"
                   />
                 </div>
               </div>
               
               <div>
-                <label htmlFor="quietTimezone" className="block text-sm font-medium text-gray-300 mb-2">
-                  Timezone
-                </label>
-                <select
-                  id="quietTimezone"
-                  value={profile.notifications?.quietHours?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
-                  onChange={(e) => handleQuietHoursChange('timezone', e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white focus:border-purple-500 focus:outline-none transition-colors"
-                >
-                  {TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz}>
-                      {tz}
-                    </option>
-                  ))}
-                </select>
+                <label htmlFor="quietTimezone" className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Timezone</label>
+                <div className="relative">
+                  <select
+                    id="quietTimezone"
+                    value={profile.notifications?.quietHours?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
+                    onChange={(e) => handleQuietHoursChange('timezone', e.target.value)}
+                    className="w-full px-5 py-3.5 rounded-xl bg-black/40 border border-white/10 text-white appearance-none focus:border-purple-500 focus:outline-none transition-colors"
+                  >
+                    {TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
+                  </select>
+                </div>
               </div>
             </motion.div>
           )}
@@ -280,10 +257,10 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
       </div>
 
       {/* Notification Categories */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-6">
           <Zap className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Notification Types</h3>
+          <h3 className="text-lg font-bold text-white">Notification Types</h3>
         </div>
         
         <div className="space-y-6">
@@ -292,38 +269,32 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
             
             return (
               <div key={category.id} className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Icon className="w-5 h-5 text-purple-400" />
-                  <div>
-                    <h4 className="text-white font-medium">{category.name}</h4>
-                    <p className="text-gray-400 text-sm">{category.description}</p>
-                  </div>
+                <div className="flex items-center gap-3 pb-2 border-b border-white/5">
+                  <Icon className="w-5 h-5 text-gray-400" />
+                  <h4 className="text-white font-bold text-sm">{category.name}</h4>
                 </div>
                 
-                <div className="space-y-3 ml-8">
+                <div className="grid grid-cols-1 gap-3">
                   {category.fields.map((field) => {
                     const catKey = category.id as 'blog' | 'playlists' | 'spotify'
                     const isEnabled = (profile.notifications?.[catKey] as Record<string, boolean> | undefined)?.[field.id] ?? true
                     
                     return (
-                      <div
-                        key={field.id}
-                        className="flex items-center justify-between p-3 bg-black/20 rounded-xl"
-                      >
+                      <div key={field.id} className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
                         <div>
-                          <h5 className="text-white text-sm font-medium">{field.name}</h5>
-                          <p className="text-gray-400 text-xs">{field.description}</p>
+                          <h5 className="text-white text-sm font-bold">{field.name}</h5>
+                          <p className="text-gray-400 text-xs font-medium mt-0.5">{field.description}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleCategoryChange(catKey, field.id, !isEnabled)}
-                          className={`relative w-10 h-5 rounded-full transition-colors ${
+                          className={`relative w-10 h-6 rounded-full transition-colors ${
                             isEnabled ? 'bg-purple-600' : 'bg-gray-700'
                           }`}
                         >
                           <div
-                            className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-                              isEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
+                              isEnabled ? 'translate-x-5' : 'translate-x-1'
                             }`}
                           />
                         </button>
@@ -335,43 +306,6 @@ export default function NotificationsForm({ profile, onUpdate, error }: Notifica
             )
           })}
         </div>
-      </div>
-
-      {/* Notification Summary */}
-      <div className="p-4 bg-gray-800/50 rounded-xl">
-        <h4 className="text-white font-medium mb-3">Notification Summary</h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${profile.notifications?.channels?.inApp ? 'bg-green-500' : 'bg-gray-500'}`} />
-            <span className="text-gray-300">In-App</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${profile.notifications?.channels?.email ? 'bg-green-500' : 'bg-gray-500'}`} />
-            <span className="text-gray-300">Email</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${quietHoursEnabled ? 'bg-yellow-500' : 'bg-gray-500'}`} />
-            <span className="text-gray-300">Quiet Hours</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${(['blog','playlists','spotify'] as Array<'blog'|'playlists'|'spotify'>).some((k) => {
-              const cat = profile.notifications?.[k] as Record<string, boolean> | undefined
-              return !!cat && Object.values(cat).some((v) => v === true)
-            }) ? 'bg-green-500' : 'bg-gray-500'}`} />
-            <span className="text-gray-300">Active Types</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Help Text */}
-      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-        <h4 className="text-blue-300 font-medium mb-2">Notification Tips</h4>
-        <ul className="text-blue-300/80 text-sm space-y-1">
-          <li>• Quiet hours pause all notifications during the specified time</li>
-          <li>• In-app notifications appear in your ARMYVERSE dashboard</li>
-          <li>• Email notifications are sent to your registered email address</li>
-          <li>• You can customize each notification type independently</li>
-        </ul>
       </div>
     </div>
   )

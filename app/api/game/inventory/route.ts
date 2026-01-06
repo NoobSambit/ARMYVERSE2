@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { url as cloudinaryUrl } from '@/lib/cloudinary'
 // Ensure Photocard schema is registered before populate()
@@ -18,7 +18,7 @@ export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

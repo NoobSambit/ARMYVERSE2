@@ -5,6 +5,7 @@ import { FaSpotify, FaLock } from 'react-icons/fa'
 import { CheckCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
+import { getAuthToken } from '@/lib/auth/token'
 
 interface SpotifyConnectCardProps {
   onAuthSuccess?: () => void
@@ -46,7 +47,7 @@ export default function SpotifyConnectCard({ onAuthSuccess }: SpotifyConnectCard
       }
 
       setIsLoading(true)
-      const idToken = await user.getIdToken()
+      const idToken = await getAuthToken(user)
       const response = await fetch('/api/spotify/auth-url', {
         headers: {
           Authorization: `Bearer ${idToken}`

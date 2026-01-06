@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
 
@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const authUser = await verifyFirebaseToken(request)
-    if (!authUser?.email) {
+    const authUser = await verifyAuth(request)
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -244,19 +244,28 @@ const profileSchema = new mongoose.Schema({
 }, { _id: false })
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: function(this: any) {
-      return !this.email // Name not required for Firebase Auth users
-    },
-    trim: true
-  },
-  email: {
+  username: {
     type: String,
     required: true,
     unique: true,
     trim: true,
-    lowercase: true
+    lowercase: true,
+    minlength: 3,
+    maxlength: 30,
+    match: /^[a-z0-9_]+$/,
+    index: true
+  },
+  name: {
+    type: String,
+    trim: true
+  },
+  email: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null values, but enforce uniqueness when present
+    trim: true,
+    lowercase: true,
+    index: true
   },
   firebaseUid: {
     type: String,
@@ -267,7 +276,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: function(this: any) {
-      return !this.googleId && !this.email // Password only required if not using Google OAuth and not Firebase Auth
+      return !this.googleId && !this.firebaseUid // Password required if not using OAuth or Firebase
     }
   },
   googleId: {
@@ -359,7 +368,11 @@ userSchema.index({ 'profile.socials.youtube': 1 }, { sparse: true })
 userSchema.index({ 
   'profile.displayName': 'text', 
   'profile.bio': 'text',
-  'profile.handle': 'text'
+  'profile.handle': 'text',
+  'username': 'text'
 })
+
+// Add compound index for username lookups (case-insensitive)
+userSchema.index({ username: 1 }, { unique: true })
 
 export const User = mongoose.models.User || mongoose.model('User', userSchema) 

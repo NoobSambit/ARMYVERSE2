@@ -130,14 +130,20 @@ export async function GET(request: NextRequest) {
 
     const statePayload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf-8')) as {
       uid: string
-      email: string
+      email?: string
+      username?: string
       nonce: string
       ts: number
     }
 
     const MAX_STATE_AGE_MS = 5 * 60 * 1000
-    if (!statePayload?.uid || !statePayload?.email || !statePayload?.ts || Date.now() - statePayload.ts > MAX_STATE_AGE_MS) {
+    if (!statePayload?.uid || !statePayload?.ts || Date.now() - statePayload.ts > MAX_STATE_AGE_MS) {
       return NextResponse.redirect(new URL('/stats?error=state_expired', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
+    }
+    
+    // Must have either email or username
+    if (!statePayload.email && !statePayload.username) {
+      return NextResponse.redirect(new URL('/stats?error=invalid_state', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
     }
 
     // Exchange code for access token (owner app credentials)
@@ -193,10 +199,17 @@ export async function GET(request: NextRequest) {
     const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000)
     const scope = tokenData.scope ? tokenData.scope.split(' ') : []
 
+    // Find user by email or username depending on what's in the state
+    const query = statePayload.email 
+      ? { $or: [{ firebaseUid: statePayload.uid }, { email: statePayload.email }] }
+      : { $or: [{ firebaseUid: statePayload.uid }, { username: statePayload.username }] }
+
     const updateResult = await User.findOneAndUpdate(
-      { email: statePayload.email },
+      query,
       {
         $set: {
+          ...(statePayload.email && { email: statePayload.email }),
+          ...(statePayload.username && !statePayload.email && { username: statePayload.username }),
           firebaseUid: statePayload.uid,
           'integrations.spotify': {
             accessToken: tokenData.access_token,

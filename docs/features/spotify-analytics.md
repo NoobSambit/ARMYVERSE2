@@ -2,12 +2,23 @@
 
 ## What It Is
 
-Comprehensive Spotify analytics and insights featuring:
-- **Personal Dashboard** - Top artists, tracks, and listening habits
-- **BTS-Specific Analytics** - BTS listening patterns and preferences
+Comprehensive music analytics and insights featuring:
+- **Personal Dashboard** - Top artists, tracks, and listening habits (Last.fm/Stats.fm)
+- **BTS-Specific Analytics** - BTS listening patterns and member preferences
 - **Recent Activity** - Recently played tracks with timestamps
-- **Global Snapshots** - Daily streaming data for BTS songs and albums
+- **Timeline Visualization** - Track BTS listening journey over time
+- **Member Analysis** - Detailed breakdown of listening by BTS member
+- **Global Snapshots** - Daily streaming data for BTS songs and albums (Spotify)
 - **Artist Rankings** - All-time most-streamed artists and monthly listeners
+
+### New Bento Grid Landing Page
+
+The `/stats` page features a modern bento grid layout before login with:
+- **Interactive Preview Cards**: Bias Analysis, Timeline, Recent Tracks, BTS Percentage
+- **Central Input Module**: Service selection (Last.fm/Stats.fm) and username entry
+- **Glassmorphic Design**: Modern backdrop blur effects with gradient accents
+- **Responsive Layout**: Adapts from single column (mobile) to 12-column grid (desktop)
+- **No Authentication Required**: Public profiles can be viewed instantly
 
 ## How It Works
 
@@ -63,11 +74,33 @@ Comprehensive Spotify analytics and insights featuring:
 
 ## Workflow
 
-### Personal Dashboard Load Flow
+### Stats Page Flow
 
 ```mermaid
 graph TD
-    A[User visits /stats] --> B{Spotify Connected?}
+    A[User visits /stats] --> B{Username Entered?}
+    B -->|No| C[Show Bento Grid Landing Page]
+    C --> D[User Selects Provider - Last.fm/Stats.fm]
+    D --> E[User Enters Username]
+    E --> F[Submit Form]
+    F --> G[POST /api/music/dashboard]
+    G --> H[Fetch User Info]
+    G --> I[Fetch Top Artists]
+    G --> J[Fetch Top Tracks]
+    G --> K[Fetch Recent Tracks]
+    H --> L[Calculate BTS Analytics]
+    I --> L
+    J --> L
+    K --> L
+    L --> M[Build BTS Timeline]
+    M --> N[Render Full Dashboard]
+```
+
+### Personal Dashboard Load Flow (Legacy Spotify Integration)
+
+```mermaid
+graph TD
+    A[User visits /stats with Spotify] --> B{Spotify Connected?}
     B -->|No| C[Show Connect Button]
     C --> D[OAuth Flow]
     D --> E[Store Tokens]
@@ -391,7 +424,97 @@ user-read-recently-played # Recently played
 }
 ```
 
+## UI Components
+
+### StatsLandingPage Component
+
+**Location**: `/components/dashboard/StatsLandingPage.tsx`
+
+**Purpose**: Modern bento grid landing page for the `/stats` route before username submission
+
+**Features**:
+- **Bento Grid Layout**: 12-column responsive grid system
+- **Feature Preview Cards**:
+  - Bias Analysis (Top Left): Shows mini bar chart visualization
+  - Timeline (Top Right): Displays wavy chart for listening timeline
+  - Recent Tracks (Bottom Left): Preview of recent listening activity
+  - BTS Percentage (Bottom Right): Shows user's BTS listening percentage
+- **Central Input Module**:
+  - Service selection toggle (Last.fm/Stats.fm)
+  - Username input with validation
+  - Error message handling
+  - Animated submit button
+- **Responsive Design**:
+  - Mobile: Single column stack
+  - Tablet (md): 2-column grid
+  - Desktop (lg): 12-column bento grid
+- **Animations**: Framer Motion staggered entry and hover effects
+- **Glassmorphism**: Backdrop blur, transparent backgrounds, gradient accents
+
+**Props**:
+```typescript
+interface StatsLandingPageProps {
+  onSubmit: (username: string, provider: 'lastfm' | 'statsfm') => void
+  error?: string | null
+}
+```
+
+**Design System**:
+- Primary Color: `#330df2` (purple-blue)
+- Secondary Color: `#7b1fa2` (purple)
+- Background: `#131023` (dark navy)
+- Border: `#292249` (dark purple)
+- Glassmorphic panels: `backdrop-blur-[20px]` with `rgba(29,24,52,0.4)` background
+
+### Dashboard Components
+
+Once a username is submitted, the page renders the full dashboard with:
+
+**UserProfile Component** (`/components/dashboard/UserProfile.tsx`)
+- User avatar, username, account age
+- Stats cards: Total Scrobbles, Top Artist, Minutes Streamed, Total Tracks
+
+**BTSAnalytics Component** (`/components/dashboard/BTSAnalytics.tsx`)
+- 3 view modes: Overview, Members (radar chart), Tracks
+- Member preference breakdown with progress bars
+- BTS percentage and super fan status
+- Favorite album and top tracks
+
+**TopArtists Component** (`/components/dashboard/TopArtists.tsx`)
+- Dual view: List view or Chart view (bar chart)
+- Top 10 artists with play counts
+
+**RecentTracks Component** (`/components/dashboard/RecentTracks.tsx`)
+- Scrollable feed of recently played tracks
+- "Now Playing" indicator with animated music bars
+- Time ago formatting
+
 ## Usage Examples
+
+### Rendering the Landing Page
+
+```typescript
+import StatsLandingPage from '@/components/dashboard/StatsLandingPage'
+
+function StatsPage() {
+  const [username, setUsername] = useState('')
+  const [provider, setProvider] = useState<'lastfm' | 'statsfm'>('lastfm')
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = (user: string, prov: 'lastfm' | 'statsfm') => {
+    setUsername(user)
+    setProvider(prov)
+    // Fetch dashboard data...
+  }
+
+  // Show landing page if no username
+  if (!username) {
+    return <StatsLandingPage onSubmit={handleSubmit} error={error} />
+  }
+
+  // Render dashboard...
+}
+```
 
 ### Fetching Dashboard Data
 

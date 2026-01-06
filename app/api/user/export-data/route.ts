@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
 
@@ -24,14 +24,14 @@ const sanitizeUser = (user: any) => {
 
 export async function GET(request: Request) {
   try {
-    const authUser = await verifyFirebaseToken(request as any)
-    if (!authUser?.email) {
+    const authUser = await verifyAuth(request as any)
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await connect()
 
-    const userDoc = await User.findOne({ email: authUser.email })
+    const userDoc = await getUserFromAuth(authUser)
     if (!userDoc) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
     }

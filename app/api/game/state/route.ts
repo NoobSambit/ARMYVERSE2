@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
 import { Badge } from '@/lib/models/Badge'
 import { UserBadge } from '@/lib/models/UserBadge'
@@ -25,7 +25,7 @@ function getNextMilestone(currentStreak: number): { nextMilestone: number; daysR
 /** GET /api/game/state - returns user game state with streak info and next milestone */
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connect()
 

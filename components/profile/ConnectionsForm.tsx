@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Music, Twitter, Instagram, Youtube, Globe, Link, Eye, EyeOff, Check, X, AlertCircle } from 'lucide-react'
+import { Music, Twitter, Instagram, Youtube, Globe, Link as LinkIcon, Eye, EyeOff, Check, X, AlertCircle, RefreshCw, LogOut, Settings } from 'lucide-react'
 import { formatSocialUrl, extractSocialHandle, validateUrl } from '@/lib/utils/profile'
 import { track } from '@/lib/utils/analytics'
 import { useAuth } from '@/contexts/AuthContext'
+import { getAuthToken } from '@/lib/auth/token'
 
 type SocialVisibility = Record<string, boolean>
 type ProfileSocials = {
@@ -25,35 +26,22 @@ interface ConnectionsFormProps {
 }
 
 const SOCIAL_PLATFORMS = [
-  {
-    id: 'twitter',
-    name: 'Twitter/X',
-    icon: Twitter,
-    placeholder: 'https://twitter.com/username',
-    example: 'https://twitter.com/username'
-  },
-  {
-    id: 'instagram',
-    name: 'Instagram',
-    icon: Instagram,
-    placeholder: 'https://instagram.com/username',
-    example: 'https://instagram.com/username'
-  },
-  {
-    id: 'youtube',
-    name: 'YouTube',
-    icon: Youtube,
-    placeholder: 'https://youtube.com/@username',
-    example: 'https://youtube.com/@username'
-  },
-  {
-    id: 'website',
-    name: 'Website',
-    icon: Globe,
-    placeholder: 'https://yourwebsite.com',
-    example: 'https://yourwebsite.com'
-  }
+  { id: 'twitter', name: 'Twitter/X', icon: Twitter, placeholder: 'https://twitter.com/username' },
+  { id: 'instagram', name: 'Instagram', icon: Instagram, placeholder: 'https://instagram.com/username' },
+  { id: 'youtube', name: 'YouTube', icon: Youtube, placeholder: 'https://youtube.com/@username' },
+  { id: 'website', name: 'Website', icon: Globe, placeholder: 'https://yourwebsite.com' }
 ]
+
+const SCOPE_TAGS: Record<string, string> = {
+  'user-read-private': 'USER READ PRIVATE',
+  'user-read-email': 'EMAIL',
+  'user-read-currently-playing': 'CURRENT PLAYING',
+  'user-read-playback-state': 'PLAYBACK STATE',
+  'user-top-read': 'TOP ITEMS',
+  'playlist-read-private': 'PLAYLIST PRIVATE',
+  'playlist-modify-public': 'PLAYLIST PUBLIC',
+  'playlist-modify-private': 'PLAYLIST PRIVATE'
+}
 
 export default function ConnectionsForm({ profile, onUpdate, error }: ConnectionsFormProps) {
   const { user } = useAuth()
@@ -65,8 +53,8 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     displayName?: string
     mode?: 'byo' | 'standard'
   }>({ connected: false, loading: true })
-  const [byo, setByo] = useState<{ clientId: string; clientSecret: string; busy: boolean; error?: string }>({ clientId: '', clientSecret: '', busy: false })
   
+  const [byo, setByo] = useState<{ clientId: string; clientSecret: string; busy: boolean; error?: string }>({ clientId: '', clientSecret: '', busy: false })
   const [urlErrors, setUrlErrors] = useState<Record<string, string>>({})
 
   // Check Spotify connection status
@@ -78,43 +66,26 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
       }
 
       try {
-        const token = await user.getIdToken()
+        const token = await getAuthToken(user)
         const response = await fetch('/api/spotify/status', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         })
 
         if (response.ok) {
           const data = await response.json()
-          if (data.connected) {
-            setSpotifyStatus({
-              connected: true,
-              loading: false,
-              scopes: data.scopes || [],
-              displayName: data.displayName,
-              mode: data.mode
-            })
-          } else {
-            setSpotifyStatus({
-              connected: false,
-              loading: false,
-              error: 'Not connected'
-            })
-          }
-        } else {
           setSpotifyStatus({
-            connected: false,
+            connected: !!data.connected,
             loading: false,
-            error: 'Failed to fetch status'
+            scopes: data.scopes || [],
+            displayName: data.displayName,
+            mode: data.mode,
+            error: data.connected ? undefined : 'Not connected'
           })
+        } else {
+          setSpotifyStatus({ connected: false, loading: false, error: 'Failed to fetch status' })
         }
       } catch (err) {
-        setSpotifyStatus({
-          connected: false,
-          loading: false,
-          error: 'Failed to check connection'
-        })
+        setSpotifyStatus({ connected: false, loading: false, error: 'Failed to check connection' })
       }
     }
 
@@ -125,7 +96,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     if (!user) return
     setByo(prev => ({ ...prev, busy: true, error: undefined }))
     try {
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/spotify/client-credentials', {
         method: 'POST',
         headers: {
@@ -153,14 +124,14 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
   const disconnectBYO = useCallback(async () => {
     if (!user) return
     try {
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/spotify/disconnect-byo', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       })
       if (response.ok) {
         await track('connection_disconnected', { platform: 'spotify-byo' })
-        setSpotifyStatus(prev => ({ ...prev, mode: undefined }))
+        setSpotifyStatus(prev => ({ ...prev, mode: undefined, connected: false }))
       }
     } catch (err) {
       console.error('Failed to disconnect Spotify BYO:', err)
@@ -177,22 +148,16 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
   }, [onUpdate, profile.socials])
 
   const handleUrlChange = useCallback((platform: string, url: string) => {
-    // Clear previous error
     setUrlErrors(prev => ({ ...prev, [platform]: '' }))
-    
     if (!url) {
       handleInputChange(platform, '')
       return
     }
-
-    // Validate URL
     const validation = validateUrl(url)
     if (!validation.isValid) {
       setUrlErrors(prev => ({ ...prev, [platform]: validation.error || 'Invalid URL' }))
       return
     }
-
-    // Format URL
     const formattedUrl = formatSocialUrl(url, platform)
     handleInputChange(platform, formattedUrl)
   }, [handleInputChange])
@@ -211,13 +176,10 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
 
   const connectSpotify = useCallback(async () => {
     if (!user) return
-
     try {
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/spotify/auth-url', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.ok) {
         const { url } = await response.json()
@@ -231,20 +193,14 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
 
   const disconnectSpotify = useCallback(async () => {
     if (!user) return
-
     try {
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/spotify/disconnect', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.ok) {
-        setSpotifyStatus({
-          connected: false,
-          loading: false
-        })
+        setSpotifyStatus(prev => ({ ...prev, connected: false }))
         await track('connection_disconnected', { platform: 'spotify' })
       }
     } catch (err) {
@@ -252,289 +208,204 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     }
   }, [user])
 
-  const getScopeDescription = (scopes: string[]) => {
-    const scopeMap: Record<string, string> = {
-      'user-read-private': 'View your Spotify account details',
-      'user-read-email': 'View your Spotify email address',
-      'user-top-read': 'View your top artists and tracks',
-      'user-read-recently-played': 'View your recently played tracks',
-      'playlist-read-private': 'View your private playlists',
-      'playlist-modify-public': 'Modify your public playlists',
-      'playlist-modify-private': 'Modify your private playlists'
-    }
-    
-    return scopes.map(scope => scopeMap[scope] || scope).join(', ')
-  }
-
   return (
-    <div className="space-y-8">
-      {/* Error display */}
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header */}
+      <div>
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          Connections
+        </h2>
+        <p className="text-sm text-gray-400 mt-1">
+          Manage your external accounts and social links for your profile.
+        </p>
+      </div>
+
       {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
-        >
+        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
           <AlertCircle className="w-5 h-5 text-red-400" />
           <p className="text-red-400 text-sm">{error}</p>
-        </motion.div>
+        </div>
       )}
 
-      {/* Spotify Connection */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Music className="w-5 h-5 text-green-400" />
-          <h3 className="text-lg font-semibold text-white">Spotify Connection</h3>
-        </div>
-        
-        <div className="p-6 bg-black/20 rounded-xl border border-gray-700">
-          {spotifyStatus.loading ? (
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-gray-400">Checking connection...</span>
-            </div>
-          ) : spotifyStatus.connected ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full" />
-                <span className="text-green-400 font-medium">Connected to Spotify</span>
-                {spotifyStatus.displayName && (
-                  <span className="text-sm text-gray-400">as {spotifyStatus.displayName}</span>
-                )}
-              </div>
-              
-              {spotifyStatus.scopes && spotifyStatus.scopes.length > 0 && (
-                <div>
-                  <p className="text-sm text-gray-400 mb-2">Permissions granted:</p>
-                  <p className="text-sm text-gray-300">
-                    {getScopeDescription(spotifyStatus.scopes)}
-                  </p>
-                </div>
-              )}
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={connectSpotify}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors"
-                >
-                  Reconnect
-                </button>
-                <button
-                  onClick={disconnectSpotify}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
-                >
-                  Disconnect
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-gray-500 rounded-full" />
-                <span className="text-gray-400">Not connected to Spotify</span>
-              </div>
-              
-              <p className="text-sm text-gray-400">
-                Connect your Spotify account to access personalized playlists, recommendations, and music insights.
-              </p>
-              
-              <button
-                onClick={connectSpotify}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors"
-              >
-                Connect Spotify
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Spotify Integration Card */}
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden">
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-6">
+             <div className="p-2 bg-green-500/10 rounded-xl">
+                <Music className="w-6 h-6 text-green-500" />
+             </div>
+             <h3 className="text-lg font-bold text-white">Spotify Integration</h3>
+          </div>
 
-      {/* Bring your own Spotify app */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Music className="w-5 h-5 text-green-400" />
-          <h3 className="text-lg font-semibold text-white">Bring your own Spotify app</h3>
-        </div>
-
-        <div className="p-6 bg-black/20 rounded-xl border border-gray-700 space-y-4">
-          {spotifyStatus.mode === 'byo' ? (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full" />
-                <span className="text-green-400 font-medium">Personal app connected</span>
-                {spotifyStatus.displayName && (
-                  <span className="text-sm text-gray-400">as {spotifyStatus.displayName}</span>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={disconnectBYO}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
-                >
-                  Disconnect personal Spotify
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              {byo.error && (
-                <div className="flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                  <AlertCircle className="w-5 h-5 text-red-400" />
-                  <p className="text-red-400 text-sm">{byo.error}</p>
+          <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
+             {spotifyStatus.loading ? (
+                <div className="flex items-center gap-3 text-gray-400 font-medium">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Checking status...</span>
                 </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Client ID</label>
-                  <input
-                    type="text"
-                    value={byo.clientId}
-                    onChange={(e) => setByo(prev => ({ ...prev, clientId: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
-                    placeholder="your-client-id"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Client Secret (optional)</label>
-                  <input
-                    type="password"
-                    value={byo.clientSecret}
-                    onChange={(e) => setByo(prev => ({ ...prev, clientSecret: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
-                    placeholder="your-client-secret (leave empty to use PKCE)"
-                  />
-                </div>
-              </div>
-              <p className="text-xs text-gray-400">
-                Requires scopes: playlist-modify-public, playlist-modify-private, user-read-private. Add your Spotify account email to your app&#39;s User Management before connecting.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={submitBYO}
-                  disabled={byo.busy || !byo.clientId}
-                  className={`px-4 py-2 rounded-xl transition-colors ${byo.busy || !byo.clientId ? 'bg-gray-700 text-gray-400' : 'bg-green-600 hover:bg-green-700 text-white'}`}
-                >
-                  {byo.busy ? 'Preparing…' : 'Connect personal Spotify'}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Social Links */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Link className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Social Links</h3>
-        </div>
-        
-        <div className="space-y-6">
-          {SOCIAL_PLATFORMS.map((platform) => {
-            const Icon = platform.icon
-            const socialValue = profile.socials?.[platform.id]
-            const currentUrl = typeof socialValue === 'string' ? socialValue : ''
-            const isVisible = profile.socials?.visibility?.[platform.id] ?? true
-            const hasError = urlErrors[platform.id]
-            
-            return (
-              <div key={platform.id} className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Icon className="w-5 h-5 text-gray-400" />
-                  <h4 className="text-white font-medium">{platform.name}</h4>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="url"
-                      value={currentUrl}
-                      onChange={(e) => handleUrlChange(platform.id, e.target.value)}
-                      className={`w-full px-4 py-3 rounded-xl bg-black/40 border text-white placeholder-gray-500 focus:outline-none transition-colors ${
-                        hasError ? 'border-red-500' : 'border-gray-700 focus:border-purple-500'
-                      }`}
-                      placeholder={platform.placeholder}
-                    />
-                    {hasError && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <X className="w-5 h-5 text-red-400" />
+             ) : spotifyStatus.connected ? (
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                   <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-green-900/20">
+                         {spotifyStatus.displayName?.[0]?.toUpperCase() || 'S'}
                       </div>
-                    )}
-                    {currentUrl && !hasError && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Check className="w-5 h-5 text-green-400" />
+                      <div>
+                         <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-white">Connected to Spotify</h4>
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                         </div>
+                         <p className="text-sm text-gray-400">Logged in as <span className="text-white font-medium">{spotifyStatus.displayName || 'User'}</span></p>
+                         
+                         {/* Scopes Badges */}
+                         <div className="flex flex-wrap gap-2 mt-2">
+                            {(spotifyStatus.scopes || []).slice(0, 3).map(scope => (
+                               <span key={scope} className="px-2 py-0.5 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                                  {SCOPE_TAGS[scope] || 'ACCESS'}
+                               </span>
+                            ))}
+                         </div>
                       </div>
-                    )}
-                  </div>
-                  
-                  {hasError && (
-                    <p className="text-xs text-red-400">{hasError}</p>
-                  )}
-                  
-                  {currentUrl && !hasError && (
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>Handle: {extractSocialHandle(currentUrl, platform.id)}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleVisibilityChange(platform.id, !isVisible)}
-                        className={`flex items-center gap-2 px-3 py-1 rounded-xl text-sm transition-colors ${
-                          isVisible
-                            ? 'bg-green-600/20 text-green-400'
-                            : 'bg-gray-700 text-gray-400'
-                        }`}
+                   </div>
+
+                   <div className="flex gap-3 w-full md:w-auto">
+                      <button 
+                         onClick={connectSpotify}
+                         className="flex-1 md:flex-none px-5 py-2.5 bg-[#2E2E32] hover:bg-[#3E3E42] text-white rounded-xl text-sm font-bold transition-colors"
                       >
-                        {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        {isVisible ? 'Visible' : 'Hidden'}
+                         Reconnect
                       </button>
-                    </div>
-                    
-                    {currentUrl && (
-                      <a
-                        href={currentUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                      <button 
+                         onClick={disconnectSpotify}
+                         className="flex-1 md:flex-none px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors"
                       >
-                        Test link
-                      </a>
-                    )}
-                  </div>
+                         Disconnect
+                      </button>
+                   </div>
                 </div>
-              </div>
-            )
-          })}
+             ) : (
+                <div className="text-center py-6">
+                   <p className="text-gray-400 mb-6 font-medium">Connect to show your listening activity and favorites.</p>
+                   <button 
+                      onClick={connectSpotify}
+                      className="px-8 py-3.5 bg-green-600 hover:bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 mx-auto uppercase tracking-wide text-sm"
+                   >
+                      <Music className="w-5 h-5" />
+                      Connect Spotify
+                   </button>
+                </div>
+             )}
+          </div>
         </div>
       </div>
 
-      {/* Help Text */}
-      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-        <h4 className="text-blue-300 font-medium mb-2">About Social Links</h4>
-        <ul className="text-blue-300/80 text-sm space-y-1">
-          <li>• Links are validated and formatted automatically</li>
-          <li>• Use the visibility toggle to control what appears on your public profile</li>
-          <li>• Handles are extracted and displayed for verification</li>
-          <li>• Changes are saved automatically</li>
-        </ul>
-      </div>
-
-      {/* Connection Status Summary */}
-      <div className="p-4 bg-gray-800/50 rounded-xl">
-        <h4 className="text-white font-medium mb-3">Connection Summary</h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${spotifyStatus.connected ? 'bg-green-500' : 'bg-gray-500'}`} />
-            <span className="text-gray-300">Spotify</span>
+      {/* BYOA Card */}
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden">
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-6">
+             <div className="p-2 bg-purple-500/10 rounded-xl">
+                <Settings className="w-6 h-6 text-purple-500" />
+             </div>
+             <h3 className="text-lg font-bold text-white">Bring Your Own App</h3>
           </div>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${Object.entries(profile.socials || {}).some(([, v]) => typeof v === 'string' && !!v) ? 'bg-green-500' : 'bg-gray-500'}`} />
-            <span className="text-gray-300">Social Links</span>
+
+          <p className="text-sm text-gray-400 mb-8 leading-relaxed font-medium">
+             Using your own Spotify Developer App credentials provides higher rate limits and stability for your profile widgets.
+          </p>
+
+          <div className="space-y-6">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Client ID</label>
+                   <input 
+                      type="text" 
+                      value={byo.clientId}
+                      onChange={(e) => setByo(prev => ({ ...prev, clientId: e.target.value }))}
+                      placeholder="Paste your Spotify Client ID"
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors font-mono"
+                   />
+                </div>
+                <div>
+                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Client Secret</label>
+                   <input 
+                      type="password" 
+                      value={byo.clientSecret}
+                      onChange={(e) => setByo(prev => ({ ...prev, clientSecret: e.target.value }))}
+                      placeholder="Paste your Spotify Client Secret"
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors font-mono"
+                   />
+                </div>
+             </div>
+
+             {byo.error && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3">
+                   <AlertCircle className="w-5 h-5 text-red-400" />
+                   <span className="text-sm text-red-300 font-medium">{byo.error}</span>
+                </div>
+             )}
+
+             <button 
+                onClick={submitBYO}
+                disabled={byo.busy || !byo.clientId}
+                className="w-full py-3.5 bg-[#2E2E32] hover:bg-[#3E3E42] disabled:opacity-50 text-white rounded-2xl font-bold transition-colors flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
+             >
+                {byo.busy ? (
+                   <>
+                     <RefreshCw className="w-4 h-4 animate-spin" />
+                     Preparing Authorization...
+                   </>
+                ) : (
+                   <>
+                     <LinkIcon className="w-4 h-4" />
+                     Connect Personal App
+                   </>
+                )}
+             </button>
           </div>
         </div>
+      </div>
+
+      {/* Social Links (Simplified to list styling) */}
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden">
+         <div className="p-8">
+            <h3 className="text-lg font-bold text-white mb-6">Social Links</h3>
+            <div className="space-y-5">
+               {SOCIAL_PLATFORMS.map(platform => {
+                  const Icon = platform.icon
+                  const currentUrl = typeof profile.socials?.[platform.id] === 'string' ? profile.socials[platform.id] as string : ''
+                  const isVisible = profile.socials?.visibility?.[platform.id] ?? true
+                  const hasError = urlErrors[platform.id]
+
+                  return (
+                     <div key={platform.id} className="flex items-start gap-4">
+                        <div className="mt-3.5 text-gray-400">
+                           <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                           <div className="relative">
+                              <input 
+                                 type="text"
+                                 value={currentUrl}
+                                 onChange={(e) => handleUrlChange(platform.id, e.target.value)}
+                                 placeholder={platform.placeholder}
+                                 className={`w-full bg-black/40 border ${hasError ? 'border-red-500/50' : 'border-white/10'} rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors font-medium`}
+                              />
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                 <button 
+                                    onClick={() => handleVisibilityChange(platform.id, !isVisible)}
+                                    className={`p-2 rounded-xl transition-colors ${isVisible ? 'text-purple-400 bg-purple-500/10' : 'text-gray-500 hover:text-gray-400'}`}
+                                    title={isVisible ? 'Visible on profile' : 'Hidden from profile'}
+                                 >
+                                    {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                 </button>
+                              </div>
+                           </div>
+                           {hasError && <p className="text-xs text-red-400 font-medium">{hasError}</p>}
+                        </div>
+                     </div>
+                  )
+               })}
+            </div>
+         </div>
       </div>
     </div>
   )

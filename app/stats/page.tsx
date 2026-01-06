@@ -7,7 +7,7 @@ import UserProfile from '@/components/dashboard/UserProfile'
 import RecentTracks from '@/components/dashboard/RecentTracks'
 import TopArtists from '@/components/dashboard/TopArtists'
 import BTSAnalytics from '@/components/dashboard/BTSAnalytics'
-import UsernameInputCard from '@/components/dashboard/UsernameInputCard'
+import StatsLandingPage from '@/components/dashboard/StatsLandingPage'
 import { LastFmPeriod } from '@/lib/lastfm/types'
 
 interface DashboardData {
@@ -103,9 +103,9 @@ export default function Stats() {
     await loadDashboardData()
   }
 
-  // Show username input if no username is set
+  // Show landing page if no username is set
   if (!username) {
-    return <UsernameInputCard onSubmit={handleUsernameSubmit} error={error} />
+    return <StatsLandingPage onSubmit={handleUsernameSubmit} error={error} />
   }
 
   if (loading && !data) {

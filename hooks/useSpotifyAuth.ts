@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { getAuthToken } from '@/lib/auth/token'
 
 interface SpotifyStatusResponse {
   connected: boolean
@@ -29,7 +30,7 @@ export function useSpotifyAuth() {
 
     try {
       setIsLoading(true)
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/spotify/status', {
         headers: {
           Authorization: `Bearer ${token}`
@@ -93,7 +94,7 @@ export function useSpotifyAuth() {
     }
 
     try {
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/spotify/disconnect', {
         method: 'POST',
         headers: {

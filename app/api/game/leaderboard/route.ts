@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { LeaderboardEntry, ILeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 
 export const runtime = 'nodejs'
@@ -17,7 +17,7 @@ function weeklyKey(date = new Date()) {
 /** GET /api/game/leaderboard?cursor=&limit= */
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connect()
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
 import { encryptSecret } from '@/lib/utils/secrets'
@@ -23,8 +23,8 @@ function generateCodeChallenge(verifier: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const authUser = await verifyFirebaseToken(request)
-    if (!authUser?.email || !authUser.uid) {
+    const authUser = await verifyAuth(request)
+    if (!authUser?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -66,8 +66,13 @@ export async function POST(request: NextRequest) {
 
     await connect()
 
-    await User.findOneAndUpdate(
-      { email: authUser.email },
+    const user = await getUserFromAuth(authUser)
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    await User.findByIdAndUpdate(
+      user._id,
       {
         $set: {
           'pending.spotifyByo': {
@@ -79,8 +84,7 @@ export async function POST(request: NextRequest) {
             createdAt: new Date()
           }
         }
-      },
-      { upsert: true }
+      }
     )
 
     const params = new URLSearchParams()

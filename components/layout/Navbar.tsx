@@ -8,6 +8,7 @@ import { navItems } from '@/components/layout/nav-data'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from '@/lib/firebase/auth'
 import ProfileModal from '@/components/profile/ProfileModal'
+import { getAuthToken } from '@/lib/auth/token'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -39,7 +40,7 @@ export default function Navbar() {
     let cancelled = false
     const loadProfileName = async () => {
       try {
-        const token = await user.getIdToken()
+        const token = await getAuthToken(user)
         const response = await fetch('/api/user/profile', {
           headers: { 'Authorization': `Bearer ${token}` }
         })

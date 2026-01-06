@@ -2,28 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { User } from '@/lib/models/User'
 import { connect } from '@/lib/db/mongoose'
 import { z } from 'zod'
-import { getAuth } from 'firebase-admin/auth'
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-
-// Initialize Firebase Admin SDK
-if (!getApps().length) {
-  // Check if we have the required environment variables
-  if (!process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
-    console.error('Missing Firebase Admin SDK environment variables')
-    throw new Error('Firebase Admin SDK not configured')
-  }
-  
-  initializeApp({
-    credential: cert({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    }),
-  })
-}
-
-const auth = getAuth()
-// const db = getFirestore()
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 
 // Validation schemas - Clean and consistent approach
 const profileUpdateSchema = z.object({
@@ -122,76 +101,70 @@ const profileUpdateSchema = z.object({
   }).optional()
 })
 
-// Helper function to verify Firebase token
-async function verifyFirebaseToken(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return null
-    }
-    
-    const token = authHeader.split('Bearer ')[1]
-    const decodedToken = await auth.verifyIdToken(token)
-    return decodedToken
-  } catch (error) {
-    console.error('Token verification error:', error)
-    return null
-  }
-}
+// Note: Helper function moved to @/lib/auth/verify for unified auth support
 
 // Note: Firestore→Mongo migration helper was removed to avoid unused code during build.
 
 // GET /api/user/profile
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
-    if (!user) {
+    const authUser = await verifyAuth(request)
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await connect()
     
-    // First, try to find the existing user
-    let dbUser = await User.findOne({ email: user.email }, { profile: 1, email: 1, name: 1, firebaseUid: 1 })
+    // Find or create user based on auth type
+    let dbUser = await getUserFromAuth(authUser)
     
-    // If user doesn't exist, create them with minimal profile
-    if (!dbUser) {
+    // If user doesn't exist, create them with minimal profile (mainly for Firebase users)
+    if (!dbUser && authUser.authType === 'firebase' && authUser.email) {
       dbUser = await User.findOneAndUpdate(
-        { email: user.email },
+        { email: authUser.email },
         {
           $setOnInsert: {
-            name: user.displayName || user.email?.split('@')[0] || 'User',
-            email: user.email!,
-            firebaseUid: user.uid,
+            username: authUser.username || authUser.email.split('@')[0],
+            name: authUser.displayName || authUser.email.split('@')[0] || 'User',
+            email: authUser.email,
+            firebaseUid: authUser.uid,
             createdAt: new Date(),
             profile: {
-              displayName: user.displayName || user.email?.split('@')[0] || 'User',
-              avatarUrl: user.photoURL || '',
+              displayName: authUser.displayName || authUser.email.split('@')[0] || 'User',
+              avatarUrl: authUser.photoURL || '',
             }
           }
         },
         { 
           upsert: true, 
           new: true,
-          projection: { profile: 1, email: 1, name: 1, firebaseUid: 1 }
+          projection: { profile: 1, email: 1, name: 1, firebaseUid: 1, username: 1 }
         }
       )
     }
 
-    if (dbUser && (!dbUser.firebaseUid || dbUser.firebaseUid !== user.uid)) {
-      await User.updateOne({ _id: dbUser._id }, { $set: { firebaseUid: user.uid } })
-      dbUser = await User.findOne({ email: user.email }, { profile: 1, email: 1, name: 1, firebaseUid: 1 })
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Extract profile data from Mongoose document and merge with Firebase auth data
+    // Update Firebase UID if needed (for Firebase users)
+    if (authUser.authType === 'firebase' && (!dbUser.firebaseUid || dbUser.firebaseUid !== authUser.uid)) {
+      await User.updateOne({ _id: dbUser._id }, { $set: { firebaseUid: authUser.uid } })
+      dbUser = await getUserFromAuth(authUser)
+    }
+
+    // Extract profile data from Mongoose document
     const savedProfile = dbUser.profile ? dbUser.profile.toObject() : {}
     
     const profile = {
-      // Start with Firebase auth data as base
-      displayName: user.displayName || user.email?.split('@')[0] || 'User',
-      avatarUrl: user.photoURL || '',
-      email: user.email,
-      uid: user.uid,
+      // Start with auth data as base
+      displayName: authUser.displayName || authUser.username || 'User',
+      avatarUrl: authUser.photoURL || '',
+      email: authUser.email,
+      username: dbUser.username || authUser.username,
+      uid: authUser.uid,
+      _id: dbUser._id.toString(),
+      authType: authUser.authType,
       // Override with saved profile data if it exists
       ...savedProfile
     }
@@ -241,8 +214,8 @@ function sanitizeRequestBody(body: Record<string, unknown>) {
 // PUT /api/user/profile
 export async function PUT(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
-    if (!user) {
+    const authUser = await verifyAuth(request)
+    if (!authUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -260,10 +233,11 @@ export async function PUT(request: NextRequest) {
 
     // Check handle uniqueness if provided
     if (validatedData.handle) {
-      const existingUser = await User.findOne({ 
-        'profile.handle': validatedData.handle,
-        email: { $ne: user.email }
-      })
+      const query = authUser.authType === 'firebase' && authUser.email
+        ? { 'profile.handle': validatedData.handle, email: { $ne: authUser.email } }
+        : { 'profile.handle': validatedData.handle, username: { $ne: authUser.username } }
+        
+      const existingUser = await User.findOne(query)
       if (existingUser) {
         return NextResponse.json({ 
           error: 'Handle already taken',
@@ -292,18 +266,22 @@ export async function PUT(request: NextRequest) {
     })
 
     // Check if user exists first
-    const existingUser = await User.findOne({ email: user.email })
+    const existingUser = await getUserFromAuth(authUser)
     
     let dbUser
     if (existingUser) {
       // Update existing user
+      const updateQuery = authUser.authType === 'firebase' && authUser.email
+        ? { email: authUser.email }
+        : { username: authUser.username }
+        
       dbUser = await User.findOneAndUpdate(
-        { email: user.email },
+        updateQuery,
         {
           $set: {
-            name: user.displayName || user.email?.split('@')[0] || 'User',
-            email: user.email!,
-            firebaseUid: user.uid,
+            name: authUser.displayName || authUser.username || 'User',
+            ...(authUser.email && { email: authUser.email }),
+            ...(authUser.authType === 'firebase' && { firebaseUid: authUser.uid }),
             ...updateFields
           }
         },
@@ -312,19 +290,20 @@ export async function PUT(request: NextRequest) {
           runValidators: true
         }
       )
-    } else {
-      // Create new user
+    } else if (authUser.authType === 'firebase' && authUser.email) {
+      // Create new user for Firebase (JWT users should already exist)
       dbUser = await User.findOneAndUpdate(
-        { email: user.email },
+        { email: authUser.email },
         {
           $set: {
-            name: user.displayName || user.email?.split('@')[0] || 'User',
-            email: user.email!,
-            firebaseUid: user.uid,
+            username: authUser.username || authUser.email.split('@')[0],
+            name: authUser.displayName || authUser.email.split('@')[0] || 'User',
+            email: authUser.email,
+            firebaseUid: authUser.uid,
             createdAt: new Date(),
             profile: {
-              displayName: user.displayName || user.email?.split('@')[0] || 'User',
-              avatarUrl: user.photoURL || '',
+              displayName: authUser.displayName || authUser.email.split('@')[0] || 'User',
+              avatarUrl: authUser.photoURL || '',
               ...validatedData
             }
           }
@@ -335,6 +314,8 @@ export async function PUT(request: NextRequest) {
           runValidators: true
         }
       )
+    } else {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     console.log('PUT - saved profile:', dbUser.profile)

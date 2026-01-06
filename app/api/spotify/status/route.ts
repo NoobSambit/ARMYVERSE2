@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
 import { getUserExportToken } from '@/lib/spotify/userTokens'
@@ -107,14 +107,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const authUser = await verifyFirebaseToken(request)
-    if (!authUser?.uid || !authUser.email) {
+    const authUser = await verifyAuth(request)
+    if (!authUser?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await connect()
 
-    const userDoc = await User.findOne({ email: authUser.email })
+    const userDoc = await getUserFromAuth(authUser)
     if (!userDoc) {
       return NextResponse.json({ connected: false })
     }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { Photocard, IPhotocard } from '@/lib/models/Photocard'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
@@ -25,7 +25,7 @@ const DEFAULT_COSTS: Record<string, number> = { common: 20, rare: 60, epic: 200,
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connect()
 

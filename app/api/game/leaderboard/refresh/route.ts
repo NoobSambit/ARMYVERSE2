@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 import { User } from '@/lib/models/User'
 
@@ -18,7 +18,7 @@ function weeklyKey(date = new Date()) {
 /** POST /api/game/leaderboard/refresh - Force update current user's leaderboard entry with profile data */
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     
     await connect()
@@ -26,12 +26,9 @@ export async function POST(request: NextRequest) {
     const periodKey = weeklyKey()
     
     // Get user profile data from MongoDB
-    let userDoc = await User.findOne({ firebaseUid: user.uid }).lean()
-    if (!userDoc && user.email) {
-      userDoc = await User.findOne({ email: user.email }).lean()
-    }
-    const profileDisplayName = (userDoc as any)?.profile?.displayName || user.name || user.email || 'User'
-    const profileAvatarUrl = (userDoc as any)?.profile?.avatarUrl || user.picture || ''
+    const userDoc = await getUserFromAuth(user)
+    const profileDisplayName = (userDoc as any)?.profile?.displayName || user.displayName || user.username || 'User'
+    const profileAvatarUrl = (userDoc as any)?.profile?.avatarUrl || user.photoURL || ''
     
     console.log('[Leaderboard Refresh] Updating:', {
       userId: user.uid,

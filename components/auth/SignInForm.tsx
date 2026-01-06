@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
-  Mail, 
+  User,
   Lock, 
   Eye, 
   EyeOff,
@@ -12,7 +12,7 @@ import {
   Loader2
 } from 'lucide-react'
 import Link from 'next/link'
-import { signInWithEmail, signInWithGoogle, signInWithTwitter, AuthError } from '@/lib/firebase/auth'
+import { signInWithEmail, signInWithUsername, signInWithGoogle, signInWithTwitter, AuthError } from '@/lib/firebase/auth'
 
 interface SignInFormProps {
   embedded?: boolean
@@ -20,20 +20,21 @@ interface SignInFormProps {
 }
 
 export default function SignInForm({ embedded = false, hideHeader = false }: SignInFormProps) {
-  const [email, setEmail] = useState('')
+  const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
 
     try {
-      await signInWithEmail({ email, password })
+      // Use username-based signin which accepts both username and email
+      await signInWithUsername({ usernameOrEmail, password })
       router.push('/')
     } catch (error) {
       const authError = error as AuthError
@@ -94,21 +95,21 @@ export default function SignInForm({ embedded = false, hideHeader = false }: Sig
 
         {/* Sign In Form */}
         <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-          <form onSubmit={handleEmailSignIn} className="space-y-6">
-            {/* Email Field */}
+          <form onSubmit={handleSignIn} className="space-y-6">
+            {/* Username or Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
+              <label htmlFor="usernameOrEmail" className="block text-sm font-medium text-gray-300 mb-2">
+                Username or Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="usernameOrEmail"
+                  type="text"
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
-                  placeholder="Enter your email"
+                  placeholder="Enter your username or email"
                   required
                   disabled={isLoading}
                 />
@@ -164,7 +165,7 @@ export default function SignInForm({ embedded = false, hideHeader = false }: Sig
           {/* Divider */}
           <div className="my-6 flex items-center">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
-            <span className="px-4 text-gray-400 text-sm">or continue with</span>
+            <span className="px-4 text-gray-400 text-sm">or sign in with</span>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
           </div>
 

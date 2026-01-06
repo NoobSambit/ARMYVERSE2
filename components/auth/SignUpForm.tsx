@@ -13,7 +13,7 @@ import {
   Loader2
 } from 'lucide-react'
 import Link from 'next/link'
-import { signUpWithEmail, signInWithGoogle, signInWithTwitter, AuthError } from '@/lib/firebase/auth'
+import { signUpWithEmail, signUpWithUsername, signInWithGoogle, signInWithTwitter, AuthError } from '@/lib/firebase/auth'
 
 interface SignUpFormProps {
   embedded?: boolean
@@ -21,6 +21,7 @@ interface SignUpFormProps {
 }
 
 export default function SignUpForm({ embedded = false, hideHeader = false }: SignUpFormProps) {
+  const [username, setUsername] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -42,14 +43,20 @@ export default function SignUpForm({ embedded = false, hideHeader = false }: Sig
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long')
       setIsLoading(false)
       return
     }
 
     try {
-      await signUpWithEmail({ name, email, password })
+      // Use username-based signup (email is optional)
+      await signUpWithUsername({ 
+        username, 
+        password, 
+        name: name || undefined,
+        email: email || undefined
+      })
       router.push('/')
     } catch (error) {
       const authError = error as AuthError
@@ -111,10 +118,35 @@ export default function SignUpForm({ embedded = false, hideHeader = false }: Sig
         {/* Sign Up Form */}
         <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
           <form onSubmit={handleSignUp} className="space-y-6">
+            {/* Username Field */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Username *
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
+                  placeholder="Choose a username"
+                  required
+                  disabled={isLoading}
+                  pattern="[a-zA-Z0-9_]+"
+                  title="Username can only contain letters, numbers, and underscores"
+                  minLength={3}
+                  maxLength={30}
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-400">3-30 characters, letters, numbers, and underscores only</p>
+            </div>
+
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                Full Name
+                Display Name (optional)
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -124,8 +156,7 @@ export default function SignUpForm({ embedded = false, hideHeader = false }: Sig
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
-                  placeholder="Enter your full name"
-                  required
+                  placeholder="Enter your display name"
                   disabled={isLoading}
                 />
               </div>
@@ -134,7 +165,7 @@ export default function SignUpForm({ embedded = false, hideHeader = false }: Sig
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
+                Email (optional)
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -144,11 +175,11 @@ export default function SignUpForm({ embedded = false, hideHeader = false }: Sig
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/60 focus:border-purple-400/60"
-                  placeholder="Enter your email"
-                  required
+                  placeholder="Enter your email (for account recovery)"
                   disabled={isLoading}
                 />
               </div>
+              <p className="mt-1 text-xs text-gray-400">Optional, but recommended for account recovery</p>
             </div>
 
             {/* Password Field */}
@@ -228,7 +259,7 @@ export default function SignUpForm({ embedded = false, hideHeader = false }: Sig
           {/* Divider */}
           <div className="my-6 flex items-center">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
-            <span className="px-4 text-gray-400 text-sm">or continue with</span>
+            <span className="px-4 text-gray-400 text-sm">or sign up with</span>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
           </div>
 

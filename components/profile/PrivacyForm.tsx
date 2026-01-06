@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Shield, Eye, Users, Lock, AlertTriangle, Download, Trash2, UserX, Check } from 'lucide-react'
 import { track } from '@/lib/utils/analytics'
 import { useAuth } from '@/contexts/AuthContext'
+import { getAuthToken } from '@/lib/auth/token'
 
 type FieldVisibilityKey = 'bias' | 'era' | 'socials' | 'stats'
 
@@ -28,42 +29,15 @@ interface PrivacyFormProps {
 }
 
 const VISIBILITY_OPTIONS = [
-  {
-    id: 'public',
-    name: 'Public',
-    description: 'Anyone can view your profile',
-    icon: Eye
-  },
-  {
-    id: 'followers',
-    name: 'Followers Only',
-    description: 'Only your followers can view your profile',
-    icon: Users
-  },
-  {
-    id: 'private',
-    name: 'Private',
-    description: 'Only you can view your profile',
-    icon: Lock
-  }
+  { id: 'public', name: 'Public', description: 'Anyone can view your profile', icon: Eye },
+  { id: 'followers', name: 'Followers Only', description: 'Only your followers can view your profile', icon: Users },
+  { id: 'private', name: 'Private', description: 'Only you can view your profile', icon: Lock }
 ]
 
 const FIELD_VISIBILITY_OPTIONS: Array<{ id: FieldVisibilityKey; name: string; description: string }> = [
-  {
-    id: 'bias',
-    name: 'Bias & Era',
-    description: 'Your favorite members and eras'
-  },
-  {
-    id: 'socials',
-    name: 'Social Links',
-    description: 'Your connected social media accounts'
-  },
-  {
-    id: 'stats',
-    name: 'Activity Stats',
-    description: 'Your playlists, likes, and saves count'
-  }
+  { id: 'bias', name: 'Bias & Era', description: 'Your favorite members and eras' },
+  { id: 'socials', name: 'Social Links', description: 'Your connected social media accounts' },
+  { id: 'stats', name: 'Activity Stats', description: 'Your playlists, likes, and saves count' }
 ]
 
 export default function PrivacyForm({ profile, onUpdate, error, onError }: PrivacyFormProps) {
@@ -98,15 +72,11 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
     setExporting(true)
     onError?.(null)
     try {
-      if (!user) {
-        throw new Error('You must be signed in to export data.')
-      }
+      if (!user) throw new Error('You must be signed in to export data.')
 
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/user/export-data', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.ok) {
         const blob = await response.blob()
@@ -124,9 +94,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
         throw new Error(body.error || 'Failed to export data')
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to export data'
-      console.error('Export failed:', err)
-      onError?.(message)
+      onError?.(err instanceof Error ? err.message : 'Failed to export data')
     } finally {
       setExporting(false)
     }
@@ -144,15 +112,12 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
 
     try {
       await track('account_deletion_initiated', {})
-      const token = await user.getIdToken()
+      const token = await getAuthToken(user)
       const response = await fetch('/api/user/delete-account', {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.ok) {
-        // Redirect to home page or show success message
         window.location.href = '/'
         return
       }
@@ -160,7 +125,6 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       const body = await response.json().catch(() => ({}))
       throw new Error(body.error || 'Failed to delete account')
     } catch (err) {
-      console.error('Delete account failed:', err)
       onError?.(err instanceof Error ? err.message : 'Failed to delete account')
     } finally {
       setDeleting(false)
@@ -170,23 +134,26 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
   const isDeleteEnabled = deleteConfirmText === 'DELETE'
 
   return (
-    <div className="space-y-8">
-      {/* Error display */}
+    <div className="space-y-8 animate-in fade-in duration-500">
       {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
-        >
+        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
           <p className="text-red-400 text-sm">{error}</p>
-        </motion.div>
+        </div>
       )}
 
+      {/* Header */}
+      <div>
+         <h2 className="text-xl font-bold text-white flex items-center gap-2">
+           Privacy & Safety
+         </h2>
+         <p className="text-sm text-gray-400 mt-1">Manage who can see your profile and data.</p>
+      </div>
+
       {/* Profile Visibility */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-6">
           <Shield className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Profile Visibility</h3>
+          <h3 className="text-lg font-bold text-white">Profile Visibility</h3>
         </div>
         
         <div className="space-y-3">
@@ -199,21 +166,23 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                 key={option.id}
                 type="button"
                 onClick={() => handleInputChange('visibility', option.id)}
-                className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                className={`w-full p-5 rounded-2xl border-2 transition-all text-left ${
                   isSelected
-                    ? 'border-purple-500 bg-purple-500/10'
-                    : 'border-gray-700 hover:border-gray-600 bg-black/20'
+                    ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-900/10'
+                    : 'border-white/5 hover:border-white/10 bg-black/20 hover:bg-white/5'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <Icon className="w-5 h-5 text-purple-400" />
+                <div className="flex items-center gap-4">
+                  <div className={`p-2 rounded-xl ${isSelected ? 'bg-purple-500/20' : 'bg-white/5'}`}>
+                    <Icon className={`w-5 h-5 ${isSelected ? 'text-purple-400' : 'text-gray-400'}`} />
+                  </div>
                   <div>
-                    <h4 className="text-white font-medium">{option.name}</h4>
-                    <p className="text-gray-400 text-sm">{option.description}</p>
+                    <h4 className="text-white font-bold text-sm">{option.name}</h4>
+                    <p className="text-gray-400 text-xs font-medium mt-0.5">{option.description}</p>
                   </div>
                   {isSelected && (
-                    <div className="ml-auto">
-                      <Check className="w-5 h-5 text-purple-400" />
+                    <div className="ml-auto bg-purple-500 p-1 rounded-full">
+                      <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
                 </div>
@@ -224,13 +193,13 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Field-Level Visibility */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-2">
           <Eye className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Field Visibility</h3>
+          <h3 className="text-lg font-bold text-white">Field Visibility</h3>
         </div>
         
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 mb-6 font-medium">
           Control which specific fields are visible on your public profile
         </p>
         
@@ -239,25 +208,22 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
             const isVisible = profile.privacy?.fieldVisibility?.[option.id] ?? true
             
             return (
-              <div
-                key={option.id}
-                className="flex items-center justify-between p-4 bg-black/20 rounded-xl"
-              >
+              <div key={option.id} className="flex items-center justify-between p-5 bg-black/20 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
                 <div>
-                  <h4 className="text-white font-medium">{option.name}</h4>
-                  <p className="text-gray-400 text-sm">{option.description}</p>
+                  <h4 className="text-white font-bold text-sm">{option.name}</h4>
+                  <p className="text-gray-400 text-xs font-medium mt-0.5">{option.description}</p>
                 </div>
                 
                 <button
                   type="button"
                   onClick={() => handleFieldVisibilityChange(option.id, !isVisible)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                  className={`relative w-12 h-7 rounded-full transition-colors ${
                     isVisible ? 'bg-purple-600' : 'bg-gray-700'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      isVisible ? 'translate-x-7' : 'translate-x-1'
+                    className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                      isVisible ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -268,77 +234,68 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Content & Communication */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-6">
           <AlertTriangle className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Content & Communication</h3>
+          <h3 className="text-lg font-bold text-white">Content & Communication</h3>
         </div>
         
         <div className="space-y-4">
-          {/* Explicit Content Filter */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
+          <div className="flex items-center justify-between p-5 bg-black/20 rounded-2xl border border-white/5">
             <div>
-              <h4 className="text-white font-medium">Explicit Content Filter</h4>
-              <p className="text-gray-400 text-sm">
-                Hide explicit content in playlists and recommendations
-              </p>
+              <h4 className="text-white font-bold text-sm">Explicit Content Filter</h4>
+              <p className="text-gray-400 text-xs font-medium mt-0.5">Hide explicit content in playlists</p>
             </div>
             <button
               type="button"
               onClick={() => handleInputChange('explicitContentFilter', !profile.privacy?.explicitContentFilter)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
+              className={`relative w-12 h-7 rounded-full transition-colors ${
                 profile.privacy?.explicitContentFilter ? 'bg-purple-600' : 'bg-gray-700'
               }`}
             >
               <div
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                  profile.privacy?.explicitContentFilter ? 'translate-x-7' : 'translate-x-1'
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                  profile.privacy?.explicitContentFilter ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
           </div>
           
-          {/* Allow Mentions */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
+          <div className="flex items-center justify-between p-5 bg-black/20 rounded-2xl border border-white/5">
             <div>
-              <h4 className="text-white font-medium">Allow Mentions</h4>
-              <p className="text-gray-400 text-sm">
-                Let other users mention you in comments and posts
-              </p>
+              <h4 className="text-white font-bold text-sm">Allow Mentions</h4>
+              <p className="text-gray-400 text-xs font-medium mt-0.5">Let users mention you in posts</p>
             </div>
             <button
               type="button"
               onClick={() => handleInputChange('allowMentions', !profile.privacy?.allowMentions)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
+              className={`relative w-12 h-7 rounded-full transition-colors ${
                 profile.privacy?.allowMentions ? 'bg-purple-600' : 'bg-gray-700'
               }`}
             >
               <div
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                  profile.privacy?.allowMentions ? 'translate-x-7' : 'translate-x-1'
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                  profile.privacy?.allowMentions ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
           </div>
           
-          {/* Allow DMs */}
-          <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl">
+          <div className="flex items-center justify-between p-5 bg-black/20 rounded-2xl border border-white/5">
             <div>
-              <h4 className="text-white font-medium">Allow Direct Messages</h4>
-              <p className="text-gray-400 text-sm">
-                Let other users send you direct messages
-              </p>
+              <h4 className="text-white font-bold text-sm">Allow Direct Messages</h4>
+              <p className="text-gray-400 text-xs font-medium mt-0.5">Let users send you direct messages</p>
             </div>
             <button
               type="button"
               onClick={() => handleInputChange('allowDMs', !profile.privacy?.allowDMs)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${
+              className={`relative w-12 h-7 rounded-full transition-colors ${
                 profile.privacy?.allowDMs ? 'bg-purple-600' : 'bg-gray-700'
               }`}
             >
               <div
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                  profile.privacy?.allowDMs ? 'translate-x-7' : 'translate-x-1'
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                  profile.privacy?.allowDMs ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -347,62 +304,60 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Blocked Users */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-2">
           <UserX className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Blocked Users</h3>
+          <h3 className="text-lg font-bold text-white">Blocked Users</h3>
         </div>
         
-        <div className="p-4 bg-black/20 rounded-xl">
-          <p className="text-gray-400 text-sm mb-3">
-            Manage users you&apos;ve blocked from interacting with you
-          </p>
+        <p className="text-gray-400 text-sm mb-4 font-medium">
+          Manage users you&apos;ve blocked from interacting with you
+        </p>
           
-          {profile.privacy?.blockedUserIds && profile.privacy.blockedUserIds.length > 0 ? (
-            <div className="space-y-2">
-              {profile.privacy.blockedUserIds.map((userId: string) => (
-                <div key={userId} className="flex items-center justify-between p-2 bg-gray-800 rounded">
-                  <span className="text-gray-300 text-sm">{userId}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newBlocked = (profile.privacy?.blockedUserIds || []).filter((id: string) => id !== userId)
-                      handleInputChange('blockedUserIds', newBlocked)
-                    }}
-                    className="text-red-400 hover:text-red-300 text-sm"
-                  >
-                    Unblock
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm">No blocked users</p>
-          )}
-        </div>
+        {profile.privacy?.blockedUserIds && profile.privacy.blockedUserIds.length > 0 ? (
+          <div className="space-y-2">
+            {profile.privacy.blockedUserIds.map((userId: string) => (
+              <div key={userId} className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-white/5">
+                <span className="text-gray-300 text-sm font-bold">{userId}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newBlocked = (profile.privacy?.blockedUserIds || []).filter((id: string) => id !== userId)
+                    handleInputChange('blockedUserIds', newBlocked)
+                  }}
+                  className="text-red-400 hover:text-red-300 text-xs font-bold px-4 py-1.5 bg-red-500/10 rounded-xl transition-colors uppercase tracking-wide"
+                >
+                  Unblock
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-6 bg-black/20 rounded-2xl text-center text-gray-500 text-sm font-medium border border-white/5">
+            No blocked users
+          </div>
+        )}
       </div>
 
       {/* Data Controls */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
+      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+        <div className="flex items-center gap-2 mb-6">
           <Download className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-white">Data Controls</h3>
+          <h3 className="text-lg font-bold text-white">Data Controls</h3>
         </div>
         
         <div className="space-y-4">
           {/* Export Data */}
-          <div className="p-4 bg-black/20 rounded-xl">
+          <div className="p-6 bg-black/20 rounded-2xl border border-white/5">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-white font-medium">Download Your Data</h4>
-                <p className="text-gray-400 text-sm">
-                  Export all your profile data, playlists, and preferences
-                </p>
+                <h4 className="text-white font-bold text-sm">Download Your Data</h4>
+                <p className="text-gray-400 text-xs font-medium mt-0.5">Export all your profile data</p>
               </div>
               <button
                 onClick={handleExportData}
                 disabled={exporting}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/20 rounded-xl transition-colors text-xs font-bold uppercase tracking-wide"
               >
                 <Download className="w-4 h-4" />
                 {exporting ? 'Exporting...' : 'Export'}
@@ -411,12 +366,12 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
           </div>
           
           {/* Delete Account */}
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-2xl">
             <div className="space-y-4">
               <div>
-                <h4 className="text-red-400 font-medium">Delete Account</h4>
-                <p className="text-gray-400 text-sm">
-                  Permanently delete your account and all associated data. This action cannot be undone.
+                <h4 className="text-red-400 font-bold">Delete Account</h4>
+                <p className="text-gray-400 text-sm font-medium mt-1">
+                  Permanently delete your account. This cannot be undone.
                 </p>
               </div>
               
@@ -424,15 +379,15 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   disabled={deleting}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20 rounded-xl transition-colors text-xs font-bold uppercase tracking-wide"
                 >
                   <Trash2 className="w-4 h-4" />
                   {deleting ? 'Preparing...' : 'Delete Account'}
                 </button>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4 p-5 bg-black/40 rounded-2xl border border-red-500/20">
                   <div>
-                    <label htmlFor="deleteConfirm" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label htmlFor="deleteConfirm" className="block text-xs font-bold text-red-300 mb-2 uppercase tracking-wider">
                       Type &quot;DELETE&quot; to confirm
                     </label>
                     <input
@@ -440,7 +395,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                       type="text"
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-black/40 border border-gray-700 text-white placeholder-gray-500 focus:border-red-500 focus:outline-none transition-colors"
+                      className="w-full px-5 py-3.5 rounded-2xl bg-black/40 border border-red-900/50 text-white placeholder-gray-600 focus:border-red-500 focus:outline-none transition-colors font-mono text-sm"
                       placeholder="DELETE"
                     />
                   </div>
@@ -449,7 +404,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                     <button
                       onClick={handleDeleteAccount}
                       disabled={!isDeleteEnabled || deleting}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl transition-colors"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl transition-colors text-xs font-bold uppercase tracking-wide"
                     >
                       <Trash2 className="w-4 h-4" />
                       {deleting ? 'Deleting...' : 'Confirm Delete'}
@@ -459,7 +414,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
                         setShowDeleteConfirm(false)
                         setDeleteConfirmText('')
                       }}
-                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
+                      className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors text-xs font-bold uppercase tracking-wide"
                     >
                       Cancel
                     </button>
@@ -469,17 +424,6 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Privacy Notice */}
-      <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-        <h4 className="text-yellow-300 font-medium mb-2">Privacy Notice</h4>
-        <ul className="text-yellow-300/80 text-sm space-y-1">
-          <li>• Your privacy settings are respected across all ARMYVERSE features</li>
-          <li>• Blocked users cannot see your content or interact with you</li>
-          <li>• Data exports include all your information except passwords</li>
-          <li>• Account deletion is permanent and irreversible</li>
-        </ul>
       </div>
     </div>
   )

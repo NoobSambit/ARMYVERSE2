@@ -158,6 +158,45 @@ Or use: `node -e "console.log(require('crypto').randomBytes(32).toString('base64
 
 ---
 
+### JWT Authentication
+
+```env
+JWT_SECRET=your-jwt-secret-key
+```
+
+**How to generate secret:**
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+Or use: `openssl rand -hex 64`
+
+**Used for:** Signing and verifying JWT tokens for username-based authentication
+
+**Important:**
+- Must be at least 32 characters long
+- Use different secrets for development and production
+- Never commit this to version control
+
+---
+
+### Last.fm API (Quest Verification)
+
+```env
+LASTFM_API_KEY=your-lastfm-api-key
+LASTFM_API_SECRET=your-lastfm-secret
+```
+
+**Where to get:**
+1. Go to [Last.fm API](https://www.last.fm/api/account/create)
+2. Create an API account
+3. Fill in application details
+4. Copy API Key and Shared Secret
+
+**Used for:** Verifying streaming quests by checking user's Last.fm scrobbles
+
+---
+
 ### Cron Jobs
 
 ```env
@@ -170,7 +209,7 @@ NEXT_PUBLIC_BASE_URL=https://your-domain.com
 openssl rand -hex 32
 ```
 
-**Used for:** Authenticating manual cron triggers for trending data scraping
+**Used for:** Authenticating manual cron triggers for trending data scraping, daily/weekly quest generation
 
 ---
 
@@ -294,11 +333,19 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
 
+# JWT Authentication
+JWT_SECRET=
+
 # Spotify
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
 NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=http://localhost:3000/api/spotify/callback
 NEXT_PUBLIC_SPOTIFY_SCOPES=user-read-private user-read-email user-top-read user-read-recently-played playlist-read-private playlist-modify-public playlist-modify-private
+SPOTIFY_USER_SECRET_KEY=
+
+# Last.fm (Quest Verification)
+LASTFM_API_KEY=
+LASTFM_API_SECRET=
 
 # YouTube
 YOUTUBE_API_KEY=
@@ -328,6 +375,7 @@ NODE_ENV=development
 ### Production (Vercel)
 
 Same as above, but:
+- Generate strong `JWT_SECRET` (64+ characters)
 - Change `NEXT_PUBLIC_SPOTIFY_REDIRECT_URI` to production domain
 - Change `NEXTAUTH_URL` to production domain
 - Change `NEXT_PUBLIC_BASE_URL` to production domain

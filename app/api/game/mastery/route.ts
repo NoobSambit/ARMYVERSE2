@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyFirebaseToken } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { MasteryProgress } from '@/lib/models/MasteryProgress'
 import { levelForXp } from '@/lib/game/mastery'
 
@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 /** GET /api/game/mastery */
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyFirebaseToken(request)
+    const user = await verifyAuth(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     await connect()
 
