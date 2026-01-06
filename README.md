@@ -18,71 +18,633 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 ## ✨ Features
 
 ### 🎵 Music & Playlists
-- **AI Playlist Generation**: Create personalized BTS playlists using Groq Llama 3.3 70B
-  - Seed track selection from BTS library
-  - 6-genre mixing (Ballad, Hip-Hop, EDM, R&B, Rock, Dance-Pop)
-  - Flow patterns (slow-build, wave, consistent, cool-down)
-  - Smart templates and personality quiz
-  - Save/load configurations
-- **Manual Playlist Creation**: Hand-pick your favorite tracks
-- **Spotify Integration**: Export playlists to Spotify, view listening analytics
+
+#### **AI Playlist Generation** (Groq Llama 3.3 70B)
+- **15+ Input Parameters**: Prompt, type, length (5-50 tracks), moods, member bias, era selection
+- **Seed Track Selection**: 1-5 reference tracks from 1000+ BTS track database
+- **Audio Features Control**: Danceability, valence, energy (0-100 sliders)
+- **6-Genre Mixing Engine**: Ballad, Hip-Hop, EDM, R&B, Rock, Dance-Pop with percentage distribution
+- **Flow Pattern System**: 4 progression types
+  - Slow-build (low → high energy)
+  - Wave (alternating energy)
+  - Consistent (steady energy)
+  - Cool-down (high → low energy)
+- **Context Optimization**: Workout, study, party, sleep, commute-specific generation
+- **Sophisticated AI Prompting**: 400+ line prompt with artist attribution rules and BTS discography verification
+- **Smart Matching**: Database lookup with fuzzy matching + Spotify API fallback
+- **Template Gallery**: Pre-configured playlists for quick generation
+- **Personality Quiz**: Generate playlists based on user preferences
+- **Config Save/Load**: Reuse favorite settings
+- **Playlist Evolution**: Refine and improve existing playlists
+- **Comparison View**: Compare multiple generated playlists
+
+#### **Manual Playlist Creation**
+- Hand-pick tracks from database with search
+- Drag-and-drop track ordering
+- Live audio preview samples
+- Visual track management interface
+
+#### **Spotify Integration**
+- **OAuth + BYO Credentials**: Dual authentication support
+- **Token Encryption**: AES-256-GCM with user-specific keys
+- **Playlist Export**: One-click export to Spotify
+- **Track Matching**: Automatic Spotify ID resolution
+- **User Library Sync**: Integration with user's Spotify account
 
 ### 📊 Analytics & Insights
-- **Personal Dashboard**: View your listening habits and BTS-specific insights
-- **Spotify Analytics**: Daily snapshots of global streaming data at `/spotify`
-  - Songs/albums by artist with streaming totals
-  - Global daily top 200 positions
-  - All-time artist ranks and monthly listeners
+
+#### **Music Stats Dashboard** (`/stats`)
+**Design**: Glassmorphic bento grid with Tailwind container queries & Framer Motion animations
+
+**Data Sources**:
+- Last.fm API with rate limiting (token bucket algorithm: 5 req/sec)
+- Stats.fm API (alternative provider)
+- 15-minute cache system for performance
+
+**Features**:
+- **No Authentication Required**: Username-based access to public profiles
+- **BTS Member Analysis**: Detailed breakdown by all 7 members (RM, Jin, Suga/Agust D, J-Hope, Jimin, V, Jungkook)
+  - Play counts per member with percentage distribution
+  - Visual radar charts and progress bars
+  - Solo track vs group track detection
+- **Timeline Visualization**: Listening journey over time with date-based grouping
+- **Top Artists & Tracks**: Ranked lists with play counts, album art, and Spotify links
+- **Recent Activity**: Real-time listening history with "now playing" indicators
+- **User Profile Card**: Avatar, total scrobbles, account age, listening time estimates
+- **Responsive Bento Grid**: Mobile (1 col) → Tablet (2 col) → Desktop (12 col grid)
+- **Glassmorphic UI**: Backdrop blur, gradient accents (#330df2, #7b1fa2), transparent panels
+
+#### **Spotify Global Analytics** (`/spotify`)
+**Data Source**: Daily Kworb.net scraping with Cheerio web scraper
+
+**Automated Data Collection** (Daily Cron at 1:30 AM UTC):
+- Scrapes 9 BTS-related pages (group + 8 members)
+- Fetches streaming data: songs, albums, global daily 200
+- Enriches with Spotify metadata: album art, follower counts
+- Stores historical snapshots in MongoDB
+
+**Features**:
+- **Songs by Artist**: All BTS members + group with total streams, daily gains
+- **Albums by Artist**: Discography overview with stream counts
+- **Global Daily Top 200**: BTS tracks in worldwide top 200
+- **All-Time Artist Ranks**: BTS member rankings globally
+- **Monthly Listeners**: Current listener counts with daily changes
+- **Historical Comparison**: Compare snapshots across dates for trend analysis
+- **35+ BTS Albums Tracked**: Full group + solo member discography
 
 ### 🎮 Boraverse Game System
-- **Quiz System**: 10-question quizzes on BTS knowledge
-- **Photocard Collection**: Earn cards with 4 rarity tiers (Common, Rare, Epic, Legendary)
-- **Crafting System**: Convert duplicates to Stardust, craft specific cards
-- **Mastery System**: Member/Era XP with milestone rewards
-- **Quest & Badge System**: Complete daily/weekly streaming quests
-  - Last.fm integration for streaming verification
-  - Album completion tracking
-  - 34 collectible badges with streak rewards
-- **Leaderboard**: Weekly competition with global rankings
-- **Sharing**: Generate shareable photocard images
+
+#### **Quiz System**
+**Core Mechanics**:
+- **10 Random Questions** per session from database of 1000+ questions
+- **Multiple Categories**: History, discography, members, lyrics, variety
+- **Difficulty Levels**: Easy (1 XP), Medium (2 XP), Hard (3 XP)
+- **20-Minute Timer**: Session expires with TTL index auto-cleanup
+- **Performance-Based Rewards**: XP score determines photocard rarity
+
+**XP → Rarity Mapping** (Pity-Aware):
+- 0-4 XP: No reward
+- 5-9 XP: 100% Common
+- 10-14 XP: 80% Common, 20% Rare
+- 15-19 XP: 20% Common, 60% Rare, 20% Epic
+- 20-24 XP: 10% Common, 50% Rare, 35% Epic, 5% Legendary
+- 25-30 XP: 45% Rare, 40% Epic, 15% Legendary
+
+**Daily Limits**: 2 free quizzes/day, resets at midnight UTC
+
+**Quest Integration**: 2 quizzes/day + 10 quizzes/week count toward quests
+
+#### **Photocard Collection System**
+**150+ Unique Photocards**:
+- All 7 BTS members (RM, Jin, Suga, J-Hope, Jimin, V, Jungkook)
+- Multiple eras (School Trilogy, HYYH, Wings, LY, MOTS, BE, solo albums)
+- Themed sets with special attributes
+
+**4 Rarity Tiers**:
+- **Common**: 70% base rate, 20 dust craft cost
+- **Rare**: 22% base rate, 60 dust craft cost
+- **Epic**: 7% base rate, 200 dust craft cost
+- **Legendary**: 1% base rate, 800 dust craft cost
+
+**Pity System** (Guaranteed Drops):
+- **Epic Guarantee**: Every 15 pulls without epic (sinceEpic counter)
+- **Legendary Guarantee**: Every 50 pulls without legendary (sinceLegendary counter)
+- Counters persist across sessions in UserGameState
+- Overrides weighted random on guarantee triggers
+
+**Earning Methods**:
+- Quiz completions (XP-based rarity)
+- Quest rewards (rare+ tickets)
+- Mastery milestones (themed pulls)
+- Crafting system (dust-based)
+
+**Drop Pools**:
+- Active pools with custom rarity weights
+- Featured sets with boost multipliers
+- Time-windowed event pools
+
+#### **Crafting System**
+**Dust Economy**:
+- **Earn Dust**: Quest completions (50-500), mastery milestones, duplicate conversions
+- **Spend Dust**: Card crafting (20/60/200/800 by rarity), random rarity crafting
+
+**Crafting Options**:
+1. **Specific Card Crafting**: Pay exact dust cost for desired card (guaranteed)
+2. **Rarity Floor Crafting**: Pay minimum for guaranteed rarity+ (uses pity system)
+3. **Random Rarity Roll**: Ticket-based crafting with weighted random
+
+**Duplicate Management**: Convert duplicates to dust for crafting
+
+#### **Mastery System**
+**Progression Types**:
+- **Member Mastery**: Individual tracking for all 7 members
+- **Era Mastery**: Progress for each BTS era
+
+**XP System**:
+- **Level Formula**: `level = floor(xp / 100)` (100 XP per level)
+- **XP Sources**: Quiz completions with automatic member/era detection
+- **Milestone Rewards**: Themed photocard pulls at level thresholds
+
+**Tracking**: MasteryProgress model with userId + kind (member/era) + key
+
+#### **Quest & Badge System**
+
+**Quest Types** (Generated by Daily/Weekly Cron Jobs):
+
+**1. Song Streaming Quests**:
+- **Daily**: Stream 5 specific BTS songs, 5 times each (25 total streams)
+- **Weekly**: Stream 40 specific BTS songs, 5 times each (200 total streams)
+- **Selection**: Deterministic random based on date seed (same for all users)
+- **Verification**: Last.fm API with fuzzy track matching
+
+**2. Album Streaming Quests**:
+- **Daily**: Stream 2 complete BTS albums (all tracks required)
+- **Weekly**: Stream 10 complete BTS albums
+- **Smart Detection**: Requires streaming ALL tracks in album
+- **35 BTS Albums**: Full group + solo member discography
+- **Album Data**: Fetched from Spotify API with complete track lists
+
+**3. Quiz Quests**:
+- **Daily**: Complete 2 quizzes
+- **Weekly**: Complete 10 quizzes
+- **Auto-Tracking**: Progress updated on quiz completion
+
+**Last.fm Integration** (Real-Time Streaming Verification):
+- **Token Bucket Rate Limiting**: 5 requests/second, 5-minute window
+- **15-Minute Caching**: StreamingCache model for performance
+- **Fuzzy Track Matching**: Normalizes names, removes feat./remix markers
+- **Baseline Tracking**: Progress calculated from quest start time (midnight UTC)
+- **Album Completion**: Verifies ALL tracks streamed for album quests
+
+**Badge System** (34 Collectible Badges):
+- **Cycling Badges (10)**: Daily streak badges 1-10
+- **Milestone Badges (5)**: 10/20/30/40/50 day streaks
+- **Quest Completion Badges**: First daily/weekly completions
+- **Achievement Badges**: Special milestones
+- **Badge Criteria**: Defined in Badge model (streakDays, streakWeeks, questPeriod, threshold)
+
+**Rewards**:
+- **Dust**: 50-500 per quest (in-game currency)
+- **XP**: 10-100 per quest (leveling system)
+- **Photocards**: Rare+ tickets for weekly quests
+- **Badges**: Streak and achievement unlocks
+
+**UI Features**:
+- Filter quests by Daily/Weekly/Completed status
+- Real-time progress tracking with metadata
+- Streaming connection modal for Last.fm setup
+- Badge rewards modal with animations
+
+#### **Leaderboard System**
+**Weekly Competition** (ISO Week-Based):
+- **Period Key Format**: `weekly-YYYY-WW` (e.g., weekly-2026-01)
+- **Ranking**: Score-based (quiz XP + quest completions + mastery)
+- **Display**: Top 100 rankings with cursor-based pagination
+- **User Rank Calculation**: `COUNT(score > my_score) + 1`
+
+**Rewards**:
+- Tier-based prizes (top 10/25/50/100)
+- Automatic distribution at week end
+- LeaderboardEntry model with periodKey, userId, score
+
+#### **Sharing System**
+**Cloudinary Integration**:
+- Generate shareable photocard images
+- Dynamic transformations and overlays
+- CDN delivery for performance
+- Secure upload with signed URLs
 
 ### 📝 Blog Platform
-- **Rich Text Editor**: Write BTS-themed blog posts with Tiptap
-- **Community Features**: Reactions, comments, and saves
-- **SEO Optimization**: Built-in preview and scoring
-- **Advanced Filtering**: Search by tags, moods, authors, and more
+
+#### **Rich Text Editor** (Tiptap with 20+ Extensions)
+**Core Extensions**:
+- **Text Formatting**: Bold, italic, underline, strike, code, superscript, subscript
+- **Headings**: H1-H6 with anchor links
+- **Lists**: Bullet lists, ordered lists, task lists with checkboxes
+- **Links**: Auto-linking, custom URLs with titles
+- **Images**: Upload to Cloudinary with captions
+- **Tables**: Full table support with cell merging
+- **Code Blocks**: Syntax highlighting (lowlight) for 100+ languages
+- **Mentions**: @user mentions with autocomplete
+- **Emojis**: Emoji picker with search
+- **YouTube**: Embed videos with iframe
+- **Alignment**: Text align left/center/right/justify
+- **Color**: Text color & highlight color pickers
+- **Typography**: Smart quotes, em dashes, ellipses
+
+**Editor Features**:
+- **Bubble Menu**: Context-aware formatting toolbar
+- **Floating Menu**: Block-level insertions (table, image, code)
+- **Placeholder Text**: Helpful prompts for empty sections
+- **Character/Word Count**: Real-time statistics
+- **Auto-Save**: Draft mode with periodic saves
+- **Preview Mode**: Live preview before publishing
+
+#### **Content Management**
+**Blog Fields**:
+- Title, content (Tiptap JSON), tags[], mood
+- Cover image (Cloudinary upload)
+- Visibility: public/unlisted/private
+- Read time: Auto-calculated (200 words/min formula)
+- Author metadata: id, name, avatar
+
+**Collections**:
+- Group related posts with custom slug
+- Cover image, description
+- Visibility settings
+- Post references (ObjectId array)
+
+**Engagement System**:
+- **Reactions**: Moved (💜), Loved (❤️), Surprised (😮) with counts
+- **Comments**: Nested threading support
+- **Saves**: Bookmark posts for later
+- **Views**: Track engagement metrics
+
+**Filtering & Search** (MongoDB Text Index):
+- **Tag Filtering**: Multi-select tag filters
+- **Mood Filtering**: Mood-based browsing
+- **Author Filtering**: By author name
+- **Text Search**: Full-text search on title/content
+- **Date Range**: Filter by publication date
+- **Sort Options**: Newest, popular, trending algorithms
+
+**SEO Features**:
+- Meta descriptions
+- Open Graph tags for social sharing
+- Twitter cards
+- Auto-generated sitemap (next-sitemap)
+
+**Soft Deletion**:
+- isDeleted flag + deletedAt timestamp
+- Restore capability via API
+- Excludes from public listings
 
 ### 🔥 Trending Content
-- **Spotify Trending**: Top BTS songs by daily streams
-- **YouTube Trending**: Top BTS videos by daily views
-- **Member Spotlight**: Individual BTS member features
-- **Automated Scraping**: Daily updates via cron jobs
+
+#### **Spotify Trending**
+**Data Source**: Daily Kworb.net scraping (Cheerio-based)
+- **Cron Schedule**: Daily at configured time
+- **Pages Scraped**: BTS + 8 members (RM, Jin, Suga/Agust D, J-Hope, Jimin, V, Jungkook)
+- **Metrics Tracked**: Total streams, daily gains, track count per artist
+- **Enrichment**: Spotify metadata (album art, follower counts via oEmbed API)
+- **Storage**: KworbSnapshot model with historical data
+
+**Features**:
+- Top BTS songs by daily streams
+- All-time streaming rankings
+- Monthly listener counts
+- Member-specific filtering
+
+#### **YouTube Trending**
+**Data Source**: Daily Kworb.net scraping
+- **Cron Schedule**: Daily automated scraping
+- **Member Filtering**: Keyword matching for all 7 members + group
+- **Metrics**: View counts, yesterday gains, published dates
+- **Storage**: YouTubeKworbSnapshot model
+
+**Features**:
+- Top BTS videos by daily views
+- Member spotlight with keyword detection
+- Historical view tracking
+
+#### **Automated Scraping**
+**Technology**: Cheerio for HTML parsing
+- **Error Handling**: Promise.allSettled for fault tolerance
+- **Retry Logic**: Graceful degradation on failures
+- **Caching**: 30-second cache headers for API responses
 
 ### 👤 User Management
-- **Flexible Authentication**:
-  - Username + password (email optional)
-  - Firebase social login (Google, Twitter)
-  - JWT-based sessions
-- **Profile Management**: 5-tab profile modal with personalization
-- **Privacy Controls**: Granular privacy and notification settings
-- **Integrations**: Connect Spotify, Last.fm, and other services
+
+#### **Unified Authentication System**
+**Dual Architecture** (JWT + Firebase):
+
+**1. Custom JWT Authentication**:
+- **Username + Password**: Email optional (privacy-first approach)
+- **Password Security**: Bcrypt hashing with 10 rounds
+- **Token Generation**: jsonwebtoken library with JWT_SECRET
+- **Token Payload**: userId, username, email, authType
+- **Session Storage**: localStorage on client
+- **Unified Verification**: `/lib/auth/verify.ts` - single function for all auth types
+
+**2. Firebase Authentication**:
+- **Google OAuth**: Firebase social login
+- **Twitter OAuth**: Firebase social login
+- **Server Validation**: Firebase Admin SDK for token verification
+- **Client State**: Firebase Auth context provider
+
+**Security Features**:
+- **Rate Limiting**: LRU cache-based (10 attempts per 15 min per IP)
+- **Password Requirements**: Min length, complexity validation
+- **HTTPS-Only**: Production environment enforcement
+- **CSRF Protection**: Built-in Next.js protections
+- **XSS Sanitization**: Input validation with Zod schemas
+
+**Session Management**:
+- Automatic token refresh
+- Logout clears both JWT and Firebase tokens
+- Seamless auth state across all 70+ API routes
+
+#### **Profile Management** (5-Tab Modal with Live Preview)
+
+**Tab 1: Profile**
+- **Basic Info**: Display name, unique handle, pronouns, bio (160 chars)
+- **Media**: Avatar & banner (Cloudinary uploads)
+- **ARMY-Specific Fields**:
+  - Bias array (multiple members)
+  - Bias wrecker
+  - Favorite era
+  - ARMY since year
+  - Top song, top album
+- **Location**: Location, timezone, language
+
+**Tab 2: Personalization**
+- **Accent Color**: Color picker for custom theming
+- **Theme Intensity**: 0-100 slider for color strength
+- **Background Style** (8 Options):
+  - Purple nebula
+  - Stage lights
+  - ARMY constellation
+  - Purple aurora
+  - Mesh gradient
+  - Glassmorphism
+  - Geometric grid
+  - Holographic
+- **Badge Style**: Minimal vs collectible display
+
+**Tab 3: Connections**
+- **Spotify Integration**:
+  - OAuth flow with PKCE
+  - BYO (Bring Your Own) credentials support
+  - Token encryption (AES-256-GCM with user-specific keys)
+  - Connect/disconnect functionality
+  - Playlist export permissions
+- **Last.fm Integration**:
+  - Username entry and verification
+  - Quest integration toggle
+  - Real-time streaming verification
+- **Stats.fm**: Alternative analytics provider
+- **Social Links**: Twitter, Instagram, YouTube, website
+  - Individual visibility toggles per link
+
+**Tab 4: Privacy**
+- **Profile Visibility**: Public / Followers Only / Private
+- **Field Visibility Toggles**:
+  - Bias, favorite era
+  - Social links
+  - Stats and analytics
+- **Content Filters**: Explicit content toggle
+- **Interaction Settings**:
+  - Allow mentions toggle
+  - Allow DMs toggle
+- **Blocked Users**: Manage blocked user list
+
+**Tab 5: Notifications**
+- **Channels**: In-app, email toggles
+- **Quiet Hours**: Start/end time + timezone
+- **Category Preferences**:
+  - **Blog**: Comments, reactions, saves
+  - **Playlists**: Exports, likes, shares
+  - **Spotify**: Weekly recap, new recommendations
+
+**Live Preview**: Real-time profile preview with all changes visible instantly
+
+#### **Privacy & Data (GDPR Compliance)**
+**Data Export** (`/api/user/export-data`):
+- Complete user data in JSON format
+- Includes: profile, playlists, blogs, game data, quest history
+- Downloadable file with timestamp
+
+**Account Deletion** (`/api/user/delete-account`):
+- Permanent deletion with confirmation
+- Cascade deletes: blogs, playlists, game data, quest progress
+- Anonymizes leaderboard entries (preserves scores)
+
+#### **Music Service Integrations**
+
+**Spotify**:
+- OAuth 2.0 with refresh token rotation
+- AES-256-GCM token encryption
+- Per-user encryption keys (SPOTIFY_USER_SECRET_KEY + userId)
+- Refresh token management
+- Client credentials flow for app-level access
+
+**Last.fm**:
+- API key-based authentication
+- Streaming verification for quest system
+- Token bucket rate limiting (5 req/sec)
+- 15-minute caching for performance
+
+**Stats.fm**:
+- Alternative music analytics provider
+- Username-based integration
+- Public profile access
+
+---
+
+## 🏗️ Technical Architecture & Database
+
+### **Database Models** (21 MongoDB Collections)
+
+#### **User Management**
+- **User**: Core user model (auth, profile, preferences, integrations)
+  - Authentication: username, email (optional), password (bcrypt), googleId, firebaseUid
+  - Profile: displayName, handle, pronouns, bio, avatar, banner
+  - ARMY fields: bias[], biasWrecker, favoriteEra, armySinceYear
+  - Personalization: accentColor, themeIntensity, backgroundStyle
+  - Privacy: visibility, fieldVisibility, blockedUsers
+  - Integrations: Spotify (OAuth + BYO), Last.fm, Stats.fm
+
+#### **Blog Platform**
+- **Blog**: Blog posts with Tiptap JSON content
+  - Fields: title, content, tags[], mood, coverImage, visibility
+  - Engagement: reactions, comments, saves, views
+  - Soft deletion: isDeleted, deletedAt
+- **Collection**: Blog collections with post references
+
+#### **Game System - Quizzes**
+- **Question**: Quiz questions database (1000+ questions)
+  - Fields: question, choices[], answerIndex, category, difficulty
+  - Metadata: member/era tags, locale
+- **QuizSession**: Active quiz sessions with TTL index (20 min)
+  - Tracking: userId, answers[], score, status, expiresAt
+
+#### **Game System - Photocards**
+- **Photocard**: Photocard definitions (150+ cards)
+  - Identity: member, era, set, rarity
+  - Metadata: publicId (Cloudinary), isLimited, craftCostDust
+- **InventoryItem**: User's photocard inventory
+  - Ownership: userId, cardId, source (quiz/quest/craft), timestamp
+- **DropPool**: Gacha drop pools with custom weights
+- **InventoryGrantAudit**: Photocard grant audit log
+
+#### **Game System - Progression**
+- **UserGameState**: User game state & pity system
+  - Pity: sinceEpic, sinceLegendary counters
+  - Streaks: dailyCount, weeklyCount, lastPlayAt
+  - Resources: dust, xp, level
+  - Limits: quizStartsToday, dateKey
+- **MasteryProgress**: Member/era mastery tracking
+  - Fields: userId, kind (member/era), key, xp, level
+- **LeaderboardEntry**: Weekly leaderboard rankings
+  - Fields: periodKey (ISO week), userId, score, displayName, avatarUrl
+
+#### **Game System - Quests & Badges**
+- **QuestDefinition**: Quest templates (daily/weekly)
+  - Config: code, title, period, goalType, goalValue
+  - Streaming: trackTargets[], albumTargets[]
+  - Rewards: dust, xp, tickets, badgeId
+- **UserQuestProgress**: User quest progress
+  - Tracking: userId, code, periodKey, progress, completed, claimed
+  - Streaming: baseline, trackProgress (Map)
+- **Badge**: Badge definitions (34 badges)
+  - Identity: code, name, description, icon, rarity
+  - Criteria: streakDays, streakWeeks, questPeriod, threshold
+- **UserBadge**: User's earned badges with timestamp
+
+#### **Playlist System**
+- **Playlist**: Generated playlists
+  - Content: name, description, prompt, tracks[]
+  - Generation: playlistType, length, members, eras, audioFeatures
+  - Spotify: playlistId, playlistUrl, exportedAt
+- **Track**: BTS track database (1000+ tracks)
+  - Identifiers: spotifyId (unique), youtubeId
+  - Metadata: name, artist, album, duration, popularity
+  - Audio features: danceability, energy, valence, tempo (8 features)
+  - Media: thumbnails, previewUrl
+- **Album**: Album metadata with track lists
+
+#### **Analytics & Trending**
+- **KworbSnapshot**: Daily Spotify snapshots
+  - Data: songsByArtist, albumsByArtist, daily200, artistsAllTime, monthlyListeners
+  - Artist metadata: images, follower counts
+- **YouTubeKworbSnapshot**: Daily YouTube snapshots
+- **StreamingCache**: Last.fm cache (15 min TTL)
+  - Fields: userId, lastfmUsername, recentTracks[], topTracks[]
+
+### **API Routes** (70+ Endpoints Across 18 Categories)
+
+**Authentication** (2): Signup, signin
+**Game System** (15): Quiz (start/complete/demo), inventory, crafting, mastery, quests, leaderboard, badges, pools, state, share, photocard preview
+**Playlists** (10): Generate, AI inspiration, history, export, configs, seed tracks, evolve, streaming-focused
+**Spotify** (12): Auth, callback, disconnect, status, playlists, cache, kworb (cron/latest/compare), validate
+**Blogs** (7): CRUD operations, reactions, comments, save, restore
+**Collections** (3): List, create, get with posts
+**Users** (4): Profile (get/update), public profile, export data, delete account
+**Trending** (1): Top songs
+**YouTube** (2): Kworb cron, latest snapshot
+**Music/Stats** (2): Dashboard, landing stats
+**Cron** (4): Daily quests, weekly quests, Spotify kworb, YouTube kworb
+**Other** (8): Upload, health, analytics, songs, integrations
+
+### **Performance Optimizations**
+
+**Database**:
+- **Strategic Indexes**: All 21 models have compound indexes for common queries
+- **TTL Indexes**: Auto-cleanup for quiz sessions (20 min expiry)
+- **Text Indexes**: Full-text search on blogs, users, tracks
+- **Lean Queries**: Mongoose .lean() for read-only operations
+
+**Caching**:
+- Last.fm responses: 15-minute cache (StreamingCache model)
+- Spotify tokens: Until expiry (encrypted in User model)
+- Active quest definitions: In-memory for request duration
+
+**API**:
+- 30-second timeout for all routes (Vercel config)
+- Batch operations: Promise.all for parallel execution
+- Pagination: Cursor-based (leaderboard) and offset-based (blogs)
+
+**Rate Limiting**:
+- Auth endpoints: LRU cache (10 attempts per 15 min per IP)
+- Last.fm API: Token bucket (5 req/sec, 5-min window)
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS, Radix UI components, Framer Motion
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: Firebase Auth + JWT-based custom auth
-- **External APIs**:
-  - Spotify Web API
-  - YouTube Data API v3
-  - Groq Llama 3.3 70B
-  - Last.fm API (quest verification)
-- **Rich Text**: Tiptap editor with extensive extensions
-- **Image Management**: Cloudinary
-- **Deployment**: Vercel with Edge Runtime
+### **Frontend**
+- **Framework**: Next.js 14 (App Router, React Server Components)
+- **Language**: TypeScript 5.6 (Strict mode)
+- **UI Libraries**:
+  - React 18
+  - Radix UI (40+ accessible components)
+  - Tailwind CSS 3.4 (Container queries, forms, typography plugins)
+  - Framer Motion (Animations & transitions)
+- **Forms**: React Hook Form + Zod validation
+- **State Management**: React Context API
+- **Rich Text**: Tiptap with 20+ extensions (lowlight syntax highlighting)
+
+### **Backend**
+- **Runtime**: Node.js on Vercel (Edge + Serverless Functions)
+- **Database**: MongoDB with Mongoose ODM (21 models, 1,348 lines)
+- **Authentication**: Dual system (Firebase Auth + JWT)
+- **APIs**: Next.js API routes (70+ endpoints)
+- **Validation**: Zod schemas for all API inputs
+
+### **External Services & APIs**
+- **AI**: Groq API (Llama 3.3 70B Versatile) for playlist generation
+- **Music**:
+  - Spotify Web API (OAuth 2.0, token encryption)
+  - Last.fm API (streaming verification, rate limited)
+  - Stats.fm API (alternative analytics)
+- **Video**: YouTube Data API v3
+- **Images**: Cloudinary (uploads, transformations, CDN)
+- **Auth**: Firebase (Google + Twitter OAuth, Admin SDK)
+- **Web Scraping**: Cheerio (Kworb.net for Spotify/YouTube data)
+
+### **Hosting & Deployment**
+- **Platform**: Vercel (Edge Runtime for API routes)
+- **Cron Jobs**: 4 automated tasks (daily quests, weekly quests, Spotify scraping, YouTube scraping)
+- **CDN**: Vercel Edge Network + Cloudinary CDN
+- **Environment**: Environment variables managed via Vercel
+
+### **Development Tools**
+- **Linting**: ESLint + TypeScript ESLint (enforced in build)
+- **Formatting**: Prettier
+- **Type Checking**: TypeScript compiler (tsc --noEmit)
+- **Package Manager**: npm
+- **Scripts**: 18 custom Node.js scripts for seeding, migrations, imports
+
+### **Security**
+- **Password Hashing**: Bcrypt (10 rounds)
+- **Token Encryption**: AES-256-GCM (Spotify tokens)
+- **JWT**: jsonwebtoken with secret key rotation
+- **Rate Limiting**: Custom LRU cache-based limiter
+- **Input Validation**: Zod schemas on all API routes
+- **HTTPS**: Enforced in production
+- **CORS**: Configured for API security
+
+### **Key Algorithms & Logic**
+1. **Pity System**: Guaranteed epic (15 pulls) and legendary (50 pulls) with persistent counters
+2. **XP → Rarity Calculation**: 5 XP bands with weighted random + pity override
+3. **Fuzzy Track Matching**: Normalization (lowercase, remove feat./remix, special chars)
+4. **Quest Progress**: Track-based counting + album completion verification (ALL tracks required)
+5. **Mastery Leveling**: `level = floor(xp / 100)` (100 XP per level)
+6. **Weekly Period Key**: ISO 8601 week format (`weekly-YYYY-WW`) for leaderboard/quests
+7. **AI Playlist Prompting**: 400+ line structured prompt with BTS discography verification
+8. **Token Bucket Rate Limiter**: 5 tokens max, 5 tokens/sec refill for Last.fm
+9. **Leaderboard Ranking**: `COUNT(score > my_score) + 1` for user rank
+10. **Read Time Estimation**: `ceil(wordCount / 200)` (200 words/min)
 
 ---
 
@@ -289,6 +851,37 @@ MIT License - See LICENSE file for details
 
 ---
 
+## 📊 Project Statistics
+
+**Codebase Metrics**:
+- **Total TypeScript Files**: 3,335 files
+- **Database Models**: 21 models (1,348 total lines)
+- **API Routes**: 70+ endpoints across 18 categories
+- **Pages**: 24 user-facing routes
+- **React Components**: 100+ components
+- **Integration Services**: 6 (Spotify, Last.fm, Stats.fm, YouTube, Groq, Cloudinary, Firebase)
+- **Utility Scripts**: 18 custom scripts
+- **Cron Jobs**: 4 automated tasks
+- **Total Lines of Code**: 50,000+ lines (TypeScript/TSX)
+
+**Feature Coverage**:
+- **Quiz Questions**: 1000+ questions
+- **Photocards**: 150+ unique cards
+- **BTS Albums**: 35+ albums tracked
+- **Badges**: 34 collectible badges
+- **Track Database**: 1000+ BTS tracks
+
+**External Integrations**:
+- 7 third-party APIs (Spotify, Last.fm, Stats.fm, YouTube, Groq, Cloudinary, Firebase)
+- 2 web scrapers (Kworb.net for Spotify & YouTube)
+- OAuth 2.0 implementation (Spotify + Firebase)
+- JWT + Firebase dual auth system
+
+---
+
 **Last Updated**: January 2026
 **Version**: 2.1
 **Status**: Production Ready 🚀
+**Tech Stack**: Next.js 14 + TypeScript + MongoDB + Vercel
+**Database**: 21 models, 70+ API endpoints, 1000+ quiz questions
+**Game Systems**: Quiz, Photocards (150+), Crafting, Mastery, Quests, Badges (34), Leaderboard
