@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
-import type { ArtistSongsGroup, StreamRow, ArtistAlbumsGroup, AlbumRow } from './kworbTypes'
+import type { ArtistSongsGroup, StreamRow, ArtistAlbumsGroup, AlbumRow, MonthlyListenerRow } from './kworbTypes'
+import { makeSpotifyRequest } from './utils'
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
 const fetchHTML = async (url: string) => {
@@ -31,6 +32,38 @@ const getSpotifyAlbumArt = async (trackId: string): Promise<string | undefined> 
     return data.thumbnail_url || undefined
   } catch {
     return undefined
+  }
+}
+
+// Extract Spotify album ID from kworb URL or spotify URL
+const extractSpotifyAlbumId = (url?: string): string | undefined => {
+  if (!url) return undefined
+  // kworb.net/spotify/album/ALBUM_ID.html
+  const kworbMatch = url.match(/\/album\/([a-zA-Z0-9]+)/)
+  if (kworbMatch) return kworbMatch[1]
+  // open.spotify.com/album/ALBUM_ID
+  const spotifyMatch = url.match(/spotify\.com\/album\/([a-zA-Z0-9]+)/)
+  if (spotifyMatch) return spotifyMatch[1]
+  return undefined
+}
+
+// Get album metadata from Spotify API (cover image, release date, album type)
+const getSpotifyAlbumMetadata = async (albumId: string): Promise<{
+  coverImage?: string
+  releaseDate?: string
+  albumType?: string
+}> => {
+  try {
+    const res = await makeSpotifyRequest(`/albums/${albumId}`)
+    if (!res.ok) return {}
+    const data = await res.json()
+    return {
+      coverImage: data.images?.[0]?.url,
+      releaseDate: data.release_date,
+      albumType: data.album_type // 'album', 'single', 'compilation'
+    }
+  } catch {
+    return {}
   }
 }
 
@@ -210,7 +243,7 @@ export async function fetchBtsAlbums() {
     }
 
     // albums table extraction: rely on album anchors then read numeric cells in same row
-    const albums: AlbumRow[] = []
+    const albumPromises: Promise<AlbumRow>[] = []
     $('a[href*="open.spotify.com/album"]').each((_, a) => {
       const row = $(a).closest('tr')
       const tds = row.find('td')
@@ -220,8 +253,31 @@ export async function fetchBtsAlbums() {
       const url = link ? (link.startsWith('http') ? link : 'https://kworb.net/spotify/' + link) : undefined
       const totalStreams = num($(tds[tds.length - 2]).text())
       const dailyGain = num($(tds[tds.length - 1]).text())
-      if (name && totalStreams) albums.push({ name, totalStreams, dailyGain, url })
+
+      if (name && totalStreams) {
+        // Extract Spotify album ID and fetch metadata
+        const albumId = extractSpotifyAlbumId(url)
+        const albumPromise = (async () => {
+          let spotifyId: string | undefined = albumId
+          let coverImage: string | undefined
+          let releaseDate: string | undefined
+          let albumType: string | undefined
+
+          if (albumId) {
+            const metadata = await getSpotifyAlbumMetadata(albumId)
+            coverImage = metadata.coverImage
+            releaseDate = metadata.releaseDate
+            albumType = metadata.albumType
+          }
+
+          return { name, totalStreams, dailyGain, url, spotifyId, coverImage, releaseDate, albumType } as AlbumRow
+        })()
+        albumPromises.push(albumPromise)
+      }
     })
+
+    // Wait for all album metadata fetches to complete
+    const albums = await Promise.all(albumPromises)
 
     if (!totals.streams && albums.length) totals.streams = albums.reduce((a, s) => a + (s.totalStreams || 0), 0)
     if (!totals.daily && albums.length) totals.daily = albums.reduce((a, s) => a + (s.dailyGain || 0), 0)
@@ -244,12 +300,13 @@ const V_EXACT = 'V' // Special handling for V to avoid false matches
 const isBTSMember = (artistName: string): boolean => {
   if (!artistName) return false
   const name = artistName.trim()
+  const normalized = name.toLowerCase().replace(/\s+/g, '') // Remove all spaces for matching
 
   // Exact match for V (avoid matching "Dei V", "L.V.", etc.)
   if (name === V_EXACT) return true
 
-  // Check other members with word boundaries
-  return MEMBERS.some(m => new RegExp(`\\b${m}\\b`, 'i').test(name))
+  // Check other members - normalize both sides by removing spaces
+  return MEMBERS.some(m => m.toLowerCase().replace(/\s+/g, '') === normalized)
 }
 
 export async function fetchDaily200Positions() {
@@ -258,26 +315,32 @@ export async function fetchDaily200Positions() {
   const rows: any[] = []
   $('table tr').each((_, tr) => {
     const t = $(tr).find('td')
-    if (t.length < 6) return
+    if (t.length < 8) return
     const rank = num($(t[0]).text())
-    // Column 2 contains "Artist and Title" combined, need to parse it
+    // Column 2 contains "Artist and Title" combined
     const artistAndTitle = $(t[2]).text().trim()
-    const streams = num($(t[5]).text())
+    // Column 6: Streams (total), Column 7: Streams+ (daily change)
+    const streamsText = $(t[6]).text().trim()
+    const dailyStreamsText = $(t[7]).text().trim()
+    const streams = streamsText ? num(streamsText) : 0
+    const daily = dailyStreamsText ? num(dailyStreamsText) : 0
+
     if (!rank) return
     // Try to extract artist and track name from the combined column
-    // Format is usually "Artist - Track" but can vary
+    // Format is "Artist - Track"
     let artist = ''
     let name = ''
     if (artistAndTitle.includes(' - ')) {
       const parts = artistAndTitle.split(' - ')
-      name = parts[0].trim()
-      artist = parts.slice(1).join(' - ').trim()
+      artist = parts[0].trim()
+      name = parts.slice(1).join(' - ').trim()
     } else {
-      name = artistAndTitle
       artist = artistAndTitle
+      name = artistAndTitle
     }
+
     if (isBTSMember(artist) || isBTSMember(name) || isBTSMember(artistAndTitle)) {
-      rows.push({ rank, artist, name, streams })
+      rows.push({ rank, artist, name, streams, daily })
     }
   })
   return rows
@@ -304,23 +367,54 @@ export async function fetchMostStreamedArtists() {
   return rows
 }
 
-export async function fetchMonthlyListeners() {
-  const html = await fetchHTML('https://kworb.net/spotify/listeners.html')
-  const $ = cheerio.load(html)
-  const rows: any[] = []
-  $('table tr').each((_, tr) => {
-    const t = $(tr).find('td')
-    if (t.length < 4) return
-    const rank = num($(t[0]).text())
-    const artist = $(t[1]).text().trim()
-    const url = $(t[1]).find('a').attr('href') ? 'https://kworb.net/spotify/' + $(t[1]).find('a').attr('href') : undefined
-    const listeners = num($(t[2]).text())
-    const dailyChange = num($(t[3]).text()) // Daily +/- column
-    // Only include BTS and members
-    if (rank && artist && isBTSMember(artist)) {
-      rows.push({ rank, artist, listeners, dailyChange, url })
+export async function fetchMonthlyListeners(): Promise<MonthlyListenerRow[]> {
+  const MAX_PAGES = 10 // Safety limit to prevent infinite loops
+  const TARGET_MEMBER_COUNT = 8 // BTS + 7 members
+  const rows: MonthlyListenerRow[] = []
+  const foundArtists = new Set<string>()
+
+  // Fetch from multiple listeners pages until we find all BTS members or hit max pages
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const url = page === 1
+      ? 'https://kworb.net/spotify/listeners.html'
+      : `https://kworb.net/spotify/listeners${page}.html`
+
+    try {
+      const html = await fetchHTML(url)
+      const $ = cheerio.load(html)
+
+      $('table tr').each((_, tr) => {
+        const t = $(tr).find('td')
+        if (t.length < 4) return
+        const rank = num($(t[0]).text())
+        const artist = $(t[1]).text().trim()
+        const href = $(t[1]).find('a').attr('href')
+        // Normalize artist name for duplicate checking (case-insensitive, remove spaces)
+        const normalizedArtist = artist.toLowerCase().replace(/\s+/g, '')
+        const listeners = num($(t[2]).text())
+        const dailyChange = num($(t[3]).text()) // Daily +/- column
+
+        // Only include BTS and members, and avoid duplicates
+        if (rank && artist && isBTSMember(artist) && !foundArtists.has(normalizedArtist)) {
+          foundArtists.add(normalizedArtist)
+          rows.push({ rank, artist, listeners, dailyChange, url: href })
+        }
+      })
+
+      // If we've found all members, stop fetching more pages
+      if (foundArtists.size >= TARGET_MEMBER_COUNT) {
+        break
+      }
+    } catch (error) {
+      // If page doesn't exist (404), stop trying
+      if (error instanceof Error && error.message.includes('404')) {
+        break
+      }
+      // Log other errors but continue trying
+      console.warn(`Failed to fetch ${url}:`, error)
     }
-  })
+  }
+
   return rows
 }
 

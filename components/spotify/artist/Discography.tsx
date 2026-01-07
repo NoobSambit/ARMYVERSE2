@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Album {
@@ -15,25 +15,58 @@ interface DiscographyProps {
 }
 
 export default function Discography({ albums }: DiscographyProps) {
+  const [currentPage, setCurrentPage] = useState(0)
+  const albumsPerPage = 5
+
+  const totalPages = Math.ceil(albums.length / albumsPerPage)
+  const startIndex = currentPage * albumsPerPage
+  const endIndex = startIndex + albumsPerPage
+  const currentAlbums = albums.slice(startIndex, endIndex)
+
+  const handlePrevious = () => {
+    setCurrentPage(prev => Math.max(0, prev - 1))
+  }
+
+  const handleNext = () => {
+    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))
+  }
+
+  if (albums.length === 0) {
+    return null
+  }
+
   return (
     <div className="flex flex-col gap-4 mt-2">
       <div className="flex justify-between items-center">
         <h3 className="text-white font-bold text-lg">Discography</h3>
-        <div className="flex gap-2">
-          <button className="h-8 w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button className="h-8 w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-3">
+            <span className="text-white/40 text-sm">{currentPage + 1} / {totalPages}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={handlePrevious}
+                disabled={currentPage === 0}
+                className="h-8 w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={currentPage === totalPages - 1}
+                className="h-8 w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {albums.map((album, i) => (
-          <div key={i} className="group cursor-pointer">
+        {currentAlbums.map((album, i) => (
+          <div key={`${startIndex}-${i}`} className="group cursor-pointer">
             <div className="aspect-square bg-[#2e2249] rounded-xl overflow-hidden mb-3 relative">
-              <img 
-                src={album.coverUrl} 
+              <img
+                src={album.coverUrl}
                 alt={album.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />

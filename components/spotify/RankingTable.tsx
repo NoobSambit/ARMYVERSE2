@@ -46,6 +46,12 @@ export default function RankingTable({
     return n.toLocaleString()
   }
 
+  const formatChange = (n?: number) => {
+    if (typeof n !== 'number') return '-'
+    const formatted = formatNumber(n)
+    return n > 0 ? `+${formatted}` : formatted
+  }
+
   const getChangeIndicator = (row: RankRow) => {
     const key = `${row.rank}-${row.name || row.artist}`
     const change24h_data = changes24h?.[key] || changes24h?.[row.artist || row.name || '']
@@ -112,11 +118,6 @@ export default function RankingTable({
                   {header}
                 </th>
               ))}
-              {(changes24h || changes7d || showStreamChanges) && (
-                <th className="px-6 py-4 text-right text-xs font-bold text-white/40 uppercase tracking-wider whitespace-nowrap">
-                  Daily Change
-                </th>
-              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -136,33 +137,39 @@ export default function RankingTable({
                         rel="noopener noreferrer"
                         className="font-semibold text-white hover:text-purple-400 transition-colors inline-flex items-center gap-1"
                       >
-                        {row.artist || row.name}
+                        {row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}
                       </a>
                     ) : (
-                      <span className="font-semibold text-white">{row.artist || row.name}</span>
-                    )}
-                    {row.artist && row.name && (
-                       <span className="text-white/40 text-xs">{row.artist}</span>
+                      <span className="font-semibold text-white">{row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}</span>
                     )}
                   </div>
                 </td>
-                {row.streams !== undefined && (
-                  <td className="px-6 py-4 font-mono text-white/80">{row.streams.toLocaleString()}</td>
+                {row.streams !== undefined && row.daily !== undefined && (
+                  <td className="px-6 py-4 font-mono text-white/80">
+                    {formatNumber(row.streams)} <span className={`text-xs ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>({formatChange(row.daily)})</span>
+                  </td>
                 )}
-                {row.daily !== undefined && (
-                  <td className="px-6 py-4 font-mono text-white/80">{row.daily.toLocaleString()}</td>
+                {row.streams !== undefined && row.daily === undefined && (
+                  <td className="px-6 py-4 font-mono text-white/80">{formatNumber(row.streams)}</td>
+                )}
+                {row.daily !== undefined && row.streams === undefined && (
+                  <td className={`px-6 py-4 font-mono text-right ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={row.daily !== 0 ? 'inline-flex items-center px-2 py-0.5 rounded' + (row.daily > 0 ? ' bg-emerald-500/10' : ' bg-rose-500/10') : ''}>
+                      {formatChange(row.daily)}
+                    </span>
+                  </td>
                 )}
                 {row.listeners !== undefined && (
-                  <td className="px-6 py-4 font-mono text-white/80">{row.listeners.toLocaleString()}</td>
+                  <td className="px-6 py-4 font-mono text-white/80">{formatNumber(row.listeners)}</td>
                 )}
                 {row.dailyChange !== undefined && (
                   <td className={`px-6 py-4 font-mono text-right ${row.dailyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                      <span className={`inline-flex items-center px-2 py-0.5 rounded ${row.dailyChange >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                        {row.dailyChange >= 0 ? '+' : ''}{formatNumber(row.dailyChange)}
+                        {formatChange(row.dailyChange)}
                      </span>
                   </td>
                 )}
-                {(changes24h || changes7d || showStreamChanges) && !row.dailyChange && (
+                {(changes24h || changes7d || showStreamChanges) && (
                   <td className="px-6 py-4 text-right">
                     {getChangeIndicator(row)}
                   </td>

@@ -163,11 +163,8 @@ export default function SpotifyAnalyticsPage() {
         </div>
         <RankingTable
           title="Global Daily Top 200 (BTS & Members)"
-          headers={['Rank', 'Artist/Track', 'Streams']}
+          headers={['Rank', 'Artist/Track', 'Streams (+/-)']}
           rows={snap.daily200 || []}
-          changes24h={changes24h?.daily200}
-          changes7d={changes7d?.daily200}
-          showStreamChanges={true}
           maxRows={10}
         />
       </section>
@@ -182,7 +179,7 @@ export default function SpotifyAnalyticsPage() {
           </div>
           <RankingTable
             title="Most Streamed Artists"
-            headers={['Rank', 'Artist', 'Streams', 'Daily']}
+            headers={['Rank', 'Artist', 'Streams (M)', 'Daily', 'Rank Δ']}
             rows={snap.artistsAllTime || []}
             changes24h={changes24h?.artistsAllTime}
             changes7d={changes7d?.artistsAllTime}
@@ -198,7 +195,7 @@ export default function SpotifyAnalyticsPage() {
           </div>
           <RankingTable
             title="Monthly Listener Rankings"
-            headers={['Rank', 'Artist', 'Listeners', 'Daily +/-']}
+            headers={['Rank', 'Artist', 'Listeners', 'Daily +/-', 'Rank Δ']}
             rows={snap.monthlyListeners || []}
             changes24h={changes24h?.monthlyListeners}
             changes7d={changes7d?.monthlyListeners}

@@ -40,7 +40,7 @@ function compareSnapshots(current: any, previous: any | null): ChangeData | null
   if (Array.isArray(current.artistsAllTime)) {
     current.artistsAllTime.forEach((currentRank: any) => {
       const artist = currentRank.artist
-      const prevRank = previous.artistsAllTime?.find((r: any) => r.artist === artist)
+      const prevRank = previous.artistsAllTime?.find((r: any) => r.artist.toLowerCase() === artist.toLowerCase())
       if (prevRank) {
         changes.artistsAllTime[artist] = { rankChange: prevRank.rank - currentRank.rank }
       }
@@ -50,7 +50,7 @@ function compareSnapshots(current: any, previous: any | null): ChangeData | null
   if (Array.isArray(current.monthlyListeners)) {
     current.monthlyListeners.forEach((currentRank: any) => {
       const artist = currentRank.artist
-      const prevRank = previous.monthlyListeners?.find((r: any) => r.artist === artist)
+      const prevRank = previous.monthlyListeners?.find((r: any) => r.artist.toLowerCase() === artist.toLowerCase())
       if (prevRank) {
         changes.monthlyListeners[artist] = { rankChange: prevRank.rank - currentRank.rank }
       }

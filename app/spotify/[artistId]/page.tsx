@@ -139,27 +139,42 @@ export default function ArtistPage() {
             </div>
             {/* Chart */}
             <div className="lg:col-span-2">
-              <ActivityChart />
+              <ActivityChart artist={artistName} />
             </div>
           </div>
 
           {/* Top Songs */}
-          <TopSongs 
-            songs={(artistSongs?.songs || []).slice(0, 6).map(s => ({
+          <TopSongs
+            songs={(artistSongs?.songs || [])
+              .sort((a, b) => b.totalStreams - a.totalStreams)
+              .slice(0, 6)
+              .map(s => ({
               title: s.name,
               streams: formatNumber(s.totalStreams),
               duration: '3:00', // Mock duration as it's not in Kworb stream row
-              coverUrl: s.albumArt || '/placeholder-song.jpg'
+              coverUrl: s.albumArt || '/placeholder-song.jpg',
+              dailyGain: s.dailyGain,
+              totalStreams: s.totalStreams
+            }))}
+            allSongs={(artistSongs?.songs || [])
+              .sort((a, b) => b.totalStreams - a.totalStreams)
+              .map(s => ({
+              title: s.name,
+              streams: formatNumber(s.totalStreams),
+              duration: '3:00',
+              coverUrl: s.albumArt || '/placeholder-song.jpg',
+              dailyGain: s.dailyGain,
+              totalStreams: s.totalStreams
             }))}
           />
           
           {/* Discography */}
-          <Discography 
-            albums={(artistAlbums?.albums || []).slice(0, 5).map(a => ({
+          <Discography
+            albums={(artistAlbums?.albums || []).map(a => ({
                title: a.name,
-               type: 'Album',
-               year: '2023', // Mock year
-               coverUrl: '/placeholder-album.jpg' // Kworb album row doesn't strictly have art always? Check type.
+               type: a.albumType === 'single' ? 'Single' : a.albumType === 'compilation' ? 'Compilation' : 'Album',
+               year: a.releaseDate ? new Date(a.releaseDate).getFullYear().toString() : '2023',
+               coverUrl: a.coverImage || '/placeholder-album.jpg'
             }))}
           />
         </div>

@@ -19,6 +19,14 @@ export type RankRow = {
   url?: string
 }
 
+export type MonthlyListenerRow = {
+  rank: number
+  artist: string
+  listeners: number
+  dailyChange: number
+  url?: string
+}
+
 export type ArtistTotals = {
   streams: number
   daily: number
@@ -37,6 +45,10 @@ export type AlbumRow = {
   totalStreams: number
   dailyGain?: number
   url?: string
+  spotifyId?: string
+  coverImage?: string
+  releaseDate?: string
+  albumType?: string // 'album', 'single', 'ep', 'compilation'
 }
 
 export type ArtistAlbumsGroup = {
