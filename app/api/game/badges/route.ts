@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { getUserBadges } from '@/lib/game/streakTracking'
 
 export const runtime = 'nodejs'

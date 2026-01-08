@@ -219,7 +219,7 @@ export default function StreamingConnectionModal({ isOpen, onClose, onConnected 
                 <li>Your streaming data is checked from the quest start time</li>
                 <li>Only streams of the required songs/albums count</li>
                 <li>Data is cached for 15 minutes to reduce API calls</li>
-                <li>Click "Verify Progress" to update your quest progress</li>
+                <li>Click &quot;Verify Progress&quot; to update your quest progress</li>
               </ul>
             </div>
           </div>

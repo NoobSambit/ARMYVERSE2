@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { selectQuestions } from '@/lib/game/selectQuestions'
 import { QuizSession } from '@/lib/models/QuizSession'
 // practice mode removed
@@ -80,5 +80,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
 

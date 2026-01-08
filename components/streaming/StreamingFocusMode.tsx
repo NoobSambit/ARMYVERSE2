@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
-import { Search, AlertCircle, CheckCircle, Music, ExternalLink, GripVertical, Trash2, ChevronDown, Flag, Info, Loader2, Download, GitCompare, Calendar, Zap, Clock, Edit3 } from 'lucide-react'
+import { Search, AlertCircle, CheckCircle, Music, GripVertical, Trash2, ChevronDown, Flag, Info, Loader2, Download, GitCompare, Calendar, Zap, Clock, Edit3 } from 'lucide-react'
 
 interface Props {
   focusResult: SongDoc[] | null
@@ -199,58 +199,58 @@ export default function StreamingFocusMode(props: Props) {
   }, [props.focusResult, selectedFocusTrack])
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start relative">
       {/* LEFT PANEL: Configuration */}
-      <section className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
-        <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border rounded-2xl p-5 flex flex-col gap-5 shadow-xl shadow-black/20">
+      <section className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3 sm:gap-4">
+        <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border rounded-2xl p-3 sm:p-5 flex flex-col gap-3 sm:gap-5 shadow-xl shadow-black/20">
           {/* Streaming Goals Widget */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-white text-lg font-bold flex items-center gap-2">
-                <Flag className="w-5 h-5 text-primary" />
+              <h3 className="text-white text-base sm:text-lg font-bold flex items-center gap-2">
+                <Flag className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
                 Streaming Goals
               </h3>
-              <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20">
+              <span className="text-[10px] sm:text-xs font-medium text-primary bg-primary/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-primary/20">
                 Active
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Platform</span>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <label className="flex flex-col gap-1 sm:gap-1.5">
+                <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">Platform</span>
                 <div className="relative">
                   <select
                     value={platform}
                     onChange={(e) => setPlatform(e.target.value)}
-                    className="w-full bg-background-dark border border-border-dark text-white text-sm rounded-xl h-10 px-3 focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer"
+                    className="w-full bg-background-dark border border-border-dark text-white text-xs sm:text-sm rounded-xl h-9 sm:h-10 px-2 sm:px-3 focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer"
                   >
                     <option value="spotify">Spotify</option>
                     <option value="apple">Apple Music</option>
                     <option value="youtube">YouTube Music</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-2.5 text-text-muted pointer-events-none w-4 h-4" />
+                  <ChevronDown className="absolute right-2.5 sm:right-3 top-2.5 text-text-muted pointer-events-none w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 </div>
               </label>
 
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Duration</span>
+              <label className="flex flex-col gap-1 sm:gap-1.5">
+                <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">Duration</span>
                 <div className="relative">
                   <input
                     type="text"
                     value={targetDuration}
                     onChange={(e) => setTargetDuration(e.target.value)}
-                    className="w-full bg-background-dark border border-border-dark text-white text-sm rounded-xl h-10 px-3 pr-8 focus:ring-1 focus:ring-primary focus:border-primary font-mono"
+                    className="w-full bg-background-dark border border-border-dark text-white text-xs sm:text-sm rounded-xl h-9 sm:h-10 px-2 sm:px-3 pr-7 sm:pr-8 focus:ring-1 focus:ring-primary focus:border-primary font-mono"
                   />
-                  <Calendar className="absolute right-3 top-2.5 text-text-muted w-4 h-4" />
+                  <Calendar className="absolute right-2.5 sm:right-3 top-2.5 text-text-muted w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 </div>
               </label>
             </div>
 
             {/* Tip Banner */}
-            <div className="flex gap-3 bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl items-start">
-              <Info className="text-blue-400 w-4 h-4 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-blue-100/80 leading-relaxed">
-                <strong className="text-blue-200">Tip:</strong> For Billboard charting, aim for 3-4 filler songs between focus tracks to filter bot behavior.
+            <div className="flex gap-2 sm:gap-3 bg-blue-500/10 border border-blue-500/20 p-2 sm:p-3 rounded-xl items-start">
+              <Info className="text-blue-400 w-3.5 sm:w-4 h-3.5 sm:h-4 mt-0.5 flex-shrink-0" />
+              <p className="text-[11px] sm:text-xs text-blue-100/80 leading-relaxed">
+                <strong className="text-blue-200">Tip:</strong> For Billboard charting, aim for 3-4 filler songs between focus tracks.
               </p>
             </div>
           </div>
@@ -258,14 +258,14 @@ export default function StreamingFocusMode(props: Props) {
           <hr className="border-border-dark" />
 
           {/* Focus Track Section */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-white text-lg font-bold">Focus Track</h3>
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <h3 className="text-white text-base sm:text-lg font-bold">Focus Track</h3>
 
             {/* Selected Track Display */}
             {selectedFocusTrack ? (
-              <div className="bg-surface-dark border border-border-dark rounded-xl p-3 flex gap-4 items-center group hover:border-primary/50 transition-colors cursor-pointer relative overflow-hidden">
+              <div className="bg-surface-dark border border-border-dark rounded-xl p-2 sm:p-3 flex gap-2 sm:gap-4 items-center group hover:border-primary/50 transition-colors cursor-pointer relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="size-16 rounded-xl overflow-hidden shadow-lg shrink-0 z-10 relative">
+                <div className="size-12 sm:size-16 rounded-xl overflow-hidden shadow-lg shrink-0 z-10 relative">
                   <Image
                     src={selectedFocusTrack.thumbnails?.medium || selectedFocusTrack.thumbnails?.small || '/images/placeholder.jpg'}
                     alt={selectedFocusTrack.name}
@@ -274,23 +274,23 @@ export default function StreamingFocusMode(props: Props) {
                   />
                 </div>
                 <div className="flex flex-col min-w-0 z-10 flex-1">
-                  <span className="text-white font-bold truncate">{selectedFocusTrack.name}</span>
-                  <span className="text-text-muted text-xs truncate">{selectedFocusTrack.artist}</span>
+                  <span className="text-white font-bold truncate text-sm">{selectedFocusTrack.name}</span>
+                  <span className="text-text-muted text-[10px] sm:text-xs truncate">{selectedFocusTrack.artist}</span>
                   {/* Audio Features Viz */}
-                  <div className="flex items-end gap-1 mt-2 h-4">
-                    <div className="w-1 bg-primary/40 rounded-t-sm h-[60%]"></div>
-                    <div className="w-1 bg-primary/60 rounded-t-sm h-[80%]"></div>
-                    <div className="w-1 bg-primary rounded-t-sm h-[100%]"></div>
-                    <div className="w-1 bg-primary/80 rounded-t-sm h-[90%]"></div>
-                    <div className="w-1 bg-primary/50 rounded-t-sm h-[50%]"></div>
-                    <span className="text-[10px] text-text-muted ml-2 font-mono">124 BPM</span>
+                  <div className="flex items-end gap-0.5 sm:gap-1 mt-1.5 sm:mt-2 h-3 sm:h-4">
+                    <div className="w-[2px] sm:w-1 bg-primary/40 rounded-t-sm h-[60%]"></div>
+                    <div className="w-[2px] sm:w-1 bg-primary/60 rounded-t-sm h-[80%]"></div>
+                    <div className="w-[2px] sm:w-1 bg-primary rounded-t-sm h-[100%]"></div>
+                    <div className="w-[2px] sm:w-1 bg-primary/80 rounded-t-sm h-[90%]"></div>
+                    <div className="w-[2px] sm:w-1 bg-primary/50 rounded-t-sm h-[50%]"></div>
+                    <span className="text-[9px] sm:text-[10px] text-text-muted ml-1.5 sm:ml-2 font-mono">124 BPM</span>
                   </div>
                 </div>
                 <button
                   onClick={() => setFocusTrackId('')}
                   className="text-text-muted hover:text-white z-10"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 sm:w-5 h-4 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -298,12 +298,12 @@ export default function StreamingFocusMode(props: Props) {
             ) : (
               /* Search Input */
               <div className="relative group">
-                <Search className="absolute left-3 top-3 text-text-muted group-focus-within:text-primary transition-colors w-4 h-4" />
+                <Search className="absolute left-2.5 sm:left-3 top-2.5 sm:top-3 text-text-muted group-focus-within:text-primary transition-colors w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 <input
                   type="text"
                   value={focusSearch}
                   onChange={(e) => setFocusSearch(e.target.value)}
-                  className="w-full bg-background-dark border border-border-dark text-white rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:border-primary transition-colors placeholder:text-text-muted/50"
+                  className="w-full bg-background-dark border border-border-dark text-white rounded-xl py-2 sm:py-2.5 pl-9 sm:pl-10 pr-3 sm:pr-4 focus:outline-none focus:border-primary transition-colors placeholder:text-text-muted/50 text-sm"
                   placeholder="Search for a song..."
                 />
               </div>
@@ -312,7 +312,7 @@ export default function StreamingFocusMode(props: Props) {
             {/* Search Results */}
             {focusSearch && !selectedFocusTrack && (
               <div className="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
-                {loading && <p className="text-text-muted text-sm p-2">Loading...</p>}
+                {loading && <p className="text-text-muted text-xs sm:text-sm p-2">Loading...</p>}
                 {focusOptions.map((track) => (
                   <button
                     key={track.spotifyId}
@@ -322,7 +322,7 @@ export default function StreamingFocusMode(props: Props) {
                     }}
                     className="flex items-center w-full p-2 rounded-xl hover:bg-white/10 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-xl overflow-hidden mr-3 flex-shrink-0 relative">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden mr-2 sm:mr-3 flex-shrink-0 relative">
                       <Image
                         src={track.thumbnails?.small || '/images/placeholder.jpg'}
                         alt={track.name}
@@ -331,48 +331,48 @@ export default function StreamingFocusMode(props: Props) {
                       />
                     </div>
                     <div className="text-left min-w-0 flex-1">
-                      <p className="text-white text-sm font-medium truncate">{track.name}</p>
-                      <p className="text-text-muted text-xs truncate">{track.artist}</p>
+                      <p className="text-white text-xs sm:text-sm font-medium truncate">{track.name}</p>
+                      <p className="text-text-muted text-[10px] sm:text-xs truncate">{track.artist}</p>
                     </div>
                   </button>
                 ))}
                 {!loading && focusOptions.length === 0 && (
-                  <p className="text-text-muted text-sm p-2">No songs found</p>
+                  <p className="text-text-muted text-xs sm:text-sm p-2">No songs found</p>
                 )}
               </div>
             )}
           </div>
 
           {/* Accordions for Configuration */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:gap-3">
             {/* Auto Mode Settings */}
             <details
               className="group bg-surface-dark rounded-xl border border-border-dark open:border-primary/30 open:ring-1 open:ring-primary/20 transition-all duration-300"
               open={autoModeOpen}
               onToggle={(e) => setAutoModeOpen((e.target as HTMLDetailsElement).open)}
             >
-              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 select-none">
-                <div className="flex items-center gap-2 text-white font-medium">
-                  <Zap className="w-5 h-5 text-primary" />
-                  Auto Mode Settings
+              <summary className="flex cursor-pointer items-center justify-between px-3 sm:px-4 py-2 sm:py-3 select-none">
+                <div className="flex items-center gap-2 text-white font-medium text-sm">
+                  <Zap className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
+                  <span className="text-xs sm:text-sm">Auto Mode Settings</span>
                 </div>
-                <ChevronDown className="text-text-muted group-open:rotate-180 transition-transform w-5 h-5" />
+                <ChevronDown className="text-text-muted group-open:rotate-180 transition-transform w-4 sm:w-5 h-4 sm:h-5" />
               </summary>
-              <div className="px-4 pb-4 pt-1 flex flex-col gap-5">
+              <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-1 flex flex-col gap-3 sm:gap-5">
                 {/* Range Slider */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex justify-between text-xs text-text-muted">
+                  <div className="flex justify-between text-[10px] sm:text-xs text-text-muted">
                     <span>Gap Range</span>
                     <span className="text-white font-mono">{gapRange[0]} - {gapRange[1]} songs</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 sm:gap-2">
                     <input
                       type="number"
                       min={1}
                       max={10}
                       value={gapRange[0]}
                       onChange={(e) => setGapRange([parseInt(e.target.value), gapRange[1]])}
-                      className="w-16 bg-background-dark border border-border-dark text-white text-xs rounded-xl px-2 py-1"
+                      className="w-12 sm:w-16 bg-background-dark border border-border-dark text-white text-[10px] sm:text-xs rounded-xl px-1.5 sm:px-2 py-1"
                     />
                     <input
                       type="range"
@@ -380,7 +380,7 @@ export default function StreamingFocusMode(props: Props) {
                       max={10}
                       value={gapRange[1]}
                       onChange={(e) => setGapRange([gapRange[0], parseInt(e.target.value)])}
-                      className="flex-1 h-1.5 bg-border-dark rounded-xl appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                      className="flex-1 h-1.5 bg-border-dark rounded-xl appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 sm:[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-3.5 sm:[&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
                     />
                     <input
                       type="number"
@@ -388,18 +388,18 @@ export default function StreamingFocusMode(props: Props) {
                       max={10}
                       value={gapRange[1]}
                       onChange={(e) => setGapRange([gapRange[0], parseInt(e.target.value)])}
-                      className="w-16 bg-background-dark border border-border-dark text-white text-xs rounded-xl px-2 py-1"
+                      className="w-12 sm:w-16 bg-background-dark border border-border-dark text-white text-[10px] sm:text-xs rounded-xl px-1.5 sm:px-2 py-1"
                     />
                   </div>
                 </div>
 
                 {/* Fill Mode */}
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Fill Mode</span>
+                <label className="flex flex-col gap-1 sm:gap-1.5">
+                  <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">Fill Mode</span>
                   <select
                     value={fillMode}
                     onChange={(e) => setFillMode(e.target.value as FillMode)}
-                    className="w-full bg-background-dark border border-border-dark text-white text-sm rounded-xl h-9 px-3"
+                    className="w-full bg-background-dark border border-border-dark text-white text-xs sm:text-sm rounded-xl h-8 sm:h-9 px-2 sm:px-3"
                   >
                     <option value="smartMix">Smart Mix (Era + Mood)</option>
                     <option value="chronological">Chronological</option>
@@ -768,30 +768,30 @@ export default function StreamingFocusMode(props: Props) {
           </div>
 
           {/* Footer Actions */}
-          <div className="mt-auto flex flex-col gap-3 pt-2">
+          <div className="mt-auto flex flex-col gap-2 sm:gap-3 pt-2">
             <div className="relative">
-              <select className="w-full bg-surface-dark border border-border-dark text-text-muted text-sm rounded-xl h-10 px-3 appearance-none cursor-pointer hover:border-primary/50 transition-colors">
+              <select className="w-full bg-surface-dark border border-border-dark text-text-muted text-xs sm:text-sm rounded-xl h-9 sm:h-10 px-2 sm:px-3 appearance-none cursor-pointer hover:border-primary/50 transition-colors">
                 <option>Load Template: Comeback Stream</option>
                 <option>Load Template: Maintenance Loop</option>
               </select>
-              <svg className="w-5 h-5 absolute right-3 top-2.5 text-text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 sm:w-5 h-4 sm:h-5 absolute right-2.5 sm:right-3 top-2.5 text-text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
               </svg>
             </div>
             <button
               onClick={handleGenerate}
               disabled={!focusTrackId || generating}
-              className="w-full bg-primary hover:bg-primary-dark text-white h-12 rounded-xl font-bold text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-primary hover:bg-primary-dark text-white h-10 sm:h-12 rounded-xl font-bold text-sm sm:text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {generating ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
                   <span>Generating...</span>
                 </>
               ) : (
                 <>
                   <span>Generate Playlist</span>
-                  <Zap className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <Zap className="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
@@ -800,30 +800,30 @@ export default function StreamingFocusMode(props: Props) {
       </section>
 
       {/* RIGHT PANEL: Generated Playlist */}
-      <aside className="lg:col-span-5 xl:col-span-4 sticky top-6 self-start z-10">
-        <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border flex flex-col h-[calc(100vh-6rem)] min-h-[500px] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 relative">
+      <aside className="lg:col-span-5 xl:col-span-4 sticky top-4 sm:top-6 self-start z-10">
+        <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-6rem)] min-h-[400px] sm:min-h-[500px] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 relative">
           {props.focusResult && props.focusResult.length > 0 ? (
             <>
               {/* Playlist Header */}
-              <div className="p-5 border-b border-border-dark bg-[#1e1629]/50 shrink-0">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 mb-3">
+              <div className="p-3 sm:p-5 border-b border-border-dark bg-[#1e1629]/50 shrink-0">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                   <div className="flex flex-col gap-1 w-full max-w-md">
-                    <label className="text-xs text-primary font-bold uppercase tracking-wider">Playlist Name</label>
+                    <label className="text-[10px] sm:text-xs text-primary font-bold uppercase tracking-wider">Playlist Name</label>
                     <div className="flex items-center gap-2 border-b border-white/20 pb-1 focus-within:border-primary transition-colors">
                       <input
                         type="text"
                         value={props.playlistName}
                         onChange={(e) => props.setPlaylistName(e.target.value)}
-                        className="bg-transparent border-none p-0 text-white text-xl font-bold focus:ring-0 w-full placeholder:text-white/20 outline-none"
+                        className="bg-transparent border-none p-0 text-white text-lg sm:text-xl font-bold focus:ring-0 w-full placeholder:text-white/20 outline-none"
                       />
-                      <Edit3 className="w-4 h-4 text-text-muted cursor-pointer hover:text-white flex-shrink-0" />
+                      <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-text-muted cursor-pointer hover:text-white flex-shrink-0" />
                     </div>
                   </div>
 
                   {/* Header Stats */}
-                  <div className="flex gap-3">
-                    <div className="flex items-center gap-2 bg-background-dark/80 rounded-xl p-2 pr-3 border border-border-dark">
-                      <div className="relative size-9 flex items-center justify-center">
+                  <div className="flex gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2 bg-background-dark/80 rounded-xl p-1.5 sm:p-2 pr-2 sm:pr-3 border border-border-dark">
+                      <div className="relative size-7 sm:size-9 flex items-center justify-center">
                         <svg className="size-full rotate-[-90deg]" viewBox="0 0 36 36">
                           <path
                             className="text-border-dark"
@@ -841,60 +841,52 @@ export default function StreamingFocusMode(props: Props) {
                             strokeWidth="4"
                           />
                         </svg>
-                        <span className="absolute text-[10px] font-bold text-white">{qualityMetrics.optimizedScore}</span>
+                        <span className="absolute text-[9px] sm:text-[10px] font-bold text-white">{qualityMetrics.optimizedScore}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-text-muted uppercase">Optimized</span>
-                        <span className="text-sm font-bold text-white">Score</span>
+                        <span className="text-[9px] sm:text-[10px] text-text-muted uppercase">Optimized</span>
+                        <span className="text-xs sm:text-sm font-bold text-white">Score</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-background-dark/80 rounded-xl p-2 pr-3 border border-border-dark">
-                      <div className="size-9 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                        <Clock className="w-4 h-4" />
+                    <div className="flex items-center gap-1.5 sm:gap-2 bg-background-dark/80 rounded-xl p-1.5 sm:p-2 pr-2 sm:pr-3 border border-border-dark">
+                      <div className="size-7 sm:size-9 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                        <Clock className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-text-muted uppercase">Total Time</span>
-                        <span className="text-sm font-bold text-white">{props.focusDuration}</span>
+                        <span className="text-[9px] sm:text-[10px] text-text-muted uppercase">Time</span>
+                        <span className="text-xs sm:text-sm font-bold text-white">{props.focusDuration}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Secondary Metrics */}
-                <div className="flex items-center gap-6 overflow-x-auto pb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-primary"></span>
-                    <span className="text-sm text-text-muted whitespace-nowrap">
-                      Focus Coverage: <span className="text-white font-medium">{qualityMetrics.focusCoverage}%</span>
+                <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto pb-1">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="size-1.5 sm:size-2 rounded-full bg-primary"></span>
+                    <span className="text-[10px] sm:text-sm text-text-muted whitespace-nowrap">
+                      Focus: <span className="text-white font-medium">{qualityMetrics.focusCoverage}%</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-orange-400"></span>
-                    <span className="text-sm text-text-muted whitespace-nowrap">
-                      Est. Skip Rate: <span className="text-white font-medium">&lt; {qualityMetrics.skipRate}%</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                    <span className="text-sm text-text-muted whitespace-nowrap">
-                      Smart Shuffle: <span className="text-green-400 font-medium">Active</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="size-1.5 sm:size-2 rounded-full bg-orange-400"></span>
+                    <span className="text-[10px] sm:text-sm text-text-muted whitespace-nowrap">
+                      Skip Rate: <span className="text-white font-medium">&lt; {qualityMetrics.skipRate}%</span>
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Draggable Track List */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1 relative custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-1.5 sm:p-2 space-y-0.5 sm:space-y-1 relative custom-scrollbar">
                 {/* List Header */}
-                <div className="flex items-center px-4 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider sticky top-0 bg-[#1e1629]/95 backdrop-blur z-20 border-b border-white/5">
-                  <div className="w-8 text-center">#</div>
-                  <div className="flex-1">Title</div>
-                  <div className="w-32 hidden sm:block">Album</div>
-                  <div className="w-16 text-right">Time</div>
-                  <div className="w-12"></div>
+                <div className="flex items-center px-2 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider sticky top-0 bg-[#1e1629]/95 backdrop-blur z-20 border-b border-white/5">
+                  <div className="w-6 sm:w-8 text-center">#</div>
+                  <div className="flex-1 text-[10px] sm:text-xs">Title</div>
+                  <div className="w-16 sm:w-32 hidden sm:block">Album</div>
+                  <div className="w-10 sm:w-16 text-right text-[10px] sm:text-xs">Time</div>
+                  <div className="w-8 sm:w-12"></div>
                 </div>
 
                 {/* Track Items */}
@@ -908,7 +900,7 @@ export default function StreamingFocusMode(props: Props) {
                       onDragOver={(e) => props.handleFocusDragOver(e, index)}
                       onDrop={(e) => props.handleFocusDrop(e, index)}
                       onDragEnd={props.handleFocusDragEnd}
-                      className={`group flex items-center gap-3 p-2 rounded-xl transition-colors border cursor-grab active:cursor-grabbing ${
+                      className={`group flex items-center gap-1.5 sm:gap-3 p-1.5 sm:p-2 rounded-xl transition-colors border cursor-grab active:cursor-grabbing ${
                         props.focusDraggedIndex === index
                           ? 'opacity-50 bg-white/10 border-primary/30'
                           : props.focusDragOverIndex === index
@@ -918,10 +910,10 @@ export default function StreamingFocusMode(props: Props) {
                           : 'border-transparent hover:bg-white/5 hover:border-white/5'
                       }`}
                     >
-                      <div className={`w-8 text-center font-bold ${isFocusTrack ? 'text-primary' : 'text-text-muted'}`}>
+                      <div className={`w-5 sm:w-8 text-center font-bold text-[10px] sm:text-xs ${isFocusTrack ? 'text-primary' : 'text-text-muted'}`}>
                         {index + 1}
                       </div>
-                      <div className="size-10 rounded overflow-hidden shrink-0 relative">
+                      <div className="size-8 sm:size-10 rounded overflow-hidden shrink-0 relative">
                         <Image
                           src={track.thumbnails?.small || '/images/placeholder.jpg'}
                           alt={track.name}
@@ -929,36 +921,36 @@ export default function StreamingFocusMode(props: Props) {
                           className={`object-cover ${!isFocusTrack ? 'grayscale opacity-70' : ''}`}
                         />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Music className="text-white w-5 h-5" />
+                          <Music className="text-white w-4 sm:w-5 h-4 sm:h-5" />
                         </div>
                       </div>
                       <div className="flex flex-col flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-medium truncate ${isFocusTrack ? 'text-white' : 'text-white/80'}`}>
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <span className={`font-medium truncate text-xs sm:text-sm ${isFocusTrack ? 'text-white' : 'text-white/80'}`}>
                             {track.name}
                           </span>
                           {isFocusTrack && (
-                            <span className="bg-primary text-[10px] font-bold text-white px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                            <span className="bg-primary text-[8px] sm:text-[10px] font-bold text-white px-1 sm:px-1.5 py-0.5 rounded uppercase flex-shrink-0">
                               Focus
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-text-muted truncate">{track.artist}</span>
+                        <span className="text-[10px] sm:text-xs text-text-muted truncate">{track.artist}</span>
                       </div>
-                      <div className="w-32 text-xs text-text-muted truncate hidden sm:block">
+                      <div className="w-16 sm:w-32 text-[10px] sm:text-xs text-text-muted truncate hidden sm:block">
                         {track.album}
                       </div>
-                      <div className="w-16 text-right text-xs text-text-muted font-mono">3:04</div>
-                      <div className="w-12 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-10 sm:w-16 text-right text-[10px] sm:text-xs text-text-muted font-mono">3:04</div>
+                      <div className="w-8 sm:w-12 flex justify-end gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {!isFocusTrack && (
                           <button
                             onClick={() => props.removeFromFocusResult(index)}
                             className="text-text-muted hover:text-red-400"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                           </button>
                         )}
-                        <GripVertical className="text-text-muted cursor-move w-4 h-4" />
+                        <GripVertical className="text-text-muted cursor-move w-3.5 sm:w-4 h-3.5 sm:h-4" />
                       </div>
                     </div>
                   )
@@ -966,41 +958,41 @@ export default function StreamingFocusMode(props: Props) {
               </div>
 
               {/* Bottom Action Bar */}
-              <div className="p-4 bg-[#171023] border-t border-border-dark shrink-0">
-                <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button className="text-text-muted hover:text-white text-sm flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2.5 sm:p-4 bg-[#171023] border-t border-border-dark shrink-0">
+                <div className="flex flex-col md:flex-row gap-2 sm:gap-3 items-center justify-between">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <button className="text-text-muted hover:text-white text-[10px] sm:text-sm flex items-center gap-1">
+                      <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       Export Options
                     </button>
                     <span className="text-border-dark">|</span>
-                    <button className="text-text-muted hover:text-white text-sm flex items-center gap-1">
-                      <GitCompare className="w-4 h-4" />
+                    <button className="text-text-muted hover:text-white text-[10px] sm:text-sm flex items-center gap-1">
+                      <GitCompare className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
                       Compare
                     </button>
                   </div>
 
-                  <div className="flex gap-3 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none h-10 px-4 rounded-full border border-border-dark bg-surface-dark text-white text-sm font-bold hover:bg-border-dark transition-colors flex items-center justify-center gap-2">
-                      <Download className="w-4 h-4" />
-                      CSV
+                  <div className="flex gap-2 sm:gap-3 w-full md:w-auto">
+                    <button className="flex-1 md:flex-none h-8 sm:h-10 px-3 sm:px-4 rounded-full border border-border-dark bg-surface-dark text-white text-xs sm:text-sm font-bold hover:bg-border-dark transition-colors flex items-center justify-center gap-1.5 sm:gap-2">
+                      <Download className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                      <span>CSV</span>
                     </button>
                     <button
                       onClick={() => props.handleSaveToSpotify(props.focusResult!)}
                       disabled={props.isSaving}
-                      className="flex-1 md:flex-none h-10 px-6 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-white text-sm font-bold shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-2 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 md:flex-none h-8 sm:h-10 px-4 sm:px-6 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-white text-xs sm:text-sm font-bold shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-1.5 sm:gap-2 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {props.isSaving ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
                       ) : (
                         <>
-                          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <svg className="w-4 sm:w-5 h-4 sm:h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
                           </svg>
-                          Create on Spotify
+                          <span>Create</span>
                         </>
                       )}
                     </button>
@@ -1009,15 +1001,15 @@ export default function StreamingFocusMode(props: Props) {
 
                 {/* Error/Success Messages */}
                 {props.saveError && (
-                  <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-3 text-red-300 text-xs">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <div className="mt-2 sm:mt-3 bg-red-500/10 border border-red-500/20 rounded-xl p-2 sm:p-3 flex items-center gap-2 sm:gap-3 text-red-300 text-[10px] sm:text-xs">
+                    <AlertCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 flex-shrink-0" />
                     <span>{props.saveError}</span>
                   </div>
                 )}
 
                 {props.saveSuccess && (
-                  <div className="mt-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center gap-3 text-green-300 text-xs">
-                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  <div className="mt-2 sm:mt-3 bg-green-500/10 border border-green-500/20 rounded-xl p-2 sm:p-3 flex items-center gap-2 sm:gap-3 text-green-300 text-[10px] sm:text-xs">
+                    <CheckCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 flex-shrink-0" />
                     <span>{props.saveSuccess}</span>
                   </div>
                 )}
@@ -1025,11 +1017,11 @@ export default function StreamingFocusMode(props: Props) {
             </>
           ) : (
             /* Empty State */
-            <div className="h-full flex flex-col items-center justify-center text-center p-12">
-              <Music className="w-16 h-16 text-gray-600 mb-4" />
-              <h3 className="text-white text-xl font-bold mb-2">No Playlist Generated</h3>
-              <p className="text-text-muted text-sm max-w-md">
-                Select a focus track, configure your settings, and click "Generate Playlist" to create your streaming-optimized playlist.
+            <div className="h-full flex flex-col items-center justify-center text-center p-6 sm:p-12">
+              <Music className="w-12 sm:w-16 h-12 sm:h-16 text-gray-600 mb-3 sm:mb-4" />
+              <h3 className="text-white text-lg sm:text-xl font-bold mb-2">No Playlist Generated</h3>
+              <p className="text-text-muted text-xs sm:text-sm max-w-md">
+                Select a focus track, configure your settings, and click &quot;Generate Playlist&quot; to create your streaming-optimized playlist.
               </p>
             </div>
           )}

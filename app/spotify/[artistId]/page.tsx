@@ -62,8 +62,8 @@ export default function ArtistPage() {
 
   if (loading || !data) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-white/50">Loading artist data...</div>
+      <div className="flex items-center justify-center min-h-[50vh] sm:min-h-[60vh]">
+        <div className="text-white/50 text-sm sm:text-base">Loading artist data...</div>
       </div>
     )
   }
@@ -76,26 +76,26 @@ export default function ArtistPage() {
   const artistAllTime = snap.artistsAllTime?.find(r => r.artist === artistName)
   const artistMonthly = snap.monthlyListeners?.find(r => r.artist === artistName)
   const artistMeta = (snap.artistMetadata as any)?.[artistName] || {}
-  
+
   // Calculate Stats
   const totalStreams = artistAllTime?.streams || artistSongs?.totals.streams || 0
   const monthlyListeners = artistMonthly?.listeners || 0
-  
+
   // Mock Follower Data (since it's not in Kworb)
   const followers = 72000000 // 72M placeholder
-  
+
   // Changes
   const streamsChange = artistSongs?.totals.daily || 0
   const streamsPercent = (streamsChange / totalStreams) * 100
-  
+
   const listenersChange = artistMonthly?.dailyChange || 0
   const listenersPercent = (listenersChange / monthlyListeners) * 100
 
   return (
-    <div className="container mx-auto max-w-[1400px] px-4 py-8 md:px-6 lg:px-8">
+    <div className="container mx-auto max-w-[1400px] px-3 sm:px-4 py-4 sm:py-6 md:py-8 lg:px-6 xl:px-8">
       {/* Breadcrumbs */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div className="flex items-center gap-2 text-sm text-[#a290cb]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-[#a290cb]">
            <span className="hover:text-white transition-colors cursor-pointer">Hub</span>
            <span>/</span>
            <span className="hover:text-white transition-colors cursor-pointer">Artists</span>
@@ -104,41 +104,41 @@ export default function ArtistPage() {
         </div>
       </div>
 
-      <ArtistHero 
+      <ArtistHero
         name={artistName}
         heroImage={artistMeta.imageUrl} // Use metadata image as hero bg (often suitable)
         avatarImage={artistMeta.imageUrl}
         tags={['K-Pop', 'Verified']}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Left Column */}
-        <div className="xl:col-span-3 flex flex-col gap-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="xl:col-span-3 flex flex-col gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Stats */}
-            <div className="lg:col-span-1">
-              <ArtistStatsRow 
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <ArtistStatsRow
                 stats={{
-                  streams: { 
-                    value: formatNumber(totalStreams), 
+                  streams: {
+                    value: formatNumber(totalStreams),
                     change: parseFloat(streamsPercent.toFixed(2)) || 0.1, // Mock small percent if 0
-                    percent: 85 
+                    percent: 85
                   },
-                  listeners: { 
-                    value: formatNumber(monthlyListeners), 
+                  listeners: {
+                    value: formatNumber(monthlyListeners),
                     change: parseFloat(listenersPercent.toFixed(2)) || 0.2,
-                    percent: 65 
+                    percent: 65
                   },
-                  followers: { 
-                    value: formatNumber(followers), 
-                    change: 0.5, 
-                    percent: 72 
+                  followers: {
+                    value: formatNumber(followers),
+                    change: 0.5,
+                    percent: 72
                   }
                 }}
               />
             </div>
             {/* Chart */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 order-1 lg:order-2">
               <ActivityChart artist={artistName} />
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function ArtistPage() {
               totalStreams: s.totalStreams
             }))}
           />
-          
+
           {/* Discography */}
           <Discography
             albums={(artistAlbums?.albums || []).map(a => ({
@@ -179,9 +179,29 @@ export default function ArtistPage() {
           />
         </div>
 
-        {/* Right Column */}
-        <div className="xl:col-span-1">
-          <ArtistSidebar 
+        {/* Right Column - Desktop */}
+        <div className="hidden xl:block xl:col-span-1">
+          <ArtistSidebar
+            rankings={{
+              global: { rank: artistAllTime?.rank || 0, label: 'TOP 50' },
+              kpop: { rank: 1, label: 'LEADER' } // Mock K-pop rank
+            }}
+            socials={[
+              { name: 'Spotify', url: '#', icon: SOCIAL_ICONS.spotify, color: '#1DB954' },
+              { name: 'Instagram', url: '#', icon: SOCIAL_ICONS.instagram, color: '#E1306C' },
+              { name: 'Twitter', url: '#', icon: SOCIAL_ICONS.twitter, color: '#1DA1F2' }
+            ]}
+            similar={[
+              { name: 'BLACKPINK', imageUrl: '/placeholder-bp.jpg' },
+              { name: 'Stray Kids', imageUrl: '/placeholder-skz.jpg' },
+              { name: 'TXT', imageUrl: '/placeholder-txt.jpg' }
+            ]}
+          />
+        </div>
+
+        {/* Right Column - Mobile FAB trigger is inside ArtistSidebar component */}
+        <div className="xl:hidden">
+          <ArtistSidebar
             rankings={{
               global: { rank: artistAllTime?.rank || 0, label: 'TOP 50' },
               kpop: { rank: 1, label: 'LEADER' } // Mock K-pop rank

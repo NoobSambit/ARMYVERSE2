@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuth, DecodedIdToken } from 'firebase-admin/auth'
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { verifyToken, type JWTPayload, type AuthUser } from './jwt'
+import { verifyToken, type AuthUser } from './jwt'
 import { User } from '@/lib/models/User'
 import { connect } from '@/lib/db/mongoose'
 
@@ -120,5 +120,4 @@ export async function getUserFromAuth(authUser: AuthUser) {
     return await User.findOne({ username: authUser.username })
   }
 }
-
 

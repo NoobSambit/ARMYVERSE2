@@ -25,28 +25,43 @@ export type RollOptions = {
   seed?: string
 }
 
+type ActivePool = {
+  slug: string
+  weights: Record<Rarity, number>
+  featured?: { set?: string; members?: string[]; rarityBoost?: { epic?: number; legendary?: number } }
+}
+
+type LeanPhotocard = {
+  _id: any
+  rarity: Rarity
+  set?: string
+  member?: string
+  era?: string
+  publicId: string
+}
+
 export async function getActivePool(): Promise<null | { slug: string; weights: Record<Rarity, number>; featured?: { set?: string; members?: string[]; rarityBoost?: { epic?: number; legendary?: number } } }> {
   const now = new Date()
-  const pool: any = await DropPool.findOne({ active: true, 'window.start': { $lte: now }, 'window.end': { $gte: now } }).lean()
+  const pool = await DropPool.findOne({ active: true, 'window.start': { $lte: now }, 'window.end': { $gte: now } }).lean<ActivePool>()
   if (!pool) return null
   return {
     slug: pool.slug,
-    weights: pool.weights as any,
-    featured: pool.featured as any
+    weights: pool.weights,
+    featured: pool.featured
   }
 }
 
-export async function rollRarityAndCardV2(opts: RollOptions) {
+export async function rollRarityAndCardV2(opts: RollOptions): Promise<{ rarity: Rarity; card: any; poolSlug: string }> {
   const { userId, poolSlug, ticketMinRarity, featuredConstraint } = opts
 
   let state = await UserGameState.findOne({ userId })
   if (!state) state = await UserGameState.create({ userId })
 
-  const activePool: any = poolSlug
-    ? await DropPool.findOne({ slug: poolSlug }).lean()
-    : await DropPool.findOne({ active: true, 'window.start': { $lte: new Date() }, 'window.end': { $gte: new Date() } }).lean()
+  const activePool: ActivePool | null = poolSlug
+    ? await DropPool.findOne({ slug: poolSlug }).lean<ActivePool>()
+    : await DropPool.findOne({ active: true, 'window.start': { $lte: new Date() }, 'window.end': { $gte: new Date() } }).lean<ActivePool>()
 
-  const baseWeights: Record<Rarity, number> = activePool ? (activePool.weights as any) : DEFAULT_BASE_RATES
+  const baseWeights: Record<Rarity, number> = activePool ? activePool.weights : DEFAULT_BASE_RATES
   const boosts = activePool?.featured?.rarityBoost || {}
 
   // Apply pity and ticket floor
@@ -83,11 +98,11 @@ export async function rollRarityAndCardV2(opts: RollOptions) {
   await state.save()
 
   // Build card match
-  const match: any = { rarity }
+  const match: Record<string, unknown> = { rarity }
   if (featuredConstraint?.set) match.set = featuredConstraint.set
   if (featuredConstraint?.members && featuredConstraint.members.length) match.member = { $in: featuredConstraint.members }
 
-  const cardAgg = await Photocard.aggregate([
+  const cardAgg = await Photocard.aggregate<LeanPhotocard>([
     { $match: match },
     { $sample: { size: 1 } }
   ])
@@ -127,15 +142,15 @@ function weightedRandom(weights: Record<Rarity, number>): Rarity {
 // --- XP band odds for quiz rewards ---
 export function weightsForXpBand(xp: number): Record<Rarity, number> {
   if (xp < 5) return { common: 0, rare: 0, epic: 0, legendary: 0 }
-  if (xp <= 9) return { common: 100, rare: 0, epic: 0, legendary: 0 }
-  if (xp <= 14) return { common: 80, rare: 20, epic: 0, legendary: 0 }
-  if (xp <= 19) return { common: 20, rare: 60, epic: 20, legendary: 0 }
-  if (xp <= 24) return { common: 10, rare: 50, epic: 35, legendary: 5 }
+  if (xp <= 9) return { common: 60, rare: 30, epic: 10, legendary: 0 }
+  if (xp <= 14) return { common: 40, rare: 45, epic: 15, legendary: 0 }
+  if (xp <= 19) return { common: 20, rare: 45, epic: 30, legendary: 5 }
+  if (xp <= 24) return { common: 10, rare: 35, epic: 40, legendary: 15 }
   // 25–30 (and above) treated as top band
-  return { common: 0, rare: 45, epic: 40, legendary: 15 }
+  return { common: 0, rare: 30, epic: 45, legendary: 25 }
 }
 
-export async function rollQuizRarityAndCardByXp(userId: string, xp: number): Promise<{ rarity: Rarity | null; card: any | null; rarityWeightsUsed: Record<Rarity, number> | null; pityApplied: boolean }>{
+export async function rollQuizRarityAndCardByXp(userId: string, xp: number): Promise<{ rarity: Rarity | null; card: LeanPhotocard | null; rarityWeightsUsed: Record<Rarity, number> | null; pityApplied: boolean }>{
   const weights = weightsForXpBand(xp)
   const total = Object.values(weights).reduce((s, v) => s + v, 0)
   if (total <= 0) {
@@ -173,7 +188,7 @@ export async function rollQuizRarityAndCardByXp(userId: string, xp: number): Pro
   await state.save()
 
   // Sample globally by rarity — no era/set/pool constraints
-  const cardAgg = await Photocard.aggregate([
+  const cardAgg = await Photocard.aggregate<LeanPhotocard>([
     { $match: { rarity } },
     { $sample: { size: 1 } }
   ])
@@ -193,11 +208,9 @@ export async function rollQuizRarityAndCardByXp(userId: string, xp: number): Pro
         anomaly: false,
         // xp field optional; if schema is strict without xp it will be omitted
         xp
-      } as any)
+      } as unknown)
     } catch {}
   }
 
   return { rarity, card, rarityWeightsUsed: weights, pityApplied }
 }
-
-

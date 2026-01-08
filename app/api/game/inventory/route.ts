@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { url as cloudinaryUrl } from '@/lib/cloudinary'
 // Ensure Photocard schema is registered before populate()
@@ -65,5 +65,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
 

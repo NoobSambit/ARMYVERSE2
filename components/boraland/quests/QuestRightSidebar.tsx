@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getBadgeImagePath, getBadgeRarityColors } from '@/lib/utils/badgeImages'
+import { getBadgeImagePath } from '@/lib/utils/badgeImages'
 import BadgeRewardsModal from './BadgeRewardsModal'
 
 type GameState = {
@@ -43,31 +43,31 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
   const fmt = (n: number) => n.toLocaleString()
 
   return (
-    <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
+    <aside className="col-span-12 lg:col-span-3 flex flex-col gap-4 md:gap-6">
       {/* Wallet */}
-      <div className="bora-glass-panel rounded-2xl p-5 border-t-4 border-t-bora-primary relative overflow-hidden">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wide">My Wallet</h3>
-          <span className="material-symbols-outlined text-gray-500 cursor-help text-sm">info</span>
+      <div className="bora-glass-panel rounded-2xl p-4 md:p-5 border-t-2 md:border-t-4 border-t-bora-primary relative overflow-hidden">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <h3 className="text-xs md:text-sm font-bold text-gray-300 uppercase tracking-wide">My Wallet</h3>
+          <span className="material-symbols-outlined text-gray-500 cursor-help text-xs md:text-sm">info</span>
         </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-2 rounded-xl bg-surface-lighter/50 hover:bg-surface-lighter transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
-                <span className="material-symbols-outlined text-sm">auto_awesome</span>
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex items-center justify-between p-2 md:p-3 rounded-xl bg-surface-lighter/50 hover:bg-surface-lighter transition-colors">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
+                <span className="material-symbols-outlined text-xs md:text-sm">auto_awesome</span>
               </div>
-              <span className="text-sm text-gray-300">Dust</span>
+              <span className="text-xs md:text-sm text-gray-300">Dust</span>
             </div>
-            <span className="text-lg font-bold text-white">{fmt(state.dust)}</span>
+            <span className="text-base md:text-lg font-bold text-white">{fmt(state.dust)}</span>
           </div>
-          <div className="flex items-center justify-between p-2 rounded-xl bg-surface-lighter/50 hover:bg-surface-lighter transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                <span className="material-symbols-outlined text-sm">bolt</span>
+          <div className="flex items-center justify-between p-2 md:p-3 rounded-xl bg-surface-lighter/50 hover:bg-surface-lighter transition-colors">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                <span className="material-symbols-outlined text-xs md:text-sm">bolt</span>
               </div>
-              <span className="text-sm text-gray-300">Total XP</span>
+              <span className="text-xs md:text-sm text-gray-300">Total XP</span>
             </div>
-            <span className="text-lg font-bold text-white">{fmt(state.totalXp)}</span>
+            <span className="text-base md:text-lg font-bold text-white">{fmt(state.totalXp)}</span>
           </div>
         </div>
         <div className="mt-4 pt-4 border-t border-white/10 text-center">
@@ -78,10 +78,10 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
       </div>
 
       {/* Potential Rewards */}
-      <div className="bora-glass-panel rounded-2xl p-5 relative overflow-hidden">
+      <div className="bora-glass-panel rounded-2xl p-4 md:p-5 relative overflow-hidden">
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-bora-primary blur-[50px] opacity-20 pointer-events-none"></div>
-        <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wide mb-4">Potential Rewards</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <h3 className="text-xs md:text-sm font-bold text-gray-300 uppercase tracking-wide mb-3 md:mb-4">Potential Rewards</h3>
+        <div className="grid grid-cols-2 gap-2 md:gap-3">
           {/* Photocard Preview */}
           <div className="bg-surface-lighter rounded-xl p-3 flex flex-col items-center justify-center text-center gap-2 border border-white/5 hover:border-bora-primary/50 transition-colors group cursor-pointer">
              {/* Using a placeholder for now as we don't have the image URL in state, only rarity */}
@@ -135,15 +135,14 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
       </div>
 
       {/* Latest Badges */}
-      <div className="bora-glass-panel rounded-2xl p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wide">Latest Badges</h3>
+      <div className="bora-glass-panel rounded-2xl p-4 md:p-5">
+        <div className="flex justify-between items-center mb-3 md:mb-4">
+          <h3 className="text-xs md:text-sm font-bold text-gray-300 uppercase tracking-wide">Latest Badges</h3>
           <Link href="/boraland/achievements" className="text-[10px] text-bora-primary hover:text-white transition-colors">View All</Link>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {state.latestBadges.length > 0 ? (
             state.latestBadges.map((badge, i) => {
-              const colors = getBadgeRarityColors(badge.rarity)
               return (
                 <div key={i} className={`flex-shrink-0 w-12 h-12 rounded-full p-0.5 ${
                     badge.rarity === 'legendary' ? 'bg-gradient-to-tr from-yellow-500 to-orange-600' :

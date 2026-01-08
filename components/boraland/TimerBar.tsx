@@ -13,6 +13,16 @@ export default function TimerBar({ durationMs = 20000, onComplete, onTick }: Tim
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const endTimeRef = useRef<number>(0)
   const announcedRef = useRef(false)
+  const onCompleteRef = useRef(onComplete)
+  const onTickRef = useRef(onTick)
+
+  // Keep latest callbacks without restarting timer
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
+  useEffect(() => {
+    onTickRef.current = onTick
+  }, [onTick])
 
   useEffect(() => {
     // Reset timer state when component mounts
@@ -28,8 +38,8 @@ export default function TimerBar({ durationMs = 20000, onComplete, onTick }: Tim
       setRemaining(newRemaining)
 
       // Call onTick callback if provided
-      if (onTick) {
-        onTick(newRemaining)
+      if (onTickRef.current) {
+        onTickRef.current(newRemaining)
       }
 
       // Check if time is up
@@ -38,7 +48,7 @@ export default function TimerBar({ durationMs = 20000, onComplete, onTick }: Tim
           clearInterval(intervalRef.current)
           intervalRef.current = null
         }
-        onComplete()
+        if (onCompleteRef.current) onCompleteRef.current()
       }
     }, 100) // Update every 100ms for smooth animation
 
@@ -48,7 +58,7 @@ export default function TimerBar({ durationMs = 20000, onComplete, onTick }: Tim
         intervalRef.current = null
       }
     }
-  }, [durationMs, onComplete, onTick])
+  }, [durationMs])
 
   // Calculate progress percentage
   const progress = Math.max(0, Math.min(1, remaining / durationMs))
@@ -63,5 +73,4 @@ export default function TimerBar({ durationMs = 20000, onComplete, onTick }: Tim
     </div>
   )
 }
-
 

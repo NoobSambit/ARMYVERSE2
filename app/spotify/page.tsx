@@ -72,14 +72,14 @@ export default function SpotifyAnalyticsPage() {
 
   if (loading || !data) {
     return (
-      <div className="p-6 md:p-8">
+      <div className="p-4 sm:p-6 md:p-8">
         <SpotifyAnalyticsHeader />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
           {[1, 2, 3, 4].map(i => (
             <StatCard key={i} title="" value={0} loading />
           ))}
         </div>
-        <div className="text-white/50 text-center mt-20">Loading analytics...</div>
+        <div className="text-white/50 text-center mt-12 sm:mt-20 text-sm sm:text-base">Loading analytics...</div>
       </div>
     )
   }
@@ -92,7 +92,7 @@ export default function SpotifyAnalyticsPage() {
   const artistMetadata = (snap.artistMetadata as any) || {}
 
   return (
-    <div className="p-6 md:p-10 space-y-10">
+    <div className="p-4 sm:p-6 md:p-8 lg:p-10 space-y-6 sm:space-y-8 lg:space-y-10">
       {/* Header */}
       <SpotifyAnalyticsHeader
         lastUpdated={snap.dateKey}
@@ -102,7 +102,7 @@ export default function SpotifyAnalyticsPage() {
       />
 
       {/* Top Statistics Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <StatCard
           title="Total Songs"
           value={snap.songs?.length || 0}
@@ -118,26 +118,26 @@ export default function SpotifyAnalyticsPage() {
           variant="blue"
         />
         <StatCard
-          title="Daily 200 Entries"
+          title="Daily 200"
           value={snap.daily200?.length || 0}
           change24h={changes24h?.daily200Entries}
           change7d={changes7d?.daily200Entries}
           variant="pink"
         />
         <StatCard
-          title="Artists Listed"
+          title="Artists"
           value={snap.songsByArtist?.length || 0}
           variant="gray"
         />
       </section>
 
       {/* Songs by Artist */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3">
-           <Disc3 className="w-5 h-5 text-purple-400" />
-           <h2 className="text-xl font-bold text-white">Songs by Artist</h2>
+      <section className="space-y-4 sm:space-y-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+           <Disc3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+           <h2 className="text-lg sm:text-xl font-bold text-white">Songs by Artist</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {snap.songsByArtist?.map((group: any) => (
             <ArtistSongCard
               key={group.artist}
@@ -156,10 +156,10 @@ export default function SpotifyAnalyticsPage() {
       </section>
 
       {/* Global Daily Top 200 */}
-      <section className="space-y-6">
-         <div className="flex items-center gap-3">
-           <TrendingUp className="w-5 h-5 text-purple-400" />
-           <h2 className="text-xl font-bold text-white">Global Daily Top 200</h2>
+      <section className="space-y-4 sm:space-y-6">
+         <div className="flex items-center gap-2 sm:gap-3">
+           <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+           <h2 className="text-lg sm:text-xl font-bold text-white">Global Daily Top 200</h2>
         </div>
         <RankingTable
           title="Global Daily Top 200 (BTS & Members)"
@@ -170,12 +170,12 @@ export default function SpotifyAnalyticsPage() {
       </section>
 
       {/* Bottom Section: Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Most Streamed Artists (All Time) */}
-        <section className="space-y-6">
-           <div className="flex items-center gap-3">
-             <Music className="w-5 h-5 text-purple-400" />
-             <h2 className="text-xl font-bold text-white">Most Streamed Artists (All Time)</h2>
+        <section className="space-y-4 sm:space-y-6">
+           <div className="flex items-center gap-2 sm:gap-3">
+             <Music className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+             <h2 className="text-lg sm:text-xl font-bold text-white">Most Streamed Artists</h2>
           </div>
           <RankingTable
             title="Most Streamed Artists"
@@ -188,10 +188,10 @@ export default function SpotifyAnalyticsPage() {
         </section>
 
         {/* Monthly Listener Rankings */}
-        <section className="space-y-6">
-           <div className="flex items-center gap-3">
-             <Users className="w-5 h-5 text-purple-400" />
-             <h2 className="text-xl font-bold text-white">Monthly Listener Rankings</h2>
+        <section className="space-y-4 sm:space-y-6">
+           <div className="flex items-center gap-2 sm:gap-3">
+             <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+             <h2 className="text-lg sm:text-xl font-bold text-white">Monthly Listeners</h2>
           </div>
           <RankingTable
             title="Monthly Listener Rankings"

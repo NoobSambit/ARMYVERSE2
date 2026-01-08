@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import React, { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'

@@ -119,8 +119,8 @@ User clicks "Start Quiz"
 │    - If no: add to inventory
 │ 9. Award XP (5-20 per question)
 │ 10. Update mastery progress
-│     - Member XP if member question
-│     - Era XP if era question
+│     - Member/Era XP from question metadata (correct answers only)
+│     - OT7 XP only when all 7 members are listed; OT7 requires 7× XP per level
 │ 11. Check mastery milestones
 │ 12. Update quest progress
 │     - Increment quiz quest count

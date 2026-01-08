@@ -1,0 +1,57 @@
+[
+  {
+    "question": "In which year did BTS debut under BigHit?",
+    "choices": ["2011", "2012", "2013", "2014"],
+    "answerIndex": 2,
+    "difficulty": "easy",
+    "tags": ["history"],
+    "members": ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"],
+    "eras": ["School Trilogy"],
+    "locale": "en",
+    "source": "seed"
+  },
+  {
+    "question": "Which title track opened the 'Love Yourself: Tear' era?",
+    "choices": ["DNA", "Fake Love", "Boy With Luv", "Run"],
+    "answerIndex": 1,
+    "difficulty": "medium",
+    "tags": ["discography", "title-track"],
+    "members": ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"],
+    "eras": ["Love Yourself"],
+    "locale": "en",
+    "source": "seed"
+  },
+  {
+    "question": "Which member released the mixtape 'D-2'?",
+    "choices": ["RM", "J-Hope", "Suga", "Jungkook"],
+    "answerIndex": 2,
+    "difficulty": "medium",
+    "tags": ["solo"],
+    "members": ["Suga"],
+    "eras": ["D-2"],
+    "locale": "en",
+    "source": "seed"
+  },
+  {
+    "question": "What is the lead single of the album 'BE'?",
+    "choices": ["Butter", "Black Swan", "Life Goes On", "Permission to Dance"],
+    "answerIndex": 2,
+    "difficulty": "easy",
+    "tags": ["discography"],
+    "members": ["RM", "Jin", "Suga", "J-Hope", "Jimin", "V", "Jungkook"],
+    "eras": ["BE"],
+    "locale": "en",
+    "source": "seed"
+  },
+  {
+    "question": "Which member is known for the catchphrase 'Worldwide Handsome'?",
+    "choices": ["Jimin", "Jin", "V", "RM"],
+    "answerIndex": 1,
+    "difficulty": "easy",
+    "tags": ["members", "variety"],
+    "members": ["Jin"],
+    "eras": ["General"],
+    "locale": "en",
+    "source": "seed"
+  }
+]

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { LeaderboardEntry, ILeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 
 export const runtime = 'nodejs'
@@ -64,5 +64,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
 

@@ -1,5 +1,6 @@
 'use client'
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { getBadgeImagePath, getBadgeRarityColors } from '@/lib/utils/badgeImages'
@@ -122,30 +123,31 @@ export default function BadgeRewardsModal({
   const progressToNext = ((cyclePosition) / 10) * 100
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-      <div className="relative w-full max-w-6xl h-[90vh] flex flex-col bg-[#0F0B1E] border border-[#302249] rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4 bg-black/70 backdrop-blur-md animate-fade-in" onClick={onClose}>
+      <div className="relative w-full max-w-6xl max-h-[95vh] md:h-[90vh] flex flex-col bg-[#0F0B1E] border border-[#302249] rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         {/* Sticky Header */}
         <div className="shrink-0 bg-[#0F0B1E]/95 backdrop-blur-xl z-20 border-b border-[#302249]">
           {/* Top Bar */}
-          <div className="flex items-center justify-between px-6 py-5">
-            <div className="flex flex-col gap-1">
-              <h1 className="text-white text-2xl font-bold tracking-tight">Badge Rewards</h1>
-              <p className="text-gray-400 text-sm">Track your consistency and earn exclusive Boraland items.</p>
+          <div className="flex items-center justify-between px-3 md:px-6 py-3 md:py-5">
+            <div className="flex flex-col gap-0.5 md:gap-1">
+              <h1 className="text-white text-lg md:text-2xl font-bold tracking-tight">Badge Rewards</h1>
+              <p className="text-gray-400 text-xs md:text-sm hidden sm:block">Track your consistency and earn exclusive Boraland items.</p>
             </div>
             <button
               onClick={onClose}
-              className="group p-2 rounded-full hover:bg-white/5 transition-colors text-white/70 hover:text-white"
+              className="group p-2 rounded-full hover:bg-white/20 active:bg-white/30 transition-colors text-white bg-white/10 shrink-0"
+              aria-label="Close modal"
             >
-              <span className="material-symbols-outlined text-2xl">close</span>
+              <span className="material-symbols-outlined text-xl md:text-2xl">close</span>
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="px-6 pb-4">
-            <div className="flex h-12 w-full max-w-md items-center rounded-full bg-[#231b2e] p-1 border border-[#302249]">
+          <div className="px-3 md:px-6 pb-3 md:pb-4">
+            <div className="flex h-10 md:h-12 w-full max-w-md items-center rounded-full bg-[#231b2e] p-0.5 md:p-1 border border-[#302249]">
               <button
                 onClick={() => setActiveTab('daily')}
-                className={`flex h-full grow items-center justify-center rounded-full px-4 text-sm font-semibold transition-all ${
+                className={`flex h-full grow items-center justify-center rounded-full px-3 md:px-4 text-xs md:text-sm font-semibold transition-all ${
                   activeTab === 'daily'
                     ? 'bg-bora-primary shadow-lg text-white'
                     : 'text-gray-400'
@@ -155,7 +157,7 @@ export default function BadgeRewardsModal({
               </button>
               <button
                 onClick={() => setActiveTab('weekly')}
-                className={`flex h-full grow items-center justify-center rounded-full px-4 text-sm font-semibold transition-all ${
+                className={`flex h-full grow items-center justify-center rounded-full px-3 md:px-4 text-xs md:text-sm font-semibold transition-all ${
                   activeTab === 'weekly'
                     ? 'bg-bora-primary shadow-lg text-white'
                     : 'text-gray-400'
@@ -168,8 +170,8 @@ export default function BadgeRewardsModal({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin bg-[#0F0B1E] p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+        <div className="flex-1 overflow-y-auto scrollbar-thin bg-[#0F0B1E] p-3 md:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
             {/* LEFT COLUMN: Badges & Milestones */}
             <div className="lg:col-span-8 flex flex-col gap-8">
               {/* 10-Day Cycle Section */}
@@ -282,9 +284,10 @@ export default function BadgeRewardsModal({
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StreakBadgeCard({
   badge,
-  type
+  type: streakType
 }: {
   badge: {
     code: string
@@ -394,10 +397,11 @@ function StreakBadgeCard({
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function MilestoneBadgeCard({
   milestone,
   currentStreak,
-  type
+  type: streakType
 }: {
   milestone: {
     code: string
@@ -464,7 +468,7 @@ function MilestoneBadgeCard({
           ></div>
         </div>
         <p className="text-[10px] text-gray-400 mt-1 text-right">
-          {currentStreak} / {milestone.streakCount} {type === 'daily' ? 'Days' : 'Weeks'}
+          {currentStreak} / {milestone.streakCount} {streakType === 'daily' ? 'Days' : 'Weeks'}
         </p>
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Search, X, Plus, Music, Check } from 'lucide-react'
+import { Search, X, Music, Check } from 'lucide-react'
 
 interface Track {
   _id?: string

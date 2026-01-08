@@ -1,13 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch } from '@/lib/client/api'
+import BoralandHeader from '@/components/boraland/BoralandHeader'
 import CommandCenter from '@/components/boraland/CommandCenter'
 import QuestsView from '@/components/boraland/QuestsView'
 import QuestRightSidebar from '@/components/boraland/quests/QuestRightSidebar'
+import MobileNav from '@/components/boraland/MobileNav'
+import MobileWalletDrawer from '@/components/boraland/MobileWalletDrawer'
 
 // Type definition for state
 type GameState = {
@@ -31,11 +34,14 @@ export default function Page() {
   const { user } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
+  const warnedRef = useRef(false)
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
 
   useEffect(() => {
-    if (user === null) {
+    if (user === null && !warnedRef.current) {
+      warnedRef.current = true
       showToast('warning', 'Sign in to access quests')
       router.push('/boraland')
     }
@@ -69,32 +75,37 @@ export default function Page() {
   if (!user) return null
 
   return (
-    <div className="bg-[#0F0B1E] text-white min-h-screen flex flex-col transition-colors duration-300 font-sans">
-        {/* Navigation - mimicking the design's nav or assuming global nav handles it. 
-            The design shows a top nav. In Next.js App Router, layout.tsx usually handles top nav. 
-            We'll assume the layout provides the top nav, or we can add a sub-nav here if needed.
-            For now, we just render the main content grid.
-        */}
-        
-        {/* Sub-nav pills (Home, Fangate, Quests, ArmyBattles) from design */}
-        <div className="flex justify-center py-6">
-            <div className="inline-flex bg-surface-dark rounded-full p-1 border border-white/5">
-                <button onClick={() => router.push('/boraland')} className="px-6 py-1.5 rounded-full text-sm text-gray-400 hover:text-white transition-colors">Home</button>
-                <button onClick={() => router.push('/boraland/fangate')} className="px-6 py-1.5 rounded-full text-sm text-gray-400 hover:text-white transition-colors">Fangate</button>
-                <button className="px-6 py-1.5 rounded-full text-sm text-white bg-bora-primary/20 border border-bora-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.3)]">Quests</button>
-                <button onClick={() => router.push('/boraland/battles')} className="px-6 py-1.5 rounded-full text-sm text-gray-400 hover:text-white transition-colors">ArmyBattles</button>
-            </div>
+    <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
+        {/* Background Effects */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+            <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-bora-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
         </div>
 
-        <main className="flex-1 max-w-[1600px] w-full mx-auto px-6 pb-12 grid grid-cols-12 gap-6">
-            <div className="col-span-12 lg:col-span-2">
-                <CommandCenter className="lg:w-full" />
+        <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
+          setActiveTab(tab)
+          if (tab === 'home') router.push('/boraland')
+          else if (tab === 'fangate') router.push('/boraland')
+          else if (tab === 'armybattles') router.push('/boraland')
+        }} />
+
+        <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
+            <div className="hidden lg:block w-64 shrink-0 overflow-y-auto scrollbar-hide">
+                <CommandCenter />
             </div>
             
-            <QuestsView dailyStreak={gameState?.streaks.daily} />
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+                <QuestsView dailyStreak={gameState?.streaks.daily} />
+            </div>
             
-            <QuestRightSidebar state={gameState} />
+            <div className="hidden lg:block w-80 shrink-0 overflow-y-auto scrollbar-hide">
+                <QuestRightSidebar state={gameState} />
+            </div>
         </main>
+        
+        <MobileWalletDrawer state={gameState} />
+        <MobileNav />
     </div>
   )
 }

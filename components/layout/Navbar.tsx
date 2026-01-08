@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, User, LogOut, Search, Bell, Sparkles } from 'lucide-react'
+import { Menu, X, Sparkles } from 'lucide-react'
 import { navItems } from '@/components/layout/nav-data'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from '@/lib/firebase/auth'
@@ -16,7 +16,6 @@ export default function Navbar() {
   const { user, isAuthenticated } = useAuth()
   const [profileName, setProfileName] = useState<string | null>(null)
   
-
   // Load profile name with immediate seed to prevent flicker
   useEffect(() => {
     if (!user) {
@@ -72,23 +71,23 @@ export default function Navbar() {
   const isActive = (path: string) => pathname === path
 
   return (
-    <div className="sticky top-0 z-50 w-full glass-panel border-b border-glass-border">
-      <header className="layout-container flex h-16 items-center justify-between px-6 lg:px-10 max-w-[1400px] mx-auto">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative size-8 flex items-center justify-center">
+    <div className="sticky top-0 z-50 w-full glass-panel border-b border-glass-border bg-black/80 md:bg-black/60">
+      <header className="layout-container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-6 lg:px-10 max-w-[1400px] mx-auto">
+        <div className="flex items-center gap-4 sm:gap-8 flex-1 min-w-0">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0">
+            <div className="relative size-7 sm:size-8 flex items-center justify-center">
               <div className="absolute inset-0 bg-primary rounded-xl blur-md opacity-50 group-hover:opacity-100 transition-opacity"></div>
-              <Sparkles className="relative text-white z-10 w-5 h-5" />
+              <Sparkles className="relative text-white z-10 w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <h2 className="text-white text-xl font-bold tracking-tight group-hover:text-primary transition-colors">ARMYVERSE</h2>
+            <h2 className="text-white text-base sm:text-xl font-bold tracking-tight group-hover:text-primary transition-colors">ARMYVERSE</h2>
           </Link>
           
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-8 overflow-x-auto scrollbar-hide">
             {navItems.map(({ path, label }) => (
               <Link
                 key={path}
                 href={path}
-                className={`text-sm font-medium transition-colors ${
+                className={`text-xs lg:text-sm font-medium transition-colors whitespace-nowrap ${
                   isActive(path) ? 'text-white' : 'text-white/60 hover:text-white'
                 }`}
               >
@@ -98,23 +97,23 @@ export default function Navbar() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           {/* Auth / Profile */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2">
                <ProfileModal trigger={
                   <div 
-                    className="size-10 rounded-full bg-cover bg-center border-2 border-primary/30 cursor-pointer hover:border-primary transition-colors bg-gray-700 flex items-center justify-center overflow-hidden" 
+                    className="size-8 sm:size-10 rounded-full bg-cover bg-center border-2 border-primary/30 cursor-pointer hover:border-primary transition-colors bg-gray-700 flex items-center justify-center overflow-hidden" 
                     style={{ backgroundImage: user.photoURL ? `url('${user.photoURL}')` : undefined }}
                   >
-                    {!user.photoURL && <span className="text-white font-bold">{profileName?.charAt(0) || 'A'}</span>}
+                    {!user.photoURL && <span className="text-white text-xs sm:text-base font-bold">{profileName?.charAt(0) || 'A'}</span>}
                   </div>
                } />
             </div>
           ) : (
              <Link
                 href="/auth/signin"
-                className="h-10 px-4 rounded-full bg-primary hover:bg-primary-dark text-white text-sm font-bold flex items-center transition-colors"
+                className="h-8 sm:h-10 px-3 sm:px-4 rounded-full bg-primary hover:bg-primary-dark text-white text-xs sm:text-sm font-bold flex items-center transition-colors"
               >
                 Sign In
               </Link>
@@ -124,9 +123,9 @@ export default function Navbar() {
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="size-10 flex items-center justify-center text-white"
+              className="size-8 sm:size-10 flex items-center justify-center text-white"
             >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
           </div>
         </div>
@@ -134,13 +133,13 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden glass-panel border-t border-glass-border absolute w-full left-0 top-16 p-4 flex flex-col gap-4">
+        <div className="md:hidden glass-panel border-t border-glass-border absolute w-full left-0 top-14 sm:top-16 p-3 sm:p-4 flex flex-col gap-2 sm:gap-4 max-h-[calc(100vh-3.5rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto bg-black/95 backdrop-blur-xl">
           {navItems.map(({ path, label }) => (
             <Link
               key={path}
               href={path}
               onClick={() => setIsOpen(false)}
-              className={`text-sm font-medium p-2 rounded-xl transition-colors ${
+              className={`text-xs sm:text-sm font-medium p-2 sm:p-2 rounded-xl transition-colors ${
                 isActive(path) ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -150,7 +149,7 @@ export default function Navbar() {
            {isAuthenticated && user && (
               <button
                 onClick={handleSignOut}
-                className="text-sm font-medium p-2 rounded-xl text-red-400 hover:bg-white/5 text-left"
+                className="text-xs sm:text-sm font-medium p-2 rounded-xl text-red-400 hover:bg-white/5 text-left"
               >
                 Sign Out
               </button>

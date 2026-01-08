@@ -121,18 +121,18 @@ Each card:
 - Chevron indicator on hover
 
 **3. Rarity System Section**
-Four rarity tiers displayed:
+Four rarity tiers displayed with boosted quiz odds (25+ XP band shown):
 
 | Rarity | Drop Rate | Icon | Color |
 |--------|-----------|------|-------|
-| Legendary | 1% | 👑 Crown | Amber/Gold |
-| Epic | 7% | 💎 Gem | Purple/Fuchsia |
-| Rare | 22% | ⭐ Star | Blue/Cyan |
-| Common | 70% | 💜 Heart | Slate |
+| Legendary | 25% | 👑 Crown | Amber/Gold |
+| Epic | 45% | 💎 Gem | Purple/Fuchsia |
+| Rare | 30% | ⭐ Star | Blue/Cyan |
+| Common | 0% | 💜 Heart | Slate |
 
 **Performance-Based Drops Callout:**
-- Explains how quiz scores affect drop rates
-- Perfect score = higher legendary rate
+- Explains XP-based bands and how higher XP raises rare/epic/legendary odds
+- Shows boosted odds milestones (e.g., 20+ XP and 25+ XP bands)
 - Visual indicator of score impact
 
 **4. Rewards & Progression Section**

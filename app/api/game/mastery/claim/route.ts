@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { MasteryProgress } from '@/lib/models/MasteryProgress'
-import { rollRarityAndCardV2 } from '@/lib/game/dropTable'
-import { InventoryItem } from '@/lib/models/InventoryItem'
-import { url as cloudinaryUrl } from '@/lib/cloudinary'
+import { MasteryRewardLedger } from '@/lib/models/MasteryRewardLedger'
+import { getMasteryDefinitions, claimableMilestones as computeClaimable, MASTERY_MILESTONES, formatTrack, dividerFor } from '@/lib/game/mastery'
+import { Question } from '@/lib/models/Question'
+import { awardBalances } from '@/lib/game/rewards'
 
 export const runtime = 'nodejs'
 
 /**
  * POST /api/game/mastery/claim
- * Body: { kind: 'member'|'era', key: string }
+ * Body: { kind: 'member'|'era', key: string, milestone?: number }
  */
-const Schema = z.object({ kind: z.enum(['member', 'era']), key: z.string().min(1) })
+const Schema = z.object({ kind: z.enum(['member', 'era']), key: z.string().min(1), milestone: z.number().int().positive().optional() })
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,33 +28,56 @@ export async function POST(request: NextRequest) {
 
     const prog = await MasteryProgress.findOne({ userId: user.uid, kind: input.data.kind, key: input.data.key })
     if (!prog) return NextResponse.json({ error: 'Not eligible' }, { status: 400 })
-    const level = Math.floor((prog.xp || 0) / 100)
-    // Milestones at 5/10/20 etc. For simplicity, allow one claim per milestone level stored in 'level' field
-    if ((prog.level || 0) >= level) return NextResponse.json({ error: 'Already claimed' }, { status: 409 })
 
-    // Grant themed guaranteed pull
-    const roll = await rollRarityAndCardV2({ userId: user.uid, ticketMinRarity: 'rare', featuredConstraint: input.data.kind === 'member' ? { members: [input.data.key] } : { set: input.data.key } })
-    if (!roll.card) return NextResponse.json({ error: 'No cards available' }, { status: 500 })
+    const baseDefs = getMasteryDefinitions()
+    const dynamicMembers = await Question.distinct('members', { members: { $exists: true, $ne: [] } })
+    const dynamicEras = await Question.distinct('eras', { eras: { $exists: true, $ne: [] } })
+    const memberKeys = Array.from(new Set([...baseDefs.members.map(m => m.key), ...dynamicMembers.filter(Boolean) as string[]]))
+    const eraKeys = Array.from(new Set([...dynamicEras.filter(Boolean) as string[]]))
+    const validKeys = input.data.kind === 'member' ? memberKeys : eraKeys
+    if (!validKeys.includes(input.data.key) && !prog) {
+      return NextResponse.json({ error: 'Unknown mastery key' }, { status: 400 })
+    }
 
-    await InventoryItem.create({ userId: user.uid, cardId: roll.card._id, acquiredAt: new Date(), source: { type: 'quiz' } })
-    prog.level = level
-    await prog.save()
+    const divider = dividerFor(input.data.kind, input.data.key)
+    const claimable = computeClaimable(prog.xp || 0, prog.claimedMilestones || [], prog.level || 0, divider)
+    if (!claimable.length) return NextResponse.json({ error: 'Nothing to claim' }, { status: 400 })
 
+    const milestone = input.data.milestone ?? claimable[0]
+    if (!claimable.includes(milestone)) return NextResponse.json({ error: 'Already claimed' }, { status: 409 })
+    const reward = MASTERY_MILESTONES.find(m => m.level === milestone)
+    if (!reward) return NextResponse.json({ error: 'Invalid milestone' }, { status: 400 })
+
+    // Update mastery progress atomically
+    await MasteryProgress.updateOne(
+      { userId: user.uid, kind: input.data.kind, key: input.data.key },
+      { $addToSet: { claimedMilestones: milestone }, $set: { level: milestone, lastUpdatedAt: new Date() } }
+    )
+
+    const balances = await awardBalances(user.uid, { dust: reward.rewards.dust, xp: reward.rewards.xp })
+
+    // Ledger for audit (ignore duplicates)
+    try {
+      await MasteryRewardLedger.create({
+        userId: user.uid,
+        kind: input.data.kind,
+        key: input.data.key,
+        milestone,
+        rewards: reward.rewards
+      })
+    } catch (err) {
+      // noop on duplicate
+    }
+
+    const updated = await MasteryProgress.findOne({ userId: user.uid, kind: input.data.kind, key: input.data.key }).lean<any>()
     return NextResponse.json({
-      reward: {
-        cardId: roll.card._id.toString(),
-        rarity: roll.rarity,
-        member: roll.card.member,
-        era: roll.card.era,
-        set: roll.card.set,
-        publicId: roll.card.publicId,
-        imageUrl: cloudinaryUrl(roll.card.publicId)
-      }
+      milestone,
+      rewards: reward.rewards,
+      balances,
+      track: updated ? formatTrack(input.data.kind, input.data.key, updated.xp || 0, updated.claimedMilestones || [], updated.level || 0) : null
     })
   } catch (error) {
     console.error('Mastery claim error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-

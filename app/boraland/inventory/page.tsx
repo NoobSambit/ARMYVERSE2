@@ -9,6 +9,7 @@ import BoralandHeader from '@/components/boraland/BoralandHeader'
 import CommandCenter from '@/components/boraland/CommandCenter'
 import InventoryGrid from '@/components/boraland/InventoryGrid'
 import BadgesGrid from '@/components/boraland/BadgesGrid'
+import MobileNav from '@/components/boraland/MobileNav'
 
 // Types aligned with API responses
 type ItemCard = { member: string; era: string; set: string; rarity: 'common'|'rare'|'epic'|'legendary' | null | undefined; publicId: string; imageUrl: string }
@@ -153,7 +154,7 @@ export default function Page() {
   if (!user) return null
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
+    <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
         {/* Background Effects */}
         <div className="fixed inset-0 z-0 pointer-events-none">
             <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
@@ -168,35 +169,38 @@ export default function Page() {
           else if (tab === 'armybattles') router.push('/boraland')
         }} />
 
-        <main className="flex-grow z-10 p-4 lg:p-6 flex flex-col lg:flex-row gap-6 h-[calc(100vh-4rem)]">
-            <CommandCenter />
+        <main className="flex-grow z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
+            <div className="hidden lg:block w-64 shrink-0">
+                <CommandCenter />
+            </div>
 
-            <div className="flex-grow flex flex-col gap-4">
+            <div className="flex-grow flex flex-col gap-3 md:gap-4 overflow-hidden">
               {/* View Toggle */}
-              <div className="flex items-center gap-2 bora-glass-panel rounded-xl p-1 w-fit">
+              <div className="flex items-center gap-1 md:gap-2 bora-glass-panel rounded-lg md:rounded-xl p-0.5 md:p-1 w-fit shrink-0">
                 <button
                   onClick={() => setView('cards')}
-                  className={`px-6 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
                     view === 'cards'
                       ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">style</span>
-                    Photocards
+                  <span className="flex items-center gap-1 md:gap-2">
+                    <span className="material-symbols-outlined text-sm md:text-base">style</span>
+                    <span className="hidden sm:inline">Photocards</span>
+                    <span className="sm:hidden">Cards</span>
                   </span>
                 </button>
                 <button
                   onClick={() => setView('badges')}
-                  className={`px-6 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
                     view === 'badges'
                       ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">military_tech</span>
+                  <span className="flex items-center gap-1 md:gap-2">
+                    <span className="material-symbols-outlined text-sm md:text-base">military_tech</span>
                     Badges
                   </span>
                 </button>
@@ -224,6 +228,8 @@ export default function Page() {
               )}
             </div>
         </main>
+        
+        <MobileNav />
     </div>
   )
 }

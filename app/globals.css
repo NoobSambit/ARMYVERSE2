@@ -119,6 +119,36 @@
     @apply bg-gradient-to-r from-purple-600 to-purple-500 border-purple-400 text-white shadow-md;
   }
 
+  /* Bottom drawer slide-up animation */
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  /* Fade in animation for modals */
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+
   /* BTS-themed gradient animations */
   .animate-gradient {
     background-size: 200% 200%;
@@ -1348,4 +1378,35 @@ select {
 select option {
     background-color: rgba(20, 20, 25, 0.98) !important;
     color: rgb(209, 213, 219) !important;
+}
+
+/* Boraland Bento Grid Styles */
+.bento-card {
+    backdrop-filter: blur(12px);
+    background: rgba(24, 24, 24, 0.5);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.bento-card:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px -10px rgba(139, 92, 246, 0.25);
+    background: rgba(24, 24, 24, 0.7);
+}
+
+/* Boraland carousel animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
 }

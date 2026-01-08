@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unused-vars, react/no-unescaped-entities */
 
 import React, { useState, useEffect } from 'react'
 import {
@@ -571,52 +572,52 @@ function AIPlaylistContent() {
     <div className="min-h-screen relative overflow-x-hidden selection:bg-purple-500 selection:text-white text-white" style={{ backgroundColor: '#050505' }}>
       <div className="noise-bg"></div>
       {/* Aurora blobs */}
-      <div className="aurora-blob bg-purple-900 w-[500px] h-[500px] top-[-100px] left-[-100px]"></div>
-      <div className="aurora-blob bg-blue-900 w-[600px] h-[600px] bottom-[-100px] right-[-100px] animation-delay-2000"></div>
-      <div className="aurora-blob bg-pink-900 w-[300px] h-[300px] top-[40%] left-[50%] transform -translate-x-1/2 opacity-20"></div>
+      <div className="aurora-blob bg-purple-900 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] top-[-100px] left-[-100px]"></div>
+      <div className="aurora-blob bg-blue-900 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bottom-[-100px] right-[-100px] animation-delay-2000"></div>
+      <div className="aurora-blob bg-pink-900 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] top-[40%] left-[50%] transform -translate-x-1/2 opacity-20"></div>
 
       {/* Main Content */}
-      <main className="relative z-10 pt-24 pb-20 px-4 md:px-8 max-w-[1600px] mx-auto">
-        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <main className="relative z-10 pt-16 sm:pt-20 sm:pt-24 pb-12 sm:pb-16 pb-20 px-3 sm:px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto">
+        <header className="mb-4 sm:mb-6 md:mb-8 flex flex-col gap-3 sm:gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-gray-400">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-1 sm:mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-gray-400">
               AI Playlist Architect
             </h1>
-            <p className="text-gray-400 text-sm md:text-base max-w-2xl">
+            <p className="text-gray-400 text-xs sm:text-sm md:text-base max-w-2xl">
               Craft the perfect soundscape using Galaxy AI. Mix eras, moods, and members for your ultimate ARMY experience.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={() => setShowPersonalityQuiz(true)}
-              className="px-4 py-2 rounded-2xl glass-panel text-sm font-medium text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl glass-panel text-xs sm:text-sm font-medium text-white hover:bg-white/10 transition-colors flex items-center gap-1.5 sm:gap-2"
             >
-              <Lightbulb className="text-lg w-5 h-5" />
+              <Lightbulb className="text-base sm:text-lg w-4 sm:w-5 h-4 sm:h-5" />
               Take Personality Quiz
             </button>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-6 auto-rows-min gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 items-start">
+          <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-6 auto-rows-min gap-2 sm:gap-4">
             {/* Core Vibe & Atmosphere */}
-            <div className="bento-cell md:col-span-6 glass-panel rounded-3xl p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Sparkles className="text-purple-500 w-32 h-32" />
+            <div className="bento-cell md:col-span-6 glass-panel rounded-3xl p-3 sm:p-4 md:p-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Sparkles className="text-purple-500 w-16 sm:w-24 md:w-32 h-16 sm:h-24 md:h-32" />
               </div>
               <div className="relative z-10">
-                <div className="flex justify-between items-start mb-4">
-                  <label className="text-xs font-bold tracking-widest text-purple-300 uppercase">Core Vibe & Atmosphere</label>
+                <div className="flex justify-between items-start mb-2 sm:mb-4">
+                  <label className="text-[10px] sm:text-xs font-bold tracking-widest text-purple-300 uppercase">Core Vibe & Atmosphere</label>
                   <button
                     onClick={getAIInspiration}
-                    className="text-xs flex items-center gap-1 text-purple-400 hover:text-white transition-colors"
+                    className="text-[10px] sm:text-xs flex items-center gap-1 text-purple-400 hover:text-white transition-colors"
                   >
-                    <Lightbulb className="text-sm w-4 h-4" /> AI Inspiration
+                    <Lightbulb className="w-3 sm:w-4 h-3 sm:h-4" /> AI Inspiration
                   </button>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-4">
                   <input
-                    className="glass-input w-full px-4 py-3 rounded-2xl text-lg font-medium placeholder-gray-500 text-white"
+                    className="glass-input w-full px-3 sm:px-4 py-2 sm:py-3 rounded-2xl text-base sm:text-lg font-medium placeholder-gray-500 text-white text-sm"
                     placeholder="Playlist Name (e.g., Late Night Seoul Drive)"
                     type="text"
                     value={playlistName}
@@ -624,7 +625,7 @@ function AIPlaylistContent() {
                   />
                   <div className="relative">
                     <textarea
-                      className="glass-input w-full px-4 py-3 rounded-2xl resize-none text-sm placeholder-gray-500 text-white"
+                      className="glass-input w-full px-3 sm:px-4 py-2 sm:py-3 rounded-2xl resize-none text-xs sm:text-sm placeholder-gray-500 text-white"
                       placeholder="Describe the vibe... 'Comforting songs for a rainy day with a focus on vocal line ballads...'"
                       rows={2}
                       value={prompt}
@@ -632,25 +633,25 @@ function AIPlaylistContent() {
                     ></textarea>
                     <button
                       onClick={getAIInspiration}
-                      className="absolute right-3 bottom-3 p-1.5 bg-purple-600 rounded-xl hover:bg-purple-500 transition-colors shadow-lg shadow-purple-900/50"
+                      className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 p-1 sm:p-1.5 bg-purple-600 rounded-xl hover:bg-purple-500 transition-colors shadow-lg shadow-purple-900/50"
                     >
-                      <Wand2 className="text-sm text-white w-4 h-4" />
+                      <Wand2 className="text-xs sm:text-sm text-white w-3 sm:w-4 h-3 sm:h-4" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-xs text-gray-500 py-1">Quick Starts:</span>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    <span className="text-[10px] sm:text-xs text-gray-500 py-1">Quick Starts:</span>
                     {QUICK_STARTS.map(qs => (
                       <button
                         key={qs}
                         onClick={() => applyQuickStart(qs)}
-                        className="px-3 py-1 rounded-xl border border-white/10 text-xs text-gray-300 hover:text-white hover:bg-white/10 transition-colors hover:border-purple-400"
+                        className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-xl border border-white/10 text-[10px] sm:text-xs text-gray-300 hover:text-white hover:bg-white/10 transition-colors hover:border-purple-400"
                       >
                         {qs}
                       </button>
                     ))}
                   </div>
-                  <div className="pt-2">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  <div className="pt-1.5 sm:pt-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1 sm:gap-2">
                       {MOOD_OPTIONS.map(mood => {
                          const isSelected = selectedMoods.includes(mood.id)
                          const colorMap: Record<string, string> = {
@@ -666,11 +667,11 @@ function AIPlaylistContent() {
                           <button
                             key={mood.id}
                             onClick={() => toggleMood(mood.id)}
-                            className={`h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-${mood.color}-600/20 hover:border-${mood.color}-500 text-xs font-medium transition-all flex items-center justify-center gap-1 group/pill ${
+                            className={`h-8 sm:h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-${mood.color}-600/20 hover:border-${mood.color}-500 text-[10px] sm:text-xs font-medium transition-all flex items-center justify-center gap-0.5 sm:gap-1 group/pill ${
                               isSelected ? `bg-${mood.color}-900/40 border-${mood.color}-500/50 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]` : 'text-gray-300 hover:text-white'
                             }`}
                           >
-                            <span className={`w-2 h-2 rounded-full ${colorMap[mood.color]} group-hover/pill:animate-pulse`}></span> {mood.label}
+                            <span className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${colorMap[mood.color]} group-hover/pill:animate-pulse`}></span> {mood.label}
                           </button>
                         )
                       })}
@@ -681,24 +682,24 @@ function AIPlaylistContent() {
             </div>
 
             {/* Members & Eras */}
-            <div className="bento-cell md:col-span-3 glass-panel rounded-3xl p-5 flex flex-col gap-4">
+            <div className="bento-cell md:col-span-3 glass-panel rounded-3xl p-3 sm:p-5 flex flex-col gap-2 sm:gap-4">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Members & Eras</label>
-                <Users className="text-gray-600 text-lg w-5 h-5" />
+                <label className="text-[10px] sm:text-xs font-bold tracking-widest text-gray-400 uppercase">Members & Eras</label>
+                <Users className="text-gray-600 text-base sm:text-lg w-4 sm:w-5 h-4 sm:h-5" />
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {MEMBER_OPTIONS.map(member => {
                    const isSelected = selectedMembers.includes(member.value)
                    return (
                     <button
                       key={member.value}
                       onClick={() => toggleMember(member.value)}
-                      className={`flex-shrink-0 flex flex-col items-center gap-1 group ${!isSelected && member.value !== 'BTS' ? 'opacity-50 hover:opacity-100 transition-opacity' : ''}`}
+                      className={`flex-shrink-0 flex flex-col items-center gap-0.5 sm:gap-1 group ${!isSelected && member.value !== 'BTS' ? 'opacity-50 hover:opacity-100 transition-opacity' : ''}`}
                     >
-                      <div className={`w-10 h-10 rounded-full p-[2px] ${isSelected ? 'bg-gradient-to-tr from-purple-500 to-white' : 'bg-white/10'}`}>
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full p-[1.5px] sm:p-[2px] ${isSelected ? 'bg-gradient-to-tr from-purple-500 to-white' : 'bg-white/10'}`}>
                         <img alt={member.name} className="rounded-full w-full h-full object-cover border-2 border-black" src={member.image} />
                       </div>
-                      <span className={`text-[10px] ${isSelected ? 'text-purple-400' : 'text-gray-500'} group-hover:text-purple-400`}>
+                      <span className={`text-[9px] sm:text-[10px] ${isSelected ? 'text-purple-400' : 'text-gray-500'} group-hover:text-purple-400`}>
                         {member.name === 'BTS (OT7)' ? 'OT7' : member.name}
                       </span>
                     </button>
@@ -707,7 +708,7 @@ function AIPlaylistContent() {
               </div>
               <div className="relative">
                 <select
-                  className="era-select w-full bg-black/30 border border-white/5 rounded-2xl px-3 py-2 text-sm text-gray-300 focus:ring-0 focus:border-white/10 outline-none appearance-none cursor-pointer transition-all"
+                  className="era-select w-full bg-black/30 border border-white/5 rounded-lg sm:rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-sm text-gray-300 focus:ring-0 focus:border-white/10 outline-none appearance-none cursor-pointer transition-all"
                   value={selectedEra}
                   onChange={(e) => setSelectedEra(e.target.value)}
                 >
@@ -715,17 +716,17 @@ function AIPlaylistContent() {
                     <option key={era.value} value={era.value} className="bg-[#141419] text-gray-300">{era.label}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-2.5 text-gray-500 text-lg pointer-events-none w-4 h-4" />
+                <ChevronDown className="absolute right-2.5 sm:right-3 top-1.5 sm:top-2.5 text-gray-500 text-base sm:text-lg pointer-events-none w-3.5 sm:w-4 h-3.5 sm:h-4" />
               </div>
             </div>
 
             {/* Format */}
-            <div className="bento-cell md:col-span-3 glass-panel rounded-3xl p-5 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Format</label>
-                <span className="text-xs text-purple-400 font-mono">{estimatedDuration()}</span>
+            <div className="bento-cell md:col-span-3 glass-panel rounded-3xl p-3 sm:p-5 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-2 sm:mb-3">
+                <label className="text-[10px] sm:text-xs font-bold tracking-widest text-gray-400 uppercase">Format</label>
+                <span className="text-[10px] sm:text-xs text-purple-400 font-mono">{estimatedDuration()}</span>
               </div>
-              <div className="mb-4">
+              <div className="mb-2 sm:mb-4">
                 <input
                   className="w-full h-1 bg-white/10 rounded-full appearance-none"
                   max="50"
@@ -734,18 +735,18 @@ function AIPlaylistContent() {
                   value={playlistLength}
                   onChange={(e) => setPlaylistLength(parseInt(e.target.value))}
                 />
-                <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                <div className="flex justify-between text-[9px] sm:text-[10px] text-gray-500 mt-1">
                   <span>10</span>
                   <span>Length</span>
                   <span>50</span>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {FORMAT_OPTIONS.map(fmt => (
                   <button
                     key={fmt.value}
                     onClick={() => setFormat(fmt.value)}
-                    className={`py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                    className={`py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-medium border transition-all ${
                       format === fmt.value
                         ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20'
                         : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border-transparent'
@@ -976,56 +977,56 @@ function AIPlaylistContent() {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-4 space-y-6 sticky top-24 h-fit">
-            <div className="glass-panel rounded-3xl p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-purple-500 blur-[60px] opacity-30"></div>
+          <div className="lg:col-span-4 space-y-4 sm:space-y-6 sticky top-16 sm:top-24 h-fit">
+            <div className="glass-panel rounded-3xl p-3 sm:p-4 md:p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-6 sm:-mt-10 -mr-6 sm:-mr-10 w-20 sm:w-32 h-20 sm:h-32 bg-purple-500 blur-[40px sm:blur-[60px]] opacity-30"></div>
               <button
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold text-lg shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] hover:scale-[1.02] transition-all flex items-center justify-center gap-2 mb-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold text-base sm:text-lg shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 group disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 onClick={generatePlaylist}
                 disabled={isGenerating || !prompt.trim()}
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="animate-spin w-5 h-5" /> GENERATING...
+                    <Loader2 className="animate-spin w-4 sm:w-5 h-4 sm:h-5" /> GENERATING...
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="group-hover:rotate-180 transition-transform duration-500 w-5 h-5" />
+                    <RefreshCw className="group-hover:rotate-180 transition-transform duration-500 w-4 sm:w-5 h-4 sm:h-5" />
                     GENERATE PLAYLIST
                   </>
                 )}
               </button>
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <button
                   onClick={surpriseMe}
-                  className="py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium border border-white/10 transition-colors flex items-center justify-center gap-2 text-gray-300 hover:text-white"
+                  className="py-2 sm:py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] sm:text-xs font-medium border border-white/10 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-gray-300 hover:text-white"
                 >
-                  <Dices className="text-sm w-4 h-4" /> Surprise Me
+                  <Dices className="text-xs sm:text-sm w-3 sm:w-4 h-3 sm:h-4" /> Surprise Me
                 </button>
                 <button
                   onClick={() => setShowCompare(!showCompare)}
                   disabled={playlist.length === 0}
-                  className="py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium border border-white/10 transition-colors flex items-center justify-center gap-2 text-gray-300 hover:text-white disabled:opacity-50"
+                  className="py-2 sm:py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] sm:text-xs font-medium border border-white/10 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-gray-300 hover:text-white disabled:opacity-50"
                 >
-                  <ArrowLeftRight className="text-sm w-4 h-4" /> Compare
+                  <ArrowLeftRight className="text-xs sm:text-sm w-3 sm:w-4 h-3 sm:h-4" /> Compare
                 </button>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-white/5">
+              <div className="flex justify-between items-center pt-1.5 sm:pt-2 border-t border-white/5">
                 <div className="relative">
                   <button
                     onClick={() => setShowLoadConfigDropdown(!showLoadConfigDropdown)}
-                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+                    className="text-[10px] sm:text-xs text-gray-400 hover:text-white flex items-center gap-1"
                   >
-                    <Download className="text-sm w-4 h-4" /> Load Config
+                    <Download className="text-xs sm:text-sm w-3 sm:w-4 h-3 sm:h-4" /> Load Config
                   </button>
 
                   {showLoadConfigDropdown && savedConfigs.length > 0 && (
-                    <div className="absolute bottom-full left-0 mb-2 glass-panel rounded-2xl border border-white/10 overflow-hidden z-20 shadow-xl min-w-[200px]">
+                    <div className="absolute bottom-full left-0 mb-2 glass-panel rounded-lg sm:rounded-2xl border border-white/10 overflow-hidden z-20 shadow-xl min-w-[160px] sm:min-w-[200px]">
                       {savedConfigs.map((config, idx) => (
                         <button
                           key={idx}
                           onClick={() => loadConfiguration(config)}
-                          className="w-full px-4 py-2 text-left hover:bg-white/10 transition-colors text-xs text-gray-300 hover:text-white"
+                          className="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-left hover:bg-white/10 transition-colors text-[10px] sm:text-xs text-gray-300 hover:text-white"
                         >
                           {config.name}
                         </button>
@@ -1035,36 +1036,36 @@ function AIPlaylistContent() {
                 </div>
                 <button
                   onClick={() => setShowSaveConfigModal(true)}
-                  className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+                  className="text-[10px] sm:text-xs text-gray-400 hover:text-white flex items-center gap-1"
                 >
-                  <Save className="text-sm w-4 h-4" /> Save Config
+                  <Save className="text-xs sm:text-sm w-3 sm:w-4 h-3 sm:h-4" /> Save Config
                 </button>
               </div>
             </div>
 
-            <div className="glass-panel rounded-3xl p-1 backdrop-blur-2xl border-white/10">
-              <div className="rounded-2xl bg-black/40 p-5">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Live Preview</span>
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+            <div className="glass-panel rounded-3xl p-0.5 sm:p-1 backdrop-blur-2xl border-white/10">
+              <div className="rounded-2xl bg-black/40 p-3 sm:p-4 md:p-5">
+                <div className="flex justify-between items-start mb-2 sm:mb-4">
+                  <span className="text-[9px] sm:text-[10px] font-bold uppercase text-gray-500 tracking-wider">Live Preview</span>
+                  <div className="flex gap-0.5 sm:gap-1">
+                    <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-red-500"></span>
+                    <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-yellow-500"></span>
+                    <span className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-green-500"></span>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-xl bg-gray-800 relative overflow-hidden group cursor-pointer">
+                <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-4">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-gray-800 relative overflow-hidden group cursor-pointer">
                     <img className="w-full h-full object-cover opacity-80 group-hover:opacity-40 transition-opacity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBQABqtwB07IaA_TTtCVTQGwZ7kSsLfKKpqiEVp1Dud_CjbbV5iBkN89bbdOURJMiT02Nvo2YzYYc_yyJ3hOVopZYRNvpfm-KNJeW3POIgFqM37pU1AFAcovoiJvLIgAFTtmtmDTGHL3896vqLtWZUS4-WRDmZGehzRBM4jlyfuEZdfLfFu5nr02mNX4rNqV6TgElIXtkSrAq4_ZeoJWhw08j2GR8waNP6J7xeMKJONLx8lMgAdpyvbKQcPH-DRKgrDk4DodqiVTM" />
-                    <PlayCircle className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 group-hover:opacity-100 transition-opacity text-xl w-6 h-6" />
+                    <PlayCircle className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 group-hover:opacity-100 transition-opacity text-base sm:text-xl w-4 sm:w-6 h-4 sm:h-6" />
                   </div>
                   <div className="flex-1">
-                    <div className="h-2 w-2/3 bg-white/10 rounded-full mb-2 overflow-hidden">
+                    <div className="h-1.5 sm:h-2 w-2/3 bg-white/10 rounded-full mb-1.5 sm:mb-2 overflow-hidden">
                       <div className="h-full w-0 bg-purple-500 animate-[pulse_2s_infinite]"></div>
                     </div>
-                    <div className="h-2 w-1/2 bg-white/10 rounded-full"></div>
+                    <div className="h-1.5 sm:h-2 w-1/2 bg-white/10 rounded-full"></div>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {selectedMoods.slice(0, 3).map(moodId => {
                     const mood = MOOD_OPTIONS.find(m => m.id === moodId)
                     return mood ? (

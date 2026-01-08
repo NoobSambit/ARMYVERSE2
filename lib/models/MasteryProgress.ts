@@ -5,12 +5,13 @@ const masteryProgressSchema = new mongoose.Schema({
   kind: { type: String, enum: ['member', 'era'], required: true },
   key: { type: String, required: true },
   xp: { type: Number, default: 0 },
+  // Legacy "level" stored last-claimed milestone; kept for backwards compatibility.
   level: { type: Number, default: 0 },
+  claimedMilestones: { type: [Number], default: [] },
   lastUpdatedAt: { type: Date, default: Date.now }
 })
 
 masteryProgressSchema.index({ userId: 1, kind: 1, key: 1 }, { unique: true })
 
 export const MasteryProgress = mongoose.models.MasteryProgress || mongoose.model('MasteryProgress', masteryProgressSchema)
-
 

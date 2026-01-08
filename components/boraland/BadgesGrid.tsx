@@ -103,7 +103,7 @@ export default function BadgesGrid({ badges, loading, error, totalCount }: Badge
                   return (
                     <div
                       key={item.id}
-                      className={`group relative rounded-xl overflow-hidden bora-glass-panel border ${colors.border} hover:border-bora-primary/50 transition-all duration-300 hover:-translate-y-1 ${colors.glow} p-4 flex flex-col items-center gap-3`}
+                      className={`group relative rounded-2xl overflow-hidden bora-glass-panel border ${colors.border} hover:border-bora-primary/50 transition-all duration-300 hover:-translate-y-1 ${colors.glow} p-4 flex flex-col items-center gap-3`}
                     >
                       {/* Badge Image */}
                       <div className={`relative w-20 h-20 rounded-full ${colors.bg} p-2 flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -143,7 +143,7 @@ export default function BadgesGrid({ badges, loading, error, totalCount }: Badge
                       )}
 
                       {/* Earned Date on Hover */}
-                      <div className="absolute inset-0 bg-black/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                      <div className="absolute inset-0 bg-black/90 opacity-100 transition-opacity flex items-center justify-center p-3">
                         <div className="text-center">
                           <p className="text-xs text-gray-300 mb-1">{item.badge.description}</p>
                           <p className="text-[10px] text-gray-500">

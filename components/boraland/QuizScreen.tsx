@@ -46,7 +46,8 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
   const [currentIndex, setCurrentIndex] = useState(0)
   const [, setExpiresAt] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [result, setResult] = useState<{ xp: number; correctCount: number; reward: Reward | null; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: Review | null } | null>(null)
+  const [result, setResult] = useState<{ xp: number; correctCount: number; reward: Reward | null; dustAwarded?: number; duplicate?: boolean; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: Review | null } | null>(null)
+  const [redirecting, setRedirecting] = useState(false)
   const [mode, setMode] = useState<'ranked'|'demo'|'unknown'>('unknown')
 
   // Ref to prevent race conditions and double triggers
@@ -79,8 +80,13 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
     }
   }, [demoMode])
 
+  // Run once per mount (or demo/ranked toggle) to start a quiz; do not rerun on session updates
   useEffect(() => {
     start()
+  }, [demoMode, start])
+
+  // Warn on close when an active ranked session exists
+  useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {
       if (!demoMode && sessionId && !result) {
         e.preventDefault()
@@ -89,7 +95,7 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
     }
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
-  }, [demoMode]) // Only depend on demoMode, not sessionId or result
+  }, [demoMode, sessionId, result])
 
   const selectAnswer = useCallback((idx: number) => {
     setAnswers(prev => {
@@ -106,7 +112,7 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
     }
   }, [currentIndex, questions.length])
 
-  const submitQuiz = async () => {
+  const submitQuiz = useCallback(async () => {
     if (!sessionId && !sessionSeed) return
 
     // Prevent double submission
@@ -122,18 +128,38 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
           sessionSeed: sessionSeed!
         }
         const res = await demoFetch('/api/game/quiz/demo/complete', { method: 'POST', body: JSON.stringify(payload) })
-        setResult({ xp: res.xp, correctCount: res.correctCount, reward: res.previewReward || null, rarityWeightsUsed: res.rarityWeightsUsed || null, pityApplied: false, reason: null, review: res.review })
+        setResult({
+          xp: res.xp,
+          correctCount: res.correctCount,
+          reward: res.previewReward || null,
+          dustAwarded: 0,
+          duplicate: false,
+          rarityWeightsUsed: res.rarityWeightsUsed || null,
+          pityApplied: false,
+          reason: null,
+          review: res.review
+        })
       } else {
         const payload = { sessionId, answers }
         const res = await apiFetch('/api/game/quiz/complete', { method: 'POST', body: JSON.stringify(payload) })
-        setResult({ xp: res.xp, correctCount: res.correctCount, reward: res.reward || null, rarityWeightsUsed: res.rarityWeightsUsed || null, pityApplied: !!res.pityApplied, reason: res.reason || null, review: res.review })
+        setResult({
+          xp: res.xp,
+          correctCount: res.correctCount,
+          reward: res.reward || null,
+          dustAwarded: res.dustAwarded || 0,
+          duplicate: !!res.duplicate,
+          rarityWeightsUsed: res.rarityWeightsUsed || null,
+          pityApplied: !!res.pityApplied,
+          reason: res.reason || null,
+          review: res.review
+        })
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to complete')
     } finally {
       setIsSubmitting(false)
     }
-  }
+  }, [sessionId, sessionSeed, isSubmitting, demoMode, answers])
 
   const onTimeout = useCallback(() => {
     if (didCompleteRef.current) return // Prevent race conditions
@@ -143,7 +169,7 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
     } else {
       submitQuiz()
     }
-  }, [currentIndex, questions.length])
+  }, [currentIndex, nextQuestion, questions.length, submitQuiz])
 
   // Timer duration - memoized to prevent unnecessary re-renders
   const timerDuration = useMemo(() => 20000, [])
@@ -209,7 +235,7 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
               onTick={handleTimerTick}
               onComplete={onTimeout}
             />
-            <div className="mt-1 text-center text-white/50 text-xs">XP: +1 easy, +2 medium, +3 hard. Need 5+ XP to earn a card.</div>
+            <div className="mt-1 text-center text-white/50 text-xs">XP: +1 easy, +2 medium, +3 hard. 5+ XP unlocks drops; 25+ XP now gives 25% legendary with heavy rare/epic boosts.</div>
           </div>
           <button
             disabled={isSubmitting}
@@ -226,9 +252,26 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
 
       <QuestionCard question={q.question} choices={q.choices} selectedIndex={answers[currentIndex]} onSelect={selectAnswer} />
 
-      <ResultModal open={!!result} onClose={() => setResult(null)} xp={result?.xp || 0} correctCount={result?.correctCount || 0} reward={result?.reward || null} rarityWeightsUsed={result?.rarityWeightsUsed || null} pityApplied={result?.pityApplied || false} reason={result?.reason || null} review={result?.review} demoMode={demoMode} />
+      <ResultModal
+        open={!!result}
+        onClose={() => {
+          setResult(null)
+          if (!demoMode && result && !redirecting) {
+            setRedirecting(true)
+            window.location.href = '/boraland'
+          }
+        }}
+        xp={result?.xp || 0}
+        correctCount={result?.correctCount || 0}
+        reward={result?.reward || null}
+        dustAwarded={result?.dustAwarded || 0}
+        duplicate={!!result?.duplicate}
+        rarityWeightsUsed={result?.rarityWeightsUsed || null}
+        pityApplied={result?.pityApplied || false}
+        reason={result?.reason || null}
+        review={result?.review}
+        demoMode={demoMode}
+      />
     </div>
   )
 }
-
-

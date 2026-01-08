@@ -12,7 +12,7 @@ import {
   Loader2
 } from 'lucide-react'
 import Link from 'next/link'
-import { signInWithEmail, signInWithUsername, signInWithGoogle, signInWithTwitter, AuthError } from '@/lib/firebase/auth'
+import { signInWithUsername, signInWithGoogle, signInWithTwitter, AuthError } from '@/lib/firebase/auth'
 
 interface SignInFormProps {
   embedded?: boolean

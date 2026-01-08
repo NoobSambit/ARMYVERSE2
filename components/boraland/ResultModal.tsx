@@ -16,7 +16,7 @@ type Reward = {
   imageUrl: string
 } | null
 
-export default function ResultModal({ open, onClose, xp, correctCount, reward, rarityWeightsUsed, pityApplied, reason, review, demoMode = false }: { open: boolean; onClose: () => void; xp: number; correctCount: number; reward: Reward; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: { items: Array<{ id: string; question: string; choices: string[]; difficulty: 'easy'|'medium'|'hard'; userAnswerIndex: number; correctIndex: number; xpAward: number }>; summary: { xp: number; correctCount: number } } | null; demoMode?: boolean }) {
+export default function ResultModal({ open, onClose, xp, correctCount, reward, dustAwarded = 0, duplicate = false, rarityWeightsUsed, pityApplied, reason, review, demoMode = false }: { open: boolean; onClose: () => void; xp: number; correctCount: number; reward: Reward; dustAwarded?: number; duplicate?: boolean; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: { items: Array<{ id: string; question: string; choices: string[]; difficulty: 'easy'|'medium'|'hard'; userAnswerIndex: number; correctIndex: number; xpAward: number }>; summary: { xp: number; correctCount: number } } | null; demoMode?: boolean }) {
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
   const [showReview, setShowReview] = useState(false)
@@ -54,6 +54,9 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
           {demoMode ? 'Demo Result' : 'Your Result'}
         </div>
         <div className="text-center text-white/70 mt-1">XP earned: {xp} • Correct: {correctCount}</div>
+        {dustAwarded > 0 && (
+          <div className="text-center text-amber-200 text-sm mt-1">Duplicate converted to +{dustAwarded} Dust</div>
+        )}
         {(!reward && reason === 'low_xp') && (
           <div className="text-center text-amber-300 text-sm mt-1">Need at least 5 XP to earn a card.</div>
         )}
@@ -64,6 +67,11 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
           <div className="mt-4 flex flex-col items-center">
             <div className="relative">
               <Image src={reward.imageUrl} alt={`${reward.member} ${reward.era}`} width={192} height={256} className="w-48 h-64 object-cover rounded-xl" />
+              {duplicate && (
+                <div className="absolute top-2 left-2 bg-black/70 text-amber-200 text-xs font-semibold px-2 py-1 rounded-full border border-amber-300/50">
+                  Duplicate
+                </div>
+              )}
               {(reward.rarity === 'legendary' || reward.rarity === 'epic') && (
                 <div className="pointer-events-none absolute -inset-2 rounded-2xl animate-pulse" style={{ boxShadow: reward.rarity === 'legendary' ? '0 0 50px rgba(251,191,36,0.35)' : '0 0 50px rgba(232,121,249,0.35)' }} />
               )}
@@ -135,7 +143,7 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
                             const userPick = it.userAnswerIndex === cIdx
                             const correct = it.correctIndex === cIdx
                             return (
-                              <li key={cIdx} aria-selected={userPick} className={`px-3 py-2 rounded-xl text-sm ${correct ? 'bg-emerald-600/20 border border-emerald-400/40' : userPick ? 'bg-rose-600/10 border border-rose-400/30' : 'bg-white/5 border border-white/10'}`}>
+                              <li key={cIdx} className={`px-3 py-2 rounded-xl text-sm ${correct ? 'bg-emerald-600/20 border border-emerald-400/40' : userPick ? 'bg-rose-600/10 border border-rose-400/30' : 'bg-white/5 border border-white/10'}`}>
                                 <span className="text-white/90">{choice}</span>
                                 {correct && <span className="sr-only"> correct answer</span>}
                                 <span className="ml-2 text-xs text-white/70">
@@ -191,5 +199,3 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, r
     </div>
   )
 }
-
-

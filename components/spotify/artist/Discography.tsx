@@ -16,7 +16,9 @@ interface DiscographyProps {
 
 export default function Discography({ albums }: DiscographyProps) {
   const [currentPage, setCurrentPage] = useState(0)
-  const albumsPerPage = 5
+
+  // Responsive albums per page
+  const albumsPerPage = typeof window !== 'undefined' && window.innerWidth < 640 ? 4 : 5
 
   const totalPages = Math.ceil(albums.length / albumsPerPage)
   const startIndex = currentPage * albumsPerPage
@@ -36,43 +38,43 @@ export default function Discography({ albums }: DiscographyProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 mt-2">
+    <div className="flex flex-col gap-3 sm:gap-4 mt-2">
       <div className="flex justify-between items-center">
-        <h3 className="text-white font-bold text-lg">Discography</h3>
+        <h3 className="text-white font-bold text-base sm:text-lg">Discography</h3>
         {totalPages > 1 && (
-          <div className="flex items-center gap-3">
-            <span className="text-white/40 text-sm">{currentPage + 1} / {totalPages}</span>
-            <div className="flex gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-white/40 text-xs sm:text-sm">{currentPage + 1} / {totalPages}</span>
+            <div className="flex gap-1.5 sm:gap-2">
               <button
                 onClick={handlePrevious}
                 disabled={currentPage === 0}
-                className="h-8 w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
               <button
                 onClick={handleNext}
                 disabled={currentPage === totalPages - 1}
-                className="h-8 w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-[#2e2249] hover:bg-white/10 flex items-center justify-center transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>
         )}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         {currentAlbums.map((album, i) => (
           <div key={`${startIndex}-${i}`} className="group cursor-pointer">
-            <div className="aspect-square bg-[#2e2249] rounded-xl overflow-hidden mb-3 relative">
+            <div className="aspect-square bg-[#2e2249] rounded-xl overflow-hidden mb-2 sm:mb-3 relative">
               <img
                 src={album.coverUrl}
                 alt={album.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <h5 className="text-white text-sm font-bold truncate">{album.title}</h5>
-            <p className="text-[#a290cb] text-xs">{album.year} • {album.type}</p>
+            <h5 className="text-white text-xs sm:text-sm font-bold truncate">{album.title}</h5>
+            <p className="text-[#a290cb] text-[10px] sm:text-xs">{album.year} • {album.type}</p>
           </div>
         ))}
       </div>

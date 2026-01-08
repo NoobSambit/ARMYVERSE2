@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { Photocard, IPhotocard } from '@/lib/models/Photocard'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
@@ -91,5 +91,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
 

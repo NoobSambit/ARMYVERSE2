@@ -133,7 +133,7 @@ Comprehensive auth system guides:
   - Daily limits and leaderboard integration
 
 - **Photocard Collection**: Earn cards with 4 rarity tiers
-  - Common (70%), Rare (22%), Epic (7%), Legendary (1%)
+  - XP-banded odds with boosted rates (25+ XP = 0% common, 30% rare, 45% epic, 25% legendary)
   - Pity system guarantees
   - 150+ unique photocards
 

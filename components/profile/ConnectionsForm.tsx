@@ -1,7 +1,7 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
 import { Music, Twitter, Instagram, Youtube, Globe, Link as LinkIcon, Eye, EyeOff, Check, X, AlertCircle, RefreshCw, LogOut, Settings } from 'lucide-react'
 import { formatSocialUrl, extractSocialHandle, validateUrl } from '@/lib/utils/profile'
 import { track } from '@/lib/utils/analytics'

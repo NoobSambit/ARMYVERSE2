@@ -18,7 +18,7 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 **Quiz Structure:**
 - 10 multiple-choice questions per quiz
 - Questions pulled from MongoDB database
-- Randomized from different categories
+- Uniform random sample across the approved question pool for the locale (no difficulty buckets)
 - 20-minute time limit (TTL)
 - Score based on correct answers
 
@@ -29,22 +29,35 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - Lyrics (song identification, meaning)
 - MVs & Performances (visual identification)
 
-**Performance-Based Rewards:**
-- Perfect score (10/10): Higher legendary drop rate
-- Good score (7-9/10): Standard drop rates
-- Passing score (5-6/10): Lower epic drop rate
-- Below 5/10: Common cards only
+**Performance-Based Rewards (XP-banded):**
+- XP is difficulty-weighted (+1 easy, +2 medium, +3 hard)
+- 5–9 XP: 60% common, 30% rare, 10% epic
+- 10–14 XP: 40% common, 45% rare, 15% epic
+- 15–19 XP: 20% common, 45% rare, 30% epic, 5% legendary
+- 20–24 XP: 10% common, 35% rare, 40% epic, 15% legendary
+- 25+ XP: 0% common, 30% rare, 45% epic, 25% legendary
+- Below 5 XP: No card drop (XP still awarded)
 
 ### Rarity System
 
-Four rarity tiers with different drop rates:
+Four rarity tiers:
 
-| Rarity | Drop Rate | Icon | Color | Description |
-|--------|-----------|------|-------|-------------|
-| **Legendary** | 1% | 👑 | Amber/Gold | Rarest cards, most valuable |
-| **Epic** | 7% | 💎 | Purple/Fuchsia | Very rare, high value |
-| **Rare** | 22% | ⭐ | Blue/Cyan | Uncommon, good value |
-| **Common** | 70% | 💜 | Slate | Base cards, frequent drops |
+| Rarity | Icon | Color | Description |
+|--------|------|-------|-------------|
+| **Legendary** | 👑 | Amber/Gold | Rarest cards, most valuable |
+| **Epic** | 💎 | Purple/Fuchsia | Very rare, high value |
+| **Rare** | ⭐ | Blue/Cyan | Uncommon, good value |
+| **Common** | 💜 | Slate | Base cards, frequent drops |
+
+**Quiz drop odds by XP band (ranked mode, boosted):**
+
+| XP Band | Common | Rare | Epic | Legendary |
+|---------|--------|------|------|-----------|
+| 5–9 XP | 60% | 30% | 10% | 0% |
+| 10–14 XP | 40% | 45% | 15% | 0% |
+| 15–19 XP | 20% | 45% | 30% | 5% |
+| 20–24 XP | 10% | 35% | 40% | 15% |
+| 25+ XP | 0% | 30% | 45% | 25% |
 
 **Pity System:**
 - Guaranteed Epic or higher every 15 pulls
@@ -58,9 +71,9 @@ Four rarity tiers with different drop rates:
 - Duplicate cards convert to Stardust
 - Stardust amount based on rarity:
   - Common: 10 Stardust
-  - Rare: 50 Stardust
-  - Epic: 200 Stardust
-  - Legendary: 1000 Stardust
+  - Rare: 40 Stardust
+  - Epic: 120 Stardust
+  - Legendary: 400 Stardust
 
 **Crafting Options:**
 1. **Craft Specific Card**: Spend Stardust to get exact card you want
@@ -77,20 +90,19 @@ Four rarity tiers with different drop rates:
 ### Mastery System
 
 **XP Progression:**
-- Earn XP for each quiz question (5-20 XP)
-- Difficulty bonuses for harder questions
-- Member-specific XP for member-related questions
-- Era-specific XP for era-related questions
+- Earn XP for each correctly answered quiz question (difficulty-weighted)
+- Member/Era XP sourced from question metadata (not from reward cards)
 
 **Mastery Tracks:**
-- **Member Mastery**: Individual progress for each BTS member
-- **Era Mastery**: Progress for each album/era
+- **Member Mastery**: Individual progress for each BTS member, plus **OT7** (OT7 requires 7× XP per level)
+- **Era Mastery**: Progress for each album/era, derived dynamically from questions
 
-**Milestone Rewards:**
-- Level 10: 1 themed pull (member or era)
-- Level 25: 3 themed pulls + 500 Stardust
-- Level 50: 5 themed pulls + 2000 Stardust
-- Level 100: Guaranteed legendary themed card
+**Milestone Rewards (XP + Dust):**
+- Level 5: +50 XP, +25 Dust
+- Level 10: +100 XP, +75 Dust
+- Level 25: +250 XP, +200 Dust
+- Level 50: +500 XP, +400 Dust
+- Level 100: +1500 XP, +1000 Dust
 
 ### Quest System
 
@@ -258,7 +270,7 @@ Submit quiz answers and receive rewards.
       "imageUrl": "https://res.cloudinary.com/..."
     },
     "duplicate": false,
-    "stardustAwarded": 0
+    "dustAwarded": 0
   },
   "xpAwarded": 160,
   "masteryUpdates": {
@@ -629,7 +641,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 - ✅ Focus on mastery for themed pulls
 - ✅ Save Stardust for specific cards you want
 - ✅ Participate weekly for leaderboard rewards
-- ✅ Perfect scores give better drop rates
+- ✅ Aim for 25+ XP per quiz run to hit the 25% legendary / 45% epic band
 
 ### For Developers
 - ✅ Validate quiz sessions before completion

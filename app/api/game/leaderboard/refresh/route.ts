@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
-import { User } from '@/lib/models/User'
 
 export const runtime = 'nodejs'
 

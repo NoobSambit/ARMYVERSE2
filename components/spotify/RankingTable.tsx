@@ -99,14 +99,15 @@ export default function RankingTable({
       transition={{ duration: 0.4 }}
       className="bg-[#18181B] rounded-3xl border border-white/5 overflow-hidden"
     >
-      <div className="p-6 border-b border-white/5 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+      <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-white/5 flex items-center justify-between">
+        <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
           {title}
         </h2>
         {/* Optional: Add Today/Yesterday toggle here if needed in future */}
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full text-sm text-white">
           <thead className="bg-[#1F1F23]">
             <tr>
@@ -180,13 +181,91 @@ export default function RankingTable({
         </table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="md:hidden">
+        {displayRows.map((row, idx) => (
+          <div
+            key={idx}
+            className="p-4 border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              {/* Rank */}
+              <div className="text-lg sm:text-xl font-bold text-white/50 w-8 flex-shrink-0">
+                {row.rank}
+              </div>
+
+              {/* Main Content */}
+              <div className="flex-1 min-w-0">
+                {/* Artist/Track Name */}
+                <div className="mb-2">
+                  {row.url ? (
+                    <a
+                      href={row.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-white hover:text-purple-400 transition-colors text-sm"
+                    >
+                      {row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}
+                    </a>
+                  ) : (
+                    <span className="font-semibold text-white text-sm">
+                      {row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}
+                    </span>
+                  )}
+                </div>
+
+                {/* Stats in a compact row */}
+                <div className="flex items-center gap-3 text-xs flex-wrap">
+                  {row.streams !== undefined && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-white/40">Streams:</span>
+                      <span className="font-mono text-white font-medium">
+                        {formatNumber(row.streams)}
+                      </span>
+                      {row.daily !== undefined && (
+                        <span className={`font-medium ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          ({formatChange(row.daily)})
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {row.listeners !== undefined && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-white/40">Listeners:</span>
+                      <span className="font-mono text-white font-medium">
+                        {formatNumber(row.listeners)}
+                      </span>
+                    </div>
+                  )}
+
+                  {row.dailyChange !== undefined && (
+                    <div className={`flex items-center gap-1 font-medium ${row.dailyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <span className="text-white/40">Daily:</span>
+                      <span>{formatChange(row.dailyChange)}</span>
+                    </div>
+                  )}
+
+                  {/* Change Indicator */}
+                  {(changes24h || changes7d || showStreamChanges) && getChangeIndicator(row) && (
+                    <div className="flex items-center">
+                      {getChangeIndicator(row)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {rows.length > maxRows && (
-        <div className="p-4 border-t border-white/5 text-center bg-white/[0.02]">
+        <div className="p-3 sm:p-4 border-t border-white/5 text-center bg-white/[0.02]">
           <button
             onClick={() => setShowAll(!showAll)}
             className="text-purple-400 hover:text-purple-300 text-xs font-bold uppercase tracking-wide transition-colors"
           >
-            {showAll ? 'Show Less Rows' : `Show More Rows`}
+            {showAll ? 'Show Less' : `Show More`}
           </button>
         </div>
       )}

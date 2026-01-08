@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { QuestDefinition, IQuestDefinition } from '@/lib/models/QuestDefinition'
 import { UserQuestProgress } from '@/lib/models/UserQuestProgress'
 import { dailyKey, weeklyKey } from '@/lib/game/quests'
@@ -12,6 +12,7 @@ import { UserBadge } from '@/lib/models/UserBadge'
 import { updateDailyStreakAndAwardBadges, updateWeeklyStreakAndAwardBadges } from '@/lib/game/streakTracking'
 import { checkAndAwardDailyCompletionBadge, checkAndAwardWeeklyCompletionBadge } from '@/lib/game/completionBadges'
 import { url as cloudinaryUrl } from '@/lib/cloudinary'
+import { awardBalances } from '@/lib/game/rewards'
 
 export const runtime = 'nodejs'
 
@@ -40,13 +41,9 @@ export async function POST(request: NextRequest) {
     if (prog.claimed) return NextResponse.json({ error: 'Already claimed' }, { status: 409 })
 
     let reward: any = null
-    if (def.reward?.dust) {
-      await UserGameState.findOneAndUpdate({ userId: user.uid }, { $inc: { dust: def.reward.dust } }, { upsert: true })
-    }
-
-    // Handle XP rewards
-    if (def.reward?.xp) {
-      await UserGameState.findOneAndUpdate({ userId: user.uid }, { $inc: { xp: def.reward.xp } }, { upsert: true })
+    let balances = null
+    if (def.reward?.dust || def.reward?.xp) {
+      balances = await awardBalances(user.uid, { dust: def.reward?.dust || 0, xp: def.reward?.xp || 0 })
     }
 
     // Handle badge rewards
@@ -127,10 +124,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       reward,
-      balances: { dust: state?.dust || 0, xp: state?.xp || 0 },
+      balances,
       streaks: {
-        daily: state?.streak.dailyCount || 0,
-        weekly: state?.streak.weeklyCount || 0
+        daily: newDailyStreak || state?.streak?.dailyCount || 0,
+        weekly: newWeeklyStreak || state?.streak?.weeklyCount || 0
       },
       badgesAwarded: allBadgesAwarded,
       photocardAwarded,
@@ -141,5 +138,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-

@@ -55,16 +55,16 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-[#1A103C]/40 backdrop-blur-2xl rounded-3xl p-6 md:p-10 border border-white/5 relative overflow-hidden group"
+      className="bg-[#1A103C]/40 backdrop-blur-2xl rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-10 border border-white/5 relative overflow-hidden group"
     >
       {/* Background Gradient Blob */}
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl group-hover:bg-purple-600/30 transition-colors duration-700 pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-64 md:w-96 h-64 md:h-96 bg-purple-600/20 rounded-full blur-3xl group-hover:bg-purple-600/30 transition-colors duration-700 pointer-events-none" />
 
-      <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 relative z-10">
-        
+      <div className="flex flex-col lg:flex-row items-center gap-6 md:gap-8 lg:gap-12 relative z-10">
+
         {/* Profile Info */}
-        <div className="flex flex-col items-center text-center lg:items-start lg:text-left shrink-0">
-          <div className="relative mb-4">
+        <div className="flex flex-col items-center text-center lg:items-start lg:text-left shrink-0 w-full lg:w-auto">
+          <div className="relative mb-3 md:mb-4">
              <motion.div
                initial={{ scale: 0 }}
                animate={{ scale: 1 }}
@@ -74,56 +74,56 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
                 <img
                   src={user.image || 'https://images.pexels.com/photos/6975474/pexels-photo-6975474.jpeg?auto=compress&cs=tinysrgb&w=150&h=150'}
                   alt={user.name}
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-[#0F0720]"
+                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full object-cover border-3 md:border-4 border-[#0F0720]"
                 />
              </motion.div>
-             <div className="absolute -bottom-2 -right-2 bg-[#0F0720] rounded-full p-1.5 border border-white/10">
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-[10px] font-bold text-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
-                  <span className="font-display">LVL 42</span>
+             <div className="absolute -bottom-1.5 -right-1.5 md:-bottom-2 md:-right-2 bg-[#0F0720] rounded-full p-1 md:p-1.5 border border-white/10">
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-[8px] md:text-[10px] font-bold text-black px-1.5 md:px-2 py-0.5 rounded-full flex items-center gap-0.5 md:gap-1 shadow-lg">
+                  <span className="font-display text-[10px] md:text-xs">LVL 42</span>
                 </div>
              </div>
           </div>
-          
-          <h2 className="text-3xl font-bold text-white mb-1">{user.name}</h2>
-          <div className="flex items-center gap-2 text-purple-300 text-sm font-medium bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
+
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1">{user.name}</h2>
+          <div className="flex items-center gap-1.5 md:gap-2 text-purple-300 text-xs md:text-sm font-medium bg-purple-500/10 px-2.5 md:px-3 py-1 rounded-full border border-purple-500/20">
             <Crown className="w-3 h-3" />
             <span>Pro Member</span>
           </div>
-          <p className="text-gray-400 text-sm mt-3 flex items-center gap-2">
+          <p className="text-gray-400 text-xs md:text-sm mt-2 md:mt-3 flex items-center gap-1.5 md:gap-2">
              <Calendar className="w-3 h-3" />
              Joined {new Date(user.registered).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-           <StatCard 
-             icon={Music} 
-             label="Total Scrobbles" 
-             value={formatNumber(user.playcount)} 
-             color="purple" 
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 lg:gap-4 w-full">
+           <StatCard
+             icon={Music}
+             label="Scrobbles"
+             value={formatNumber(user.playcount)}
+             color="purple"
              delay={0.2}
            />
-           <StatCard 
-             icon={Trophy} 
-             label="Top Artist" 
-             value="BTS" 
-             subValue={`${overview.btsPercentage}%`} 
-             color="pink" 
+           <StatCard
+             icon={Trophy}
+             label="Top Artist"
+             value="BTS"
+             subValue={`${overview.btsPercentage}%`}
+             color="pink"
              delay={0.3}
            />
-           <StatCard 
-             icon={Clock} 
-             label="Minutes Streamed" 
-             value={formatNumber(Math.round(overview.totalListeningTime * 60))} 
-             color="blue" 
+           <StatCard
+             icon={Clock}
+             label="Minutes"
+             value={formatNumber(Math.round(overview.totalListeningTime * 60))}
+             color="blue"
              delay={0.4}
            />
-           <StatCard 
-             icon={Play} 
-             label="Total Tracks" 
-             value={formatNumber(overview.totalTracks)} 
-             color="green" 
+           <StatCard
+             icon={Play}
+             label="Tracks"
+             value={formatNumber(overview.totalTracks)}
+             color="green"
              delay={0.5}
            />
         </div>
@@ -153,13 +153,13 @@ function StatCard({ icon: Icon, label, value, subValue, color, delay }: { icon: 
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       whileHover={{ y: -5 }}
-      className={`flex flex-col items-center justify-center p-6 rounded-2xl border ${colors[color]} backdrop-blur-md hover:bg-opacity-20 transition-all`}
+      className={`flex flex-col items-center justify-center p-3 md:p-4 lg:p-6 rounded-xl md:rounded-2xl border ${colors[color]} backdrop-blur-md hover:bg-opacity-20 transition-all`}
     >
-      <Icon className={`w-6 h-6 mb-3 ${iconColors[color]}`} />
-      <span className="text-2xl md:text-3xl font-bold text-white mb-1">{value}</span>
-      <span className="text-xs text-gray-400 uppercase tracking-wider">{label}</span>
+      <Icon className={`w-5 h-5 md:w-6 md:h-6 mb-2 md:mb-3 ${iconColors[color]}`} />
+      <span className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white mb-0.5 md:mb-1">{value}</span>
+      <span className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">{label}</span>
       {subValue && (
-        <span className={`text-xs font-bold mt-1 ${iconColors[color]}`}>{subValue}</span>
+        <span className={`text-[10px] md:text-xs font-bold mt-0.5 md:mt-1 ${iconColors[color]}`}>{subValue}</span>
       )}
     </motion.div>
   )

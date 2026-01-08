@@ -601,28 +601,18 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  userId: ObjectId           // unique
-
-  // Member mastery
-  members: Map<string, {
-    xp: number
-    level: number
-    lastClaimed: number      // last claimed milestone
-  }>
-
-  // Era mastery
-  eras: Map<string, {
-    xp: number
-    level: number
-    lastClaimed: number
-  }>
-
-  updatedAt: Date
+  userId: string
+  kind: 'member' | 'era'
+  key: string              // member name or era name (includes OT7)
+  xp: number
+  level: number            // legacy claimed milestone marker
+  claimedMilestones: number[]
+  lastUpdatedAt: Date
 }
 ```
 
 **Indexes:**
-- `userId` (unique)
+- Compound: `[userId, kind, key]` (unique)
 
 ---
 

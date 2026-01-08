@@ -135,7 +135,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 **Earning Methods**:
 - Quiz completions (XP-based rarity)
 - Quest rewards (rare+ tickets)
-- Mastery milestones (themed pulls)
+- Mastery milestones (XP + Dust rewards)
 - Crafting system (dust-based)
 
 **Drop Pools**:
@@ -145,7 +145,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 
 #### **Crafting System**
 **Dust Economy**:
-- **Earn Dust**: Quest completions (50-500), mastery milestones, duplicate conversions
+- **Earn Dust**: Quest completions (50-500), mastery milestones, duplicate conversions (10/40/120/400 by rarity)
 - **Spend Dust**: Card crafting (20/60/200/800 by rarity), random rarity crafting
 
 **Crafting Options**:
@@ -157,15 +157,15 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 
 #### **Mastery System**
 **Progression Types**:
-- **Member Mastery**: Individual tracking for all 7 members
-- **Era Mastery**: Progress for each BTS era
+- **Member Mastery**: Individual tracking for all 7 members + OT7 (harder progression)
+- **Era Mastery**: Progress for each BTS era (dynamic from question metadata)
 
 **XP System**:
-- **Level Formula**: `level = floor(xp / 100)` (100 XP per level)
-- **XP Sources**: Quiz completions with automatic member/era detection
-- **Milestone Rewards**: Themed photocard pulls at level thresholds
+- **Level Formula**: `level = floor(xp / 100)` (OT7 uses 7× XP per level)
+- **XP Sources**: Quiz completions (members/eras derived from correctly answered questions)
+- **Milestone Rewards**: XP + Dust at levels 5/10/25/50/100
 
-**Tracking**: MasteryProgress model with userId + kind (member/era) + key
+**Tracking**: MasteryProgress model (userId + kind + key), mastery rewards ledger for claims
 
 #### **Quest & Badge System**
 

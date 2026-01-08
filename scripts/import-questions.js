@@ -12,7 +12,7 @@ const crypto = require('crypto')
 const { MongoClient } = require('mongodb')
 
 function parseArgs(argv) {
-  const args = { file: '', db: 'armyverse', collection: 'questions', batch: 1000, dryRun: false }
+  const args = { file: '', db: 'test', collection: 'questions', batch: 1000, dryRun: false, drop: false }
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--file') args.file = argv[++i]
@@ -20,6 +20,7 @@ function parseArgs(argv) {
     else if (a === '--collection') args.collection = argv[++i]
     else if (a === '--batch') args.batch = parseInt(argv[++i], 10)
     else if (a === '--dry-run') args.dryRun = true
+    else if (a === '--drop') args.drop = true
   }
   if (!args.file) throw new Error('Missing --file path')
   if (!Number.isFinite(args.batch) || args.batch <= 0) args.batch = 1000
@@ -36,7 +37,7 @@ function makeHash(doc) {
   const correct = Array.isArray(doc.choices) && typeof doc.answerIndex === 'number' && doc.choices[doc.answerIndex]
     ? String(doc.choices[doc.answerIndex]).trim()
     : ''
-  const base = JSON.stringify({ q: question, a: correct, loc })
+  const base = JSON.stringify({ q: question, a: correct, loc, choices: doc.choices || [] })
   return sha256Hex(base).slice(0, 24)
 }
 
@@ -58,7 +59,7 @@ function validate(doc) {
 }
 
 async function ensureIndex(col) {
-  await col.createIndex({ hash: 1 }, { unique: true })
+  await col.createIndex({ hash: 1 }, { unique: false })
 }
 
 function redactUri(uri) {
@@ -74,7 +75,19 @@ function redactUri(uri) {
 async function processArray(col, items, opts) {
   const stats = { readCount: 0, validCount: 0, upsertedCount: 0, matchedCount: 0, skippedInvalid: 0 }
   const errors = []
-  const batchOps = []
+  let batch = []
+
+  const flush = async () => {
+    if (opts.dryRun || batch.length === 0) return
+    try {
+      const res = await col.insertMany(batch, { ordered: false })
+      stats.upsertedCount += res.insertedCount || 0
+    } catch (e) {
+      // ignore duplicate errors if any
+    } finally {
+      batch = []
+    }
+  }
 
   for (const raw of items) {
     stats.readCount++
@@ -86,36 +99,44 @@ async function processArray(col, items, opts) {
       continue
     }
     stats.validCount++
-    if (!doc.hash) doc.hash = makeHash(doc)
     if (opts.dryRun) continue
-    batchOps.push({ updateOne: { filter: { hash: doc.hash }, update: { $setOnInsert: doc }, upsert: true } })
-    if (batchOps.length >= opts.batch) {
-      const res = await col.bulkWrite(batchOps, { ordered: false })
-      stats.upsertedCount += res.upsertedCount || 0
-      stats.matchedCount += res.matchedCount || 0
-      batchOps.length = 0
+    batch.push(doc)
+    if (batch.length >= opts.batch) {
+      await flush()
     }
   }
-  if (!opts.dryRun && batchOps.length) {
-    const res = await col.bulkWrite(batchOps, { ordered: false })
-    stats.upsertedCount += res.upsertedCount || 0
-    stats.matchedCount += res.matchedCount || 0
-  }
+  await flush()
   return { stats, errors }
 }
 
 function normalize(doc) {
   const out = { ...doc }
+  // Always recompute hash; ignore incoming hash values to avoid collisions from placeholders
+  delete out.hash
   if (!out.locale) out.locale = 'en'
   if (!out.source) out.source = 'perplexity'
   if (!out.status) out.status = 'approved'
+  // Compute hash after normalization
+  out.hash = makeHash(out)
   return out
 }
 
 async function processNdjson(col, file, opts) {
   const stats = { readCount: 0, validCount: 0, upsertedCount: 0, matchedCount: 0, skippedInvalid: 0 }
   const errors = []
-  const batchOps = []
+  let batch = []
+
+  const flush = async () => {
+    if (opts.dryRun || batch.length === 0) return
+    try {
+      const res = await col.insertMany(batch, { ordered: false })
+      stats.upsertedCount += res.insertedCount || 0
+    } catch (e) {
+      // ignore duplicate errors if any
+    } finally {
+      batch = []
+    }
+  }
 
   const rl = readline.createInterface({ input: fs.createReadStream(file) })
   for await (const line of rl) {
@@ -137,21 +158,13 @@ async function processNdjson(col, file, opts) {
       continue
     }
     stats.validCount++
-    if (!doc.hash) doc.hash = makeHash(doc)
     if (opts.dryRun) continue
-    batchOps.push({ updateOne: { filter: { hash: doc.hash }, update: { $setOnInsert: doc }, upsert: true } })
-    if (batchOps.length >= opts.batch) {
-      const res = await col.bulkWrite(batchOps, { ordered: false })
-      stats.upsertedCount += res.upsertedCount || 0
-      stats.matchedCount += res.matchedCount || 0
-      batchOps.length = 0
+    batch.push(doc)
+    if (batch.length >= opts.batch) {
+      await flush()
     }
   }
-  if (!opts.dryRun && batchOps.length) {
-    const res = await col.bulkWrite(batchOps, { ordered: false })
-    stats.upsertedCount += res.upsertedCount || 0
-    stats.matchedCount += res.matchedCount || 0
-  }
+  await flush()
   return { stats, errors }
 }
 
@@ -173,6 +186,14 @@ async function main() {
     await client.connect()
     const db = client.db(args.db)
     const col = db.collection(args.collection)
+    if (args.drop && !args.dryRun) {
+      console.log(`Dropping collection '${args.collection}' before import...`)
+      try {
+        await col.drop()
+      } catch (err) {
+        if (err && err.codeName !== 'NamespaceNotFound') throw err
+      }
+    }
     await ensureIndex(col)
 
     const content = fs.readFileSync(file, 'utf8')
@@ -206,5 +227,3 @@ async function main() {
 if (require.main === module) {
   main()
 }
-
-

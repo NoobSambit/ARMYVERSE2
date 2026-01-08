@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter, Plus_Jakarta_Sans, Noto_Sans } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
-import MobileQuickActions from '@/components/layout/MobileQuickActions'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ToastProvider } from '@/components/ui/Toast'
 
@@ -91,7 +90,6 @@ export default function RootLayout({
           <AuthProvider>
             <Navbar />
             {children}
-            <MobileQuickActions />
           </AuthProvider>
         </ToastProvider>
       </body>

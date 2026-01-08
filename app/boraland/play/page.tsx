@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
@@ -10,10 +10,12 @@ export default function Page() {
   const { user } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
+  const warnedRef = useRef(false)
 
   useEffect(() => {
-    if (user === null) {
+    if (user === null && !warnedRef.current) {
       // User is not authenticated
+      warnedRef.current = true
       showToast('warning', 'Sign in to save rewards and access your collection')
       router.push('/boraland')
     }
@@ -33,7 +35,9 @@ export default function Page() {
     return null
   }
 
-  return <QuizScreen />
+  return (
+    <div className="h-[100dvh] bg-background-deep overflow-hidden">
+      <QuizScreen />
+    </div>
+  )
 }
-
-

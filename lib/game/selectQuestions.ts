@@ -1,6 +1,14 @@
 import { Question } from '@/lib/models/Question'
 
-type Difficulty = 'easy' | 'medium' | 'hard'
+type QuizQuestionDoc = {
+  _id: string
+  question: string
+  choices: string[]
+  difficulty: 'easy' | 'medium' | 'hard'
+  tags?: string[]
+  locale: string
+  status: string
+}
 
 export type SelectOptions = {
   locale?: string
@@ -9,66 +17,33 @@ export type SelectOptions = {
   tagsAny?: string[]
 }
 
-const DEFAULT_MIX = { easy: 0.5, medium: 0.35, hard: 0.15 }
-
 export async function selectQuestions(opts: SelectOptions) {
   const locale = opts.locale || 'en'
   const count = Math.max(1, Math.min(opts.count || 10, 20))
-  const mix = opts.difficultyMix
-    ? normalizeMix(opts.difficultyMix)
-    : DEFAULT_MIX
 
-  const perBucket: Record<Difficulty, number> = {
-    easy: Math.round(count * mix.easy),
-    medium: Math.round(count * mix.medium),
-    hard: Math.round(count * mix.hard)
-  }
-  // Adjust rounding to hit exact count
-  const delta = count - (perBucket.easy + perBucket.medium + perBucket.hard)
-  if (delta !== 0) perBucket.easy += delta
-
-  const fetchBucket = async (difficulty: Difficulty, size: number) => {
-    if (size <= 0) return [] as any[]
-    const match: any = { status: 'approved', locale, difficulty }
-    if (opts.tagsAny && opts.tagsAny.length) {
-      match.tags = { $in: opts.tagsAny }
-    }
-    return Question.aggregate([
-      { $match: match },
-      { $sample: { size } }
-    ])
+  const baseMatch: Record<string, unknown> = { status: 'approved', locale }
+  if (opts.tagsAny && opts.tagsAny.length) {
+    baseMatch.tags = { $in: opts.tagsAny }
   }
 
-  const [easyQs, medQs, hardQs] = await Promise.all([
-    fetchBucket('easy', perBucket.easy),
-    fetchBucket('medium', perBucket.medium),
-    fetchBucket('hard', perBucket.hard)
+  // Primary: uniform random sample across the entire approved pool for the locale.
+  let questions: QuizQuestionDoc[] = await Question.aggregate<QuizQuestionDoc>([
+    { $match: baseMatch },
+    { $sample: { size: count } }
   ])
 
-  let questions: any[] = [...easyQs, ...medQs, ...hardQs]
-
-  // Fallback: if not enough in a bucket, top up from any available
+  // Fallback: if the pool is smaller than requested, top up from any approved locale to avoid repeats.
   if (questions.length < count) {
     const needed = count - questions.length
-    const anyMatch: any = { status: 'approved', locale }
-    if (opts.tagsAny && opts.tagsAny.length) anyMatch.tags = { $in: opts.tagsAny }
-    const extra = await Question.aggregate([
-      { $match: anyMatch },
+    const fallbackMatch: Record<string, unknown> = { status: 'approved' }
+    if (opts.tagsAny && opts.tagsAny.length) fallbackMatch.tags = { $in: opts.tagsAny }
+    const extra = await Question.aggregate<QuizQuestionDoc>([
+      { $match: fallbackMatch },
       { $sample: { size: needed } }
     ])
     questions = [...questions, ...extra]
   }
 
-  // Trim to requested count
-  questions = questions.slice(0, count)
-
-  return questions
+  // Trim in case sample returned extra due to top-up
+  return questions.slice(0, count)
 }
-
-function normalizeMix(mix: { easy: number; medium: number; hard: number }) {
-  const total = mix.easy + mix.medium + mix.hard
-  if (total <= 0) return DEFAULT_MIX
-  return { easy: mix.easy / total, medium: mix.medium / total, hard: mix.hard / total }
-}
-
-

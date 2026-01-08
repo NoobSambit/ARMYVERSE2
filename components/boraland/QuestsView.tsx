@@ -91,44 +91,47 @@ export default function QuestsView({ dailyStreak }: { dailyStreak?: StreakInfo }
   })
 
   return (
-    <section className="col-span-12 lg:col-span-7 flex flex-col gap-6">
+    <section className="flex flex-col gap-4 md:gap-6 h-full">
       <QuestBoardHeader dailyStreak={dailyStreak} />
 
       {/* Tabs and Verify Button */}
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 border-b border-white/10 pb-1">
+        <div className="flex items-center gap-1 md:gap-2 overflow-x-auto w-full sm:w-auto scrollbar-hide">
           <button
               onClick={() => setFilter('daily')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 relative transition-colors ${
+              className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${
                   filter === 'daily'
                   ? 'text-white border-bora-primary'
                   : 'text-gray-500 border-transparent hover:text-gray-300'
               }`}
           >
-              Daily Quests
+              <span className="hidden sm:inline">Daily Quests</span>
+              <span className="sm:hidden">Daily</span>
               {quests.some(q => q.period === 'daily' && q.completed && !q.claimed) && (
-                  <span className="absolute top-2 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  <span className="absolute top-1 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               )}
           </button>
           <button
               onClick={() => setFilter('weekly')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 relative transition-colors ${
+              className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${
                   filter === 'weekly'
                   ? 'text-white border-bora-primary'
                   : 'text-gray-500 border-transparent hover:text-gray-300'
               }`}
           >
-              Weekly Quests
+              <span className="hidden sm:inline">Weekly Quests</span>
+              <span className="sm:hidden">Weekly</span>
           </button>
           <button
               onClick={() => setFilter('special')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 relative transition-colors ${
+              className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${
                   filter === 'special'
                   ? 'text-white border-bora-primary'
                   : 'text-gray-500 border-transparent hover:text-gray-300'
               }`}
           >
-              Special Events
+              <span className="hidden sm:inline">Special Events</span>
+              <span className="sm:hidden">Special</span>
           </button>
         </div>
 
@@ -136,17 +139,18 @@ export default function QuestsView({ dailyStreak }: { dailyStreak?: StreakInfo }
         {isStreamingConnected && (
           <button
             onClick={verifyStreaming}
-            className="px-4 py-2 rounded-xl bg-green-600/20 text-green-400 text-xs font-bold border border-green-600/30 hover:bg-green-600/30 transition-all flex items-center gap-2"
+            className="px-3 md:px-4 py-1.5 md:py-2 rounded-xl bg-green-600/20 text-green-400 text-[10px] md:text-xs font-bold border border-green-600/30 hover:bg-green-600/30 transition-all flex items-center gap-1.5 md:gap-2 shrink-0"
           >
-            <span className="material-symbols-outlined text-sm">verified</span>
-            Verify Progress
+            <span className="material-symbols-outlined text-xs md:text-sm">verified</span>
+            <span className="hidden sm:inline">Verify Progress</span>
+            <span className="sm:hidden">Verify</span>
           </button>
         )}
       </div>
 
-      {error && <div className="mb-4 text-rose-300">{error}</div>}
+      {error && <div className="mb-4 text-rose-300 text-sm">{error}</div>}
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {loading ? (
              <div className="animate-pulse space-y-4">
                 <div className="h-48 bg-white/5 rounded-2xl"></div>

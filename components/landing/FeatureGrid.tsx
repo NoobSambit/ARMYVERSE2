@@ -2,12 +2,16 @@
 
 import { BarChart3, Gamepad2, Music2, ListMusic, BarChart, User, ArrowRight, Info } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import FeatureInfoModal from '@/components/ui/FeatureInfoModal'
 
 export default function FeatureGrid() {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedFeature, setSelectedFeature] = useState<any>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const autoScrollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [isPaused, setIsPaused] = useState(false)
 
   const features = [
     {
@@ -119,16 +123,140 @@ export default function FeatureGrid() {
     setModalOpen(true)
   }
 
+  // Auto-scroll functionality
+  useEffect(() => {
+    const startAutoScroll = () => {
+      autoScrollIntervalRef.current = setInterval(() => {
+        if (!isPaused && scrollContainerRef.current) {
+          setCurrentIndex((prevIndex) => {
+            const nextIndex = (prevIndex + 1) % features.length
+            
+            // Scroll to the next card
+            const container = scrollContainerRef.current
+            if (container) {
+              const cardWidth = container.scrollWidth / features.length
+              container.scrollTo({
+                left: cardWidth * nextIndex,
+                behavior: 'smooth'
+              })
+            }
+            
+            return nextIndex
+          })
+        }
+      }, 2000) // 2 seconds
+    }
+
+    startAutoScroll()
+
+    return () => {
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current)
+      }
+    }
+  }, [isPaused, features.length])
+
+  // Pause auto-scroll on user interaction
+  const handleTouchStart = () => {
+    setIsPaused(true)
+    if (autoScrollIntervalRef.current) {
+      clearInterval(autoScrollIntervalRef.current)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    // Resume after 3 seconds of no interaction
+    setTimeout(() => {
+      setIsPaused(false)
+    }, 3000)
+  }
+
+  // Update current index when user manually scrolls
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current
+      const cardWidth = container.scrollWidth / features.length
+      const newIndex = Math.round(container.scrollLeft / cardWidth)
+      if (newIndex !== currentIndex) {
+        setCurrentIndex(newIndex)
+      }
+    }
+  }
+
   return (
     <>
-      <div className="md:col-span-2 lg:col-span-3 md:row-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Mobile: Horizontal Scrolling Carousel */}
+      <div className="md:hidden col-span-1 md:col-span-2 lg:col-span-3 md:row-span-2">
+        <div 
+          ref={scrollContainerRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 -mx-3 px-3"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onScroll={handleScroll}
+        >
+          {features.map((feature, idx) => {
+            const IconComponent = feature.icon
+            return (
+              <Link
+                href={feature.href}
+                key={idx}
+                className="glass-panel glass-panel-hover rounded-2xl p-5 flex flex-col justify-between group cursor-pointer relative overflow-hidden min-h-[180px] w-[85vw] max-w-[340px] shrink-0 snap-center"
+              >
+                {feature.overlay && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                )}
+
+                {/* Header with icon and info button */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`size-10 rounded-full bg-gradient-to-br ${feature.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shrink-0`}>
+                    <IconComponent className="text-white w-6 h-6" />
+                  </div>
+
+                  {/* Info button */}
+                  <button
+                    onClick={(e) => handleInfoClick(e, feature)}
+                    className="p-2 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:border-white/30 transition-all duration-200 hover:scale-110 z-20 shrink-0"
+                    aria-label={`Learn more about ${feature.title}`}
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="relative z-10 flex-1">
+                  <h4 className="text-base font-bold text-white mb-1">{feature.title}</h4>
+                  <p className="text-sm text-gray-400 line-clamp-2">{feature.description}</p>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <ArrowRight className="text-gray-500 group-hover:text-white transition-colors w-5 h-5" />
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+        {/* Scroll indicator dots */}
+        <div className="flex justify-center gap-1.5 mt-3">
+          {features.map((_, idx) => (
+            <div 
+              key={idx} 
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                idx === currentIndex 
+                  ? 'bg-primary w-4' 
+                  : 'bg-white/20'
+              }`}
+            ></div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: Grid Layout */}
+      <div className="hidden md:grid md:col-span-2 lg:col-span-3 md:row-span-2 grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((feature, idx) => {
           const IconComponent = feature.icon
           return (
             <Link
               href={feature.href}
               key={idx}
-              className="glass-panel glass-panel-hover rounded-2xl p-5 flex flex-col justify-between group cursor-pointer h-full relative overflow-hidden"
+              className="glass-panel glass-panel-hover rounded-2xl p-5 flex flex-col justify-between group cursor-pointer h-full relative overflow-hidden min-h-[160px]"
             >
               {feature.overlay && (
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -136,14 +264,14 @@ export default function FeatureGrid() {
 
               {/* Header with icon and info button */}
               <div className="flex items-start justify-between mb-4">
-                <div className={`size-10 rounded-full bg-gradient-to-br ${feature.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                <div className={`size-10 rounded-full bg-gradient-to-br ${feature.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shrink-0`}>
                   <IconComponent className="text-white w-6 h-6" />
                 </div>
 
                 {/* Info button */}
                 <button
                   onClick={(e) => handleInfoClick(e, feature)}
-                  className="p-2 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:border-white/30 transition-all duration-200 hover:scale-110 z-20"
+                  className="p-2 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:border-white/30 transition-all duration-200 hover:scale-110 z-20 shrink-0"
                   aria-label={`Learn more about ${feature.title}`}
                 >
                   <Info className="w-4 h-4" />

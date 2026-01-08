@@ -1,9 +1,9 @@
-type EventName = 
-  | 'filter_changed' 
-  | 'sort_changed' 
-  | 'search_submitted' 
-  | 'card_click' 
-  | 'pagination_load_more' 
+type EventName =
+  | 'filter_changed'
+  | 'sort_changed'
+  | 'search_submitted'
+  | 'card_click'
+  | 'pagination_load_more'
   | 'view_toggled'
   | 'profile_opened'
   | 'profile_saved'
@@ -25,6 +25,8 @@ type EventName =
   | 'blog_deleted'
   | 'blog_restored'
   | 'blog_added_to_collection'
+  | 'blog_saved'
+  | 'blog_reaction'
 
 export async function track(event: EventName, payload: Record<string, unknown> = {}) {
 	try {

@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, RefreshCw, AlertCircle, Settings } from 'lucide-react'
+import { Calendar, RefreshCw, AlertCircle, Settings, SlidersHorizontal } from 'lucide-react'
 import UserProfile from '@/components/dashboard/UserProfile'
 import RecentTracks from '@/components/dashboard/RecentTracks'
 import TopArtists from '@/components/dashboard/TopArtists'
 import BTSAnalytics from '@/components/dashboard/BTSAnalytics'
 import StatsLandingPage from '@/components/dashboard/StatsLandingPage'
+import MobileDrawer from '@/components/spotify/MobileDrawer'
 import { LastFmPeriod } from '@/lib/lastfm/types'
 
 interface DashboardData {
@@ -50,6 +51,7 @@ export default function Stats() {
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<LastFmPeriod>('overall')
   const [refreshing, setRefreshing] = useState(false)
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
 
   const loadDashboardData = useCallback(async () => {
     if (!username) return
@@ -110,23 +112,23 @@ export default function Stats() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen py-8 px-4 md:px-6 bg-[#0F0720]">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <div className="min-h-screen py-4 md:py-8 px-3 md:px-6 bg-[#0F0720]">
+        <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
           {/* Loading Header */}
-          <div className="flex justify-between items-center mb-8">
-             <div className="h-10 bg-gray-800 rounded w-64 animate-pulse"></div>
-             <div className="h-10 bg-gray-800 rounded w-32 animate-pulse"></div>
+          <div className="flex justify-between items-center mb-4 md:mb-8">
+             <div className="h-8 md:h-10 bg-gray-800 rounded w-40 md:w-64 animate-pulse"></div>
+             <div className="h-8 md:h-10 bg-gray-800 rounded w-24 md:w-32 animate-pulse"></div>
           </div>
 
-          <div className="h-64 bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 space-y-6">
-               <div className="h-80 bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
-               <div className="h-80 bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
+          <div className="h-48 md:h-64 bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+            <div className="lg:col-span-8 space-y-4 md:space-y-6">
+               <div className="h-60 md:h-80 bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
+               <div className="h-60 md:h-80 bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
             </div>
             <div className="lg:col-span-4">
-               <div className="h-[600px] bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
+               <div className="h-96 md:h-[600px] bg-black/40 backdrop-blur-lg rounded-3xl border border-white/5 animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -172,80 +174,156 @@ export default function Stats() {
   }
 
   return (
-    <div className="min-h-screen py-6 px-4 md:px-6 bg-[#0F0720] text-white">
-      <div className="max-w-[1600px] mx-auto space-y-6">
+    <div className="min-h-screen py-4 md:py-6 px-3 md:px-6 bg-[#0F0720] text-white">
+      <div className="max-w-[1600px] mx-auto space-y-4 md:space-y-6">
         {/* Dashboard Header Bar */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-black/20 backdrop-blur-md p-4 rounded-2xl border border-white/5"
+          className="bg-black/20 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-white/5"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-900/20">
-              <span className="font-display font-bold text-lg">AV</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Music Stats Dashboard</h1>
-              <p className="text-xs text-purple-300 tracking-wider">ARMYVERSE EDITION</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 md:gap-6">
-            {/* Provider Status */}
-            <div className="hidden md:flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
-              <span className="text-xs text-gray-400">Connected to</span>
-              <span className="text-xs font-bold text-white capitalize">{provider === 'lastfm' ? 'Last.fm' : 'Stats.fm'}</span>
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-            </div>
-
-            <div className="h-8 w-px bg-white/10 hidden md:block" />
-
-            {/* Controls */}
-            <div className="flex items-center gap-3 flex-1 md:flex-none">
-              <div className="relative group">
-                <select
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value as LastFmPeriod)}
-                  className="appearance-none bg-black/40 hover:bg-black/60 text-sm text-white border border-white/10 rounded-xl pl-3 pr-8 py-2 focus:border-purple-500/50 focus:outline-none transition-colors cursor-pointer min-w-[140px]"
-                >
-                  <option value="7day">Last 7 Days</option>
-                  <option value="1month">Last Month</option>
-                  <option value="3month">Last 3 Months</option>
-                  <option value="6month">Last 6 Months</option>
-                  <option value="12month">Last Year</option>
-                  <option value="overall">All Time</option>
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <Calendar className="w-3 h-3" />
-                </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-900/20 shrink-0">
+                <span className="font-display font-bold text-sm md:text-lg">AV</span>
               </div>
+              <div>
+                <h1 className="text-base md:text-xl font-bold">Music Stats</h1>
+                <p className="text-[10px] md:text-xs text-purple-300 tracking-wider hidden sm:block">ARMYVERSE EDITION</p>
+              </div>
+            </div>
 
+            {/* Mobile Controls Button */}
+            <div className="flex items-center gap-2">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
+                className="p-2.5 md:p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
                 title="Refresh Data"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               </motion.button>
-              
+
               <motion.button
-                 whileHover={{ scale: 1.05 }}
-                 whileTap={{ scale: 0.95 }}
-                 onClick={() => {
-                   setUsername('')
-                   setData(null)
-                 }}
-                 className="p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
-                 title="Change User Settings"
-               >
-                 <Settings className="w-4 h-4" />
-               </motion.button>
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setMobileControlsOpen(true)}
+                className="lg:hidden p-2.5 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
+                title="Controls"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </motion.button>
+
+              {/* Desktop Controls */}
+              <div className="hidden lg:flex items-center gap-3">
+                {/* Provider Status */}
+                <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+                  <span className="text-xs text-gray-400">Connected to</span>
+                  <span className="text-xs font-bold text-white capitalize">{provider === 'lastfm' ? 'Last.fm' : 'Stats.fm'}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                </div>
+
+                <div className="h-8 w-px bg-white/10" />
+
+                {/* Period Selector */}
+                <div className="relative group">
+                  <select
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value as LastFmPeriod)}
+                    className="appearance-none bg-black/40 hover:bg-black/60 text-sm text-white border border-white/10 rounded-xl pl-3 pr-8 py-2 focus:border-purple-500/50 focus:outline-none transition-colors cursor-pointer min-w-[140px]"
+                  >
+                    <option value="7day">Last 7 Days</option>
+                    <option value="1month">Last Month</option>
+                    <option value="3month">Last 3 Months</option>
+                    <option value="6month">Last 6 Months</option>
+                    <option value="12month">Last Year</option>
+                    <option value="overall">All Time</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <Calendar className="w-3 h-3" />
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setUsername('')
+                    setData(null)
+                  }}
+                  className="p-2 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors"
+                  title="Change User Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </motion.button>
+              </div>
             </div>
           </div>
         </motion.header>
+
+        {/* Mobile Controls Drawer */}
+        <MobileDrawer
+          isOpen={mobileControlsOpen}
+          onClose={() => setMobileControlsOpen(false)}
+          title="Dashboard Controls"
+          position="bottom"
+        >
+          <div className="space-y-6">
+            {/* Provider Status */}
+            <div className="flex items-center gap-2 bg-black/40 px-4 py-3 rounded-xl border border-white/5">
+              <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+              <span className="text-sm text-gray-400">Connected to</span>
+              <span className="text-sm font-bold text-white capitalize">{provider === 'lastfm' ? 'Last.fm' : 'Stats.fm'}</span>
+            </div>
+
+            {/* Period Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">Time Period</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: '7day', label: '7 Days' },
+                  { value: '1month', label: '1 Month' },
+                  { value: '3month', label: '3 Months' },
+                  { value: '6month', label: '6 Months' },
+                  { value: '12month', label: '1 Year' },
+                  { value: 'overall', label: 'All Time' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setPeriod(option.value as LastFmPeriod)
+                      setMobileControlsOpen(false)
+                    }}
+                    className={`py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                      period === option.value
+                        ? 'bg-purple-600 text-white shadow-lg'
+                        : 'bg-black/40 text-gray-400 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Settings Actions */}
+            <div className="pt-4 border-t border-white/5">
+              <button
+                onClick={() => {
+                  setUsername('')
+                  setData(null)
+                  setMobileControlsOpen(false)
+                }}
+                className="w-full py-3.5 bg-black/40 hover:bg-purple-500/20 border border-white/10 rounded-xl text-gray-300 hover:text-white transition-colors flex items-center justify-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-sm font-medium">Change User Settings</span>
+              </button>
+            </div>
+          </div>
+        </MobileDrawer>
 
         {/* Hero Section: User Profile */}
         <div className="w-full">
@@ -253,10 +331,10 @@ export default function Stats() {
         </div>
 
         {/* Main Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start">
+
           {/* Left Column: Analytics & Charts (8 cols) */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="lg:col-span-8 flex flex-col gap-4 md:gap-6">
             {/* BTS Analytics - Prominent Feature */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -277,7 +355,7 @@ export default function Stats() {
           </div>
 
           {/* Right Column: Feeds & Lists (4 cols) */}
-          <div className="lg:col-span-4 flex flex-col gap-6 h-full">
+          <div className="lg:col-span-4 flex flex-col gap-4 md:gap-6 h-full">
             {/* Recent Tracks Feed */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}

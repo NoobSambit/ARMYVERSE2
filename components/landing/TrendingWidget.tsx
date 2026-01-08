@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 
 type Song = {
   rank: number
@@ -80,19 +79,19 @@ export default function TrendingWidget() {
   }, [category, selectedMember])
 
   return (
-    <div className="col-span-1 md:col-span-2 md:row-span-2 glass-panel rounded-2xl p-6 flex flex-col">
-      <div className="flex items-center justify-between mb-4">
+    <div className="col-span-1 md:col-span-2 md:row-span-2 glass-panel rounded-2xl p-4 sm:p-6 flex flex-col">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4">
         <div>
-          <h3 className="text-xl font-bold text-white">Trending Now</h3>
-          <p className="text-xs text-gray-400">Top tracks across platforms</p>
+          <h3 className="text-lg sm:text-xl font-bold text-white">Trending Now</h3>
+          <p className="text-[10px] sm:text-xs text-gray-400">Top tracks across platforms</p>
         </div>
-        <div className="flex p-1 bg-secondary rounded-xl">
+        <div className="flex p-0.5 sm:p-1 bg-secondary rounded-xl shrink-0">
           <button
             onClick={() => {
               setCategory('ot7')
               setSelectedMember('all')
             }}
-            className={`px-3 py-1 text-xs font-bold transition-colors rounded-md ${
+            className={`px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold transition-colors rounded-md ${
               category === 'ot7' ? 'text-white bg-primary shadow-sm' : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -100,7 +99,7 @@ export default function TrendingWidget() {
           </button>
           <button
             onClick={() => setCategory('solo')}
-            className={`px-3 py-1 text-xs font-bold transition-colors rounded-md ${
+            className={`px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold transition-colors rounded-md ${
               category === 'solo' ? 'text-white bg-primary shadow-sm' : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -111,7 +110,7 @@ export default function TrendingWidget() {
 
       {/* Member Selection - Only show in Solo mode */}
       {category === 'solo' && (
-        <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide pb-2">
+        <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide pb-2 -mx-2 px-2">
           {members.map((member) => (
             <button
               key={member.id}
@@ -120,7 +119,7 @@ export default function TrendingWidget() {
                 selectedMember === member.id ? '' : 'opacity-50 hover:opacity-100'
               } transition-opacity`}
             >
-              <div className={`size-12 rounded-full overflow-hidden border-2 ${
+              <div className={`size-10 sm:size-12 rounded-full overflow-hidden border-2 ${
                 selectedMember === member.id ? 'border-primary' : 'border-transparent'
               } transition-colors`}>
                 <img
@@ -129,20 +128,20 @@ export default function TrendingWidget() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-[10px] text-gray-400 font-medium">{member.name}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium">{member.name}</span>
             </button>
           ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 flex-1">
         {/* Spotify List */}
-        <div className="bg-secondary/30 rounded-xl p-4 border border-white/5">
-          <div className="flex items-center gap-2 mb-4 text-accent-green">
-            <span className="material-symbols-outlined text-sm">social_distance</span>
-            <span className="text-xs font-bold uppercase">Spotify Global</span>
+        <div className="bg-secondary/30 rounded-xl p-3 sm:p-4 border border-white/5">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 text-accent-green">
+            <span className="material-symbols-outlined text-xs sm:text-sm">social_distance</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase">Spotify Global</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {spotifySongs.map((song) => (
               <TrendingItem key={song.rank} rank={song.rank} title={song.title} artist={song.artist} thumbnail={song.thumbnail} />
             ))}
@@ -150,12 +149,12 @@ export default function TrendingWidget() {
         </div>
 
         {/* YouTube List */}
-        <div className="bg-secondary/30 rounded-xl p-4 border border-white/5">
-           <div className="flex items-center gap-2 mb-4 text-red-500">
-            <span className="material-symbols-outlined text-sm">play_arrow</span>
-            <span className="text-xs font-bold uppercase">YouTube Trending</span>
+        <div className="bg-secondary/30 rounded-xl p-3 sm:p-4 border border-white/5">
+           <div className="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 text-red-500">
+            <span className="material-symbols-outlined text-xs sm:text-sm">play_arrow</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase">YouTube Trending</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {youtubeSongs.map((song) => (
               <TrendingItem key={song.rank} rank={song.rank} title={song.title} artist={song.artist} thumbnail={song.thumbnail} isYoutube />
             ))}
@@ -168,15 +167,15 @@ export default function TrendingWidget() {
 
 function TrendingItem({ rank, title, artist, thumbnail, isYoutube }: { rank: number, title: string, artist: string, thumbnail?: string, isYoutube?: boolean }) {
     return (
-        <div className="flex items-center gap-3 group cursor-pointer">
-            {!isYoutube && <span className="text-lg font-bold text-gray-500 w-4">{rank}</span>}
+        <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
+            {!isYoutube && <span className="text-base sm:text-lg font-bold text-gray-500 w-3 sm:w-4 shrink-0">{rank}</span>}
             <div
-              className="size-10 rounded bg-gray-700 bg-cover"
+              className="size-8 sm:size-10 rounded bg-gray-700 bg-cover shrink-0"
               style={{ backgroundImage: thumbnail ? `url('${thumbnail}')` : `url('https://api.dicebear.com/7.x/shapes/svg?seed=${title}')` }}
             ></div>
             <div className="flex-1 min-w-0">
-                <p className={`text-sm font-bold text-white truncate ${isYoutube ? 'group-hover:text-red-500' : 'group-hover:text-accent-green'}`}>{title}</p>
-                <p className="text-xs text-gray-400">{artist}</p>
+                <p className={`text-xs sm:text-sm font-bold text-white truncate ${isYoutube ? 'group-hover:text-red-500' : 'group-hover:text-accent-green'}`}>{title}</p>
+                <p className="text-[10px] sm:text-xs text-gray-400 truncate">{artist}</p>
             </div>
         </div>
     )

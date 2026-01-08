@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { verifyAuth } from '@/lib/auth/verify'
 import { User } from '@/lib/models/User'
 import { verifyAllStreamingQuests } from '@/lib/game/streamingVerification'
 import { getUserQuests } from '@/lib/game/quests'

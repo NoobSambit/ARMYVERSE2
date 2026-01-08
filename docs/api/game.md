@@ -76,7 +76,7 @@ Submit quiz answers and receive photocard reward.
       "imageUrl": "https://res.cloudinary.com/..."
     },
     "duplicate": false,
-    "stardustAwarded": 0
+    "dustAwarded": 0
   },
   "xpAwarded": 160,
   "masteryUpdates": {
@@ -205,21 +205,23 @@ Get user's mastery progress for members and eras.
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "mastery": {
-    "members": {
-      "Jungkook": { "xp": 2400, "level": 24, "nextMilestone": 25 },
-      "Jimin": { "xp": 1800, "level": 18, "nextMilestone": 25 },
-      "V": { "xp": 1500, "level": 15, "nextMilestone": 25 }
-    },
-    "eras": {
-      "Love Yourself": { "xp": 3200, "level": 32, "nextMilestone": 50 },
-      "Map of the Soul": { "xp": 2100, "level": 21, "nextMilestone": 25 }
-    }
-  },
-  "claimableMilestones": [
-    { "kind": "member", "key": "Jungkook", "level": 25 }
-  ]
+  "members": [
+    { "definition": { "key": "Jungkook" }, "track": { "level": 24, "xp": 2400, "nextMilestone": 25, "claimable": [25], "xpToNext": 100 } },
+    { "definition": { "key": "OT7" }, "track": { "level": 3, "xp": 2100, "nextMilestone": 5, "claimable": [], "xpToNext": 500 } }
+  ],
+  "eras": [
+    { "definition": { "key": "Love Yourself: Tear" }, "track": { "level": 21, "xp": 2100, "nextMilestone": 25, "claimable": [], "xpToNext": 400 } }
+  ],
+  "milestones": [
+    { "level": 5, "rewards": { "xp": 50, "dust": 25 } },
+    { "level": 10, "rewards": { "xp": 100, "dust": 75 } }
+  ],
+  "summary": {
+    "totalTracks": 2,
+    "claimableCount": 1,
+    "dust": 1200,
+    "totalXp": 5400
+  }
 }
 ```
 
@@ -235,31 +237,28 @@ Claim mastery milestone rewards.
 ```json
 {
   "kind": "member",
-  "key": "Jungkook"
+  "key": "Jungkook",
+  "milestone": 10
 }
 ```
 
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "rewards": {
-    "themedPulls": 3,
-    "stardust": 500,
-    "cards": [
-      { "member": "Jungkook", "rarity": "rare" },
-      { "member": "Jungkook", "rarity": "epic" },
-      { "member": "Jungkook", "rarity": "rare" }
-    ]
-  }
+  "milestone": 10,
+  "rewards": { "xp": 100, "dust": 75 },
+  "balances": { "dust": 1275, "xp": 5500 },
+  "track": { "kind": "member", "key": "Jungkook", "level": 24, "xp": 2400, "claimable": [25] }
 }
 ```
 
 **Milestone Rewards:**
-- Level 10: 1 themed pull
-- Level 25: 3 themed pulls + 500 Stardust
-- Level 50: 5 themed pulls + 2000 Stardust
-- Level 100: Guaranteed legendary themed card
+- Level 5: +50 XP, +25 Dust
+- Level 10: +100 XP, +75 Dust
+- Level 25: +250 XP, +200 Dust
+- Level 50: +500 XP, +400 Dust
+- Level 100: +1500 XP, +1000 Dust
+* OT7 uses 7× XP per level when computing milestones.
 
 ---
 

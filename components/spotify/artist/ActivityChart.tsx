@@ -36,15 +36,15 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
 
   if (loading || history.length === 0) {
     return (
-      <div className="bg-[#2e2249] rounded-xl p-6 border border-white/5 flex flex-col h-full min-h-[300px]">
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-[#2e2249] rounded-xl p-4 sm:p-5 md:p-6 border border-white/5 flex flex-col h-full min-h-[200px] sm:min-h-[250px] md:min-h-[300px]">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
           <div>
-            <h3 className="text-white font-bold text-lg">Listening Activity</h3>
-            <p className="text-[#a290cb] text-xs">Last 30 Days • Daily Streams</p>
+            <h3 className="text-white font-bold text-base sm:text-lg">Listening Activity</h3>
+            <p className="text-[#a290cb] text-[10px] sm:text-xs">Last 30 Days • Daily Streams</p>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-white/40 text-sm">{loading ? 'Loading...' : 'No data available'}</div>
+          <div className="text-white/40 text-xs sm:text-sm">{loading ? 'Loading...' : 'No data available'}</div>
         </div>
       </div>
     )
@@ -53,8 +53,6 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
   // Use dailyGain for the chart to show variance
   // Find max absolute value for scaling (positive or negative)
   const maxAbsValue = Math.max(...history.map(h => Math.abs(h.dailyGain)), 1)
-  const maxPositive = Math.max(...history.map(h => h.dailyGain), 0)
-  const maxNegative = Math.min(...history.map(h => h.dailyGain), 0)
 
   // Format large numbers
   const formatValue = (n: number) => {
@@ -88,23 +86,23 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
   }
 
   return (
-    <div className="bg-[#2e2249] rounded-xl p-6 border border-white/5 flex flex-col h-full min-h-[300px]">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-[#2e2249] rounded-xl p-4 sm:p-5 md:p-6 border border-white/5 flex flex-col h-full min-h-[200px] sm:min-h-[250px] md:min-h-[300px]">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>
-          <h3 className="text-white font-bold text-lg">Listening Activity</h3>
-          <p className="text-[#a290cb] text-xs">Last {history.length} Days • Daily Streams Variance</p>
+          <h3 className="text-white font-bold text-base sm:text-lg">Listening Activity</h3>
+          <p className="text-[#a290cb] text-[10px] sm:text-xs">Last {history.length} Days • Daily Streams Variance</p>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="flex-1 w-full flex items-center gap-2 sm:gap-3 px-2 relative">
+      <div className="flex-1 w-full flex items-center gap-1 sm:gap-2 md:gap-3 px-1 sm:px-2 relative">
         {/* Zero line */}
         <div className="absolute inset-0 flex items-center pointer-events-none z-0">
           <div className="w-full h-px bg-white/10" />
         </div>
 
         {/* Bars */}
-        <div className="flex-1 flex items-center justify-center gap-2 sm:gap-3 h-full w-full relative z-10">
+        <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 md:gap-3 h-full w-full relative z-10">
           {displayHistory.map((data, i) => {
             const originalIndex = history.indexOf(data)
             const { height, isPositive } = getBarHeightAndColor(data.dailyGain)
@@ -130,11 +128,11 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
                   onMouseLeave={() => setHoveredIndex(null)}
                 >
                   {/* Tooltip */}
-                  <div className={`absolute -top-14 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded whitespace-nowrap transition-opacity z-20 ${
+                  <div className={`absolute -top-10 sm:-top-12 md:-top-14 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] sm:text-[9px] md:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap transition-opacity z-20 ${
                     isHovered || isLatest ? 'opacity-100' : 'opacity-0'
                   }`}>
                     <div>{formatValue(data.dailyGain)} daily</div>
-                    <div className="text-[8px] font-normal text-gray-600">{formatDate(data.date)}</div>
+                    <div className="text-[7px] sm:text-[8px] font-normal text-gray-600">{formatDate(data.date)}</div>
                   </div>
                 </div>
               </div>
@@ -144,13 +142,13 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-6 mt-4 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-green-500/60"></div>
+      <div className="flex justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 text-[10px] sm:text-xs">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="w-2 h-2 sm:w-3 sm:h-3 rounded bg-green-500/60"></div>
           <span className="text-white/60">Positive</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-red-500/60"></div>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="w-2 h-2 sm:w-3 sm:h-3 rounded bg-red-500/60"></div>
           <span className="text-white/60">Negative</span>
         </div>
       </div>

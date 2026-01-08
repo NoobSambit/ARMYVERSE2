@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { X, ArrowRight, ArrowLeft } from 'lucide-react'
+import { X, ArrowLeft } from 'lucide-react'
 
 interface PlaylistConfig {
   name: string
