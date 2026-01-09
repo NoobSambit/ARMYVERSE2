@@ -7,7 +7,7 @@ import { Question } from '@/lib/models/Question'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { rollQuizRarityAndCardByXp, type Rarity } from '@/lib/game/dropTable'
 import { scoreWithBreakdown, Difficulty } from '@/lib/game/scoring'
-import { url as cloudinaryUrl } from '@/lib/cloudinary'
+import { mapPhotocardSummary } from '@/lib/game/photocardMapper'
 // import { Photocard } from '@/lib/models/Photocard' // Not currently used
 import { addMasteryXp } from '@/lib/game/mastery'
 import { advanceQuest } from '@/lib/game/quests'
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session expired' }, { status: 410 })
     }
 
+    const mode = session.mode === 'quest' ? 'quest' : 'ranked'
     const questionIds = (session.questionIds as unknown[]).map((id) => String(id))
     const answers = input.data.answers
     if (answers.length !== questionIds.length) {
@@ -152,19 +153,16 @@ export async function POST(request: NextRequest) {
     // Persist base completion and XP before reward gating
     await awardBalances(user.uid, { xp })
 
-    // Reward roll
     let rarity: Rarity | null = null
-    let card: {
-      _id: string
-      member?: string
-      era?: string
-      set?: string
-      rarity: Rarity
-      publicId: string
-    } | null = null
-    let rarityWeightsUsed: Record<Rarity, number> | null = null
+    let card: any | null = null
+    let rarityWeightsUsed: Record<string, number> | null = null
     let pityApplied = false
-    {
+    let duplicate = false
+    let dustAwarded = 0
+    let inventoryCount = 0
+    let imageUrl: string | null = null
+
+    if (mode === 'ranked') {
       if (xp < 5) {
         return NextResponse.json({
           xp,
@@ -189,47 +187,35 @@ export async function POST(request: NextRequest) {
       }
       const roll = await rollQuizRarityAndCardByXp(user.uid, xp)
       rarity = roll.rarity
-      card = roll.card
-        ? {
-            _id: String(roll.card._id),
-            member: roll.card.member,
-            era: roll.card.era,
-            set: roll.card.set,
-            rarity: roll.card.rarity as Rarity,
-            publicId: roll.card.publicId
-          }
-        : null
+      card = roll.card || null
       rarityWeightsUsed = roll.rarityWeightsUsed
       pityApplied = roll.pityApplied
-    }
-    if (!card) {
-      // Safety: if no card came back (shouldn't happen for non-practice with enough XP), return no reward
-      return NextResponse.json({
-        xp,
-        correctCount,
-        reward: null,
-        reason: 'no_card',
-        rarityWeightsUsed: rarityWeightsUsed || null,
-        pityApplied,
-        review: {
-          items: ordered.map((q, i) => ({
-            id: q.id,
-            question: q.question,
-            choices: q.choices,
-            difficulty: q.difficulty,
-            userAnswerIndex: answers[i],
-            correctIndex: q.answerIndex,
-            xpAward: scored.breakdown[i]?.xpAward || 0
-          })),
-          summary: { xp, correctCount }
-        }
-      })
-    }
 
-    let inventoryCount = await InventoryItem.countDocuments({ userId: user.uid })
-    let duplicate = false
-    let dustAwarded = 0
-    if (card) {
+      if (!card) {
+        // Safety: if no card came back (shouldn't happen for non-practice with enough XP), return no reward
+        return NextResponse.json({
+          xp,
+          correctCount,
+          reward: null,
+          reason: 'no_card',
+          rarityWeightsUsed: rarityWeightsUsed || null,
+          pityApplied,
+          review: {
+            items: ordered.map((q, i) => ({
+              id: q.id,
+              question: q.question,
+              choices: q.choices,
+              difficulty: q.difficulty,
+              userAnswerIndex: answers[i],
+              correctIndex: q.answerIndex,
+              xpAward: scored.breakdown[i]?.xpAward || 0
+            })),
+            summary: { xp, correctCount }
+          }
+        })
+      }
+
+      inventoryCount = await InventoryItem.countDocuments({ userId: user.uid })
       const existingOwned = await InventoryItem.findOne({ userId: user.uid, cardId: card._id })
       if (existingOwned) {
         duplicate = true
@@ -247,9 +233,9 @@ export async function POST(request: NextRequest) {
         }
       }
       inventoryCount = await InventoryItem.countDocuments({ userId: user.uid })
+      const summary = mapPhotocardSummary(card)
+      imageUrl = summary?.imageUrl || null
     }
-
-    const imageUrl = card ? cloudinaryUrl(card.publicId) : null
 
     // Update mastery only from correctly answered questions, preserving per-question XP per track
     const masteryUpdates: Promise<unknown>[] = []
@@ -264,59 +250,62 @@ export async function POST(request: NextRequest) {
     }
 
     // Advance quests and leaderboard
-    await advanceQuest(user.uid, 'score', correctCount)
-    await advanceQuest(user.uid, 'correct', correctCount)
+    if (mode === 'quest') {
+      await advanceQuest(user.uid, 'quiz:complete', 1)
+    } else {
+      // Legacy score/correct-driven quests (if any)
+      await advanceQuest(user.uid, 'score', correctCount)
+      await advanceQuest(user.uid, 'correct', correctCount)
+    }
 
-    // Weekly leaderboard: keep max score for user in current week
-    const periodKey = (() => {
-      const now = new Date()
-      const tmp = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-      const dayNum = tmp.getUTCDay() || 7
-      tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum)
-      const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1))
-      const weekNo = Math.ceil((((tmp.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
-      return `weekly-${tmp.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`
-    })()
-    
-    // Get user profile data from MongoDB for leaderboard
-    // Ensure User model is registered before leaderboard upsert
-    await import('@/lib/models/User')
-    type UserProfileDoc = { profile?: { displayName?: string; avatarUrl?: string } }
-    const userDoc = await getUserFromAuth(user) as UserProfileDoc | null
-    const profileDisplayName = userDoc?.profile?.displayName || user.displayName || user.username || 'User'
-    const profileAvatarUrl = userDoc?.profile?.avatarUrl || user.photoURL || ''
-    
-    console.log('[Quiz Complete] Updating leaderboard:', {
-      userId: user.uid,
-      displayName: profileDisplayName,
-      avatarUrl: profileAvatarUrl,
-      score: correctCount,
-      hasProfile: !!userDoc?.profile
-    })
-    
-    await LeaderboardEntry.findOneAndUpdate(
-      { periodKey, userId: user.uid },
-      { 
-        $max: { score: correctCount }, 
-        $set: {
-          displayName: profileDisplayName, 
-          avatarUrl: profileAvatarUrl,
-          updatedAt: new Date()
-        }
-      },
-      { upsert: true }
-    )
+    if (mode === 'ranked') {
+      // Weekly leaderboard: keep max score for user in current week
+      const periodKey = (() => {
+        const now = new Date()
+        const tmp = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+        const dayNum = tmp.getUTCDay() || 7
+        tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum)
+        const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1))
+        const weekNo = Math.ceil((((tmp.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+        return `weekly-${tmp.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`
+      })()
+      
+      // Get user profile data from MongoDB for leaderboard
+      // Ensure User model is registered before leaderboard upsert
+      await import('@/lib/models/User')
+      type UserProfileDoc = { profile?: { displayName?: string; avatarUrl?: string } }
+      const userDoc = await getUserFromAuth(user) as UserProfileDoc | null
+      const profileDisplayName = userDoc?.profile?.displayName || user.displayName || user.username || 'User'
+      const profileAvatarUrl = userDoc?.profile?.avatarUrl || user.photoURL || ''
+      
+      console.log('[Quiz Complete] Updating leaderboard:', {
+        userId: user.uid,
+        displayName: profileDisplayName,
+        avatarUrl: profileAvatarUrl,
+        score: correctCount,
+        hasProfile: !!userDoc?.profile
+      })
+      
+      await LeaderboardEntry.findOneAndUpdate(
+        { periodKey, userId: user.uid },
+        { 
+          $max: { score: correctCount }, 
+          $set: {
+            displayName: profileDisplayName, 
+            avatarUrl: profileAvatarUrl,
+            updatedAt: new Date()
+          }
+        },
+        { upsert: true }
+      )
+    }
 
     return NextResponse.json({
       xp,
       correctCount,
       reward: card ? {
-        cardId: card._id.toString(),
+        ...mapPhotocardSummary(card),
         rarity,
-        member: card.member,
-        era: card.era,
-        set: card.set,
-        publicId: card.publicId,
         imageUrl
       } : null,
       duplicate,

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/client/api'
 import StreamingQuestCard from './StreamingQuestCard'
 import QuizQuestCard from './QuizQuestCard'
@@ -25,12 +26,15 @@ type StreakInfo = {
     daysRemaining?: number
 }
 
-export default function QuestsView({ dailyStreak }: { dailyStreak?: StreakInfo }) {
+export default function QuestsView({ dailyStreak, onStateRefresh }: { dailyStreak?: StreakInfo; onStateRefresh?: () => Promise<void> }) {
+  const router = useRouter()
   const [quests, setQuests] = useState<Quest[]>([])
   const [filter, setFilter] = useState<'daily' | 'weekly' | 'special'>('daily')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isStreamingConnected, setIsStreamingConnected] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const load = async () => {
     setError(null)
@@ -54,23 +58,33 @@ export default function QuestsView({ dailyStreak }: { dailyStreak?: StreakInfo }
 
   useEffect(() => { load() }, [])
 
+  const startQuiz = () => {
+    router.push('/boraland/quest-play')
+  }
+
   const claim = async (code: string) => {
     try {
       await apiFetch('/api/game/quests/claim', { method: 'POST', body: JSON.stringify({ code }) })
       await load()
+      if (onStateRefresh) {
+        await onStateRefresh()
+      }
     } catch (e) {}
   }
 
   const verifyStreaming = async () => {
     setError(null)
+    setSuccessMessage(null)
+    setIsVerifying(true)
     try {
       const result = await apiFetch('/api/game/quests/verify-streaming', { method: 'POST' })
       await load()
 
-      // Show success message if available
+      // Show success message
       if (result.message) {
-        // Could show a success toast here
-        console.log(result.message)
+        setSuccessMessage(result.message)
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => setSuccessMessage(null), 5000)
       }
     } catch (e: any) {
       // Handle specific error cases
@@ -79,6 +93,10 @@ export default function QuestsView({ dailyStreak }: { dailyStreak?: StreakInfo }
       } else {
         setError(e.message || 'Failed to verify streaming progress. Please try again.')
       }
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => setError(null), 5000)
+    } finally {
+      setIsVerifying(false)
     }
   }
 
@@ -139,16 +157,35 @@ export default function QuestsView({ dailyStreak }: { dailyStreak?: StreakInfo }
         {isStreamingConnected && (
           <button
             onClick={verifyStreaming}
-            className="px-3 md:px-4 py-1.5 md:py-2 rounded-xl bg-green-600/20 text-green-400 text-[10px] md:text-xs font-bold border border-green-600/30 hover:bg-green-600/30 transition-all flex items-center gap-1.5 md:gap-2 shrink-0"
+            disabled={isVerifying}
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-bold border transition-all flex items-center gap-1.5 md:gap-2 shrink-0 ${
+              isVerifying
+                ? 'bg-green-600/10 text-green-400/50 border-green-600/20 cursor-wait'
+                : 'bg-green-600/20 text-green-400 border-green-600/30 hover:bg-green-600/30'
+            }`}
           >
-            <span className="material-symbols-outlined text-xs md:text-sm">verified</span>
-            <span className="hidden sm:inline">Verify Progress</span>
-            <span className="sm:hidden">Verify</span>
+            <span className={`material-symbols-outlined text-xs md:text-sm ${isVerifying ? 'animate-spin' : ''}`}>
+              {isVerifying ? 'refresh' : 'verified'}
+            </span>
+            <span className="hidden sm:inline">{isVerifying ? 'Verifying...' : 'Verify Progress'}</span>
+            <span className="sm:hidden">{isVerifying ? 'Verifying...' : 'Verify'}</span>
           </button>
         )}
       </div>
 
-      {error && <div className="mb-4 text-rose-300 text-sm">{error}</div>}
+      {successMessage && (
+        <div className="mb-4 p-3 md:mb-6 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center gap-3 animate-slide-down">
+          <span className="material-symbols-outlined text-green-400 shrink-0">check_circle</span>
+          <span className="text-green-300 text-sm font-medium">{successMessage}</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-3 md:mb-6 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3 animate-slide-down">
+          <span className="material-symbols-outlined text-rose-400 shrink-0">error</span>
+          <span className="text-rose-300 text-sm">{error}</span>
+        </div>
+      )}
 
       <div className="space-y-3 md:space-y-4">
         {loading ? (
@@ -178,7 +215,7 @@ export default function QuestsView({ dailyStreak }: { dailyStreak?: StreakInfo }
                             key={q.code}
                             quest={q}
                             onClaim={claim}
-                            onAction={() => {}} // Could link to blog/quiz page
+                            onAction={startQuiz}
                         />
                     )
                 }

@@ -26,7 +26,7 @@ export interface IQuestDefinition {
     dust: number
     xp?: number
     ticket?: {
-      rarityMin: 'rare' | 'epic' | 'legendary'
+      enabled?: boolean
     }
     badgeId?: mongoose.Types.ObjectId
   }
@@ -58,7 +58,7 @@ const questDefinitionSchema = new mongoose.Schema<IQuestDefinition>({
     dust: { type: Number, default: 0 },
     xp: { type: Number, default: 0 },
     ticket: {
-      rarityMin: { type: String, enum: ['rare', 'epic', 'legendary'], default: undefined }
+      enabled: { type: Boolean, default: false }
     },
     badgeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Badge', default: undefined }
   },
@@ -68,5 +68,4 @@ const questDefinitionSchema = new mongoose.Schema<IQuestDefinition>({
 questDefinitionSchema.index({ code: 1 }, { unique: true })
 
 export const QuestDefinition = mongoose.models.QuestDefinition || mongoose.model<IQuestDefinition>('QuestDefinition', questDefinitionSchema)
-
 

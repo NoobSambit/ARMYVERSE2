@@ -6,9 +6,9 @@ import { apiFetch } from '@/lib/client/api'
 
 type InventoryItem = {
   card?: {
-    member: string
-    era: string
-    rarity: string
+    title?: string | null
+    category?: string
+    subcategory?: string | null
   }
 }
 
@@ -20,13 +20,8 @@ type GameStats = {
 
 type PoolInfo = {
   name?: string
-  set?: string
-  weights?: {
-    common: number
-    rare: number
-    epic: number
-    legendary: number
-  }
+  totalCards?: number
+  categories?: number
 }
 
 export default function GameHub() {
@@ -45,7 +40,7 @@ export default function GameHub() {
           const state = await apiFetch('/api/game/state')
           totalXp = state?.totalXp || 0
         } catch {}
-        setStats({ latest: res?.items?.[0], totalXp })
+        setStats({ latest: res?.items?.[0], totalXp, total: res?.total || 0 })
         try {
           const pools = await apiFetch('/api/game/pools')
           if (active) setPool(pools.active || null)
@@ -83,8 +78,8 @@ export default function GameHub() {
           <div className="text-white">
             {stats?.latest ? (
               <div>
-                <div className="font-semibold">{stats.latest.card?.member}</div>
-                <div className="text-sm text-white/70">{stats.latest.card?.era} • {stats.latest.card?.rarity}</div>
+                <div className="font-semibold">{stats.latest.card?.category}</div>
+                <div className="text-sm text-white/70">{stats.latest.card?.subcategory || stats.latest.card?.title || 'Gallery'}</div>
               </div>
             ) : (
               <div className="text-white/50">Play to get your first card!</div>
@@ -145,12 +140,11 @@ export default function GameHub() {
         <div className="text-white/60 text-sm mb-2">Active Pool</div>
         {pool ? (
           <div className="text-white">
-            <div className="font-semibold">{pool.name || pool.set || 'Default Pool'}</div>
-            {pool.weights && (
-              <div className="mt-2 text-sm text-white/70">
-                Rarity chances: Common {pool.weights.common}% • Rare {pool.weights.rare}% • Epic {pool.weights.epic}% • Legendary {pool.weights.legendary}%
-              </div>
-            )}
+            <div className="font-semibold">{pool.name || 'Fandom Gallery Pool'}</div>
+            <div className="mt-2 text-sm text-white/70">
+              {typeof pool.totalCards === 'number' ? `${pool.totalCards} cards` : 'Card pool loading...'}
+              {typeof pool.categories === 'number' ? ` • ${pool.categories} categories` : ''}
+            </div>
           </div>
         ) : (
           <div className="text-white/50">Loading pool information...</div>
@@ -161,5 +155,3 @@ export default function GameHub() {
     </div>
   )
 }
-
-

@@ -62,35 +62,40 @@ Submit quiz answers and receive photocard reward.
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "score": 8,
-  "correctAnswers": 8,
-  "totalQuestions": 10,
-  "newCard": {
-    "id": "item_xyz789",
-    "photocard": {
-      "member": "Jungkook",
-      "era": "Love Yourself",
-      "set": "LY: Answer",
-      "rarity": "epic",
-      "imageUrl": "https://res.cloudinary.com/..."
-    },
-    "duplicate": false,
-    "dustAwarded": 0
+  "xp": 18,
+  "correctCount": 7,
+  "reward": {
+    "cardId": "6960e7ce2d95902a438cace4",
+    "title": "Melon Profile",
+    "category": "D-DAY",
+    "categoryPath": "D-DAY/Gallery",
+    "subcategory": "Promo Pictures",
+    "subcategoryPath": "Promo_Pictures",
+    "imageUrl": "https://static.wikia.nocookie.net/...",
+    "thumbUrl": "https://static.wikia.nocookie.net/...",
+    "sourceUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery#Promo_Pictures",
+    "pageUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery",
+    "rarity": "random"
   },
-  "xpAwarded": 160,
-  "masteryUpdates": {
-    "Jungkook": { "xpGained": 80, "newLevel": 12 },
-    "Love Yourself": { "xpGained": 80, "newLevel": 8 }
-  },
-  "questProgress": [
-    {
-      "code": "daily_quiz_3",
-      "progress": 1,
-      "total": 3,
-      "completed": false
-    }
-  ]
+  "duplicate": false,
+  "dustAwarded": 0,
+  "rarityWeightsUsed": null,
+  "pityApplied": false,
+  "inventoryCount": 1002,
+  "review": {
+    "items": [
+      {
+        "id": "q1",
+        "question": "In which year did BTS debut?",
+        "choices": ["2012", "2013", "2014", "2015"],
+        "difficulty": "easy",
+        "userAnswerIndex": 1,
+        "correctIndex": 1,
+        "xpAward": 1
+      }
+    ],
+    "summary": { "xp": 18, "correctCount": 7 }
+  }
 }
 ```
 
@@ -105,44 +110,36 @@ Get user's photocard collection.
 **Authentication**: Required
 
 **Query Parameters:**
-- `page` (number, default: 1)
-- `limit` (number, default: 20, max: 100)
-- `rarity` (string, optional): Filter by rarity
-- `member` (string, optional): Filter by member
-- `era` (string, optional): Filter by era
+- `skip` (number, default: 0)
+- `limit` (number, default: 20, max: 50)
+- `q` (string, optional): Search by caption/name/category paths
+- `category` (string, optional): Filter by `categoryPath`
+- `subcategory` (string, optional): Filter by `subcategoryPath`
+- `source` (string, optional): Filter by `source.type`
+- `newOnly` (string, optional): `1` to return items from the last 7 days
 
 **Success Response (200):**
 ```json
 {
-  "ok": true,
   "items": [
     {
-      "id": "item_xyz789",
-      "photocard": {
-        "member": "Jungkook",
-        "era": "Love Yourself",
-        "set": "LY: Answer",
-        "rarity": "epic",
-        "imageUrl": "https://res.cloudinary.com/..."
-      },
+      "id": "69612f423984715f3b4fde37",
       "acquiredAt": "2026-01-06T10:30:00.000Z",
-      "source": "quiz"
+      "source": { "type": "quiz" },
+      "card": {
+        "cardId": "6960e7ce2d95902a438cace4",
+        "title": "Melon Profile",
+        "category": "D-DAY",
+        "categoryPath": "D-DAY/Gallery",
+        "subcategory": "Promo Pictures",
+        "subcategoryPath": "Promo_Pictures",
+        "imageUrl": "https://static.wikia.nocookie.net/...",
+        "thumbUrl": "https://static.wikia.nocookie.net/..."
+      }
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 142,
-    "pages": 8
-  },
-  "stats": {
-    "totalCards": 142,
-    "uniqueCards": 87,
-    "legendary": 3,
-    "epic": 12,
-    "rare": 28,
-    "common": 99
-  }
+  "total": 1002,
+  "nextCursor": "20"
 }
 ```
 
@@ -159,38 +156,38 @@ Craft a photocard using Stardust.
 **Request Body (Specific Card):**
 ```json
 {
-  "cardId": "photocard_jk_ly_answer_01"
+  "cardId": "6960e7ce2d95902a438cace4"
 }
 ```
 
-**Request Body (Rarity Roll):**
+**Request Body (Random Roll):**
 ```json
-{
-  "targetRarity": "epic"
-}
+{}
 ```
 
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "stardustSpent": 2000,
-  "remainingStardust": 3500,
-  "craftedCard": {
-    "id": "item_new123",
-    "photocard": {
-      "member": "Jungkook",
-      "era": "Love Yourself",
-      "rarity": "epic",
-      "imageUrl": "https://res.cloudinary.com/..."
-    }
-  }
+  "reward": {
+    "cardId": "6960e7ce2d95902a438cace4",
+    "title": "Melon Profile",
+    "category": "D-DAY",
+    "categoryPath": "D-DAY/Gallery",
+    "subcategory": "Promo Pictures",
+    "subcategoryPath": "Promo_Pictures",
+    "imageUrl": "https://static.wikia.nocookie.net/...",
+    "thumbUrl": "https://static.wikia.nocookie.net/...",
+    "sourceUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery#Promo_Pictures",
+    "pageUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery",
+    "rarity": "random"
+  },
+  "balances": { "dust": 3500, "dustSpent": 50 },
+  "inventoryCount": 1002
 }
 ```
 
-**Crafting Costs:**
-- **Specific Card**: Common 100, Rare 500, Epic 2000, Legendary 10000
-- **Rarity Roll**: Rare+ 200, Epic+ 1000, Legendary 5000
+**Cost:**
+- Fixed 50 dust per craft (specific or random).
 
 ---
 
@@ -273,72 +270,27 @@ Get available quests and user progress.
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "quests": {
-    "daily": [
-      {
-        "code": "daily_stream_songs",
-        "title": "Stream 5 Songs",
-        "description": "Stream 5 BTS songs (5 times each)",
-        "category": "streaming",
-        "progress": 12,
-        "total": 25,
-        "completed": false,
-        "metadata": {
-          "targetCount": 5,
-          "playCount": 5,
-          "targetSongs": [
-            {
-              "title": "Dynamite",
-              "artist": "BTS",
-              "spotifyId": "5WM3WZSEKjFQMNmYBjJ3bK"
-            }
-          ]
-        },
-        "rewards": {
-          "stardust": 50,
-          "xp": 20
-        },
-        "expiresAt": "2026-01-07T00:00:00.000Z"
+  "quests": [
+    {
+      "code": "daily_stream_songs_2026-01-06",
+      "title": "Stream 5 Songs",
+      "period": "daily",
+      "goalType": "stream:songs",
+      "goalValue": 25,
+      "progress": 12,
+      "completed": false,
+      "claimed": false,
+      "reward": { "dust": 50, "xp": 20, "ticket": { "enabled": true }, "badgeId": null },
+      "streamingMeta": {
+        "trackTargets": [
+          { "trackName": "Dynamite", "artistName": "BTS", "count": 5 }
+        ]
+      },
+      "trackProgress": {
+        "dynamite:bts": 3
       }
-    ],
-    "weekly": [
-      {
-        "code": "weekly_stream_albums",
-        "title": "Stream 10 Albums",
-        "description": "Stream 10 complete BTS albums",
-        "category": "streaming",
-        "progress": 3,
-        "total": 10,
-        "completed": false,
-        "metadata": {
-          "targetAlbums": [
-            {
-              "name": "Love Yourself: Answer",
-              "artist": "BTS",
-              "spotifyId": "2lATMC0r3rD7eZDgvJKHvq",
-              "tracks": [
-                { "title": "Euphoria", "duration": 223 }
-              ],
-              "totalTracks": 25
-            }
-          ]
-        },
-        "rewards": {
-          "stardust": 400,
-          "xp": 200,
-          "photocard": { "rarity": "rare" }
-        },
-        "expiresAt": "2026-01-13T00:00:00.000Z"
-      }
-    ]
-  },
-  "userState": {
-    "dailyStreak": 5,
-    "weeklyStreak": 2,
-    "lastCompletedDaily": "2026-01-06T00:00:00.000Z",
-    "lastCompletedWeekly": "2026-01-01T00:00:00.000Z"
-  }
+    }
+  ]
 }
 ```
 
@@ -388,19 +340,20 @@ Claim quest rewards.
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "rewards": {
-    "stardust": 50,
-    "xp": 20,
-    "photocard": null
+  "reward": {
+    "cardId": "6960e7ce2d95902a438cace4",
+    "title": "Melon Profile",
+    "category": "D-DAY",
+    "subcategory": "Promo Pictures",
+    "imageUrl": "https://static.wikia.nocookie.net/...",
+    "sourceUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery#Promo_Pictures",
+    "rarity": "random"
   },
-  "badge": {
-    "code": "daily_completion",
-    "name": "Daily Dedication",
-    "icon": "🎯",
-    "tier": 1
-  },
-  "newStreak": 6
+  "balances": { "dust": 1250, "xp": 320 },
+  "streaks": { "daily": 6, "weekly": 2 },
+  "badgesAwarded": ["daily_completion"],
+  "photocardAwarded": null,
+  "allQuestsCompleted": true
 }
 ```
 
@@ -410,36 +363,22 @@ Claim quest rewards.
 
 ### GET /api/game/badges
 
-Get user's badge collection and available badges.
+Get user's earned badges.
 
 **Authentication**: Required
 
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "userBadges": [
+  "badges": [
     {
       "code": "daily_completion",
       "name": "Daily Dedication",
       "description": "Complete all daily quests",
       "icon": "🎯",
-      "tier": 5,
-      "awardedAt": "2026-01-06T10:00:00.000Z"
-    }
-  ],
-  "allBadges": [
-    {
-      "code": "daily_completion",
-      "name": "Daily Dedication",
-      "description": "Complete all daily quests",
-      "icon": "🎯",
-      "maxTier": 10,
-      "rewards": {
-        "1": { "stardust": 100 },
-        "5": { "stardust": 500, "photocard": { "rarity": "rare" } },
-        "10": { "stardust": 2000, "photocard": { "rarity": "epic" } }
-      }
+      "rarity": "rare",
+      "earnedAt": "2026-01-06T10:00:00.000Z",
+      "metadata": { "questCode": "daily_stream_songs_2026-01-06" }
     }
   ]
 }
@@ -516,29 +455,28 @@ Get complete user game state.
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "state": {
-    "userId": "user_123",
-    "stardust": 3500,
-    "tickets": 12,
-    "pityCounters": {
-      "standard": 8,
-      "legendary": 32
-    },
-    "dailyQuizCount": 5,
-    "lastQuizDate": "2026-01-06",
-    "quests": {
-      "dailyStreak": 5,
-      "weeklyStreak": 2
-    },
-    "stats": {
-      "totalQuizzes": 142,
-      "perfectScores": 23,
-      "totalCards": 356,
-      "uniqueCards": 187,
-      "legendaryCards": 8
+  "dust": 3500,
+  "totalXp": 5400,
+  "level": 54,
+  "streaks": {
+    "daily": { "current": 5, "nextMilestone": 10, "daysRemaining": 5 },
+    "weekly": { "current": 2, "nextMilestone": 10, "weeksRemaining": 8 }
+  },
+  "potentialRewards": {
+    "dailyMilestoneBadge": { "code": "daily_milestone_1", "name": "Dedicated Devotee", "icon": "🏆", "rarity": "epic", "atStreak": 10 },
+    "weeklyMilestoneBadge": { "code": "weekly_milestone_1", "name": "Weekly Warrior", "icon": "💫", "rarity": "epic", "atStreak": 10 },
+    "dailyPhotocard": { "type": "random" },
+    "weeklyPhotocard": { "type": "random" }
+  },
+  "latestBadges": [
+    {
+      "code": "daily_completion",
+      "name": "Daily Dedication",
+      "icon": "🎯",
+      "rarity": "rare",
+      "earnedAt": "2026-01-06T10:00:00.000Z"
     }
-  }
+  ]
 }
 ```
 
@@ -548,7 +486,7 @@ Get complete user game state.
 
 ### POST /api/game/share
 
-Generate shareable photocard image.
+Generate a shareable URL for a photocard.
 
 **Authentication**: Required
 
@@ -562,8 +500,7 @@ Generate shareable photocard image.
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "shareUrl": "https://res.cloudinary.com/.../share_jk_ly_answer.png"
+  "shareUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery#Promo_Pictures"
 }
 ```
 
@@ -580,15 +517,94 @@ Preview available photocards (for UI display).
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "photocards": [
+  "cards": [
     {
-      "id": "photocard_jk_ly_answer_01",
-      "member": "Jungkook",
-      "era": "Love Yourself",
-      "set": "LY: Answer",
-      "rarity": "epic",
-      "imageUrl": "https://res.cloudinary.com/..."
+      "cardId": "6960e7ce2d95902a438cace4",
+      "title": "Melon Profile",
+      "category": "D-DAY",
+      "categoryPath": "D-DAY/Gallery",
+      "subcategory": "Promo Pictures",
+      "subcategoryPath": "Promo_Pictures",
+      "imageUrl": "https://static.wikia.nocookie.net/...",
+      "thumbUrl": "https://static.wikia.nocookie.net/..."
+    }
+  ],
+  "total": 12
+}
+```
+
+---
+
+### GET /api/game/photocards/catalog
+
+Return the category/subcategory tree with total vs collected counts.
+
+**Authentication**: Required
+
+**Success Response (200):**
+```json
+{
+  "totalCards": 9871,
+  "collectedCards": 45,
+  "categories": [
+    {
+      "key": "D-DAY/Gallery",
+      "label": "D-DAY",
+      "path": ["D-DAY/Gallery"],
+      "total": 120,
+      "collected": 5,
+      "children": [
+        {
+          "key": "Promo_Pictures",
+          "label": "Promo Pictures",
+          "path": ["Promo_Pictures"],
+          "total": 24,
+          "collected": 2,
+          "children": []
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/game/photocards/collection
+
+Return grouped catalog cards with owned status for collection view.
+
+**Authentication**: Required
+
+**Query Parameters:**
+- `q` (string, optional): Search by caption/name/category paths
+- `category` (string, optional): Filter by `categoryPath`
+- `subcategory` (string, optional): Filter by `subcategoryPath`
+
+**Success Response (200):**
+```json
+{
+  "totalCards": 120,
+  "collectedCards": 5,
+  "groups": [
+    {
+      "key": "Promo_Pictures",
+      "label": "Promo Pictures",
+      "total": 24,
+      "collected": 2,
+      "cards": [
+        {
+          "cardId": "6960e7ce2d95902a438cace4",
+          "title": "Melon Profile",
+          "category": "D-DAY",
+          "subcategory": "Promo Pictures",
+          "imageUrl": "https://static.wikia.nocookie.net/...",
+          "thumbUrl": "https://static.wikia.nocookie.net/...",
+          "sourceUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery#Promo_Pictures",
+          "pageUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery",
+          "owned": true
+        }
+      ]
     }
   ]
 }

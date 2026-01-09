@@ -20,7 +20,25 @@ export function weeklyKey(date = new Date()) {
 
 export async function getActiveQuests() {
   const defs = await QuestDefinition.find({ active: true }).lean()
-  return defs
+
+  // Deduplicate daily/weekly quests so only the latest code per goalType/period is returned
+  const latestByPeriodAndGoal = new Map<string, any>()
+  const otherPeriods: any[] = []
+
+  for (const quest of defs) {
+    if (quest.period === 'daily' || quest.period === 'weekly') {
+      const key = `${quest.period}:${quest.goalType}`
+      const existing = latestByPeriodAndGoal.get(key)
+
+      if (!existing || (quest.code || '') > (existing.code || '')) {
+        latestByPeriodAndGoal.set(key, quest)
+      }
+    } else {
+      otherPeriods.push(quest)
+    }
+  }
+
+  return [...Array.from(latestByPeriodAndGoal.values()), ...otherPeriods]
 }
 
 export async function advanceQuest(userId: string, kind: 'score' | 'correct' | string, amount: number) {
@@ -86,5 +104,3 @@ export async function getUserQuests(userId: string) {
   })
   return results
 }
-
-

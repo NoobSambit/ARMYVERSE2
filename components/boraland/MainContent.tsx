@@ -8,7 +8,7 @@ export default function MainContent({ onTabChange }: { pool: PoolInfo | null, on
     <section className="flex-grow flex flex-col gap-6">
     {/* Banner */}
     <div className="relative w-full h-[280px] md:h-[400px] rounded-3xl overflow-hidden group shadow-2xl shadow-purple-900/20 border border-white/10">
-    <div className="absolute inset-0 bg-[url('https://placehold.co/1200x600/1a0b2e/FFFFFF?text=Quiz+Banner')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"></div>
+    <div className="absolute inset-0 bg-[url('https://res.cloudinary.com/dacgtjw7w/image/upload/v1767954618/boraland_quiz_banner_i0hv7v.png')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"></div>
     <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-[#030014]/80 to-transparent"></div>
     <div className="absolute bottom-0 left-0 w-full p-4 md:p-8 lg:p-10 flex flex-col items-start z-10">
     <div className="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-accent-pink/20 border border-accent-pink/40 text-accent-pink text-[10px] md:text-xs font-bold uppercase tracking-wider mb-2 md:mb-4 animate-pulse">
@@ -33,27 +33,21 @@ export default function MainContent({ onTabChange }: { pool: PoolInfo | null, on
     </div>
     </div>
     </div>
-    <div className="absolute top-6 right-6 flex flex-col gap-2">
-    <div className="bora-glass-panel px-4 py-2 rounded-xl flex items-center gap-2 text-sm text-gray-300">
-    <span className="material-symbols-outlined text-accent-cyan text-base">groups</span>
-    <span>1,204 Active</span>
-    </div>
-    </div>
     </div>
 
     {/* Cards */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-    <div className="bora-glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-bora-primary/50 transition-colors cursor-pointer">
+    <Link href="/boraland/practice-play" className="bora-glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-bora-primary/50 transition-colors">
     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
     <span className="material-symbols-outlined text-[120px]">school</span>
     </div>
     <h3 className="font-display text-xl font-bold text-white mb-2">Practice Mode</h3>
-    <p className="text-sm text-gray-400 mb-4">Sharpen your BTS knowledge without pressure. Study mode for learning.</p>
+    <p className="text-sm text-gray-400 mb-4">Sharpen your BTS knowledge without pressure. No rewards, just learning.</p>
     <div className="flex items-center text-bora-primary text-sm font-semibold group-hover:translate-x-1 transition-transform">
                             Start Practice <span className="material-symbols-outlined text-base ml-1">arrow_forward</span>
     </div>
-    </div>
-    <div className="bora-glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-accent-pink/50 transition-colors cursor-pointer">
+    </Link>
+    <Link href="/boraland/play" className="bora-glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-accent-pink/50 transition-colors">
     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
     <span className="material-symbols-outlined text-[120px]">diversity_3</span>
     </div>
@@ -62,7 +56,7 @@ export default function MainContent({ onTabChange }: { pool: PoolInfo | null, on
     <div className="flex items-center text-accent-pink text-sm font-semibold group-hover:translate-x-1 transition-transform">
                             Join Competition <span className="material-symbols-outlined text-base ml-1">swords</span>
     </div>
-    </div>
+    </Link>
     </div>
 
     {/* Other ARMYVERSE Features */}

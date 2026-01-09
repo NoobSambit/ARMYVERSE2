@@ -17,8 +17,8 @@ type GameState = {
   potentialRewards: {
     dailyMilestoneBadge?: Badge
     weeklyMilestoneBadge?: Badge
-    dailyPhotocard?: { rarity: string }
-    weeklyPhotocard?: { rarity: string }
+    dailyPhotocard?: { type: string }
+    weeklyPhotocard?: { type: string }
   }
   latestBadges: Badge[]
 }
@@ -84,16 +84,10 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
         <div className="grid grid-cols-2 gap-2 md:gap-3">
           {/* Photocard Preview */}
           <div className="bg-surface-lighter rounded-xl p-3 flex flex-col items-center justify-center text-center gap-2 border border-white/5 hover:border-bora-primary/50 transition-colors group cursor-pointer">
-             {/* Using a placeholder for now as we don't have the image URL in state, only rarity */}
-             <div className={`w-12 h-16 rounded bg-gray-800 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform border border-white/10 ${
-                state.potentialRewards.dailyPhotocard?.rarity === 'legendary' ? 'border-yellow-500/50 shadow-yellow-500/20' : 
-                state.potentialRewards.dailyPhotocard?.rarity === 'epic' ? 'border-purple-500/50 shadow-purple-500/20' : ''
-             }`}>
-                <span className="text-xs text-gray-500">{state.potentialRewards.dailyPhotocard?.rarity || 'Rare'}</span>
+             <div className="w-12 h-16 rounded bg-gray-800 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform border border-white/10">
+                <span className="text-xs text-gray-500">Random</span>
              </div>
-             <p className="text-[10px] text-gray-400 leading-tight">
-               {state.potentialRewards.dailyPhotocard?.rarity ? `${state.potentialRewards.dailyPhotocard.rarity} Photocard` : 'Rare Photocard'}
-             </p>
+             <p className="text-[10px] text-gray-400 leading-tight">Random Photocard</p>
           </div>
 
           {/* Badge Preview */}

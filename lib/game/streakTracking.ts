@@ -131,7 +131,7 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
     }
 
     // Award photocard for milestone
-    const roll = await rollRarityAndCardV2({ userId, ticketMinRarity: 'epic' })
+    const roll = await rollRarityAndCardV2({ userId })
     if (roll.card) {
       await InventoryItem.create({
         userId,
@@ -142,10 +142,10 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
       photocardAwarded = {
         cardId: roll.card._id.toString(),
         rarity: roll.rarity,
-        member: roll.card.member,
-        era: roll.card.era,
-        set: roll.card.set,
-        publicId: roll.card.publicId
+        category: roll.card.categoryDisplay,
+        subcategory: roll.card.subcategoryPath || null,
+        imageUrl: roll.card.imageUrl,
+        sourceUrl: roll.card.sourceUrl || roll.card.pageUrl
       }
     }
 
@@ -284,7 +284,7 @@ export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<
     }
 
     // Award photocard for milestone
-    const roll = await rollRarityAndCardV2({ userId, ticketMinRarity: 'legendary' })
+    const roll = await rollRarityAndCardV2({ userId })
     if (roll.card) {
       await InventoryItem.create({
         userId,
@@ -295,10 +295,10 @@ export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<
       photocardAwarded = {
         cardId: roll.card._id.toString(),
         rarity: roll.rarity,
-        member: roll.card.member,
-        era: roll.card.era,
-        set: roll.card.set,
-        publicId: roll.card.publicId
+        category: roll.card.categoryDisplay,
+        subcategory: roll.card.subcategoryPath || null,
+        imageUrl: roll.card.imageUrl,
+        sourceUrl: roll.card.sourceUrl || roll.card.pageUrl
       }
     }
 

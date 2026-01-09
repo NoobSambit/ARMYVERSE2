@@ -10,12 +10,14 @@ type Question = { id: string; question: string; choices: string[] }
 
 type Reward = {
   cardId: string
-  rarity: 'common'|'rare'|'epic'|'legendary' | null | undefined
-  member: string
-  era: string
-  set: string
-  publicId: string
-  imageUrl: string
+  title?: string | null
+  category?: string
+  categoryPath?: string
+  subcategory?: string | null
+  subcategoryPath?: string | null
+  imageUrl?: string
+  sourceUrl?: string
+  pageUrl?: string
 } | null
 
 type Review = {
@@ -33,10 +35,12 @@ type Review = {
 
 interface QuizScreenProps {
   demoMode?: boolean
+  practiceMode?: boolean
+  questMode?: boolean
   onExit?: () => void
 }
 
-export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps) {
+export default function QuizScreen({ demoMode = false, practiceMode = false, questMode = false, onExit }: QuizScreenProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -46,9 +50,9 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
   const [currentIndex, setCurrentIndex] = useState(0)
   const [, setExpiresAt] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [result, setResult] = useState<{ xp: number; correctCount: number; reward: Reward | null; dustAwarded?: number; duplicate?: boolean; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: Review | null } | null>(null)
+  const [result, setResult] = useState<{ xp: number; correctCount: number; reward: Reward | null; dustAwarded?: number; duplicate?: boolean; reason?: string | null; review?: Review | null } | null>(null)
   const [redirecting, setRedirecting] = useState(false)
-  const [mode, setMode] = useState<'ranked'|'demo'|'unknown'>('unknown')
+  const [mode, setMode] = useState<'ranked'|'quest'|'demo'|'practice'|'unknown'>('unknown')
 
   // Ref to prevent race conditions and double triggers
   const didCompleteRef = useRef(false)
@@ -65,20 +69,28 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
         setExpiresAt(res.expiresAt)
         setMode('demo')
         setLoading(false)
-      } else {
-        const res = await apiFetch('/api/game/quiz/start', { method: 'POST', body: JSON.stringify({}) })
+      } else if (practiceMode) {
+        const res = await demoFetch('/api/game/quiz/practice/start', { method: 'POST', body: JSON.stringify({ count: 10 }) })
         setSessionId(res.sessionId)
         setQuestions(res.questions)
         setAnswers(new Array(res.questions.length).fill(-1))
         setExpiresAt(res.expiresAt)
-        setMode('ranked')
+        setMode('practice')
+        setLoading(false)
+      } else {
+        const res = await apiFetch('/api/game/quiz/start', { method: 'POST', body: JSON.stringify({ mode: questMode ? 'quest' : 'ranked' }) })
+        setSessionId(res.sessionId)
+        setQuestions(res.questions)
+        setAnswers(new Array(res.questions.length).fill(-1))
+        setExpiresAt(res.expiresAt)
+        setMode(res.mode || (questMode ? 'quest' : 'ranked'))
         setLoading(false)
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to start')
       setLoading(false)
     }
-  }, [demoMode])
+  }, [demoMode, practiceMode, questMode])
 
   // Run once per mount (or demo/ranked toggle) to start a quiz; do not rerun on session updates
   useEffect(() => {
@@ -88,7 +100,7 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
   // Warn on close when an active ranked session exists
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {
-      if (!demoMode && sessionId && !result) {
+      if (!demoMode && !practiceMode && sessionId && !result) {
         e.preventDefault()
         e.returnValue = ''
       }
@@ -114,6 +126,7 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
 
   const submitQuiz = useCallback(async () => {
     if (!sessionId && !sessionSeed) return
+    if (practiceMode && !sessionId) return
 
     // Prevent double submission
     if (isSubmitting) return
@@ -134,8 +147,18 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
           reward: res.previewReward || null,
           dustAwarded: 0,
           duplicate: false,
-          rarityWeightsUsed: res.rarityWeightsUsed || null,
-          pityApplied: false,
+          reason: null,
+          review: res.review
+        })
+      } else if (practiceMode) {
+        const payload = { sessionId, answers }
+        const res = await demoFetch('/api/game/quiz/practice/complete', { method: 'POST', body: JSON.stringify(payload) })
+        setResult({
+          xp: res.xp,
+          correctCount: res.correctCount,
+          reward: null,
+          dustAwarded: 0,
+          duplicate: false,
           reason: null,
           review: res.review
         })
@@ -148,8 +171,6 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
           reward: res.reward || null,
           dustAwarded: res.dustAwarded || 0,
           duplicate: !!res.duplicate,
-          rarityWeightsUsed: res.rarityWeightsUsed || null,
-          pityApplied: !!res.pityApplied,
           reason: res.reason || null,
           review: res.review
         })
@@ -159,7 +180,7 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
     } finally {
       setIsSubmitting(false)
     }
-  }, [sessionId, sessionSeed, isSubmitting, demoMode, answers])
+  }, [sessionId, sessionSeed, isSubmitting, demoMode, practiceMode, answers])
 
   const onTimeout = useCallback(() => {
     if (didCompleteRef.current) return // Prevent race conditions
@@ -235,7 +256,9 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
               onTick={handleTimerTick}
               onComplete={onTimeout}
             />
-            <div className="mt-1 text-center text-white/50 text-xs">XP: +1 easy, +2 medium, +3 hard. 5+ XP unlocks drops; 25+ XP now gives 25% legendary with heavy rare/epic boosts.</div>
+            {!practiceMode && (
+              <div className="mt-1 text-center text-white/50 text-xs">XP: +1 easy, +2 medium, +3 hard. 5+ XP unlocks a random drop.</div>
+            )}
           </div>
           <button
             disabled={isSubmitting}
@@ -248,6 +271,12 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
         {mode === 'demo' && (
           <div className="mt-2 text-center text-blue-300 text-sm">Demo mode: preview rewards, no collection</div>
         )}
+        {mode === 'practice' && (
+          <div className="mt-2 text-center text-teal-300 text-sm">Practice mode: no rewards, no XP</div>
+        )}
+        {mode === 'quest' && (
+          <div className="mt-2 text-center text-emerald-300 text-sm">Quest mode: counts toward daily/weekly quests, no photocard drops</div>
+        )}
       </div>
 
       <QuestionCard question={q.question} choices={q.choices} selectedIndex={answers[currentIndex]} onSelect={selectAnswer} />
@@ -258,7 +287,9 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
           setResult(null)
           if (!demoMode && result && !redirecting) {
             setRedirecting(true)
-            window.location.href = '/boraland'
+            if (questMode) window.location.href = '/boraland/quests'
+            else if (practiceMode) window.location.href = '/boraland'
+            else window.location.href = '/boraland'
           }
         }}
         xp={result?.xp || 0}
@@ -266,11 +297,11 @@ export default function QuizScreen({ demoMode = false, onExit }: QuizScreenProps
         reward={result?.reward || null}
         dustAwarded={result?.dustAwarded || 0}
         duplicate={!!result?.duplicate}
-        rarityWeightsUsed={result?.rarityWeightsUsed || null}
-        pityApplied={result?.pityApplied || false}
         reason={result?.reason || null}
         review={result?.review}
         demoMode={demoMode}
+        questMode={questMode}
+        practiceMode={practiceMode}
       />
     </div>
   )

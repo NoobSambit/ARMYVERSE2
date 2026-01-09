@@ -2,8 +2,8 @@ import { getLastFmClient } from '@/lib/lastfm/client'
 import { isBTSTrack } from '@/lib/music/bts-detection'
 import { StreamingCache } from '@/lib/models/StreamingCache'
 import { UserQuestProgress } from '@/lib/models/UserQuestProgress'
-import { QuestDefinition, IQuestDefinition } from '@/lib/models/QuestDefinition'
-import { dailyKey, weeklyKey } from './quests'
+import { IQuestDefinition } from '@/lib/models/QuestDefinition'
+import { dailyKey, getActiveQuests, weeklyKey } from './quests'
 
 type TrackMatch = {
   trackName: string
@@ -266,10 +266,7 @@ export async function verifyAllStreamingQuests(userId: string, lastfmUsername: s
   const dKey = dailyKey()
   const wKey = weeklyKey()
 
-  const streamingQuests = await QuestDefinition.find({
-    active: true,
-    goalType: /^stream:/
-  }).lean()
+  const streamingQuests = (await getActiveQuests()).filter(q => q.goalType?.startsWith('stream:'))
 
   for (const quest of streamingQuests) {
     const key = quest.period === 'daily' ? dKey : wKey

@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
 import { Question } from '@/lib/models/Question'
 import { scoreWithBreakdown, Difficulty } from '@/lib/game/scoring'
-import { weightsForXpBand } from '@/lib/game/dropTable'
-import { url as cloudinaryUrl } from '@/lib/cloudinary'
+import { Photocard } from '@/lib/models/Photocard'
+import { mapPhotocardSummary } from '@/lib/game/photocardMapper'
 
 export const runtime = 'nodejs'
 
@@ -62,56 +62,23 @@ export async function POST(request: NextRequest) {
       return a & a
     }, 0)
 
-    const weights = weightsForXpBand(xp)
-    const entries = [
-      ['common', weights.common],
-      ['rare', weights.rare],
-      ['epic', weights.epic],
-      ['legendary', weights.legendary]
-    ] as [string, number][]
-    const total = entries.reduce((s, [, w]) => s + w, 0)
-    let selectedRarity: string | null = null
-    if (total > 0) {
-      let randomValue = Math.abs(hash) % total
-      for (const [rar, w] of entries) {
-        randomValue -= w
-        if (randomValue < 0) { selectedRarity = rar; break }
-      }
-      if (!selectedRarity) selectedRarity = 'common'
-    }
-
-    // Get a random card of the selected rarity (or any card if none found)
+    const totalCards = await Photocard.estimatedDocumentCount()
     let previewCard = null as any
-    if (selectedRarity) {
-      const cards = await Question.db.collection('photocards').aggregate([
-        { $match: { rarity: selectedRarity } },
-        { $sample: { size: 1 } }
-      ]).toArray()
+    if (totalCards > 0) {
+      const offset = Math.abs(hash) % totalCards
+      const cards = await Photocard.aggregate([
+        { $skip: offset },
+        { $limit: 1 }
+      ])
       previewCard = cards?.[0] || null
     }
-
-    if (!previewCard) {
-      const fallback = await Question.db.collection('photocards').aggregate([
-        { $sample: { size: 1 } }
-      ]).toArray()
-      previewCard = fallback?.[0] || null
-    }
-
-    const imageUrl = previewCard ? cloudinaryUrl(previewCard.publicId) : null
 
     return NextResponse.json({
       xp,
       correctCount,
-      rarityWeightsUsed: total > 0 ? weights : null,
+      rarityWeightsUsed: null,
       pityApplied: false,
-      previewReward: previewCard ? {
-        rarity: previewCard.rarity,
-        member: previewCard.member,
-        era: previewCard.era,
-        set: previewCard.set,
-        publicId: previewCard.publicId,
-        imageUrl
-      } : null,
+      previewReward: mapPhotocardSummary(previewCard),
       review: {
         items: ordered.map((q, i) => ({
           id: q.id,

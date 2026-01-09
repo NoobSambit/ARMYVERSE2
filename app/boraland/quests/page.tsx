@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
@@ -24,8 +24,8 @@ type GameState = {
   potentialRewards: {
     dailyMilestoneBadge?: any
     weeklyMilestoneBadge?: any
-    dailyPhotocard?: { rarity: string }
-    weeklyPhotocard?: { rarity: string }
+    dailyPhotocard?: { type: string }
+    weeklyPhotocard?: { type: string }
   }
   latestBadges: any[]
 }
@@ -47,22 +47,21 @@ export default function Page() {
     }
   }, [user, router, showToast])
 
+  const fetchState = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/game/state')
+      setGameState(res)
+    } catch (e) {
+      console.error('Failed to fetch game state', e)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (!user) return
-
-    const fetchState = async () => {
-        try {
-            const res = await apiFetch('/api/game/state')
-            setGameState(res)
-        } catch (e) {
-            console.error("Failed to fetch game state", e)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     fetchState()
-  }, [user])
+  }, [user, fetchState])
 
   if (user === undefined || (loading && !gameState)) {
     return (
@@ -96,7 +95,7 @@ export default function Page() {
             </div>
             
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <QuestsView dailyStreak={gameState?.streaks.daily} />
+                <QuestsView dailyStreak={gameState?.streaks.daily} onStateRefresh={fetchState} />
             </div>
             
             <div className="hidden lg:block w-80 shrink-0 overflow-y-auto scrollbar-hide">

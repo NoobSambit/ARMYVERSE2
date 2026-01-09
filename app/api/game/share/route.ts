@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
 import { verifyAuth } from '@/lib/auth/verify'
 import { InventoryItem } from '@/lib/models/InventoryItem'
-import { buildShareUrl } from '@/lib/cloudinaryShare'
 
 export const runtime = 'nodejs'
 
@@ -26,12 +25,10 @@ export async function POST(request: NextRequest) {
     const item = await InventoryItem.findOne({ _id: input.data.inventoryItemId, userId: user.uid }).populate('cardId')
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     const card: any = (item as any).cardId
-    const text = `${card.member} • ${card.rarity.toUpperCase()} • @${user.displayName || user.username || 'user'}`
-    const shareUrl = buildShareUrl({ publicId: card.publicId, text })
+    const shareUrl = card?.sourceUrl || card?.pageUrl || card?.imageUrl || ''
     return NextResponse.json({ shareUrl })
   } catch (error) {
     console.error('Share error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

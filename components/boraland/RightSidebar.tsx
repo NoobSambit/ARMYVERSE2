@@ -64,19 +64,19 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bora-primary/10"></div>
     <div className="flex justify-between items-center mb-3 md:mb-4 z-10">
     <h3 className="font-display text-xs md:text-sm font-bold text-white uppercase tracking-wider">Showcase</h3>
-    <span className="text-[10px] md:text-xs text-accent-pink border border-accent-pink/30 px-1.5 md:px-2 py-0.5 rounded bg-accent-pink/10">{stats?.latest?.card?.rarity || 'NONE'}</span>
+    <span className="text-[10px] md:text-xs text-accent-pink border border-accent-pink/30 px-1.5 md:px-2 py-0.5 rounded bg-accent-pink/10">{stats?.latest?.card?.category || 'RANDOM'}</span>
     </div>
     <div className="flex-grow flex items-center justify-center py-3 md:py-4 relative z-10 perspective-1000">
     <div className="absolute w-32 h-44 md:w-40 md:h-56 bg-gradient-to-tr from-accent-pink to-bora-primary rounded-xl blur-[30px] opacity-40 animate-pulse"></div>
     <div className="w-40 h-60 md:w-48 md:h-72 bg-gray-900 rounded-xl border border-white/10 relative overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500 group">
     {stats?.latest?.card ? (
         <>
-        <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage: `url('${stats.latest.card.imageUrl || `https://placehold.co/400x600/2a1b3d/ffffff?text=${stats.latest.card.member}`}')`}}></div>
+        <div className="absolute inset-0 bg-cover bg-center" style={{backgroundImage: `url('${stats.latest.card.imageUrl || `https://placehold.co/400x600/2a1b3d/ffffff?text=${encodeURIComponent(stats.latest.card.title || stats.latest.card.category || 'Card')}`}')`}}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
         <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700" style={{backgroundSize: '200% 200%', animation: 'shine 3s infinite'}}></div>
         <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4">
-        <h4 className="font-display font-bold text-base md:text-xl text-white">{stats.latest.card.member}</h4>
-        <p className="text-[10px] md:text-xs text-gray-300">{stats.latest.card.era}</p>
+        <h4 className="font-display font-bold text-base md:text-xl text-white">{stats.latest.card.title || stats.latest.card.subcategory || stats.latest.card.category}</h4>
+        <p className="text-[10px] md:text-xs text-gray-300">{stats.latest.card.subcategory || stats.latest.card.category}</p>
         </div>
         </>
     ) : (

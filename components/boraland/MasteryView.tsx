@@ -37,6 +37,7 @@ interface MasteryViewProps {
 export default function MasteryView({ data, loading, onRefresh }: MasteryViewProps) {
   const [claimingKey, setClaimingKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null) // Although data is passed, claim error is local
+  const [activePane, setActivePane] = useState<'members' | 'eras'>('members')
   const { showToast } = useToast()
 
   const dividerFor = (track: MasteryTrack['track']) => {
@@ -170,30 +171,53 @@ export default function MasteryView({ data, loading, onRefresh }: MasteryViewPro
             <h2 className="text-2xl md:text-3xl font-bold text-white">Mastery</h2>
             <p className="text-gray-400 text-sm">Track member & era mastery, claim XP and Dust rewards.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
-            {summaryCards.map((c) => (
-              <div key={c.label} className="relative rounded-xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/0 px-4 py-3 overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.3)]">
-                <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full bg-gradient-to-br ${c.color} opacity-25`} />
-                <div className="flex items-center justify-between relative z-10">
-                  <div>
-                    <div className="text-[11px] uppercase tracking-wider text-gray-300">{c.label}</div>
-                    <div className="text-xl font-bold text-white">{c.value}</div>
+          <div className="flex flex-col gap-2 w-full md:w-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {summaryCards.map((c) => (
+                <div key={c.label} className="relative rounded-xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/0 px-4 py-3 overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,0.3)]">
+                  <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full bg-gradient-to-br ${c.color} opacity-25`} />
+                  <div className="flex items-center justify-between relative z-10">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-wider text-gray-300">{c.label}</div>
+                      <div className="text-xl font-bold text-white">{c.value}</div>
+                    </div>
+                    <span className="material-symbols-outlined text-white/80">{c.icon}</span>
                   </div>
-                  <span className="material-symbols-outlined text-white/80">{c.icon}</span>
                 </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between md:hidden">
+              <div className="flex rounded-full bg-white/5 border border-white/10 p-1">
+                <button
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${activePane === 'members' ? 'bg-gradient-to-r from-primary to-secondary text-white shadow' : 'text-gray-300'}`}
+                  onClick={() => setActivePane('members')}
+                >
+                  Members
+                </button>
+                <button
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${activePane === 'eras' ? 'bg-gradient-to-r from-primary to-secondary text-white shadow' : 'text-gray-300'}`}
+                  onClick={() => setActivePane('eras')}
+                >
+                  Eras
+                </button>
               </div>
-            ))}
+              {onRefresh && (
+                <button onClick={onRefresh} className="text-xs text-gray-300 border border-white/10 rounded-full px-3 py-1 bg-white/5">
+                  Refresh
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {error && <div className="mb-4 text-rose-300 text-sm">{error}</div>}
-      {loading && !data && <div className="text-gray-400 text-sm">Loading mastery...</div>}
+      {(loading) && !data && <div className="text-gray-400 text-sm">Loading mastery...</div>}
 
       {data && (
         <div className="space-y-8">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <section className="space-y-3">
+            <section className={`space-y-3 ${activePane === 'members' ? '' : 'hidden md:block'}`}>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">groups</span> Member Mastery
@@ -209,7 +233,7 @@ export default function MasteryView({ data, loading, onRefresh }: MasteryViewPro
               </div>
             </section>
 
-            <section className="space-y-3">
+            <section className={`space-y-3 ${activePane === 'eras' ? '' : 'hidden md:block'}`}>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-pink-400">album</span> Era Mastery

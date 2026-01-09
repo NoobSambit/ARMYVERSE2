@@ -4,8 +4,8 @@
 
 Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - **Quiz System** - 10-question quizzes testing BTS knowledge
-- **Photocard Collection** - Earn photocards with 4 rarity tiers
-- **Crafting System** - Convert duplicates to Stardust and craft specific cards
+- **Photocard Collection** - Fandom gallery catalog with random drops
+- **Crafting System** - Convert duplicates to Dust and craft specific cards
 - **Mastery System** - Earn member/era XP with milestone rewards
 - **Quest System** - Complete daily/weekly tasks for rewards
 - **Leaderboard** - Weekly competition with global rankings
@@ -29,51 +29,19 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - Lyrics (song identification, meaning)
 - MVs & Performances (visual identification)
 
-**Performance-Based Rewards (XP-banded):**
+**XP-Gated Rewards:**
 - XP is difficulty-weighted (+1 easy, +2 medium, +3 hard)
-- 5–9 XP: 60% common, 30% rare, 10% epic
-- 10–14 XP: 40% common, 45% rare, 15% epic
-- 15–19 XP: 20% common, 45% rare, 30% epic, 5% legendary
-- 20–24 XP: 10% common, 35% rare, 40% epic, 15% legendary
-- 25+ XP: 0% common, 30% rare, 45% epic, 25% legendary
 - Below 5 XP: No card drop (XP still awarded)
+- 5+ XP: Random photocard from the Fandom catalog
 
-### Rarity System
+### Rarity (Deprecated)
 
-Four rarity tiers:
-
-| Rarity | Icon | Color | Description |
-|--------|------|-------|-------------|
-| **Legendary** | 👑 | Amber/Gold | Rarest cards, most valuable |
-| **Epic** | 💎 | Purple/Fuchsia | Very rare, high value |
-| **Rare** | ⭐ | Blue/Cyan | Uncommon, good value |
-| **Common** | 💜 | Slate | Base cards, frequent drops |
-
-**Quiz drop odds by XP band (ranked mode, boosted):**
-
-| XP Band | Common | Rare | Epic | Legendary |
-|---------|--------|------|------|-----------|
-| 5–9 XP | 60% | 30% | 10% | 0% |
-| 10–14 XP | 40% | 45% | 15% | 0% |
-| 15–19 XP | 20% | 45% | 30% | 5% |
-| 20–24 XP | 10% | 35% | 40% | 15% |
-| 25+ XP | 0% | 30% | 45% | 25% |
-
-**Pity System:**
-- Guaranteed Epic or higher every 15 pulls
-- Guaranteed Legendary at 50 pulls
-- Pity counter resets after guaranteed drop
-- Counter stored per user in database
+Rarity tiers and pity tracking were part of the legacy photocard pipeline. The current catalog uses random drops from `fandom_gallery_images`, and rewards are stored with `rarity: "random"` for audit consistency.
 
 ### Crafting System
 
-**Stardust Economy:**
-- Duplicate cards convert to Stardust
-- Stardust amount based on rarity:
-  - Common: 10 Stardust
-  - Rare: 40 Stardust
-  - Epic: 120 Stardust
-  - Legendary: 400 Stardust
+**Dust Economy:**
+- Duplicate cards convert to Dust
 
 **Crafting Options:**
 1. **Craft Specific Card**: Spend Stardust to get exact card you want
@@ -82,10 +50,7 @@ Four rarity tiers:
    - Epic: 2000 Stardust
    - Legendary: 10000 Stardust
 
-2. **Rarity Roll**: Guaranteed minimum rarity
-   - Rare+: 200 Stardust
-   - Epic+: 1000 Stardust
-   - Legendary: 5000 Stardust
+2. **Random Roll**: Spend dust for a random catalog card
 
 ### Mastery System
 
@@ -107,22 +72,19 @@ Four rarity tiers:
 ### Quest System
 
 **Daily Quests:**
-- Complete 3 quizzes
-- Earn 5 photocards
-- Score perfect on any quiz
-- Rewards: 100-300 Stardust, 1-2 tickets
+- Mix of streaming and quiz goals
+- Rewards: dust + XP
+- Some quests include a photocard ticket (random drop)
 
 **Weekly Quests:**
-- Complete 20 quizzes
-- Collect 50 photocards
-- Reach top 100 on leaderboard
-- Rewards: 1000 Stardust, 5 tickets, rare+ guarantee
+- Higher-volume streaming and quiz goals
+- Rewards: dust + XP + optional photocard ticket (random drop)
 
 **Special Events:**
 - Birthday quests (member birthdays)
 - Comeback quests (new release periods)
 - Holiday events (special themes)
-- Exclusive photocard rewards
+- Bonus photocard drops
 
 ### Leaderboard System
 
@@ -133,21 +95,19 @@ Four rarity tiers:
 - Rewards distributed at reset
 
 **Reward Tiers:**
-1. **1st Place**: 3 Legendary cards, 5000 Stardust, Special badge
-2. **2-10th Place**: 2 Epic cards, 2000 Stardust, Elite badge
-3. **11-50th Place**: 1 Epic card, 1000 Stardust, Competitor badge
-4. **51-100th Place**: 2 Rare cards, 500 Stardust
+1. **1st Place**: 3 random cards, 5000 Stardust, Special badge
+2. **2-10th Place**: 2 random cards, 2000 Stardust, Elite badge
+3. **11-50th Place**: 1 random card, 1000 Stardust, Competitor badge
+4. **51-100th Place**: 2 random cards, 500 Stardust
 
 ### Sharing System
 
-Generate beautiful shareable images of photocards using Cloudinary.
+Generate shareable photocard links from the Fandom catalog.
 
 **Features:**
-- Photocard with rarity badge
-- User information overlay
-- Acquisition date
-- Rarity tier indicators
-- Custom background effects
+- Returns page or anchor URL for the card
+- Works for any inventory item
+- Category + subcategory context
 
 ## Workflow
 
@@ -161,14 +121,15 @@ graph TD
     D --> E[Submit answers]
     E --> F[POST /api/game/quiz/complete]
     F --> G[Calculate score]
-    G --> H[Determine rarity drop]
-    H --> I[Check pity counter]
-    I --> J[Roll for photocard]
-    J --> K[Award XP and Stardust for dupes]
+    G --> H{XP >= 5?}
+    H -->|Yes| I[Roll random photocard]
+    H -->|No| J[Skip card drop]
+    I --> K[Award XP and Stardust for dupes]
+    J --> K
     K --> L[Update mastery progress]
     L --> M[Check quest progress]
     M --> N[Update leaderboard]
-    N --> O[Return results with new card]
+    N --> O[Return results]
 ```
 
 ### Crafting Flow
@@ -178,7 +139,7 @@ graph TD
     A[User opens craft menu] --> B[View Stardust balance]
     B --> C{Choose option}
     C -->|Specific Card| D[Select exact card wanted]
-    C -->|Rarity Roll| E[Select minimum rarity]
+    C -->|Random Roll| E[Skip selection]
     D --> F[POST /api/game/craft]
     E --> F
     F --> G[Deduct Stardust]
@@ -195,369 +156,28 @@ graph TD
     B --> C[Click Claim Reward]
     C --> D[POST /api/game/mastery/claim]
     D --> E[Validate milestone reached]
-    E --> F[Grant themed pulls]
-    F --> G[Roll for cards]
-    G --> H[Add to inventory]
-    H --> I[Update mastery status]
-    I --> J[Show reward summary]
+    E --> F[Grant XP + Dust rewards]
+    F --> G[Update mastery status]
+    G --> H[Show reward summary]
 ```
 
 ## API Reference
 
-### Quiz Endpoints
+Authoritative API docs live in `docs/api/game.md`. Key endpoints:
 
-**POST /api/game/quiz/start**
-
-Start a new quiz session.
-
-**Authentication**: Required
-
-**Request Body:**
-```json
-{
-  "locale": "en",
-  "count": 10,
-  "difficulty": "mixed"
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "sessionId": "664f1234abc...",
-  "questions": [
-    {
-      "id": "q123",
-      "question": "In which year did BTS debut?",
-      "options": ["2012", "2013", "2014", "2015"],
-      "category": "history",
-      "difficulty": "easy"
-    }
-  ],
-  "expiresAt": "2025-01-29T08:20:00.000Z"
-}
-```
-
-**POST /api/game/quiz/complete**
-
-Submit quiz answers and receive rewards.
-
-**Authentication**: Required
-
-**Request Body:**
-```json
-{
-  "sessionId": "664f1234abc...",
-  "answers": [1, 0, 2, 1, 3, 0, 2, 1, 0, 3]
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "score": 8,
-  "correctAnswers": 8,
-  "totalQuestions": 10,
-  "newCard": {
-    "id": "66a1def...",
-    "photocard": {
-      "member": "Jungkook",
-      "era": "Love Yourself",
-      "set": "LY: Answer",
-      "rarity": "epic",
-      "imageUrl": "https://res.cloudinary.com/..."
-    },
-    "duplicate": false,
-    "dustAwarded": 0
-  },
-  "xpAwarded": 160,
-  "masteryUpdates": {
-    "Jungkook": { "xpGained": 80, "newLevel": 12 },
-    "Love Yourself": { "xpGained": 80, "newLevel": 8 }
-  },
-  "questProgress": [
-    { "code": "daily_quiz_3", "progress": 1, "total": 3, "completed": false }
-  ]
-}
-```
-
-### Inventory Endpoints
-
-**GET /api/game/inventory**
-
-Get user's photocard inventory with pagination.
-
-**Authentication**: Required
-
-**Query Parameters:**
-- `page` (number, default: 1)
-- `limit` (number, default: 20, max: 100)
-- `rarity` (string, optional): Filter by rarity
-- `member` (string, optional): Filter by member
-- `era` (string, optional): Filter by era
-
-**Response:**
-```json
-{
-  "ok": true,
-  "items": [
-    {
-      "id": "66a1def...",
-      "photocard": {
-        "member": "Jungkook",
-        "era": "Love Yourself",
-        "set": "LY: Answer",
-        "rarity": "epic",
-        "imageUrl": "https://res.cloudinary.com/..."
-      },
-      "acquiredAt": "2025-01-29T07:30:00.000Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 142,
-    "pages": 8
-  },
-  "stats": {
-    "totalCards": 142,
-    "uniqueCards": 87,
-    "legendary": 3,
-    "epic": 12,
-    "rare": 28,
-    "common": 99
-  }
-}
-```
-
-### Crafting Endpoints
-
-**POST /api/game/craft**
-
-Craft a photocard using Stardust.
-
-**Authentication**: Required
-
-**Request Body (Specific Card):**
-```json
-{
-  "cardId": "card_jk_ly_answer_01"
-}
-```
-
-**Request Body (Rarity Roll):**
-```json
-{
-  "targetRarity": "epic"
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "stardustSpent": 2000,
-  "remainingStardust": 3500,
-  "craftedCard": {
-    "id": "66a1xyz...",
-    "photocard": {
-      "member": "Jungkook",
-      "era": "Love Yourself",
-      "rarity": "epic",
-      "imageUrl": "https://res.cloudinary.com/..."
-    }
-  }
-}
-```
-
-### Mastery Endpoints
-
-**GET /api/game/mastery**
-
-Get user's mastery progress.
-
-**Authentication**: Required
-
-**Response:**
-```json
-{
-  "ok": true,
-  "mastery": {
-    "members": {
-      "Jungkook": { "xp": 2400, "level": 24, "nextMilestone": 25 },
-      "Jimin": { "xp": 1800, "level": 18, "nextMilestone": 25 },
-      "V": { "xp": 1500, "level": 15, "nextMilestone": 25 }
-    },
-    "eras": {
-      "Love Yourself": { "xp": 3200, "level": 32, "nextMilestone": 50 },
-      "Map of the Soul": { "xp": 2100, "level": 21, "nextMilestone": 25 }
-    }
-  },
-  "claimableMilestones": [
-    { "kind": "member", "key": "Jungkook", "level": 25 }
-  ]
-}
-```
-
-**POST /api/game/mastery/claim**
-
-Claim mastery milestone rewards.
-
-**Authentication**: Required
-
-**Request Body:**
-```json
-{
-  "kind": "member",
-  "key": "Jungkook"
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "rewards": {
-    "themedPulls": 3,
-    "stardust": 500,
-    "cards": [
-      { "member": "Jungkook", "rarity": "rare" },
-      { "member": "Jungkook", "rarity": "epic" },
-      { "member": "Jungkook", "rarity": "rare" }
-    ]
-  }
-}
-```
-
-### Quest Endpoints
-
-**GET /api/game/quests**
-
-Get available quests and progress.
-
-**Authentication**: Required
-
-**Response:**
-```json
-{
-  "ok": true,
-  "quests": {
-    "daily": [
-      {
-        "code": "daily_quiz_3",
-        "title": "Quiz Master",
-        "description": "Complete 3 quizzes",
-        "progress": 1,
-        "total": 3,
-        "completed": false,
-        "rewards": { "stardust": 200, "tickets": 1 }
-      }
-    ],
-    "weekly": [
-      {
-        "code": "weekly_quiz_20",
-        "title": "Quiz Veteran",
-        "description": "Complete 20 quizzes this week",
-        "progress": 8,
-        "total": 20,
-        "completed": false,
-        "rewards": { "stardust": 1000, "tickets": 5 }
-      }
-    ]
-  },
-  "resetTimes": {
-    "daily": "2025-01-30T00:00:00.000Z",
-    "weekly": "2025-02-03T00:00:00.000Z"
-  }
-}
-```
-
-**POST /api/game/quests/claim**
-
-Claim quest rewards.
-
-**Authentication**: Required
-
-**Request Body:**
-```json
-{
-  "code": "daily_quiz_3"
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "rewards": {
-    "stardust": 200,
-    "tickets": 1
-  }
-}
-```
-
-### Leaderboard Endpoint
-
-**GET /api/game/leaderboard**
-
-Get weekly leaderboard rankings.
-
-**Query Parameters:**
-- `limit` (number, default: 100, max: 100)
-- `cursor` (string, optional): Pagination cursor
-
-**Response:**
-```json
-{
-  "ok": true,
-  "leaderboard": [
-    {
-      "rank": 1,
-      "userId": "user123",
-      "username": "ARMYFan123",
-      "score": 100,
-      "completedAt": "2025-01-29T10:30:00.000Z"
-    },
-    {
-      "rank": 2,
-      "userId": "user456",
-      "username": "BTSLover",
-      "score": 98,
-      "completedAt": "2025-01-29T09:15:00.000Z"
-    }
-  ],
-  "pagination": {
-    "hasMore": false,
-    "nextCursor": null
-  },
-  "resetDate": "2025-02-03T00:00:00.000Z"
-}
-```
-
-### Sharing Endpoint
-
-**POST /api/game/share**
-
-Generate shareable photocard image.
-
-**Authentication**: Required
-
-**Request Body:**
-```json
-{
-  "inventoryItemId": "66a1def..."
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "shareUrl": "https://res.cloudinary.com/.../share_overlay.png"
-}
-```
+- `POST /api/game/quiz/start`
+- `POST /api/game/quiz/complete`
+- `GET /api/game/inventory`
+- `GET /api/game/photocards/catalog`
+- `GET /api/game/photocards/collection`
+- `GET /api/game/photocards/preview`
+- `POST /api/game/craft`
+- `GET /api/game/mastery`
+- `POST /api/game/mastery/claim`
+- `GET /api/game/quests`
+- `POST /api/game/quests/claim`
+- `GET /api/game/badges`
+- `POST /api/game/share`
 
 ## Configuration
 
@@ -571,7 +191,7 @@ MONGODB_URI=your-mongodb-connection-string
 FIREBASE_CLIENT_EMAIL=service-account@project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
 
-# Cloudinary (for photocard images)
+# Cloudinary (blog/profile images)
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
@@ -595,12 +215,16 @@ CLOUDINARY_API_SECRET=your-api-secret
 ### Photocard
 ```typescript
 {
-  member: String,
-  era: String,
-  set: String,
-  rarity: 'common' | 'rare' | 'epic' | 'legendary',
-  publicId: String, // Cloudinary ID
-  imageUrl: String
+  sourceKey: String,
+  pageUrl: String,
+  categoryPath: String,
+  categoryDisplay: String,
+  subcategoryPath?: String,
+  subcategoryLabels?: String[],
+  imageUrl: String,
+  thumbUrl?: String,
+  sourceUrl?: String,
+  scrapedAt?: Date
 }
 ```
 
@@ -608,9 +232,13 @@ CLOUDINARY_API_SECRET=your-api-secret
 ```typescript
 {
   userId: String,
-  photocardId: ObjectId,
+  cardId: ObjectId,
   acquiredAt: Date,
-  source: String // 'quiz' | 'craft' | 'mastery' | 'quest'
+  source: {
+    type: 'quiz' | 'quest_streaming' | 'quest_quiz' | 'craft' | 'event' | 'daily_milestone' | 'weekly_milestone',
+    sessionId?: ObjectId,
+    questCode?: String
+  }
 }
 ```
 
@@ -618,19 +246,30 @@ CLOUDINARY_API_SECRET=your-api-secret
 ```typescript
 {
   userId: String,
-  stardust: Number,
-  tickets: Number,
-  pityCounters: {
-    standard: Number,
-    legendary: Number
+  dust: Number,
+  xp: Number,
+  level: Number,
+  pity: {
+    sinceEpic: Number,
+    sinceLegendary: Number
   },
-  mastery: {
-    members: Map<String, { xp: Number, level: Number }>,
-    eras: Map<String, { xp: Number, level: Number }>
+  streak: {
+    dailyCount: Number,
+    weeklyCount: Number,
+    lastPlayAt: Date,
+    lastDailyQuestCompletionAt: Date,
+    lastWeeklyQuestCompletionAt: Date
   },
-  questProgress: Map<String, { progress: Number, completed: Boolean }>,
-  dailyQuizCount: Number,
-  lastQuizDate: Date
+  limits: {
+    quizStartsToday: Number,
+    dateKey: String
+  },
+  badges: {
+    lastDailyStreakMilestone: Number,
+    lastWeeklyStreakMilestone: Number,
+    dailyStreakMilestoneCount: Number,
+    weeklyStreakMilestoneCount: Number
+  }
 }
 ```
 
@@ -638,15 +277,15 @@ CLOUDINARY_API_SECRET=your-api-secret
 
 ### For Players
 - ✅ Complete daily quests for consistent Stardust income
-- ✅ Focus on mastery for themed pulls
+- ✅ Focus on mastery for dust/XP milestones
 - ✅ Save Stardust for specific cards you want
 - ✅ Participate weekly for leaderboard rewards
-- ✅ Aim for 25+ XP per quiz run to hit the 25% legendary / 45% epic band
+- ✅ Aim for 5+ XP per quiz run to earn a card drop
 
 ### For Developers
 - ✅ Validate quiz sessions before completion
 - ✅ Implement rate limiting on quiz starts
-- ✅ Cache photocard images with CDN
+- ✅ Cache photocard images for faster catalog loads
 - ✅ Use TTL indexes for expired sessions
 - ✅ Batch database updates for performance
 

@@ -69,7 +69,7 @@ The Quest & Badge System is a gamification feature that rewards users for:
 
 #### 2. Weekly Album Streaming Quest
 - **Requirement:** Stream 10 random albums fully, 1 time each
-- **Rewards:** 400 dust, 200 XP, 1 Rare+ photocard
+- **Rewards:** 400 dust, 200 XP, 1 photocard (random)
 - **Albums:** Randomly selected from database
 - **Selection:** Deterministic based on week
 
@@ -112,11 +112,11 @@ These are **separate, unique badges** awarded at specific milestones:
 
 | Streak Count | Badge | Name | Rarity | Photocard |
 |--------------|-------|------|---------|-----------|
-| 10 | daily_milestone_1 | Dedicated Devotee | Epic | Epic |
-| 20 | daily_milestone_2 | Persistent Pioneer | Epic | Epic |
-| 30 | daily_milestone_3 | Consistent Champion | Legendary | Epic |
-| 40 | daily_milestone_4 | Legendary Loyalist | Legendary | Epic |
-| 50 | daily_milestone_5 | Ultimate ARMY | Legendary | Epic |
+| 10 | daily_milestone_1 | Dedicated Devotee | Epic | Random |
+| 20 | daily_milestone_2 | Persistent Pioneer | Epic | Random |
+| 30 | daily_milestone_3 | Consistent Champion | Legendary | Random |
+| 40 | daily_milestone_4 | Legendary Loyalist | Legendary | Random |
+| 50 | daily_milestone_5 | Ultimate ARMY | Legendary | Random |
 
 **Icons:** 🏆 (1-4), 👑 (5)
 
@@ -134,11 +134,11 @@ Same cycling logic as daily streaks, but for weekly quest completions.
 
 | Streak Count | Badge | Name | Rarity | Photocard |
 |--------------|-------|------|---------|-----------|
-| 10 | weekly_milestone_1 | Weekly Warrior | Epic | Legendary |
-| 20 | weekly_milestone_2 | Marathon Master | Epic | Legendary |
-| 30 | weekly_milestone_3 | Endurance Elite | Legendary | Legendary |
-| 40 | weekly_milestone_4 | Unstoppable Force | Legendary | Legendary |
-| 50 | weekly_milestone_5 | Eternal Devotion | Legendary | Legendary |
+| 10 | weekly_milestone_1 | Weekly Warrior | Epic | Random |
+| 20 | weekly_milestone_2 | Marathon Master | Epic | Random |
+| 30 | weekly_milestone_3 | Endurance Elite | Legendary | Random |
+| 40 | weekly_milestone_4 | Unstoppable Force | Legendary | Random |
+| 50 | weekly_milestone_5 | Eternal Devotion | Legendary | Random |
 
 **Icons:** 💫 (1-4), 👑 (5)
 
@@ -163,12 +163,12 @@ Same cycling logic as daily streaks, but for weekly quest completions.
 Day 1:  Streak = 1  → Award daily_streak_1
 Day 2:  Streak = 2  → Award daily_streak_2
 ...
-Day 10: Streak = 10 → Award daily_streak_10 + daily_milestone_1 + Epic Photocard
+Day 10: Streak = 10 → Award daily_streak_10 + daily_milestone_1 + Random Photocard
 Day 11: Streak = 11 → Award daily_streak_1 (cycle restarts)
 ...
-Day 20: Streak = 20 → Award daily_streak_10 + daily_milestone_2 + Epic Photocard
+Day 20: Streak = 20 → Award daily_streak_10 + daily_milestone_2 + Random Photocard
 ...
-Day 50: Streak = 50 → Award daily_streak_10 + daily_milestone_5 + Epic Photocard
+Day 50: Streak = 50 → Award daily_streak_10 + daily_milestone_5 + Random Photocard
 Day 51: Streak = 50 (max reached, stays at 50)
 ```
 
@@ -460,7 +460,7 @@ Claim rewards for a completed quest.
 {
   "reward": {
     "cardId": "...",
-    "rarity": "rare",
+    "rarity": "random",
     "member": "Jungkook",
     "imageUrl": "..."
   },
@@ -478,7 +478,7 @@ Claim rewards for a completed quest.
   ],
   "photocardAwarded": {
     "cardId": "...",
-    "rarity": "epic",
+    "rarity": "random",
     "member": "V"
   },
   "allQuestsCompleted": true
@@ -538,8 +538,8 @@ Verify streaming progress from Last.fm.
       "rarity": "epic",
       "atStreak": 10
     },
-    "dailyPhotocard": { "rarity": "epic" },
-    "weeklyPhotocard": { "rarity": "legendary" }
+    "dailyPhotocard": { "type": "random" },
+    "weeklyPhotocard": { "type": "random" }
   },
   "latestBadges": [
     {
@@ -597,7 +597,7 @@ Get all user's earned badges.
     dust: number
     xp?: number
     ticket?: {
-      rarityMin: 'rare' | 'epic' | 'legendary'
+      enabled?: boolean
     }
     badgeId?: ObjectId
   }

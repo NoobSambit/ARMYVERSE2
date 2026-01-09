@@ -8,13 +8,69 @@ import { apiFetch } from '@/lib/client/api'
 import BoralandHeader from '@/components/boraland/BoralandHeader'
 import CommandCenter from '@/components/boraland/CommandCenter'
 import InventoryGrid from '@/components/boraland/InventoryGrid'
+import CollectionGrid from '@/components/boraland/CollectionGrid'
 import BadgesGrid from '@/components/boraland/BadgesGrid'
 import MobileNav from '@/components/boraland/MobileNav'
 
 // Types aligned with API responses
-type ItemCard = { member: string; era: string; set: string; rarity: 'common'|'rare'|'epic'|'legendary' | null | undefined; publicId: string; imageUrl: string }
-type Item = { id: string; acquiredAt: string; card: ItemCard }
+type ItemCard = {
+  cardId: string
+  title?: string | null
+  category?: string
+  categoryPath?: string
+  subcategory?: string | null
+  subcategoryPath?: string | null
+  imageUrl?: string
+  thumbUrl?: string
+  sourceUrl?: string
+  pageUrl?: string
+}
+type ItemSource = { type?: string }
+type Item = { id: string; acquiredAt: string; card: ItemCard; source?: ItemSource }
 type ApiItem = Omit<Item, 'card'> & { card: ItemCard | null }
+
+type CatalogNode = {
+  key: string
+  label: string
+  path: string[]
+  total: number
+  collected: number
+  children: CatalogNode[]
+}
+
+type CatalogResponse = {
+  totalCards: number
+  collectedCards: number
+  categories: CatalogNode[]
+}
+
+type CollectionCard = {
+  cardId: string
+  title: string | null
+  category: string
+  categoryPath?: string
+  subcategory: string | null
+  subcategoryPath?: string | null
+  imageUrl: string
+  thumbUrl?: string
+  sourceUrl?: string
+  pageUrl?: string
+  owned: boolean
+}
+
+type CollectionGroup = {
+  key: string
+  label: string
+  total: number
+  collected: number
+  cards: CollectionCard[]
+}
+
+type CollectionResponse = {
+  totalCards: number
+  collectedCards: number
+  groups: CollectionGroup[]
+}
 
 type BadgeItem = {
   id: string
@@ -44,7 +100,7 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
 
   // View State (Cards or Badges)
-  const [view, setView] = useState<'cards' | 'badges'>('cards')
+  const [view, setView] = useState<'cards' | 'collection' | 'badges'>('cards')
 
   // Inventory State
   const [items, setItems] = useState<Item[]>([])
@@ -52,8 +108,26 @@ export default function Page() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [totalCount, setTotalCount] = useState(0)
+  const [filteredCount, setFilteredCount] = useState(0)
   const loadedOnceRef = useRef(false)
   const [, setUserXp] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string | null>(null)
+  const [sourceFilter, setSourceFilter] = useState<string | null>(null)
+  const [filterMode, setFilterMode] = useState<'all' | 'favorites' | 'new'>('all')
+
+  // Catalog State
+  const [catalog, setCatalog] = useState<CatalogResponse | null>(null)
+  const [catalogLoading, setCatalogLoading] = useState(false)
+  const [catalogError, setCatalogError] = useState<string | null>(null)
+
+  // Collection State
+  const [collectionGroups, setCollectionGroups] = useState<CollectionGroup[]>([])
+  const [collectionTotal, setCollectionTotal] = useState(0)
+  const [collectionCollected, setCollectionCollected] = useState(0)
+  const [collectionLoading, setCollectionLoading] = useState(false)
+  const [collectionError, setCollectionError] = useState<string | null>(null)
 
   // Badges State
   const [badges, setBadges] = useState<BadgeItem[]>([])
@@ -62,15 +136,37 @@ export default function Page() {
   const [badgesTotalCount, setBadgesTotalCount] = useState(0)
 
   // Derived Stats
-  const uniqueCount = new Set(items.map(i => i.card.publicId)).size // Approximate uniqueness by publicId
-  const rareCount = items.filter(i => ['rare', 'epic', 'legendary'].includes(i.card.rarity || '')).length
+  const uniqueCount = new Set(items.map(i => i.card.cardId)).size
+  const categoryCount = catalog?.categories?.length || 0
 
   // Load Inventory Data
-  const load = async (next?: string | null) => {
+  const load = async (
+    next?: string | null,
+    opts?: {
+      query?: string
+      category?: string | null
+      subcategory?: string | null
+      source?: string | null
+      mode?: 'all' | 'favorites' | 'new'
+    }
+  ) => {
     setLoading(true)
     setError(null)
     try {
-      const res = await apiFetch(`/api/game/inventory?limit=20${next ? `&skip=${next}` : ''}`)
+      const query = opts?.query ?? searchQuery
+      const category = opts?.category ?? categoryFilter
+      const subcategory = opts?.subcategory ?? subcategoryFilter
+      const source = opts?.source ?? sourceFilter
+      const mode = opts?.mode ?? filterMode
+      const params = new URLSearchParams()
+      params.set('limit', '20')
+      if (next) params.set('skip', next)
+      if (query) params.set('q', query)
+      if (category) params.set('category', category)
+      if (subcategory) params.set('subcategory', subcategory)
+      if (source) params.set('source', source)
+      if (mode === 'new') params.set('newOnly', '1')
+      const res = await apiFetch(`/api/game/inventory?${params.toString()}`)
       
       const sanitized = (res.items as ApiItem[] | undefined)?.filter(hasCard) ?? []
       
@@ -84,13 +180,7 @@ export default function Page() {
       })
       
       setCursor(res.nextCursor || null)
-      
-      // Update total count if available from API (or estimate)
-      // Note: Your current API might not return total count in the paginated response directly for the whole collection efficiently, 
-      // but let's assume we might fetch it or just use the current loaded count if API doesn't support it yet.
-      // Ideally, the API should return { items: [], nextCursor: '...', total: 100 }
-      // Checking previous response structure... API returns `items` and `nextCursor`. 
-      // We will fetch a separate stats call or modify API later. For now, let's try to get stats from game state or separate call.
+      setFilteredCount(res.total || 0)
       
     } catch (e: any) {
       setError(e?.message || 'Failed to load inventory')
@@ -120,20 +210,51 @@ export default function Page() {
           const state = await apiFetch('/api/game/state')
           setUserXp(state?.totalXp || 0)
 
-          // Get total count separately if needed, or rely on inventory load
+          // Get total count separately to keep overall totals stable
           const inventoryRes = await apiFetch('/api/game/inventory?limit=1')
-          setTotalCount(inventoryRes?.total || 0) // Assuming API was updated to return total, strictly based on previous context it returned items.
-          // Let's check api/game/inventory/route.ts -> It returns items and nextCursor.
-          // Wait, I read the route file. It does NOT return total count in the response body top level.
-          // It calculates `count` for pagination but doesn't return it as `total`.
-          // I should probably update the API to return total, or fetch it differently.
-          // For now, I will use a separate fetch to get the count or just show loaded count if I can't change API.
-          // Actually, looking at `app/boraland/page.tsx` earlier, I used `res?.total` from `/api/game/inventory?limit=1`.
-          // Let me double check if I missed where `total` is added to the response in `route.ts`.
-          // ... `const count = await InventoryItem.countDocuments(...)` ... `return NextResponse.json({ items: mapped, ...(nextCursor ? { nextCursor } : {}) })`
-          // It seems `total` is NOT returned in the current `route.ts`.
-          // I should fix the API route to return `total` as well to make the UI accurate.
+          setTotalCount(inventoryRes?.total || 0)
       } catch (e) {}
+  }
+
+  const loadCatalog = async () => {
+    setCatalogLoading(true)
+    setCatalogError(null)
+    try {
+      const res = await apiFetch('/api/game/photocards/catalog')
+      setCatalog(res)
+    } catch (e: any) {
+      setCatalogError(e?.message || 'Failed to load catalog')
+    } finally {
+      setCatalogLoading(false)
+    }
+  }
+
+  const loadCollection = async () => {
+    if (!categoryFilter) {
+      setCollectionGroups([])
+      setCollectionTotal(0)
+      setCollectionCollected(0)
+      setCollectionError(null)
+      setCollectionLoading(false)
+      return
+    }
+    setCollectionLoading(true)
+    setCollectionError(null)
+    try {
+      const params = new URLSearchParams()
+      params.set('category', categoryFilter)
+      if (subcategoryFilter) params.set('subcategory', subcategoryFilter)
+      if (searchQuery) params.set('q', searchQuery)
+      const res = await apiFetch(`/api/game/photocards/collection?${params.toString()}`)
+      const data = res as CollectionResponse
+      setCollectionGroups(data.groups || [])
+      setCollectionTotal(data.totalCards || 0)
+      setCollectionCollected(data.collectedCards || 0)
+    } catch (e: any) {
+      setCollectionError(e?.message || 'Failed to load collection')
+    } finally {
+      setCollectionLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -145,11 +266,29 @@ export default function Page() {
     
     if (user && !loadedOnceRef.current) {
         loadedOnceRef.current = true
-        load(null)
         loadBadges()
         loadUserStats()
+        loadCatalog()
     }
   }, [user, router, showToast])
+
+  useEffect(() => {
+    if (!user || !loadedOnceRef.current) return
+    const timer = setTimeout(() => {
+      if (view === 'cards') {
+        load(null, {
+          query: searchQuery,
+          category: categoryFilter,
+          subcategory: subcategoryFilter,
+          source: sourceFilter,
+          mode: filterMode
+        })
+      } else if (view === 'collection') {
+        loadCollection()
+      }
+    }, searchQuery ? 300 : 0)
+    return () => clearTimeout(timer)
+  }, [user, view, searchQuery, categoryFilter, subcategoryFilter, sourceFilter, filterMode])
 
   if (!user) return null
 
@@ -192,6 +331,20 @@ export default function Page() {
                   </span>
                 </button>
                 <button
+                  onClick={() => setView('collection')}
+                  className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
+                    view === 'collection'
+                      ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span className="flex items-center gap-1 md:gap-2">
+                    <span className="material-symbols-outlined text-sm md:text-base">collections_bookmark</span>
+                    <span className="hidden sm:inline">Collection</span>
+                    <span className="sm:hidden">Collection</span>
+                  </span>
+                </button>
+                <button
                   onClick={() => setView('badges')}
                   className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
                     view === 'badges'
@@ -215,8 +368,51 @@ export default function Page() {
                   cursor={cursor}
                   loadMore={load}
                   totalCount={totalCount || items.length}
+                  filteredCount={filteredCount || 0}
                   uniqueCount={uniqueCount}
-                  rareCount={rareCount}
+                  categoryCount={categoryCount}
+                  catalog={catalog}
+                  catalogLoading={catalogLoading}
+                  catalogError={catalogError}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  filterMode={filterMode}
+                  onFilterModeChange={setFilterMode}
+                  selectedCategory={categoryFilter}
+                  selectedSubcategory={subcategoryFilter}
+                  sourceFilter={sourceFilter}
+                  onSelectSource={setSourceFilter}
+                  onSelectCategory={(value) => {
+                    setCategoryFilter(value)
+                    setSubcategoryFilter(null)
+                  }}
+                  onSelectSubcategory={(value, category) => {
+                    if (category) setCategoryFilter(category)
+                    setSubcategoryFilter(value)
+                  }}
+                />
+              ) : view === 'collection' ? (
+                <CollectionGrid
+                  groups={collectionGroups}
+                  totalCards={collectionTotal}
+                  collectedCards={collectionCollected}
+                  loading={collectionLoading}
+                  error={collectionError}
+                  catalog={catalog}
+                  catalogLoading={catalogLoading}
+                  catalogError={catalogError}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  selectedCategory={categoryFilter}
+                  selectedSubcategory={subcategoryFilter}
+                  onSelectCategory={(value) => {
+                    setCategoryFilter(value)
+                    setSubcategoryFilter(null)
+                  }}
+                  onSelectSubcategory={(value, category) => {
+                    if (category) setCategoryFilter(category)
+                    setSubcategoryFilter(value)
+                  }}
                 />
               ) : (
                 <BadgesGrid

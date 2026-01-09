@@ -11,8 +11,8 @@ import { InventoryItem } from '@/lib/models/InventoryItem'
 import { UserBadge } from '@/lib/models/UserBadge'
 import { updateDailyStreakAndAwardBadges, updateWeeklyStreakAndAwardBadges } from '@/lib/game/streakTracking'
 import { checkAndAwardDailyCompletionBadge, checkAndAwardWeeklyCompletionBadge } from '@/lib/game/completionBadges'
-import { url as cloudinaryUrl } from '@/lib/cloudinary'
 import { awardBalances } from '@/lib/game/rewards'
+import { mapPhotocardSummary } from '@/lib/game/photocardMapper'
 
 export const runtime = 'nodejs'
 
@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (def.reward?.ticket?.rarityMin) {
-      const roll = await rollRarityAndCardV2({ userId: user.uid, ticketMinRarity: def.reward.ticket.rarityMin as any })
+    if (def.reward?.ticket) {
+      const roll = await rollRarityAndCardV2({ userId: user.uid })
       if (roll.card) {
         const sourceType = def.goalType.startsWith('stream:') ? 'quest_streaming' : 'quest_quiz'
         await InventoryItem.create({
@@ -71,13 +71,8 @@ export async function POST(request: NextRequest) {
           source: { type: sourceType, questCode: def.code }
         })
         reward = {
-          cardId: roll.card._id.toString(),
-          rarity: roll.rarity,
-          member: roll.card.member,
-          era: roll.card.era,
-          set: roll.card.set,
-          publicId: roll.card.publicId,
-          imageUrl: cloudinaryUrl(roll.card.publicId)
+          ...mapPhotocardSummary(roll.card),
+          rarity: roll.rarity
         }
       }
     }

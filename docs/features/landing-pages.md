@@ -91,7 +91,7 @@ Two premium landing pages designed for conversion and engagement:
 **Clear Communication:**
 - Immediate game concept understanding
 - Detailed mechanics before sign-up
-- Visual rarity breakdown
+- Catalog structure and collection progress
 - Multiple reward mechanisms explained
 
 ### Page Sections
@@ -102,7 +102,7 @@ Two premium landing pages designed for conversion and engagement:
 - Clear value proposition
 - Dual CTAs (Sign In / Demo)
 - Scrollable photocard gallery (12 real cards)
-- Rarity badges and hover effects
+- Category tags and hover effects
 - Gradient fade edges
 
 **2. Game Mechanics Section**
@@ -120,20 +120,10 @@ Each card:
 - Color-coded by feature type
 - Chevron indicator on hover
 
-**3. Rarity System Section**
-Four rarity tiers displayed with boosted quiz odds (25+ XP band shown):
-
-| Rarity | Drop Rate | Icon | Color |
-|--------|-----------|------|-------|
-| Legendary | 25% | 👑 Crown | Amber/Gold |
-| Epic | 45% | 💎 Gem | Purple/Fuchsia |
-| Rare | 30% | ⭐ Star | Blue/Cyan |
-| Common | 0% | 💜 Heart | Slate |
-
-**Performance-Based Drops Callout:**
-- Explains XP-based bands and how higher XP raises rare/epic/legendary odds
-- Shows boosted odds milestones (e.g., 20+ XP and 25+ XP bands)
-- Visual indicator of score impact
+**3. Catalog Structure Section**
+- Explains category + subcategory organization from Fandom galleries
+- Shows how filters and collection progress work
+- Highlights the XP gate for random drops (5+ XP)
 
 **4. Rewards & Progression Section**
 Four detailed cards:
@@ -147,13 +137,13 @@ Four detailed cards:
 - Large headline + value prop
 - Dual CTAs (wider on mobile)
 - Trust indicators (Free, No Download, Mobile, Anywhere)
-- Quick stats grid (10 questions, 100+ cards, 4 rarities, ∞ fun)
+- Quick stats grid (10 questions, 9k+ cards, random drops, ∞ fun)
 
 ### Real Photocard Integration
 
 **API Endpoint:** `/api/game/photocards/preview`
-- Fetches diverse sample (3 legendary, 4 epic, 5 rare, 6 common)
-- Returns Cloudinary URLs
+- Fetches a random sample of catalog cards
+- Returns Fandom image URLs
 - Graceful error handling
 - Public endpoint, no auth required
 
@@ -186,7 +176,7 @@ graph TD
     B --> C[Fetch photocards from API]
     C --> D[Render hero with gallery]
     D --> E[Display game mechanics cards]
-    E --> F[Show rarity system breakdown]
+    E --> F[Show catalog highlights]
     F --> G[Render rewards section]
     G --> H[Display final CTA]
 ```
@@ -202,25 +192,25 @@ Get sample photocards for landing page display.
 **Response:**
 ```json
 {
-  "ok": true,
-  "photocards": [
+  "cards": [
     {
-      "id": "card123",
-      "member": "Jungkook",
-      "era": "Love Yourself",
-      "set": "LY: Answer",
-      "rarity": "legendary",
-      "imageUrl": "https://res.cloudinary.com/armyverse/image/upload/v123/photocards/jk_ly_01.jpg"
+      "cardId": "6960e7ce2d95902a438cace4",
+      "title": "Melon Profile",
+      "category": "D-DAY",
+      "subcategory": "Promo Pictures",
+      "imageUrl": "https://static.wikia.nocookie.net/...",
+      "thumbUrl": "https://static.wikia.nocookie.net/..."
     },
     {
-      "id": "card456",
-      "member": "V",
-      "era": "Map of the Soul",
-      "set": "MOTS: 7",
-      "rarity": "epic",
-      "imageUrl": "https://res.cloudinary.com/armyverse/image/upload/v123/photocards/v_mots_02.jpg"
+      "cardId": "6960e7ce2d95902a438cace5",
+      "title": "Announcement",
+      "category": "D-DAY",
+      "subcategory": "Promotional",
+      "imageUrl": "https://static.wikia.nocookie.net/...",
+      "thumbUrl": "https://static.wikia.nocookie.net/..."
     }
-  ]
+  ],
+  "total": 12
 }
 ```
 
@@ -302,7 +292,7 @@ Get sample photocards for landing page display.
 
 ### Image Optimization
 - Next.js Image component with proper sizes
-- Cloudinary auto-optimization
+- Remote image optimization via Next.js loader
 - Lazy loading below fold
 - Responsive srcset generation
 

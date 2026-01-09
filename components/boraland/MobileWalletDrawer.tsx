@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X, Wallet } from 'lucide-react'
-import QuestRightSidebar from './quests/QuestRightSidebar'
+import MasteryRightSidebar from './mastery/MasteryRightSidebar'
 
 type GameState = {
   dust: number
@@ -15,8 +15,8 @@ type GameState = {
   potentialRewards: {
     dailyMilestoneBadge?: any
     weeklyMilestoneBadge?: any
-    dailyPhotocard?: { rarity: string }
-    weeklyPhotocard?: { rarity: string }
+    dailyPhotocard?: { type: string }
+    weeklyPhotocard?: { type: string }
   }
   latestBadges: any[]
 }
@@ -64,7 +64,7 @@ export default function MobileWalletDrawer({ state }: { state: GameState | null 
 
               {/* Content */}
               <div className="overflow-y-auto p-4 pb-8">
-                <QuestRightSidebar state={state} />
+                <MasteryRightSidebar state={state as any} masteryData={null} />
               </div>
 
               {/* Pull indicator */}

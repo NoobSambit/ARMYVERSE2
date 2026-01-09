@@ -105,29 +105,22 @@ User clicks "Start Quiz"
 │ 2. Calculate score (compare answers)
 │ 3. Delete session
 │ 4. Get UserGameState
-│ 5. Determine rarity based on score:
-│    - 10/10: Higher legendary rate
-│    - 7-9: Standard rates
-│    - 5-6: Lower epic rate
-│    - <5: Common only
-│ 6. Check pity counters
-│    - Guarantee epic+ at 15 pulls
-│    - Guarantee legendary at 50
-│ 7. Roll for photocard (weighted random)
-│ 8. Check if duplicate exists
+│ 5. If XP < 5: no card drop
+│ 6. If XP >= 5: sample random catalog card
+│ 7. Check if duplicate exists
 │    - If yes: award Stardust
 │    - If no: add to inventory
-│ 9. Award XP (5-20 per question)
-│ 10. Update mastery progress
+│ 8. Award XP (5-20 per question)
+│ 9. Update mastery progress
 │     - Member/Era XP from question metadata (correct answers only)
 │     - OT7 XP only when all 7 members are listed; OT7 requires 7× XP per level
-│ 11. Check mastery milestones
-│ 12. Update quest progress
+│ 10. Check mastery milestones
+│ 11. Update quest progress
 │     - Increment quiz quest count
 │     - Check completion
-│ 13. Update leaderboard
+│ 12. Update leaderboard
 │     - If best score this week, update entry
-│ 14. Save all to database (transaction)
+│ 13. Save all to database (transaction)
 └──────┬─────────────────────────────┘
        │ { score, newCard, xpAwarded,
        │   masteryUpdates, questProgress }
@@ -598,11 +591,11 @@ Monday 00:00 UTC (Cron)
 │ 2. Find last week's entries
 │ 3. Calculate final ranks
 │ 4. Distribute rewards:
-│    - 1st: 3 legendary + 5000 dust + badge
-│    - 2-10: 2 epic + 2000 dust + badge
-│    - 11-50: 1 epic + 1000 dust + badge
-│    - 51-100: 2 rare + 500 dust
-│ 5. Award photocards to inventories
+│    - 1st: 3 random cards + 5000 dust + badge
+│    - 2-10: 2 random cards + 2000 dust + badge
+│    - 11-50: 1 random card + 1000 dust + badge
+│    - 51-100: 2 random cards + 500 dust
+│ 5. Award photocards (random catalog)
 │ 6. Award Stardust
 │ 7. Award badges
 │ 8. Mark entries as rewards distributed

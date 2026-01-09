@@ -13,8 +13,8 @@ Complete MongoDB database schema for ARMYVERSE.
 | **albums** | BTS albums for quests | spotifyId, isBTSFamily | → quests |
 | **playlists** | Generated playlists | userId | → tracks |
 | **blogs** | Blog posts | slug, author, tags | → users, comments, reactions |
-| **photocards** | Photocard templates | rarity, member, era | → inventory |
-| **inventoryitems** | User photocard collection | userId, photocardId | → users, photocards |
+| **fandom_gallery_images** | Photocard catalog (Fandom scrape) | sourceKey, categoryPath, subcategoryPath | → inventory |
+| **inventoryitems** | User photocard collection | userId, cardId | → users, fandom_gallery_images |
 | **questions** | Quiz questions | hash, category | → quiz sessions |
 | **quizsessions** | Active quiz sessions | userId, TTL | → users, questions |
 | **usergamestate** | User game progress | userId | → users |
@@ -24,7 +24,7 @@ Complete MongoDB database schema for ARMYVERSE.
 | **userbadges** | Earned badges | userId, badgeCode | → users, badges |
 | **masteryprogress** | Member/era XP | userId | → users |
 | **leaderboardentries** | Weekly rankings | userId, weekStart | → users |
-| **droppools** | Card drop pools | active | → photocards |
+| **droppools** | Legacy drop pools (unused) | active | → fandom_gallery_images |
 | **kworbsnapshots** | Spotify analytics | date | (none) |
 | **youtubekworbsnapshots** | YouTube analytics | date | (none) |
 | **collections** | Playlist collections | userId | → playlists |
@@ -290,32 +290,47 @@ Complete MongoDB database schema for ARMYVERSE.
 
 ### Photocard
 
-**Purpose**: Photocard templates
+**Purpose**: Photocard catalog entries (from Fandom galleries)
+**Collection**: `fandom_gallery_images`
 
 **Schema:**
 ```typescript
 {
-  member: string             // Jungkook, Jimin, V, etc.
-  era: string                // Love Yourself, Map of the Soul, etc.
-  set: string                // set name within era
-  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  sourceKey: string          // unique, stable key for upserts
+  pageUrl: string            // gallery page URL
+  pageTitle?: string
+  pageSlug?: string
+  pageDisplay?: string
+  pathSegments?: string[]
 
-  // Cloudinary
-  publicId: string           // unique
-  imageUrl: string
+  categoryPath: string       // e.g., D-DAY/Gallery
+  categoryDisplay: string    // e.g., D-DAY
+  subcategoryPath?: string   // e.g., Promo_Pictures
+  subcategoryLabels?: string[] // readable labels
 
-  // Drop configuration
-  dropWeight?: number        // for weighted random selection
+  tabPath?: string[]
+  tabLabels?: string[]
+  headingPath?: string[]
+  headingLabels?: string[]
+  anchor?: string | null
 
+  imageUrl: string           // full-size image URL
+  thumbUrl?: string          // thumbnail URL
+  sourceUrl?: string         // page URL with anchor
+  filePageUrl?: string
+  imageKey?: string
+  imageName?: string
+  caption?: string
+
+  scrapedAt?: Date
   createdAt: Date
 }
 ```
 
 **Indexes:**
-- `publicId` (unique)
-- `rarity`
-- `member`
-- `era`
+- `sourceKey` (unique)
+- `categoryPath`
+- `subcategoryPath`
 
 ---
 
@@ -326,23 +341,22 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  userId: ObjectId
-  photocard: ObjectId        // references Photocard
-
-  // Acquisition
-  source: 'quiz' | 'craft' | 'mastery' | 'quest' | 'leaderboard'
+  userId: string
+  cardId: ObjectId           // references Photocard (fandom_gallery_images)
   acquiredAt: Date
 
-  // Metadata
-  duplicate: boolean         // was this a duplicate when received
-  stardustAwarded?: number   // if duplicate
+  source: {
+    type: 'quiz' | 'quest_streaming' | 'quest_quiz' | 'craft' | 'event' | 'daily_milestone' | 'weekly_milestone'
+    sessionId?: ObjectId
+    questCode?: string
+  }
 }
 ```
 
 **Indexes:**
 - `userId`
-- `photocard`
-- Compound: `[userId, photocard]`
+- `cardId`
+- Compound: `[userId, cardId]`
 - `acquiredAt` (descending)
 
 ---
@@ -354,32 +368,41 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  userId: ObjectId           // unique
+  userId: string             // unique
 
-  // Currency
-  stardust: number           // crafting currency
-  tickets: number            // premium pulls
+  // Currency & XP
+  dust: number
+  xp: number
+  level: number
 
-  // Pity system
-  pityCounters: {
-    standard: number         // pulls since last epic+
-    legendary: number        // pulls since last legendary
+  // Legacy pity counters (random drops now)
+  pity: {
+    sinceEpic: number
+    sinceLegendary: number
+  }
+
+  // Quest streaks
+  streak: {
+    dailyCount: number
+    weeklyCount: number
+    lastPlayAt: Date | null
+    lastDailyQuestCompletionAt: Date | null
+    lastWeeklyQuestCompletionAt: Date | null
   }
 
   // Quiz limits
-  dailyQuizCount: number
-  weeklyRankedQuizCount: number
-  lastQuizDate: Date
-  lastRankedQuizReset: Date
+  limits: {
+    quizStartsToday: number
+    dateKey: string
+  }
 
-  // Quest streaks
-  dailyQuestStreak: number
-  weeklyQuestStreak: number
-  lastDailyQuestComplete: Date
-  lastWeeklyQuestComplete: Date
-
-  createdAt: Date
-  updatedAt: Date
+  // Badge milestones
+  badges: {
+    lastDailyStreakMilestone: number
+    lastWeeklyStreakMilestone: number
+    dailyStreakMilestoneCount: number
+    weeklyStreakMilestoneCount: number
+  }
 }
 ```
 
@@ -452,57 +475,38 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  code: string               // unique, e.g. daily_stream_songs_20260106
+  code: string
   title: string
-  description: string
+  period: 'daily' | 'weekly'
+  goalType: string
+  goalValue: number
 
-  // Type
-  type: 'daily' | 'weekly'
-  category: 'streaming' | 'quiz' | 'collection'
-
-  // Requirements
-  total: number              // target count
-
-  // Streaming quests
-  metadata?: {
-    targetSongs?: [{
-      title: string
-      artist: string
-      spotifyId: string
+  streamingMeta?: {
+    trackTargets?: [{
+      trackName: string
+      artistName: string
+      count: number
     }]
-    targetAlbums?: [{
-      name: string
-      artist: string
-      spotifyId: string
-      tracks: [{ title, duration }]
-      totalTracks: number
+    albumTargets?: [{
+      albumName: string
+      trackCount: number
+      tracks?: [{ name: string; artist: string }]
     }]
-    playCount?: number       // required scrobbles per song
   }
 
-  // Rewards
-  rewards: {
-    stardust?: number
-    tickets?: number
+  reward: {
+    dust: number
     xp?: number
-    photocard?: {
-      rarity: string
-    }
+    ticket?: { enabled?: boolean }
+    badgeId?: ObjectId
   }
 
-  // Status
   active: boolean
-  expiresAt: Date
-
-  createdAt: Date
 }
 ```
 
 **Indexes:**
 - `code` (unique)
-- `active`
-- `type`
-- `expiresAt`
 
 ---
 
@@ -513,28 +517,25 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  userId: ObjectId
-  questCode: string          // references QuestDefinition
-
-  progress: number           // current count
+  userId: string
+  code: string               // QuestDefinition code
+  periodKey: string          // daily YYYY-MM-DD or weekly key
+  progress: number
   completed: boolean
-  completedAt?: Date
   claimed: boolean
-  claimedAt?: Date
 
-  // Streaming verification
-  lastVerified?: Date
-  scrobbleIds?: string[]     // Last.fm scrobble IDs
+  streamingBaseline?: {
+    tracks: [{ trackName: string; artistName: string; initialCount: number }]
+    timestamp: Date
+  }
 
-  createdAt: Date
+  trackProgress: Map<string, number>
   updatedAt: Date
 }
 ```
 
 **Indexes:**
-- Compound: `[userId, questCode]` (unique)
-- `userId`
-- `completed`
+- Compound: `[userId, code, periodKey]` (unique)
 
 ---
 
@@ -549,26 +550,24 @@ Complete MongoDB database schema for ARMYVERSE.
   name: string
   description: string
   icon: string               // emoji or URL
-
-  // Tiers
-  maxTier: number           // e.g. 10 for cycling badges
-
-  // Type
-  category: 'quest' | 'mastery' | 'collection' | 'achievement'
-
-  // Rewards per tier
-  rewards: Map<number, {
-    stardust?: number
-    photocard?: { rarity: string }
-  }>
-
+  type: 'streak' | 'achievement' | 'event' | 'quest' | 'completion'
+  criteria?: {
+    streakDays?: number
+    streakWeeks?: number
+    questPeriod?: 'daily' | 'weekly'
+    questType?: 'streaming' | 'quiz' | 'any'
+    threshold?: number
+  }
+  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  active: boolean
   createdAt: Date
 }
 ```
 
 **Indexes:**
 - `code` (unique)
-- `category`
+- `type`
+- `active`
 
 ---
 
@@ -579,18 +578,20 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  userId: ObjectId
-  badgeCode: string          // references Badge
-  tier: number              // current tier
-
-  awardedAt: Date
-  updatedAt: Date            // when tier increased
+  userId: string
+  badgeId: ObjectId          // references Badge
+  earnedAt: Date
+  metadata?: {
+    streakCount?: number
+    questCode?: string
+  }
 }
 ```
 
 **Indexes:**
-- Compound: `[userId, badgeCode]` (unique)
+- Compound: `[userId, badgeId]` (unique)
 - `userId`
+- `earnedAt` (descending)
 
 ---
 
@@ -623,66 +624,55 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  userId: ObjectId
-  username: string           // denormalized for performance
+  periodKey: string
+  userId: string
   score: number
-
-  // Week identification
-  weekStart: Date            // Monday 00:00 UTC
-  weekEnd: Date
-
-  // Completion details
-  completedAt: Date
-  rank?: number              // computed during refresh
-
-  // Rewards
-  rewardsDistributed: boolean
-  rewards?: {
-    stardust?: number
-    photocards?: ObjectId[]
-    badge?: string
-  }
-
-  createdAt: Date
-}
-```
-
-**Indexes:**
-- Compound: `[weekStart, score desc]`
-- Compound: `[userId, weekStart]` (unique)
-- `weekStart`
-
----
-
-### DropPool
-
-**Purpose**: Active card drop configurations
-
-**Schema:**
-```typescript
-{
-  name: string
-  active: boolean
-
-  // Card weights
-  cards: [{
-    photocardId: ObjectId
-    weight: number           // relative probability
-    featured: boolean        // featured boost
-  }]
-
-  // Season
-  startDate: Date
-  endDate: Date
-
-  createdAt: Date
+  displayName: string
+  avatarUrl: string
   updatedAt: Date
 }
 ```
 
 **Indexes:**
-- `active`
-- `startDate`, `endDate`
+- Compound: `[periodKey, userId]` (unique)
+- Compound: `[periodKey, score desc]`
+
+---
+
+### DropPool
+
+**Purpose**: Legacy drop pool configuration (not used in random catalog drops)
+
+**Schema:**
+```typescript
+{
+  slug: string
+  name: string
+  window: {
+    start: Date
+    end: Date
+  }
+  weights: {
+    common: number
+    rare: number
+    epic: number
+    legendary: number
+  }
+  featured: {
+    rarityBoost: {
+      epic: number
+      legendary: number
+    }
+    set?: string
+    members?: string[]
+  }
+  active: boolean
+}
+```
+
+**Indexes:**
+- `slug` (unique)
+- Compound: `[window.start, window.end, active]`
 
 ---
 
@@ -793,24 +783,22 @@ Complete MongoDB database schema for ARMYVERSE.
 **Schema:**
 ```typescript
 {
-  userId: ObjectId
-  photocardId: ObjectId
-  source: string
-  duplicate: boolean
-  stardustAwarded: number
-
-  // Context
-  sessionId?: ObjectId       // if from quiz
-  questCode?: string         // if from quest
-  craftDetails?: object
-
-  timestamp: Date
+  userId: string
+  sessionId?: ObjectId
+  cardId: ObjectId
+  rarity: string            // currently "random"
+  seed: string
+  poolSlug: string
+  reason: 'quiz' | 'craft' | 'quest' | 'admin'
+  anomaly: boolean
+  xp?: number
+  createdAt: Date
 }
 ```
 
 **Indexes:**
 - `userId`
-- `timestamp` (descending)
+- `createdAt` (descending)
 
 ---
 
@@ -821,8 +809,8 @@ Complete MongoDB database schema for ARMYVERSE.
 **Critical Indexes** (for fast queries):
 - User lookups: `username`, `email`, `firebaseUid`
 - Game queries: `userId` on all user-related collections
-- Quest system: `[userId, questCode]`, `active`
-- Leaderboard: `[weekStart, score desc]`
+- Quest system: `[userId, code, periodKey]`, `code`
+- Leaderboard: `[periodKey, score desc]`
 - Blog discovery: `tags`, `publishedAt`, text search
 
 **TTL Indexes** (auto-cleanup):
@@ -844,7 +832,7 @@ Complete MongoDB database schema for ARMYVERSE.
 6. Get blog posts with filters
 
 **Optimization Strategies:**
-- Denormalize username in LeaderboardEntry (avoid join)
+- Denormalize displayName in LeaderboardEntry (avoid join)
 - Cache trending data (24h)
 - Pagination for large lists
 - Text search index for blogs

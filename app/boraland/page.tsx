@@ -15,10 +15,11 @@ import MobileStatsDrawer from '@/components/boraland/MobileStatsDrawer'
 
 export type InventoryItem = {
   card?: {
-    member: string
-    era: string
-    rarity: string
+    title?: string | null
+    category?: string
+    subcategory?: string | null
     imageUrl?: string
+    sourceUrl?: string
   }
 }
 
@@ -31,13 +32,8 @@ export type GameStats = {
 
 export type PoolInfo = {
   name?: string
-  set?: string
-  weights?: {
-    common: number
-    rare: number
-    epic: number
-    legendary: number
-  }
+  totalCards?: number
+  categories?: number
 }
 
 type Tab = 'home' | 'fangate' | 'armybattles'

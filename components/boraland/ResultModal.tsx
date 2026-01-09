@@ -2,21 +2,22 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import RarityPill from './RarityPill'
 import { useMemo, useState } from 'react'
 import { apiFetch } from '@/lib/client/api'
 
 type Reward = {
   cardId: string
-  rarity: 'common'|'rare'|'epic'|'legendary' | null | undefined
-  member: string
-  era: string
-  set: string
-  publicId: string
-  imageUrl: string
+  title?: string | null
+  category?: string
+  categoryPath?: string
+  subcategory?: string | null
+  subcategoryPath?: string | null
+  imageUrl?: string
+  sourceUrl?: string
+  pageUrl?: string
 } | null
 
-export default function ResultModal({ open, onClose, xp, correctCount, reward, dustAwarded = 0, duplicate = false, rarityWeightsUsed, pityApplied, reason, review, demoMode = false }: { open: boolean; onClose: () => void; xp: number; correctCount: number; reward: Reward; dustAwarded?: number; duplicate?: boolean; rarityWeightsUsed?: Record<string, number> | null; pityApplied?: boolean; reason?: string | null; review?: { items: Array<{ id: string; question: string; choices: string[]; difficulty: 'easy'|'medium'|'hard'; userAnswerIndex: number; correctIndex: number; xpAward: number }>; summary: { xp: number; correctCount: number } } | null; demoMode?: boolean }) {
+export default function ResultModal({ open, onClose, xp, correctCount, reward, dustAwarded = 0, duplicate = false, reason, review, demoMode = false, questMode = false, practiceMode = false }: { open: boolean; onClose: () => void; xp: number; correctCount: number; reward: Reward; dustAwarded?: number; duplicate?: boolean; reason?: string | null; review?: { items: Array<{ id: string; question: string; choices: string[]; difficulty: 'easy'|'medium'|'hard'; userAnswerIndex: number; correctIndex: number; xpAward: number }>; summary: { xp: number; correctCount: number } } | null; demoMode?: boolean; questMode?: boolean; practiceMode?: boolean }) {
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
   const [showReview, setShowReview] = useState(false)
@@ -32,7 +33,8 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, d
 
   if (!open) return null
 
-  const ring = reward?.rarity === 'legendary' ? 'shadow-[0_0_40px_rgba(251,191,36,0.35)]' : reward?.rarity === 'epic' ? 'shadow-[0_0_40px_rgba(232,121,249,0.35)]' : ''
+  const title = reward?.title || reward?.subcategory || reward?.category || 'Photocard'
+  const meta = reward?.subcategory ? `${reward.category || 'Gallery'} • ${reward.subcategory}` : (reward?.category || 'Gallery')
   const doShare = async () => {
     if (!reward) return
     try {
@@ -49,11 +51,15 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, d
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
-      <div className={`w-full max-w-lg rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-6 ${ring} max-h-[90vh] overflow-y-auto`}>
+      <div className="w-full max-w-lg rounded-2xl border border-[#3b1a52]/60 bg-white/5 backdrop-blur-md p-6 max-h-[90vh] overflow-y-auto">
         <div className="text-center text-white text-2xl font-semibold">
-          {demoMode ? 'Demo Result' : 'Your Result'}
+          {demoMode ? 'Demo Result' : questMode ? 'Quest Result' : practiceMode ? 'Practice Result' : 'Your Result'}
         </div>
-        <div className="text-center text-white/70 mt-1">XP earned: {xp} • Correct: {correctCount}</div>
+        {practiceMode ? (
+          <div className="text-center text-white/70 mt-1">Correct: {correctCount}</div>
+        ) : (
+          <div className="text-center text-white/70 mt-1">XP earned: {xp} • Correct: {correctCount}</div>
+        )}
         {dustAwarded > 0 && (
           <div className="text-center text-amber-200 text-sm mt-1">Duplicate converted to +{dustAwarded} Dust</div>
         )}
@@ -63,17 +69,17 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, d
         {demoMode && (
           <div className="text-center text-blue-300 text-sm mt-1">Demo Mode - Preview Only</div>
         )}
-        {reward && (
+        {practiceMode && (
+          <div className="text-center text-teal-300 text-sm mt-1">Practice Mode - No rewards or XP</div>
+        )}
+        {reward && !practiceMode && (
           <div className="mt-4 flex flex-col items-center">
             <div className="relative">
-              <Image src={reward.imageUrl} alt={`${reward.member} ${reward.era}`} width={192} height={256} className="w-48 h-64 object-cover rounded-xl" />
+              <Image src={reward.imageUrl || `https://placehold.co/384x512/1f102c/ffffff?text=${encodeURIComponent(title)}`} alt={title} width={192} height={256} className="w-48 h-64 object-cover rounded-xl" />
               {duplicate && (
                 <div className="absolute top-2 left-2 bg-black/70 text-amber-200 text-xs font-semibold px-2 py-1 rounded-full border border-amber-300/50">
                   Duplicate
                 </div>
-              )}
-              {(reward.rarity === 'legendary' || reward.rarity === 'epic') && (
-                <div className="pointer-events-none absolute -inset-2 rounded-2xl animate-pulse" style={{ boxShadow: reward.rarity === 'legendary' ? '0 0 50px rgba(251,191,36,0.35)' : '0 0 50px rgba(232,121,249,0.35)' }} />
               )}
               {demoMode && (
                 <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center">
@@ -84,21 +90,9 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, d
               )}
             </div>
             <div className="mt-2 flex items-center gap-2 text-white">
-              <RarityPill rarity={reward.rarity} />
-              <span>{reward.member} • {reward.era}</span>
+              <span>{title}</span>
             </div>
-          </div>
-        )}
-        {(rarityWeightsUsed && reward) && (
-          <div className="mt-4 rounded-xl border border-[#3b1a52]/60 bg-white/5 p-4 text-white/80">
-            <div className="font-semibold text-white mb-2">Odds this run</div>
-            <div className="grid grid-cols-2 gap-y-1 text-sm">
-              <div>Common</div><div className="text-right">{rarityWeightsUsed.common}%</div>
-              <div>Rare</div><div className="text-right">{rarityWeightsUsed.rare}%</div>
-              <div>Epic</div><div className="text-right">{rarityWeightsUsed.epic}%</div>
-              <div>Legendary</div><div className="text-right">{rarityWeightsUsed.legendary}%</div>
-            </div>
-            <div className="mt-2 text-xs text-white/60">Rolled: <span className="text-white">{reward.rarity}</span>{pityApplied ? ' • Pity applied' : ''}</div>
+            <div className="text-xs text-white/60 mt-1">{meta}</div>
           </div>
         )}
         {/* Review Answers */}
@@ -135,7 +129,7 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, d
                           <div className="text-white/90 text-sm flex-1">{idx+1}. {it.question}</div>
                           <div className="text-xs text-white/70 flex items-center gap-2">
                             <span className={`px-2 py-0.5 rounded-full ${it.difficulty==='easy'?'bg-emerald-500/20 text-emerald-200':it.difficulty==='medium'?'bg-amber-500/20 text-amber-200':'bg-fuchsia-500/20 text-fuchsia-200'}`}>{it.difficulty}</span>
-                            <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/80">+{it.xpAward} XP</span>
+                            {!practiceMode && <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/80">+{it.xpAward} XP</span>}
                           </div>
                         </div>
                         <ul className="mt-2 space-y-1">
@@ -176,6 +170,24 @@ export default function ResultModal({ open, onClose, xp, correctCount, reward, d
               >
                 Try Another Demo
               </button>
+            </>
+          ) : questMode ? (
+            <>
+              <Link href="/boraland/quests" className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A7F3D0] to-[#34D399] text-black font-semibold">
+                Back to Quests
+              </Link>
+              <Link href="/boraland/quest-play" className="px-4 py-2 rounded-xl border border-[#3b1a52]/60 text-white/90">
+                Play Again
+              </Link>
+            </>
+          ) : practiceMode ? (
+            <>
+              <Link href="/boraland" className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A7F3D0] to-[#34D399] text-black font-semibold">
+                Back to Boraland
+              </Link>
+              <Link href="/boraland/practice-play" className="px-4 py-2 rounded-xl border border-[#3b1a52]/60 text-white/90">
+                Practice Again
+              </Link>
             </>
           ) : (
             <>

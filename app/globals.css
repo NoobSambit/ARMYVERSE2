@@ -128,11 +128,27 @@
   .animate-fade-in {
     animation: fadeIn 0.2s ease-out;
   }
+
+  /* Slide down animation for notifications */
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
 }
 
 @keyframes slideUp {
   from {
     transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
     opacity: 0;
   }
   to {
@@ -148,61 +164,61 @@
   to {
     opacity: 1;
   }
+}
 
-  /* BTS-themed gradient animations */
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient-shift 3s ease infinite;
-    will-change: background-position;
-  }
+/* BTS-themed gradient animations */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+  will-change: background-position;
+}
 
-  /* Horizontal gradient animation for borders */
-  .animate-gradient-x {
-    background-size: 200% 100%;
-    animation: gradient-x 6s linear infinite;
-    will-change: background-position;
-  }
-  @keyframes gradient-x {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+/* Horizontal gradient animation for borders */
+.animate-gradient-x {
+  background-size: 200% 100%;
+  animation: gradient-x 6s linear infinite;
+  will-change: background-position;
+}
+@keyframes gradient-x {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-  @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-  /* Glassmorphism effects */
-  .glass-effect {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
-  }
+/* Glassmorphism effects */
+.glass-effect {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
 
-  .glass-effect-hover {
-    @apply hover:bg-white/20 hover:border-purple-400/50;
-  }
+.glass-effect-hover {
+  @apply hover:bg-white/20 hover:border-purple-400/50;
+}
 
-  /* BTS-themed button styles */
-  .btn-bts-primary {
-    @apply bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-full shadow-md transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
+/* BTS-themed button styles */
+.btn-bts-primary {
+  @apply bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-full shadow-md transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed;
+}
 
-  .btn-bts-secondary {
-    @apply bg-white/10 hover:bg-white/20 text-white font-medium rounded-full border border-white/20 hover:border-purple-400/50 transition-all duration-200 backdrop-blur-sm;
-  }
+.btn-bts-secondary {
+  @apply bg-white/10 hover:bg-white/20 text-white font-medium rounded-full border border-white/20 hover:border-purple-400/50 transition-all duration-200 backdrop-blur-sm;
+}
 
-  .btn-bts-surprise {
-    @apply bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-full shadow-md transition-transform hover:scale-105;
-  }
+.btn-bts-surprise {
+  @apply bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-full shadow-md transition-transform hover:scale-105;
+}
 
-  .btn-bts-success {
-    @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-full shadow-md transition-transform hover:scale-105;
-  }
+.btn-bts-success {
+  @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-full shadow-md transition-transform hover:scale-105;
+}
 
-  .skeleton {
-    @apply animate-pulse bg-black/80 rounded backdrop-blur-sm;
-  }
+.skeleton {
+  @apply animate-pulse bg-black/80 rounded backdrop-blur-sm;
 }
 
 /* Accessibility improvements */

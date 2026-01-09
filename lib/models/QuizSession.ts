@@ -7,7 +7,7 @@ const quizSessionSchema = new mongoose.Schema({
   seed: { type: String, required: true },
   score: { type: Number, default: 0 },
   status: { type: String, enum: ['active', 'completed', 'expired'], default: 'active', index: true },
-  mode: { type: String, enum: ['ranked', 'practice'], default: 'ranked', index: true },
+  mode: { type: String, enum: ['ranked', 'practice', 'quest'], default: 'ranked', index: true },
   poolSlug: { type: String, default: '' },
   expiresAt: { type: Date, index: true, required: true },
   createdAt: { type: Date, default: Date.now }
@@ -17,6 +17,8 @@ const quizSessionSchema = new mongoose.Schema({
 quizSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
 quizSessionSchema.index({ userId: 1, status: 1 })
 
-export const QuizSession = mongoose.models.QuizSession || mongoose.model('QuizSession', quizSessionSchema)
+if (mongoose.models.QuizSession) {
+  delete mongoose.models.QuizSession
+}
 
-
+export const QuizSession = mongoose.model('QuizSession', quizSessionSchema)

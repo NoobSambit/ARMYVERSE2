@@ -160,13 +160,16 @@ Many list endpoints support pagination:
 ### Photocard Object
 ```typescript
 {
-  id: string
-  member: string
-  era: string
-  set: string
-  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  cardId: string
+  title: string | null
+  category: string
+  categoryPath?: string
+  subcategory: string | null
+  subcategoryPath?: string | null
   imageUrl: string
-  publicId: string
+  thumbUrl?: string
+  sourceUrl?: string
+  pageUrl?: string
 }
 ```
 
@@ -181,10 +184,11 @@ Many list endpoints support pagination:
   progress: number
   total: number
   completed: boolean
-  rewards: {
-    stardust?: number
-    tickets?: number
+  reward: {
+    dust?: number
     xp?: number
+    ticket?: { enabled?: boolean }
+    badgeId?: string
   }
 }
 ```

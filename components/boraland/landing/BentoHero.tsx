@@ -48,13 +48,13 @@ export default function BentoHero() {
             </svg>
           </Link>
           <Link
-            href="/boraland/play"
+            href="/boraland/practice-play"
             className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/10 h-11 sm:h-12 px-4 sm:px-5 md:px-6 rounded-full font-bold text-sm md:text-base transition-all flex items-center gap-2 font-display"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
-            Try a Quiz
+            Practice Quiz
           </Link>
         </div>
       </div>

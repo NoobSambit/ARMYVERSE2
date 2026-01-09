@@ -112,8 +112,8 @@ export async function GET(request: NextRequest) {
       potentialRewards: {
         dailyMilestoneBadge: potentialDailyBadge,
         weeklyMilestoneBadge: potentialWeeklyBadge,
-        dailyPhotocard: dailyNextMilestone ? { rarity: 'epic' } : null,
-        weeklyPhotocard: weeklyNextMilestone ? { rarity: 'legendary' } : null
+        dailyPhotocard: dailyNextMilestone ? { type: 'random' } : null,
+        weeklyPhotocard: weeklyNextMilestone ? { type: 'random' } : null
       },
       latestBadges: badgesFormatted
     })
@@ -122,4 +122,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

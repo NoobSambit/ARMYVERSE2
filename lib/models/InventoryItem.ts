@@ -7,7 +7,7 @@ const inventoryItemSchema = new mongoose.Schema({
   source: {
     type: {
       type: String,
-      enum: ['quiz', 'quest_streaming', 'quest_quiz', 'craft', 'event'],
+      enum: ['quiz', 'quest_streaming', 'quest_quiz', 'craft', 'event', 'daily_milestone', 'weekly_milestone'],
       required: true,
       default: 'quiz'
     },
@@ -19,5 +19,4 @@ const inventoryItemSchema = new mongoose.Schema({
 inventoryItemSchema.index({ userId: 1, acquiredAt: -1 })
 
 export const InventoryItem = mongoose.models.InventoryItem || mongoose.model('InventoryItem', inventoryItemSchema)
-
 

@@ -47,6 +47,8 @@ Step-by-step setup guides:
 - **[Deployment](./setup/deployment.md)** - Vercel deployment instructions
 - **[Cron Jobs](./setup/cron-jobs.md)** - Automated task configuration
 - **[Track Seeding](./setup/track-seeding.md)** - Database seeding for BTS tracks
+- **[Fandom Gallery Scraper](./scripts/fandom-gallery-scraper.md)** - Image gallery ingestion
+- **[Inventory Seed Script](./scripts/seed-inventory-sample.md)** - Generate sample inventory data
 - **[Spotify Owner Refresh Token](./setup/spotify-owner-refresh-token.md)** - OAuth setup
 
 ### 📡 API Reference
@@ -129,22 +131,22 @@ Comprehensive auth system guides:
 ### 6. **Game System (Boraverse)**
 - **Quiz System**: 10-question quizzes on BTS knowledge
   - Multiple categories (history, discography, members, lyrics)
-  - Performance-based photocard rarity
+  - Random photocard rewards (XP-gated)
   - Daily limits and leaderboard integration
 
-- **Photocard Collection**: Earn cards with 4 rarity tiers
-  - XP-banded odds with boosted rates (25+ XP = 0% common, 30% rare, 45% epic, 25% legendary)
-  - Pity system guarantees
-  - 150+ unique photocards
+- **Photocard Collection**: Fandom gallery-sourced catalog
+  - Thousands of BTS gallery cards with category + subcategory structure
+  - Inventory filters (category, subcategory, source, search)
+  - Collection view with missing-card placeholders
 
 - **Crafting System**: Convert duplicates to Stardust, craft specific cards
   - Specific card crafting
-  - Rarity roll system
+  - Random roll crafting (no rarity targeting)
 
 - **Mastery System**: Member/Era XP with milestone rewards
   - Individual member progression
   - Era-based progression
-  - Themed photocard pulls at milestones
+  - Dust + XP milestone rewards
 
 - **Quest & Badge System**: Complete daily/weekly streaming quests
   - Last.fm integration for streaming verification
@@ -156,7 +158,7 @@ Comprehensive auth system guides:
   - Automatic reward distribution
   - Tier-based prizes
 
-- **Sharing**: Generate shareable photocard images via Cloudinary
+- **Sharing**: Generate shareable photocard links
 
 ### 7. **Profile Management**
 - Comprehensive 5-tab profile modal:

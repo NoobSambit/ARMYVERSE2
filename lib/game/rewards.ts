@@ -6,16 +6,11 @@ export type BalanceAward = {
   xp?: number
 }
 
-const DUPLICATE_DUST: Record<Rarity, number> = {
-  common: 10,
-  rare: 40,
-  epic: 120,
-  legendary: 400
-}
+const DUPLICATE_DUST = 20
 
-export function duplicateDustForRarity(rarity: Rarity | null | undefined) {
-  if (!rarity) return 0
-  return DUPLICATE_DUST[rarity] || 0
+export function duplicateDustForRarity(_rarity: Rarity | null | undefined) {
+  void _rarity
+  return DUPLICATE_DUST
 }
 
 type IncUpdate = {
@@ -28,8 +23,13 @@ export async function awardBalances(userId: string, award: BalanceAward) {
   if (typeof award.dust === 'number' && award.dust !== 0) inc.dust = award.dust
   if (typeof award.xp === 'number' && award.xp !== 0) inc.xp = award.xp
 
-  const update: { $setOnInsert: { dust: number }; $inc?: IncUpdate } = { $setOnInsert: { dust: 0 } }
+  const update: { $setOnInsert?: IncUpdate; $inc?: IncUpdate } = {}
   if (Object.keys(inc).length) update.$inc = inc
+
+  const setOnInsert: IncUpdate = {}
+  if (!('dust' in inc)) setOnInsert.dust = 0
+  if (!('xp' in inc)) setOnInsert.xp = 0
+  if (Object.keys(setOnInsert).length) update.$setOnInsert = setOnInsert
 
   const res = await UserGameState.findOneAndUpdate(
     { userId },

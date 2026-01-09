@@ -12,8 +12,8 @@ type StreamingQuest = {
   completed: boolean
   claimed: boolean
   streamingMeta?: {
-    trackTargets?: Array<{ trackName: string; artistName: string; count: number }>
-    albumTargets?: Array<{ albumName: string; trackCount: number; tracks?: Array<{name: string; artist: string}> }>
+    trackTargets?: Array<{ trackName: string; artistName: string; count: number; thumbnail?: string | null; spotifyId?: string | null }>
+    albumTargets?: Array<{ albumName: string; trackCount: number; tracks?: Array<{name: string; artist: string}>, coverImage?: string | null; spotifyId?: string | null }>
   }
   trackProgress?: Record<string, number>
   reward?: { dust: number; xp: number }
@@ -131,9 +131,7 @@ export default function StreamingQuestCard({
                 return (
                   <div key={idx} className={`flex items-center justify-between p-2 rounded-xl transition-colors group ${isComplete ? 'bg-green-500/10 border border-green-500/20' : 'bg-surface-lighter/50 hover:bg-surface-lighter'}`}>
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className={`w-8 h-8 bg-gradient-to-br rounded flex items-center justify-center shrink-0 ${isComplete ? 'from-green-600 to-emerald-600' : 'from-purple-600 to-pink-600'}`}>
-                            <span className="material-symbols-outlined text-white text-sm">{isComplete ? 'check_circle' : 'music_note'}</span>
-                          </div>
+                          <TrackThumbnail url={target.thumbnail} spotifyId={target.spotifyId} isComplete={isComplete} />
                           <div className="min-w-0 flex-1">
                             <div className="text-sm text-gray-200 truncate">{target.trackName}</div>
                             <div className="text-xs text-gray-500">{target.artistName}</div>
@@ -191,9 +189,47 @@ export default function StreamingQuestCard({
   )
 }
 
+function TrackThumbnail({ url, spotifyId, isComplete }: { url?: string | null, spotifyId?: string | null, isComplete: boolean }) {
+  const content = url ? (
+    <img src={url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 border border-white/10" />
+  ) : (
+    <div className={`w-10 h-10 bg-gradient-to-br rounded-lg flex items-center justify-center shrink-0 ${isComplete ? 'from-green-600 to-emerald-600' : 'from-purple-600 to-pink-600'}`}>
+      <span className="material-symbols-outlined text-white text-sm">{isComplete ? 'check_circle' : 'music_note'}</span>
+    </div>
+  )
+
+  if (spotifyId) {
+    return (
+      <a href={`https://open.spotify.com/track/${spotifyId}`} target="_blank" rel="noreferrer" className="shrink-0">
+        {content}
+      </a>
+    )
+  }
+  return content
+}
+
+function AlbumThumbnail({ url, spotifyId, isComplete }: { url?: string | null, spotifyId?: string | null, isComplete: boolean }) {
+  const content = url ? (
+    <img src={url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0 border border-white/10" />
+  ) : (
+    <div className={`w-10 h-10 bg-gradient-to-br rounded-lg flex items-center justify-center shrink-0 ${isComplete ? 'from-green-600 to-emerald-600' : 'from-blue-600 to-purple-600'}`}>
+      <span className="material-symbols-outlined text-white text-sm">{isComplete ? 'check_circle' : 'album'}</span>
+    </div>
+  )
+
+  if (spotifyId) {
+    return (
+      <a href={`https://open.spotify.com/album/${spotifyId}`} target="_blank" rel="noreferrer" className="shrink-0">
+        {content}
+      </a>
+    )
+  }
+  return content
+}
+
 // Album target component with expandable track list
 function AlbumTarget({ album, trackProgress }: {
-  album: { albumName: string; trackCount: number; tracks?: Array<{name: string; artist: string}> }
+  album: { albumName: string; trackCount: number; tracks?: Array<{name: string; artist: string}>, coverImage?: string | null, spotifyId?: string | null }
   trackProgress?: Record<string, number>
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -214,9 +250,7 @@ function AlbumTarget({ album, trackProgress }: {
         className="w-full flex items-center justify-between p-2 hover:bg-surface-lighter transition-colors group"
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className={`w-8 h-8 bg-gradient-to-br rounded flex items-center justify-center shrink-0 ${isComplete ? 'from-green-600 to-emerald-600' : 'from-blue-600 to-purple-600'}`}>
-            <span className="material-symbols-outlined text-white text-sm">{isComplete ? 'check_circle' : 'album'}</span>
-          </div>
+          <AlbumThumbnail url={album.coverImage} spotifyId={album.spotifyId} isComplete={isComplete} />
           <div className="min-w-0 flex-1">
             <div className="text-sm text-gray-200 truncate">{album.albumName}</div>
             <div className="text-xs text-gray-500">{album.trackCount} tracks required</div>

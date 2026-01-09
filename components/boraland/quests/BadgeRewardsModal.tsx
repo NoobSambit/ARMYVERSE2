@@ -83,7 +83,7 @@ export default function BadgeRewardsModal({
       rarity: 'epic' as const,
       streakCount: 10,
       description: activeTab === 'daily' ? 'Reach a 10-day streak to unlock this exclusive achievement' : 'Reach a 10-week streak to unlock this exclusive achievement',
-      reward: activeTab === 'daily' ? 'Epic Photocard' : 'Legendary Photocard'
+      reward: 'Random Photocard'
     },
     {
       code: `${activeTab}_milestone_2`,
@@ -91,7 +91,7 @@ export default function BadgeRewardsModal({
       rarity: 'epic' as const,
       streakCount: 20,
       description: activeTab === 'daily' ? 'Reach a 20-day streak to unlock this exclusive achievement' : 'Reach a 20-week streak to unlock this exclusive achievement',
-      reward: activeTab === 'daily' ? 'Epic Photocard' : 'Legendary Photocard'
+      reward: 'Random Photocard'
     },
     {
       code: `${activeTab}_milestone_3`,
@@ -99,15 +99,15 @@ export default function BadgeRewardsModal({
       rarity: 'legendary' as const,
       streakCount: 30,
       description: activeTab === 'daily' ? 'Reach a 30-day streak to unlock this exclusive profile frame' : 'Reach a 30-week streak to unlock this exclusive profile frame',
-      reward: activeTab === 'daily' ? 'Epic Photocard + Profile Frame' : 'Legendary Photocard + Profile Frame'
+      reward: 'Random Photocard + Profile Frame'
     },
     {
       code: `${activeTab}_milestone_4`,
       name: activeTab === 'daily' ? 'Legendary Loyalist' : 'Unstoppable Force',
       rarity: 'legendary' as const,
       streakCount: 40,
-      description: activeTab === 'daily' ? 'Reach a 40-day streak for legendary status' : 'Reach a 40-week streak for legendary status',
-      reward: activeTab === 'daily' ? 'Epic Photocard Pack' : 'Legendary Photocard Pack'
+      description: activeTab === 'daily' ? 'Reach a 40-day streak for elite status' : 'Reach a 40-week streak for elite status',
+      reward: 'Bonus Photocard Pack'
     },
     {
       code: `${activeTab}_milestone_5`,
@@ -115,7 +115,7 @@ export default function BadgeRewardsModal({
       rarity: 'legendary' as const,
       streakCount: 50,
       description: activeTab === 'daily' ? 'The ultimate 50-day achievement + exclusive rewards' : 'The ultimate 50-week achievement + exclusive rewards',
-      reward: 'Legendary Status + Bonus Photocard Pack'
+      reward: 'Elite Status + Bonus Photocard Pack'
     }
   ]
 

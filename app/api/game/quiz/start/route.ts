@@ -20,7 +20,8 @@ export const runtime = 'nodejs'
 
 const StartSchema = z.object({
   locale: z.string().min(2).max(10).optional(),
-  count: z.number().int().min(1).max(20).optional()
+  count: z.number().int().min(1).max(20).optional(),
+  mode: z.enum(['ranked', 'quest']).optional()
 })
 
 export async function POST(request: NextRequest) {
@@ -48,8 +49,7 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(now.getTime() + 20 * 60 * 1000)
     const seed = Math.random().toString(36).slice(2)
 
-    // Always ranked mode
-    const mode = 'ranked'
+    const mode = input.data.mode || 'ranked'
 
     const session = await QuizSession.create({
       userId: user.uid,
@@ -80,4 +80,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

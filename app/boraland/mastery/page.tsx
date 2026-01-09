@@ -24,8 +24,8 @@ type GameState = {
   potentialRewards: {
     dailyMilestoneBadge?: any
     weeklyMilestoneBadge?: any
-    dailyPhotocard?: { rarity: string }
-    weeklyPhotocard?: { rarity: string }
+    dailyPhotocard?: { type: string }
+    weeklyPhotocard?: { type: string }
   }
   latestBadges: any[]
 }

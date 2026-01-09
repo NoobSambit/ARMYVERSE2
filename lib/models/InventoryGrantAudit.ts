@@ -4,7 +4,7 @@ const inventoryGrantAuditSchema = new mongoose.Schema({
   userId: { type: String, required: true, index: true },
   sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuizSession' },
   cardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Photocard', required: true },
-  rarity: { type: String, enum: ['common', 'rare', 'epic', 'legendary'], required: true },
+  rarity: { type: String, default: 'random' },
   seed: { type: String, required: true },
   poolSlug: { type: String, default: '' },
   reason: { type: String, enum: ['quiz', 'craft', 'quest', 'admin'], required: true },
@@ -16,5 +16,4 @@ const inventoryGrantAuditSchema = new mongoose.Schema({
 inventoryGrantAuditSchema.index({ userId: 1, createdAt: -1 })
 
 export const InventoryGrantAudit = mongoose.models.InventoryGrantAudit || mongoose.model('InventoryGrantAudit', inventoryGrantAuditSchema)
-
 

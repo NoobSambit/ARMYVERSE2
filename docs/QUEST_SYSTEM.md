@@ -148,7 +148,7 @@ Completion triggers rewards + badges
 **Reward:**
 - 400 dust
 - 200 XP
-- Rare+ photocard ticket
+- Photocard ticket (random)
 
 ### 5. Daily Quiz Quest
 
@@ -219,11 +219,11 @@ Milestone badges also award photocards:
 
 | Streak | Daily Badge | Photocard | Weekly Badge | Photocard |
 |--------|-------------|-----------|--------------|-----------|
-| 10     | Rare        | Rare      | Epic         | Epic      |
-| 20     | Epic        | Epic      | Epic         | Epic      |
-| 30     | Epic        | Epic      | Legendary    | Legendary |
-| 40     | Legendary   | Legendary | Legendary    | Legendary |
-| 50     | Legendary   | Legendary | Legendary    | Legendary |
+| 10     | Rare        | Random    | Epic         | Random    |
+| 20     | Epic        | Random    | Epic         | Random    |
+| 30     | Epic        | Random    | Legendary    | Random    |
+| 40     | Legendary   | Random    | Legendary    | Random    |
+| 50     | Legendary   | Random    | Legendary    | Random    |
 
 ---
 
@@ -424,8 +424,8 @@ Get user's complete game state including streaks, balance, and potential rewards
       "rarity": "epic",
       "atStreak": 10
     },
-    "dailyPhotocard": { "rarity": "epic" },
-    "weeklyPhotocard": { "rarity": "legendary" }
+    "dailyPhotocard": { "type": "random" },
+    "weeklyPhotocard": { "type": "random" }
   },
   "latestBadges": [
     {

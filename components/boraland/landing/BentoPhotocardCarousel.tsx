@@ -2,43 +2,13 @@
 
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { Crown, Gem, Star } from 'lucide-react'
 
 interface PhotocardPreview {
-  publicId: string
-  rarity: 'common' | 'rare' | 'epic' | 'legendary'
-  member: string
-  era: string
-  set: string
-  imageUrl: string
-  isLimited: boolean
-}
-
-const rarityConfig = {
-  common: {
-    gradient: 'from-slate-400 via-slate-300 to-slate-400',
-    textColor: 'text-slate-300',
-    borderColor: 'border-slate-400/30',
-    label: 'Standard'
-  },
-  rare: {
-    gradient: 'from-blue-400 via-cyan-300 to-blue-500',
-    textColor: 'text-cyan-300',
-    borderColor: 'border-cyan-400/30',
-    label: 'Epic'
-  },
-  epic: {
-    gradient: 'from-purple-400 via-fuchsia-400 to-purple-500',
-    textColor: 'text-fuchsia-300',
-    borderColor: 'border-fuchsia-400/30',
-    label: 'Legendary'
-  },
-  legendary: {
-    gradient: 'from-amber-300 via-yellow-200 to-amber-400',
-    textColor: 'text-amber-200',
-    borderColor: 'border-amber-400/30',
-    label: 'Mythic'
-  }
+  cardId: string
+  title?: string | null
+  category?: string
+  subcategory?: string | null
+  imageUrl?: string
 }
 
 export default function BentoPhotocardCarousel() {
@@ -51,15 +21,9 @@ export default function BentoPhotocardCarousel() {
     fetch('/api/game/photocards/preview')
       .then(res => res.json())
       .then(data => {
-        console.log('Photocards data:', data)
         if (data.cards && data.cards.length > 0) {
-          const sortedCards = data.cards.sort((a: PhotocardPreview, b: PhotocardPreview) => {
-            const rarityOrder = { legendary: 4, epic: 3, rare: 2, common: 1 }
-            return rarityOrder[b.rarity] - rarityOrder[a.rarity]
-          })
-          console.log('Sorted cards:', sortedCards)
-          setPhotocards(sortedCards)
-          setVisibleCards(sortedCards.slice(0, 3))
+          setPhotocards(data.cards)
+          setVisibleCards(data.cards.slice(0, 3))
         }
         setLoading(false)
       })
@@ -84,38 +48,41 @@ export default function BentoPhotocardCarousel() {
     return () => clearInterval(interval)
   }, [photocards])
 
+  const gradients = [
+    'from-rose-300 via-orange-200 to-amber-200',
+    'from-cyan-300 via-blue-200 to-slate-200',
+    'from-emerald-300 via-lime-200 to-teal-200',
+    'from-fuchsia-300 via-purple-200 to-indigo-200'
+  ]
+
   const renderCard = (card: PhotocardPreview, index: number) => {
-    const config = rarityConfig[card.rarity]
+    const gradient = gradients[index % gradients.length]
+    const title = card.title || card.subcategory || card.category || 'Photocard'
+    const meta = card.subcategory ? `${card.category || 'Gallery'} • ${card.subcategory}` : (card.category || 'Gallery')
 
     return (
       <div
-        key={`${card.publicId}-${currentIndex}-${index}`}
+        key={`${card.cardId}-${currentIndex}-${index}`}
         className="relative w-1/3 h-full self-stretch flex-shrink-0 rounded-2xl overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-105 animate-fade-in"
       >
-        {card.imageUrl && (
-          <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110">
-            <Image
-              src={card.imageUrl}
-              alt={`${card.member} - ${card.era}`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 33vw, 16vw"
-            />
-          </div>
-        )}
-
-        <div className={`absolute inset-0 bg-gradient-to-br ${config.gradient} opacity-20`} />
-        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent pt-8">
-          <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider font-display mb-0.5 flex items-center gap-1">
-            {card.rarity === 'legendary' && <Crown className="w-2 h-2 text-amber-300" />}
-            {card.rarity === 'epic' && <Gem className="w-2 h-2 text-fuchsia-300" />}
-            {card.rarity === 'rare' && <Star className="w-2 h-2 text-cyan-300" />}
-            <span className={config.textColor}>{config.label}</span>
-          </p>
-          <p className="text-white font-bold text-[10px] md:text-xs font-display truncate">{card.member}</p>
+        <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110">
+          <Image
+            src={card.imageUrl || `https://placehold.co/400x600/1f102c/ffffff?text=${encodeURIComponent(title)}`}
+            alt={title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 33vw, 16vw"
+          />
         </div>
 
-        <div className={`absolute inset-0 border ${config.borderColor} rounded-2xl pointer-events-none`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-20`} />
+        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent pt-8">
+          <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider font-display mb-0.5 text-white/70 truncate">
+            {meta}
+          </p>
+          <p className="text-white font-bold text-[10px] md:text-xs font-display truncate">{title}</p>
+        </div>
+        <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
       </div>
     )
   }

@@ -100,58 +100,39 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 - **Multiple Categories**: History, discography, members, lyrics, variety
 - **Difficulty Levels**: Easy (1 XP), Medium (2 XP), Hard (3 XP)
 - **20-Minute Timer**: Session expires with TTL index auto-cleanup
-- **Performance-Based Rewards**: XP score determines photocard rarity
+- **Performance-Based Rewards**: XP score gates photocard drops (random catalog)
 
-**XP → Rarity Mapping** (Pity-Aware):
-- 0-4 XP: No reward
-- 5-9 XP: 100% Common
-- 10-14 XP: 80% Common, 20% Rare
-- 15-19 XP: 20% Common, 60% Rare, 20% Epic
-- 20-24 XP: 10% Common, 50% Rare, 35% Epic, 5% Legendary
-- 25-30 XP: 45% Rare, 40% Epic, 15% Legendary
+**XP → Reward Gate**:
+- 0-4 XP: No card reward
+- 5+ XP: Random photocard from the catalog
 
 **Daily Limits**: 2 free quizzes/day, resets at midnight UTC
 
 **Quest Integration**: 2 quizzes/day + 10 quizzes/week count toward quests
 
 #### **Photocard Collection System**
-**150+ Unique Photocards**:
-- All 7 BTS members (RM, Jin, Suga, J-Hope, Jimin, V, Jungkook)
-- Multiple eras (School Trilogy, HYYH, Wings, LY, MOTS, BE, solo albums)
-- Themed sets with special attributes
+**Fandom Gallery Catalog**:
+- Thousands of BTS gallery cards ingested from Fandom galleries
+- Category + subcategory structure derived from page tabs and anchors
+- Inventory filters by category, subcategory, source, and search
 
-**4 Rarity Tiers**:
-- **Common**: 70% base rate, 20 dust craft cost
-- **Rare**: 22% base rate, 60 dust craft cost
-- **Epic**: 7% base rate, 200 dust craft cost
-- **Legendary**: 1% base rate, 800 dust craft cost
+**Rewards & Sources**:
+- Quiz drops are XP-gated (no card below 5 XP)
+- Drops are random across the catalog (rarity is stored as `random` for auditing)
+- Sources tracked: quiz, quests, crafting, events, streak milestones
 
-**Pity System** (Guaranteed Drops):
-- **Epic Guarantee**: Every 15 pulls without epic (sinceEpic counter)
-- **Legendary Guarantee**: Every 50 pulls without legendary (sinceLegendary counter)
-- Counters persist across sessions in UserGameState
-- Overrides weighted random on guarantee triggers
-
-**Earning Methods**:
-- Quiz completions (XP-based rarity)
-- Quest rewards (rare+ tickets)
-- Mastery milestones (XP + Dust rewards)
-- Crafting system (dust-based)
-
-**Drop Pools**:
-- Active pools with custom rarity weights
-- Featured sets with boost multipliers
-- Time-windowed event pools
+**Collection View**:
+- Dedicated collection tab with missing-card placeholders
+- Per-subcategory progress and completion percentages
 
 #### **Crafting System**
 **Dust Economy**:
-- **Earn Dust**: Quest completions (50-500), mastery milestones, duplicate conversions (10/40/120/400 by rarity)
-- **Spend Dust**: Card crafting (20/60/200/800 by rarity), random rarity crafting
+- **Earn Dust**: Quests, mastery milestones, duplicate conversions
+- **Spend Dust**: Craft a specific card by ID or roll a random card
 
 **Crafting Options**:
-1. **Specific Card Crafting**: Pay exact dust cost for desired card (guaranteed)
-2. **Rarity Floor Crafting**: Pay minimum for guaranteed rarity+ (uses pity system)
-3. **Random Rarity Roll**: Ticket-based crafting with weighted random
+1. **Specific Card Crafting**: Pay dust to receive the exact card
+2. **Random Roll**: Spend dust for a random catalog card
 
 **Duplicate Management**: Convert duplicates to dust for crafting
 
@@ -228,11 +209,9 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 - LeaderboardEntry model with periodKey, userId, score
 
 #### **Sharing System**
-**Cloudinary Integration**:
-- Generate shareable photocard images
-- Dynamic transformations and overlays
-- CDN delivery for performance
-- Secure upload with signed URLs
+**Share Links**:
+- Generate shareable photocard links to the original gallery page
+- Preserve category + subcategory context
 
 ### 📝 Blog Platform
 
@@ -489,17 +468,17 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
   - Tracking: userId, answers[], score, status, expiresAt
 
 #### **Game System - Photocards**
-- **Photocard**: Photocard definitions (150+ cards)
-  - Identity: member, era, set, rarity
-  - Metadata: publicId (Cloudinary), isLimited, craftCostDust
+- **Photocard**: Fandom gallery catalog entries
+  - Identity: sourceKey, pageUrl, categoryPath, subcategoryPath
+  - Media: imageUrl, thumbUrl, caption/imageName
 - **InventoryItem**: User's photocard inventory
-  - Ownership: userId, cardId, source (quiz/quest/craft), timestamp
-- **DropPool**: Gacha drop pools with custom weights
+  - Ownership: userId, cardId, source (quiz/quest/craft/streaming/streak), timestamp
+- **DropPool**: Legacy gacha drop pools (unused)
 - **InventoryGrantAudit**: Photocard grant audit log
 
 #### **Game System - Progression**
-- **UserGameState**: User game state & pity system
-  - Pity: sinceEpic, sinceLegendary counters
+- **UserGameState**: User game state & balances
+  - Pity: sinceEpic, sinceLegendary counters (legacy)
   - Streaks: dailyCount, weeklyCount, lastPlayAt
   - Resources: dust, xp, level
   - Limits: quizStartsToday, dateKey
@@ -512,7 +491,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 - **QuestDefinition**: Quest templates (daily/weekly)
   - Config: code, title, period, goalType, goalValue
   - Streaming: trackTargets[], albumTargets[]
-  - Rewards: dust, xp, tickets, badgeId
+  - Rewards: dust, xp, ticket (random card), badgeId
 - **UserQuestProgress**: User quest progress
   - Tracking: userId, code, periodKey, progress, completed, claimed
   - Streaming: baseline, trackProgress (Map)
@@ -610,7 +589,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 - **Video**: YouTube Data API v3
 - **Images**: Cloudinary (uploads, transformations, CDN)
 - **Auth**: Firebase (Google + Twitter OAuth, Admin SDK)
-- **Web Scraping**: Cheerio (Kworb.net for Spotify/YouTube data)
+- **Web Scraping**: Cheerio (Kworb.net + Fandom gallery scraping)
 
 ### **Hosting & Deployment**
 - **Platform**: Vercel (Edge Runtime for API routes)
@@ -623,7 +602,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 - **Formatting**: Prettier
 - **Type Checking**: TypeScript compiler (tsc --noEmit)
 - **Package Manager**: npm
-- **Scripts**: 18 custom Node.js scripts for seeding, migrations, imports
+- **Scripts**: 19 custom Node.js scripts for seeding, migrations, imports, scrapers
 
 ### **Security**
 - **Password Hashing**: Bcrypt (10 rounds)
@@ -676,6 +655,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 - [Deployment](./docs/setup/deployment.md) - Vercel deployment
 - [Cron Jobs](./docs/setup/cron-jobs.md) - Automated tasks
 - [Track Seeding](./docs/setup/track-seeding.md) - Database setup
+- [Fandom Gallery Scraper](./docs/scripts/fandom-gallery-scraper.md) - Image gallery ingestion
 - [Spotify Tokens](./docs/setup/spotify-owner-refresh-token.md) - OAuth setup
 
 ### 📡 API Reference
@@ -860,7 +840,7 @@ MIT License - See LICENSE file for details
 - **Pages**: 24 user-facing routes
 - **React Components**: 100+ components
 - **Integration Services**: 6 (Spotify, Last.fm, Stats.fm, YouTube, Groq, Cloudinary, Firebase)
-- **Utility Scripts**: 18 custom scripts
+- **Utility Scripts**: 19 custom scripts
 - **Cron Jobs**: 4 automated tasks
 - **Total Lines of Code**: 50,000+ lines (TypeScript/TSX)
 
@@ -873,7 +853,7 @@ MIT License - See LICENSE file for details
 
 **External Integrations**:
 - 7 third-party APIs (Spotify, Last.fm, Stats.fm, YouTube, Groq, Cloudinary, Firebase)
-- 2 web scrapers (Kworb.net for Spotify & YouTube)
+- 3 web scrapers (Kworb.net for Spotify & YouTube, plus Fandom galleries)
 - OAuth 2.0 implementation (Spotify + Firebase)
 - JWT + Firebase dual auth system
 

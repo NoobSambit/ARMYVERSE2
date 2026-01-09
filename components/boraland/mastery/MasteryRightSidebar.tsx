@@ -1,9 +1,6 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { getBadgeImagePath } from '@/lib/utils/badgeImages'
 // import BadgeRewardsModal from './BadgeRewardsModal' // We might need a specific MasteryBadgeModal
 
 type GameState = {
@@ -21,8 +18,6 @@ type MasteryResponse = {
 }
 
 export default function MasteryRightSidebar({ state, masteryData }: { state: GameState | null, masteryData: MasteryResponse | null }) {
-  const [showBadgeModal, setShowBadgeModal] = useState(false)
-
   if (!state) return null
 
   // Helper to format numbers with commas

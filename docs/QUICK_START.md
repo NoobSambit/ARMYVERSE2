@@ -157,15 +157,14 @@ db.badges.countDocuments()
 
 ### Weekly Quests (Resets every Monday)
 - **Stream 40 songs** (5x each) = 200 total streams → 300 dust + 150 XP
-- **Stream 10 albums** (all tracks) = ~150 tracks → 400 dust + 200 XP + Rare+ photocard
+- **Stream 10 albums** (all tracks) = ~150 tracks → 400 dust + 200 XP + photocard ticket (random)
 - **Complete 10 quizzes** → 200 dust + 100 XP
 
 ### Badges & Rewards
 - **34 total badges** across 4 sets
 - **Cycling badges** (1-10) for regular streaks
 - **Milestone badges** at 10, 20, 30, 40, 50 streaks
-- **Photocards** awarded with milestone badges
-- **Rarity tiers**: Common → Uncommon → Rare → Epic → Legendary
+- **Photocards** awarded with milestone badges (random drop)
 
 ---
 

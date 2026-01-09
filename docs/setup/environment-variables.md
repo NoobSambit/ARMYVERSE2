@@ -135,7 +135,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 2. Go to Dashboard
 3. Copy Cloud Name, API Key, and API Secret
 
-**Used for:** Blog cover images, user avatars/banners, photocard storage
+**Used for:** Blog cover images and user avatars/banners
 
 ---
 

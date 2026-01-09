@@ -1,8 +1,7 @@
 import { UserQuestProgress } from '@/lib/models/UserQuestProgress'
-import { QuestDefinition } from '@/lib/models/QuestDefinition'
 import { Badge } from '@/lib/models/Badge'
 import { UserBadge } from '@/lib/models/UserBadge'
-import { dailyKey, weeklyKey } from './quests'
+import { dailyKey, getActiveQuests, weeklyKey } from './quests'
 
 /**
  * Check if user has completed all daily quests (streaming + quiz)
@@ -15,7 +14,7 @@ export async function checkAndAwardDailyCompletionBadge(userId: string): Promise
   const dKey = dailyKey()
 
   // Get all active daily quest definitions
-  const dailyQuests = await QuestDefinition.find({ period: 'daily', active: true }).lean()
+  const dailyQuests = (await getActiveQuests()).filter(q => q.period === 'daily')
 
   if (dailyQuests.length === 0) {
     return { allCompleted: false }
@@ -75,7 +74,7 @@ export async function checkAndAwardWeeklyCompletionBadge(userId: string): Promis
   const wKey = weeklyKey()
 
   // Get all active weekly quest definitions
-  const weeklyQuests = await QuestDefinition.find({ period: 'weekly', active: true }).lean()
+  const weeklyQuests = (await getActiveQuests()).filter(q => q.period === 'weekly')
 
   if (weeklyQuests.length === 0) {
     return { allCompleted: false }
