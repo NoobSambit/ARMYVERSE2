@@ -23,7 +23,7 @@ export default async function BoralandTeaser() {
     <div className="col-span-1 md:col-span-2 md:row-span-2 glass-panel rounded-2xl p-0 overflow-hidden relative group min-h-[280px] sm:min-h-[320px] md:min-h-[380px]">
       <div
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-        style={{ backgroundImage: "url('https://res.cloudinary.com/dacgtjw7w/image/upload/v1767804617/boraland_poster_gyhq1q.png'), url('https://lh3.googleusercontent.com/aida-public/AB6AXuCQ7kAwnBQ9HXqT0Bd6gqq8apjmhRHVQ_Xa11r06Z9-414gYMLYCX3yESU9F2BuEzs7STMvigLWy6FIv-dilcROVIPhSHVBZhT9O25rF8rZMzB6uKO1Hr6cANQUIKMzMSzMiuseuaYDYTekLljvr7YogYV4CJi2Obp8ws9W0fI4TemwpbvH_wM3LHKGx0RE33nAt1elCOAXx92em9rjDWGAZ2iHDcjtyri9jFh6Dcq_kibMl4qkucgDrI-XnQaM44hxAZ9qM1uPRWU')" }}
+        style={{ backgroundImage: "url('https://res.cloudinary.com/dacgtjw7w/image/upload/v1768219425/boraland_poster_f7jv9n.png')" }}
       ></div>
       <div className="absolute inset-0 bg-black/20"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-background-dark/60 via-background-dark/30 to-transparent"></div>

@@ -1,10 +1,16 @@
 import { GameStats } from '@/app/boraland/page'
+import { getLevelProgress } from '@/lib/game/leveling'
 
 export default function RightSidebar({ stats }: { stats: GameStats | null }) {
   const totalXp = stats?.totalXp || 0
-  const progressPercent = Math.min((totalXp % 100) / 100 * 100, 100) // Assuming 100 XP per level for visualization
-  const level = Math.floor(totalXp / 100) + 1
+  const levelProgress = getLevelProgress(totalXp)
+  const progressPercent = levelProgress.progressPercent
+  const level = levelProgress.level
+  const xpIntoLevel = levelProgress.xpIntoLevel
+  const xpForNextLevel = levelProgress.xpForNextLevel
+  const xpToNextLevel = levelProgress.xpToNextLevel
   const dust = stats?.dust || 0
+  const fmt = (value: number) => value.toLocaleString()
 
   return (
     <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 md:gap-6">
@@ -15,11 +21,15 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
     <div className="space-y-4 md:space-y-6">
     <div>
     <div className="flex justify-between text-xs md:text-sm mb-2">
-    <span className="text-gray-400">Total XP</span>
-    <span className="text-white font-bold">{totalXp} <span className="text-gray-500 font-normal">/ {level * 100}</span></span>
+    <span className="text-gray-400">Level {level}</span>
+    <span className="text-white font-bold">{fmt(xpIntoLevel)} <span className="text-gray-500 font-normal">/ {fmt(xpForNextLevel)}</span></span>
     </div>
     <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
     <div className="h-full bg-gradient-to-r from-accent-cyan to-blue-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" style={{width: `${progressPercent}%`}}></div>
+    </div>
+    <div className="flex justify-between text-[10px] md:text-xs text-gray-500 mt-2">
+    <span>Total XP {fmt(totalXp)}</span>
+    <span>{fmt(xpToNextLevel)} XP to Lvl {level + 1}</span>
     </div>
     </div>
     <div className="grid grid-cols-2 gap-3 md:gap-4">

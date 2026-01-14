@@ -8,18 +8,37 @@ export const runtime = 'nodejs'
 
 async function runJob() {
   await connect()
-  
+
   const artistGroups = await fetchBTSYouTube()
-  
+
+  // Calculate aggregated stats for each artist group
+  const enrichedGroups = artistGroups.map(group => {
+    const totalViews = group.songs.reduce((sum, song) => sum + song.views, 0)
+    const totalYesterday = group.songs.reduce((sum, song) => sum + song.yesterday, 0)
+    const dailyAvg = group.songs.length > 0 ? Math.round(totalYesterday / group.songs.length) : 0
+
+    return {
+      ...group,
+      totalViews,
+      totalSongs: group.songs.length,
+      dailyAvg
+    }
+  })
+
   const d = new Date()
   const dateKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`
-  
+
   await YouTubeKworbSnapshot.findOneAndUpdate(
     { dateKey },
-    { dateKey, artistGroups },
+    {
+      dateKey,
+      artistGroups: enrichedGroups,
+      lastRefreshedAt: new Date(),
+      sourceUrl: 'https://kworb.net/youtube/artist/bts.html'
+    },
     { upsert: true }
   )
-  
+
   return dateKey
 }
 

@@ -150,7 +150,7 @@ export default function BlogEditor({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-purple-400 underline hover:text-purple-300 transition-colors'
+          class: 'text-blue-600 underline hover:text-blue-700 transition-colors'
         }
       }),
       Placeholder.configure({
@@ -167,7 +167,7 @@ export default function BlogEditor({
       }),
       CodeBlock.configure({
         HTMLAttributes: {
-          class: 'bg-gray-800 rounded-xl p-4 font-mono text-sm overflow-x-auto'
+          class: 'bg-gray-100 rounded-xl p-4 font-mono text-sm overflow-x-auto'
         }
       }),
       TaskList,
@@ -182,7 +182,7 @@ export default function BlogEditor({
       TableCell,
       HorizontalRule.configure({
         HTMLAttributes: {
-          class: 'my-8 border-t-2 border-purple-400/30'
+          class: 'my-8 border-t-2 border-gray-300'
         }
       }),
     ],
@@ -587,7 +587,7 @@ export default function BlogEditor({
       {/* Reading Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-white/10">
         <div
-          className="h-full bg-gradient-to-r from-purple-400 via-purple-500 to-pink-400 transition-all duration-300"
+          className="h-full bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 transition-all duration-300"
           style={{ width: `${readingProgress}%` }}
         />
       </div>
@@ -600,7 +600,7 @@ export default function BlogEditor({
             {/* Mobile Header */}
             <div className="flex items-center justify-between gap-2">
               <h1 className="text-base md:text-xl font-semibold text-white flex items-center gap-2">
-                <FileText className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
                 <span className="hidden sm:inline">Create Blog Post</span>
                 <span className="sm:hidden">New Post</span>
               </h1>
@@ -1021,10 +1021,10 @@ export default function BlogEditor({
             )}
 
             {/* Editor */}
-            <div className="container-glass rounded-none md:rounded-2xl p-4 md:p-6 relative">
+            <div className="bg-white border border-gray-200 rounded-none md:rounded-2xl p-4 md:p-6 relative">
               <EditorContent
                 editor={editor}
-                className={`prose prose-invert prose-purple prose-base md:prose-lg max-w-none min-h-[400px] md:min-h-[600px] focus:outline-none text-white caret-purple-400 selection:bg-purple-600/40 ${
+                className={`prose prose-base md:prose-lg max-w-none min-h-[400px] md:min-h-[600px] focus:outline-none text-gray-900 caret-blue-600 selection:bg-blue-200 ${
                   focusMode ? 'prose-xl' : ''
                 }`}
                 style={{
@@ -1042,7 +1042,7 @@ export default function BlogEditor({
             <div className="container-glass container-glass-hover rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium text-white flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-purple-400" />
+                  <ImageIcon className="w-4 h-4 text-blue-400" />
                   Cover Image
                 </label>
                 <span className="text-xs text-white/50 bg-white/5 px-2 py-1 rounded-full">16:9 • ≥ 1200×675</span>
@@ -1066,7 +1066,7 @@ export default function BlogEditor({
                   </button>
                 </div>
               ) : (
-                <label className="w-full h-40 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center text-white/60 hover:border-purple-400/50 hover:text-purple-400 transition-all mb-3 cursor-pointer group container-glass-hover" title="Upload cover image">
+                <label className="w-full h-40 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center text-white/60 hover:border-blue-400/50 hover:text-blue-400 transition-all mb-3 cursor-pointer group container-glass-hover" title="Upload cover image">
                   <Upload className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-medium">Drop image or click to upload</span>
                   <span className="text-xs text-white/40 mt-1">Supports JPG, PNG, WebP</span>
@@ -1100,7 +1100,7 @@ export default function BlogEditor({
             <div className="container-glass container-glass-hover rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium text-white flex items-center gap-2">
-                  <span className="text-purple-400">#</span>
+                  <span className="text-blue-400">#</span>
                   Tags
                 </label>
                 <span className="text-xs text-white/70 bg-white/10 px-2 py-1 rounded-full">{tags.length}/8</span>
@@ -1195,7 +1195,7 @@ export default function BlogEditor({
             {/* Mood */}
             <div className="container-glass container-glass-hover rounded-2xl p-4">
               <label className="block text-sm font-medium text-white mb-3 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-400" />
+                <Sparkles className="w-4 h-4 text-blue-400" />
                 Mood
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -1221,7 +1221,7 @@ export default function BlogEditor({
             <div className="container-glass container-glass-hover rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm text-white flex items-center gap-2">
-                  <Search className="w-4 h-4 text-purple-400" />
+                  <Search className="w-4 h-4 text-blue-400" />
                   SEO Preview
                 </p>
                 <span className={`inline-flex items-center justify-center w-8 h-6 rounded-full text-xs font-medium ${
@@ -1233,7 +1233,7 @@ export default function BlogEditor({
                 </span>
               </div>
               <div className="text-xs text-white/50 mb-2">URL preview</div>
-              <div className="text-purple-300 text-sm font-mono mb-3">armyverse.app/blogs/{slug || 'untitled'}</div>
+              <div className="text-blue-300 text-sm font-mono mb-3">armyverse.app/blogs/{slug || 'untitled'}</div>
               <div className="space-y-2 mb-3">
                 <div className="text-sm text-white font-semibold line-clamp-2">{title || 'Add an SEO-friendly title'}</div>
                 <div className="text-xs text-white/60 line-clamp-3">{(editor?.getText() || '').slice(0, 160) || 'Your description will appear here.'}</div>
@@ -1252,7 +1252,7 @@ export default function BlogEditor({
             <div className="container-glass container-glass-hover rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm text-white flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-purple-400" />
+                  <Globe className="w-4 h-4 text-blue-400" />
                   Publish
                 </p>
                 <span className="text-xs text-white/50">Status</span>
@@ -1370,7 +1370,7 @@ export default function BlogEditor({
                       <div className="container-glass container-glass-hover rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <label className="text-sm font-medium text-white flex items-center gap-2">
-                            <ImageIcon className="w-4 h-4 text-purple-400" />
+                            <ImageIcon className="w-4 h-4 text-blue-400" />
                             Cover Image
                           </label>
                           <span className="text-xs text-white/50 bg-white/5 px-2 py-1 rounded-full">16:9 • ≥ 1200×675</span>
@@ -1393,7 +1393,7 @@ export default function BlogEditor({
                             </button>
                           </div>
                         ) : (
-                          <label className="w-full h-40 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center text-white/60 hover:border-purple-400/50 hover:text-purple-400 transition-all mb-3 cursor-pointer group container-glass-hover">
+                          <label className="w-full h-40 border-2 border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center text-white/60 hover:border-blue-400/50 hover:text-blue-400 transition-all mb-3 cursor-pointer group container-glass-hover">
                             <Upload className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" />
                             <span className="text-sm font-medium">Drop image or click to upload</span>
                             <span className="text-xs text-white/40 mt-1">JPG, PNG, WebP</span>
@@ -1426,7 +1426,7 @@ export default function BlogEditor({
                       <div className="container-glass container-glass-hover rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <label className="text-sm font-medium text-white flex items-center gap-2">
-                            <span className="text-purple-400">#</span>
+                            <span className="text-blue-400">#</span>
                             Tags
                           </label>
                           <span className="text-xs text-white/70 bg-white/10 px-2 py-1 rounded-full">{tags.length}/8</span>
@@ -1488,7 +1488,7 @@ export default function BlogEditor({
                       {/* Mood */}
                       <div className="container-glass container-glass-hover rounded-2xl p-4">
                         <label className="block text-sm font-medium text-white mb-3 flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-purple-400" />
+                          <Sparkles className="w-4 h-4 text-blue-400" />
                           Mood
                         </label>
                         <div className="grid grid-cols-2 gap-2">
@@ -1512,7 +1512,7 @@ export default function BlogEditor({
                       <div className="container-glass container-glass-hover rounded-2xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <p className="text-sm text-white flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-purple-400" />
+                            <Globe className="w-4 h-4 text-blue-400" />
                             Publish
                           </p>
                         </div>
@@ -1588,7 +1588,7 @@ export default function BlogEditor({
             <div className="modal-glass rounded-2xl p-4 md:p-6 w-full max-w-4xl max-h-[85vh] md:max-h-[80vh] overflow-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-400" />
+                  <FileText className="w-5 h-5 text-blue-400" />
                   Blog Templates
                 </h2>
                 <button 
@@ -1728,7 +1728,7 @@ export default function BlogEditor({
             <div className="modal-glass rounded-2xl p-4 md:p-6 w-full max-w-2xl max-h-[85vh] md:max-h-[80vh] overflow-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <History className="w-5 h-5 text-purple-400" />
+                  <History className="w-5 h-5 text-blue-400" />
                   Draft History
                 </h2>
                 <button 
@@ -1794,7 +1794,7 @@ export default function BlogEditor({
             <div className="modal-glass rounded-2xl p-4 md:p-6 w-full max-w-3xl max-h-[85vh] md:max-h-[80vh] overflow-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Search className="w-5 h-5 text-purple-400" />
+                  <Search className="w-5 h-5 text-blue-400" />
                   SEO Analysis
                 </h2>
                 <button 
@@ -1917,7 +1917,7 @@ export default function BlogEditor({
                 {/* URL Preview */}
                 <div className="container-glass rounded-xl p-4">
                   <h4 className="font-medium text-white mb-2">URL Preview</h4>
-                  <div className="text-purple-300 text-sm font-mono bg-black/20 rounded-xl p-2">
+                  <div className="text-blue-300 text-sm font-mono bg-black/20 rounded-xl p-2">
                     armyverse.app/blogs/{slug || 'untitled'}
                   </div>
                 </div>
@@ -1965,7 +1965,7 @@ export default function BlogEditor({
             <div className="modal-glass rounded-2xl p-4 md:p-6 w-full max-w-md max-h-[85vh] overflow-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  <Sparkles className="w-5 h-5 text-blue-400" />
                   AI Writing Assist
                 </h2>
                 <button 
@@ -2032,7 +2032,7 @@ export default function BlogEditor({
             <div className="modal-glass rounded-2xl p-4 md:p-6 w-full max-w-2xl max-h-[85vh] md:max-h-[80vh] overflow-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                  <Keyboard className="w-5 h-5 text-purple-400" />
+                  <Keyboard className="w-5 h-5 text-blue-400" />
                   Keyboard Shortcuts
                 </h2>
                 <button
@@ -2047,7 +2047,7 @@ export default function BlogEditor({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Formatting Shortcuts */}
                 <div className="container-glass rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-purple-300 mb-3">Formatting</h3>
+                  <h3 className="text-sm font-semibold text-blue-300 mb-3">Formatting</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-white/70">Bold</span>
@@ -2074,7 +2074,7 @@ export default function BlogEditor({
 
                 {/* Structure Shortcuts */}
                 <div className="container-glass rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-purple-300 mb-3">Structure</h3>
+                  <h3 className="text-sm font-semibold text-blue-300 mb-3">Structure</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-white/70">Heading 1</span>
@@ -2101,7 +2101,7 @@ export default function BlogEditor({
 
                 {/* Editor Actions */}
                 <div className="container-glass rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-purple-300 mb-3">Editor Actions</h3>
+                  <h3 className="text-sm font-semibold text-blue-300 mb-3">Editor Actions</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-white/70">Focus Mode</span>
@@ -2128,7 +2128,7 @@ export default function BlogEditor({
 
                 {/* Insert Elements */}
                 <div className="container-glass rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-purple-300 mb-3">Insert</h3>
+                  <h3 className="text-sm font-semibold text-blue-300 mb-3">Insert</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-white/70">Slash Commands</span>
@@ -2150,9 +2150,9 @@ export default function BlogEditor({
                 </div>
               </div>
 
-              <div className="mt-6 p-4 bg-purple-500/10 border border-purple-400/30 rounded-xl">
+              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-400/30 rounded-xl">
                 <p className="text-sm text-white/70">
-                  <span className="font-semibold text-purple-300">Tip:</span> Type <kbd className="px-2 py-1 bg-white/10 rounded text-white/90 font-mono text-xs mx-1">/</kbd> at the start of a line to see all available block commands!
+                  <span className="font-semibold text-blue-300">Tip:</span> Type <kbd className="px-2 py-1 bg-white/10 rounded text-white/90 font-mono text-xs mx-1">/</kbd> at the start of a line to see all available block commands!
                 </p>
               </div>
             </div>

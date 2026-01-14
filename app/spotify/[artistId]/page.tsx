@@ -16,7 +16,7 @@ const ARTIST_MAP: Record<string, string> = {
   'rm': 'RM',
   'jin': 'Jin',
   'agust-d': 'Agust D',
-  'j-hope': 'j-hope',
+  'j-hope': 'J-Hope',
   'jimin': 'Jimin',
   'v': 'V',
   'jungkook': 'Jungkook'

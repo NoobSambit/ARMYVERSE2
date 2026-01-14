@@ -8,7 +8,7 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - **Crafting System** - Convert duplicates to Dust and craft specific cards
 - **Mastery System** - Earn member/era XP with milestone rewards
 - **Quest System** - Complete daily/weekly tasks for rewards
-- **Leaderboard** - Weekly competition with global rankings
+- **Leaderboard** - Multi-period competition with global rankings
 - **Sharing** - Generate shareable photocard images
 
 ## How It Works
@@ -45,12 +45,10 @@ Rarity tiers and pity tracking were part of the legacy photocard pipeline. The c
 
 **Crafting Options:**
 1. **Craft Specific Card**: Spend Stardust to get exact card you want
-   - Common: 100 Stardust
-   - Rare: 500 Stardust
-   - Epic: 2000 Stardust
-   - Legendary: 10000 Stardust
+   - Fixed 50 dust per craft
 
 2. **Random Roll**: Spend dust for a random catalog card
+   - Fixed 50 dust per roll
 
 ### Mastery System
 
@@ -88,17 +86,84 @@ Rarity tiers and pity tracking were part of the legacy photocard pipeline. The c
 
 ### Leaderboard System
 
-**Weekly Competition:**
-- Resets every Monday at 00:00 UTC
-- Ranks based on best quiz run score
-- Top 100 displayed publicly
-- Rewards distributed at reset
+**Overview:**
+The leaderboard is a competitive ranking system that tracks player progress across multiple time periods. It features XP-based scoring, level tracking, and rank change indicators.
 
-**Reward Tiers:**
-1. **1st Place**: 3 random cards, 5000 Stardust, Special badge
-2. **2-10th Place**: 2 random cards, 2000 Stardust, Elite badge
-3. **11-50th Place**: 1 random card, 1000 Stardust, Competitor badge
-4. **51-100th Place**: 2 random cards, 500 Stardust
+**Periods:**
+- **Daily**: `daily-YYYY-MM-DD` - Resets at 00:00 UTC
+- **Weekly**: `weekly-YYYY-WW` - ISO week format, resets Monday at 00:00 UTC
+- **All-Time**: `alltime` - Never resets, cumulative lifetime XP
+
+**Scoring:**
+- Score is based on **total XP earned** during the period (not quiz completion count)
+- XP is accumulated from quiz completions and quest completions
+- Daily/Weekly scores start at 0 and accumulate during the period
+- All-Time score represents total lifetime XP
+
+**Leveling:**
+- Player levels use a **progressive curve** (see `/lib/game/leveling.ts`)
+- Level is calculated from total XP and displayed on the leaderboard
+- Levels are updated in real-time as users earn XP
+
+**Stats Tracked:**
+- `quizzesPlayed` - Number of quizzes completed in the period
+- `questionsCorrect` - Total correct answers in the period
+- `totalQuestions` - Total questions answered in the period
+
+**Rank System:**
+- Ranks are calculated based on score (higher score = better rank)
+- Rank changes are tracked to show movement (↑/↓ indicators)
+- Previous rank is stored to enable rank change calculation
+
+**Data Model:**
+```typescript
+interface ILeaderboardEntry {
+  periodKey: string          // "daily-2026-01-10", "weekly-2026-02", "alltime"
+  userId: string
+  score: number              // Total XP for period (accumulated, not max)
+  level: number              // Player level
+  stats: {
+    quizzesPlayed: number
+    questionsCorrect: number
+    totalQuestions: number
+  }
+  previousRank?: number      // Previous rank for change calculation
+  rank?: number              // Current rank
+  displayName: string
+  avatarUrl: string
+  lastPlayedAt?: Date
+  periodStart: Date
+  periodEnd: Date
+  updatedAt: Date
+}
+```
+
+**API Endpoints:**
+- `GET /api/game/leaderboard?period=daily|weekly|alltime&limit=20&cursor=xxx`
+  - Returns paginated leaderboard entries
+  - Includes current user's rank and stats
+  - Supports cursor-based pagination
+
+- `POST /api/game/leaderboard/refresh?period=daily|weekly|alltime`
+  - Forces profile data refresh for current user
+  - Creates entries if they don't exist (useful for all-time initialization)
+
+**UI Features:**
+- Podium display for top 3 players (1st/2nd/3rd place styling)
+- Rank change indicators (↑3 ↓2 —0)
+- Player level badges
+- XP progress bar
+- Performance stats (accuracy, quizzes played)
+- Period selector (Daily/Weekly/All-Time)
+
+**How Scores Are Added:**
+When a quiz is completed in ranked mode:
+1. XP is awarded to UserGameState
+2. Daily, Weekly, and All-Time leaderboard entries are updated in parallel
+3. Score is incremented by the XP earned (`$inc` operation)
+4. Stats (quizzes played, correct answers, total questions) are incremented
+5. Level is updated based on total XP
+6. Profile data (displayName, avatarUrl) is synced
 
 ### Sharing System
 
@@ -128,7 +193,7 @@ graph TD
     J --> K
     K --> L[Update mastery progress]
     L --> M[Check quest progress]
-    M --> N[Update leaderboard]
+    M --> N[Update all-time/weekly/daily leaderboards]
     N --> O[Return results]
 ```
 
@@ -142,7 +207,7 @@ graph TD
     C -->|Random Roll| E[Skip selection]
     D --> F[POST /api/game/craft]
     E --> F
-    F --> G[Deduct Stardust]
+    F --> G[Deduct 50 Stardust]
     G --> H[Generate card]
     H --> I[Add to inventory]
     I --> J[Show success message]
@@ -177,6 +242,8 @@ Authoritative API docs live in `docs/api/game.md`. Key endpoints:
 - `GET /api/game/quests`
 - `POST /api/game/quests/claim`
 - `GET /api/game/badges`
+- `GET /api/game/leaderboard?period=daily|weekly|alltime`
+- `POST /api/game/leaderboard/refresh?period=daily|weekly|alltime`
 - `POST /api/game/share`
 
 ## Configuration
@@ -273,13 +340,36 @@ CLOUDINARY_API_SECRET=your-api-secret
 }
 ```
 
+### LeaderboardEntry
+```typescript
+{
+  periodKey: String,          // "daily-YYYY-MM-DD", "weekly-YYYY-WW", "alltime"
+  userId: String,
+  score: Number,              // Total XP (accumulated)
+  level: Number,              // Player level
+  stats: {
+    quizzesPlayed: Number,
+    questionsCorrect: Number,
+    totalQuestions: Number
+  },
+  previousRank?: Number,
+  rank?: Number,
+  displayName: String,
+  avatarUrl: String,
+  lastPlayedAt?: Date,
+  periodStart: Date,
+  periodEnd: Date,
+  updatedAt: Date
+}
+```
+
 ## Best Practices
 
 ### For Players
 - ✅ Complete daily quests for consistent Stardust income
 - ✅ Focus on mastery for dust/XP milestones
 - ✅ Save Stardust for specific cards you want
-- ✅ Participate weekly for leaderboard rewards
+- ✅ Participate in all leaderboard periods for maximum visibility
 - ✅ Aim for 5+ XP per quiz run to earn a card drop
 
 ### For Developers
@@ -288,6 +378,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 - ✅ Cache photocard images for faster catalog loads
 - ✅ Use TTL indexes for expired sessions
 - ✅ Batch database updates for performance
+- ✅ Use compound indexes for leaderboard queries
 
 ## Anti-Cheat Measures
 
@@ -302,3 +393,4 @@ CLOUDINARY_API_SECRET=your-api-secret
 - [Authentication](./authentication.md) - Required for all game features
 - [API Reference](../api/game.md) - Complete game API documentation
 - [Database Schema](../architecture/database.md) - Game data models
+- [Leveling System](../features/leveling.md) - Player progression details

@@ -37,7 +37,7 @@ export default function Page() {
   const warnedRef = useRef(false)
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
+  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard'>('home')
 
   useEffect(() => {
     if (user === null && !warnedRef.current) {

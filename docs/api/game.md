@@ -390,57 +390,100 @@ Get user's earned badges.
 
 ### GET /api/game/leaderboard
 
-Get weekly leaderboard rankings.
+Get leaderboard rankings for a specific time period.
 
-**Authentication**: Optional (shows user rank if authenticated)
+**Authentication**: Required (shows user rank if authenticated)
 
 **Query Parameters:**
-- `limit` (number, default: 100, max: 100)
-- `cursor` (string, optional): Pagination cursor
+- `period` (string, default: "weekly"): Time period - "daily", "weekly", or "alltime"
+- `limit` (number, default: 20, max: 50): Number of entries to return
+- `cursor` (string, optional): Pagination cursor for next page
 
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "leaderboard": [
+  "period": "weekly",
+  "periodKey": "weekly-2026-02",
+  "entries": [
     {
-      "rank": 1,
+      "_id": "entry_id",
       "userId": "user_123",
-      "username": "ARMYFan123",
-      "score": 100,
-      "completedAt": "2026-01-06T10:30:00.000Z",
-      "photoURL": "https://..."
+      "displayName": "ARMYFan123",
+      "avatarUrl": "https://...",
+      "score": 250,
+      "level": 5,
+      "rank": 1,
+      "previousRank": 3,
+      "rankChange": 2,
+      "stats": {
+        "quizzesPlayed": 15,
+        "questionsCorrect": 120,
+        "totalQuestions": 150
+      }
     }
   ],
-  "userRank": {
+  "nextCursor": "cursor_string_or_null",
+  "me": {
+    "score": 180,
+    "level": 4,
     "rank": 42,
-    "score": 85,
-    "percentile": 58
-  },
-  "pagination": {
-    "hasMore": false,
-    "nextCursor": null
-  },
-  "resetDate": "2026-01-13T00:00:00.000Z"
+    "rankChange": -5,
+    "displayName": "You",
+    "avatarUrl": "https://...",
+    "stats": {
+      "quizzesPlayed": 10,
+      "questionsCorrect": 80,
+      "totalQuestions": 100
+    },
+    "totalXp": 450,
+    "xpIntoLevel": 50,
+    "xpForNextLevel": 100,
+    "xpProgress": 50,
+    "xpToNextLevel": 50
+  }
 }
 ```
+
+**Periods:**
+- `daily` - Resets at 00:00 UTC, format: `daily-YYYY-MM-DD`
+- `weekly` - ISO week, resets Monday at 00:00 UTC, format: `weekly-YYYY-WW`
+- `alltime` - Never resets, format: `alltime`
+
+**Scoring:**
+- Score = Total XP earned during the period
+- Accumulated from quiz completions and quest completions
+- Higher score = better rank
 
 ---
 
 ### POST /api/game/leaderboard/refresh
 
-Manually refresh leaderboard (admin only).
+Force update current user's leaderboard entry with latest profile data.
 
-**Authentication**: Required (admin)
+**Authentication**: Required
+
+**Query Parameters:**
+- `period` (string, default: "weekly"): Time period - "daily", "weekly", or "alltime"
 
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "rewardsDistributed": 100,
-  "newWeekStarted": true
+  "success": true,
+  "period": "weekly",
+  "periodKey": "weekly-2026-02",
+  "entry": {
+    "displayName": "ARMYFan123",
+    "avatarUrl": "https://...",
+    "score": 250,
+    "level": 5
+  }
 }
 ```
+
+**Use Cases:**
+- Sync profile display name/avatar after updating profile
+- Initialize all-time leaderboard entry for new users
+- Refresh leaderboard data after profile changes
 
 ---
 

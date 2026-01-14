@@ -28,16 +28,38 @@ export interface YouTubeArtistGroup {
   songs: YouTubeSong[]
 }
 
+// Detailed video statistics from kworb
+export interface YouTubeVideoDetail {
+  videoId: string
+  title: string
+  artist: string
+  published: string
+  totalViews: number
+  likes: number
+  mostViewsInADay: number
+  mostViewsDate: string
+  expectedMilestone: string
+  milestoneViews: number
+  milestoneDate: string
+  dailyViews: Array<{ date: string; views: number }>
+  monthlyViews: Array<{ date: string; views: number }>
+  yearlyViews: Array<{ year: string; views: number }>
+  topLists: string[]
+  milestones: string[]
+  peakPosition: number
+  chartedWeeks: number
+}
+
 // Member keywords for filtering
 const MEMBER_KEYWORDS: Record<string, RegExp[]> = {
   BTS: [/\bBTS\b/i, /방탄소년단/i, /防弾少年団/i],
   Jungkook: [/\bJung\s?Kook\b/i, /\bJungkook\b/i, /정국/i],
   V: [/\bV\b(?!\w)/i, /\bTaehyung\b/i, /뷔/i, /태형/i],
-  Suga: [/\bSuga\b/i, /\bAgust\s?D\b/i, /슈가/i, /민윤기/i],
+  Suga: [/\bSuga\b/i, /\bAgust\s?D\b/i, /\bAgust\s?d\b/i, /슈가/i, /민윤기/i],
   RM: [/\b(?:RM|Rap\s?Monster)\b/i, /남준/i, /알엠/i],
   Jimin: [/\bJimin\b/i, /지민/i, /박지민/i],
   Jin: [/\bJin\b(?!\w)/i, /\bSeokjin\b/i, /진/i, /석진/i],
-  'J-Hope': [/\bJ-?Hope\b/i, /\bJhope\b/i, /제이홉/i, /호석/i, /정호석/i],
+  'J-Hope': [/\bj-?hope\b/i, /\bjhope\b/i, /\bJ-?Hope\b/i, /\bJhope\b/i, /제이홉/i, /호석/i, /정호석/i],
 }
 
 function matchesArtist(text: string, artist: string): boolean {
@@ -172,4 +194,152 @@ export async function fetchBTSYouTube(): Promise<YouTubeArtistGroup[]> {
 // Helper to get top N songs for an artist
 export function getTopSongs(group: YouTubeArtistGroup, n: number = 6): YouTubeSong[] {
   return group.songs.slice(0, n)
+}
+
+/**
+ * Fetch detailed statistics for a specific video from kworb.net
+ */
+export async function fetchVideoDetail(videoId: string, artist: string = ''): Promise<YouTubeVideoDetail | null> {
+  const url = `https://kworb.net/youtube/video/${videoId}.html`
+  const html = await fetchHTML(url)
+  const $ = cheerio.load(html)
+
+  // Extract title from pagetitle
+  const pageTitle = $('.pagetitle').text() || ''
+  const title = pageTitle.split('|')[0]?.trim() || $('title').text()?.replace('YouTube Stats of ', '') || ''
+
+  // Extract published date
+  let published = ''
+  const publishedText = $('div:contains("Published:")').text()
+  const publishedMatch = publishedText.match(/Published:\s*(\d{4}\/\d{2}\/\d{2})/)
+  if (publishedMatch) {
+    published = publishedMatch[1]
+  }
+
+  // Extract total views
+  let totalViews = 0
+  const viewsText = $('div:contains("Total views:")').text()
+  const viewsMatch = viewsText.match(/Total views:\s*([\d,]+)/)
+  if (viewsMatch) {
+    totalViews = num(viewsMatch[1])
+  }
+
+  // Extract expected milestone
+  let expectedMilestone = ''
+  let milestoneViews = 0
+  let milestoneDate = ''
+  const milestoneText = $('div:contains("Expected to hit")').text()
+  const milestoneMatch = milestoneText.match(/Expected to hit\s*([\d,]+)\s*on:\s*(\d{4}\/\d{2}\/\d{2})/)
+  if (milestoneMatch) {
+    expectedMilestone = milestoneMatch[1]
+    milestoneViews = num(milestoneMatch[1])
+    milestoneDate = milestoneMatch[2]
+  }
+
+  // Extract most views in a day
+  let mostViewsInADay = 0
+  let mostViewsDate = ''
+  const mostViewsText = $('div:contains("Most views in a day")').text()
+  const mostViewsMatch = mostViewsText.match(/Most views in a day:\s*([\d,]+)\s*\((\d{4}\/\d{2}\/\d{2})\)/)
+  if (mostViewsMatch) {
+    mostViewsInADay = num(mostViewsMatch[1])
+    mostViewsDate = mostViewsMatch[2]
+  }
+
+  // Extract likes
+  let likes = 0
+  const likesText = $('div:contains("Likes:")').text()
+  const likesMatch = likesText.match(/Likes:\s*([\d,]+)/)
+  if (likesMatch) {
+    likes = num(likesMatch[1])
+  }
+
+  // Extract peak position and charted weeks
+  let peakPosition = 0
+  let chartedWeeks = 0
+  const peakText = $('a:contains("Peaked at")').text()
+  const peakMatch = peakText.match(/Peaked at #(\d+)/)
+  if (peakMatch) {
+    peakPosition = parseInt(peakMatch[1], 10)
+  }
+  const chartedMatch = peakText.match(/charted for\s*(\d+)\s*weeks?/)
+  if (chartedMatch) {
+    chartedWeeks = parseInt(chartedMatch[1], 10)
+  }
+
+  // Extract top lists
+  const topLists: string[] = []
+  $('div:contains("On top lists:")').nextAll('a').each((_, el) => {
+    const text = $(el).text()
+    if (text) topLists.push(text)
+  })
+
+  // Extract milestones
+  const milestones: string[] = []
+  $('div:contains("On top lists:")').parent().find('a[href*="milestones"]').each((_, el) => {
+    const text = $(el).text()
+    if (text) milestones.push(text)
+  })
+
+  // Parse daily views table
+  const dailyViews: Array<{ date: string; views: number }> = []
+  $('.daily table tbody tr').each((_, el) => {
+    const tds = $(el).find('td')
+    if (tds.length >= 2) {
+      const date = tds.eq(0).text().trim()
+      const views = num(tds.eq(1).text())
+      if (date) {
+        dailyViews.push({ date, views })
+      }
+    }
+  })
+
+  // Parse monthly views table
+  const monthlyViews: Array<{ date: string; views: number }> = []
+  $('.monthly table tbody tr').each((_, el) => {
+    const tds = $(el).find('td')
+    if (tds.length >= 2) {
+      const date = tds.eq(0).text().trim()
+      const viewsText = tds.eq(1).text()
+      const views = num(viewsText.replace('~', ''))
+      if (date) {
+        monthlyViews.push({ date, views })
+      }
+    }
+  })
+
+  // Parse yearly views table
+  const yearlyViews: Array<{ year: string; views: number }> = []
+  $('.yearly table tbody tr').each((_, el) => {
+    const tds = $(el).find('td')
+    if (tds.length >= 2) {
+      const year = tds.eq(0).text().trim()
+      const viewsText = tds.eq(1).text()
+      const views = num(viewsText.replace('~', ''))
+      if (year) {
+        yearlyViews.push({ year, views })
+      }
+    }
+  })
+
+  return {
+    videoId,
+    title,
+    artist,
+    published,
+    totalViews,
+    likes,
+    mostViewsInADay,
+    mostViewsDate,
+    expectedMilestone,
+    milestoneViews,
+    milestoneDate,
+    dailyViews,
+    monthlyViews,
+    yearlyViews,
+    topLists,
+    milestones,
+    peakPosition,
+    chartedWeeks
+  }
 }

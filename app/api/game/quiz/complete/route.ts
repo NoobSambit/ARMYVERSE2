@@ -13,6 +13,7 @@ import { addMasteryXp } from '@/lib/game/mastery'
 import { advanceQuest } from '@/lib/game/quests'
 import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 import { awardBalances, duplicateDustForRarity } from '@/lib/game/rewards'
+import { getPeriodKeys, type PeriodType } from '@/lib/game/leaderboard'
 
 export const runtime = 'nodejs'
 
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       members?: string[]
       eras?: string[]
     }
+    type UserProfileDoc = { profile?: { displayName?: string; avatarUrl?: string } }
 
     const questions = await Question.find(
       { _id: { $in: questionIds } },
@@ -150,8 +152,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const activityAt = new Date()
+    let profileDisplayName = user.displayName || user.username || 'User'
+    let profileAvatarUrl = user.photoURL || ''
+    let userDoc: UserProfileDoc | null = null
+    try {
+      await import('@/lib/models/User')
+      userDoc = await getUserFromAuth(user) as UserProfileDoc | null
+      profileDisplayName = userDoc?.profile?.displayName || profileDisplayName
+      profileAvatarUrl = userDoc?.profile?.avatarUrl || profileAvatarUrl
+    } catch (err) {
+      console.warn('[Quiz Complete] Failed to load user profile:', err)
+    }
+
     // Persist base completion and XP before reward gating
-    await awardBalances(user.uid, { xp })
+    const balances = await awardBalances(user.uid, { xp }, {
+      activityAt,
+      leaderboardProfile: { displayName: profileDisplayName, avatarUrl: profileAvatarUrl }
+    })
 
     let rarity: Rarity | null = null
     let card: any | null = null
@@ -259,45 +277,46 @@ export async function POST(request: NextRequest) {
     }
 
     if (mode === 'ranked') {
-      // Weekly leaderboard: keep max score for user in current week
-      const periodKey = (() => {
-        const now = new Date()
-        const tmp = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-        const dayNum = tmp.getUTCDay() || 7
-        tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum)
-        const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1))
-        const weekNo = Math.ceil((((tmp.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
-        return `weekly-${tmp.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`
-      })()
-      
-      // Get user profile data from MongoDB for leaderboard
-      // Ensure User model is registered before leaderboard upsert
-      await import('@/lib/models/User')
-      type UserProfileDoc = { profile?: { displayName?: string; avatarUrl?: string } }
-      const userDoc = await getUserFromAuth(user) as UserProfileDoc | null
-      const profileDisplayName = userDoc?.profile?.displayName || user.displayName || user.username || 'User'
-      const profileAvatarUrl = userDoc?.profile?.avatarUrl || user.photoURL || ''
-      
-      console.log('[Quiz Complete] Updating leaderboard:', {
+      const periods: PeriodType[] = ['daily', 'weekly', 'alltime']
+
+      // Use cached profile data for leaderboard updates
+      const level = balances.level || 1
+      const now = activityAt
+
+      console.log('[Quiz Complete] Updating leaderboard stats:', {
         userId: user.uid,
         displayName: profileDisplayName,
         avatarUrl: profileAvatarUrl,
-        score: correctCount,
+        xp,
+        level,
         hasProfile: !!userDoc?.profile
       })
-      
-      await LeaderboardEntry.findOneAndUpdate(
-        { periodKey, userId: user.uid },
-        { 
-          $max: { score: correctCount }, 
-          $set: {
-            displayName: profileDisplayName, 
-            avatarUrl: profileAvatarUrl,
-            updatedAt: new Date()
-          }
-        },
-        { upsert: true }
-      )
+
+      await Promise.all(periods.map((period) => {
+        const { periodKey, periodStart, periodEnd } = getPeriodKeys(period, now)
+        return LeaderboardEntry.updateOne(
+          { periodKey, userId: user.uid },
+          {
+            $inc: {
+              'stats.quizzesPlayed': 1,
+              'stats.questionsCorrect': correctCount,
+              'stats.totalQuestions': ordered.length
+            },
+            $set: {
+              displayName: profileDisplayName,
+              avatarUrl: profileAvatarUrl,
+              level,
+              lastPlayedAt: now,
+              updatedAt: now
+            },
+            $setOnInsert: {
+              periodStart,
+              periodEnd
+            }
+          },
+          { upsert: true, setDefaultsOnInsert: true }
+        )
+      }))
     }
 
     return NextResponse.json({

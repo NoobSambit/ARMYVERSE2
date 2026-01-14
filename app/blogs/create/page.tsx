@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import BlogEditor from '@/components/blog/BlogEditor'
+import { BlogEditorLight } from '@/components/blog/editor'
 
 interface BlogData {
   title: string
@@ -13,6 +13,8 @@ interface BlogData {
   coverImage?: string
   coverAlt?: string
   status: 'draft' | 'published'
+  visibility?: 'public' | 'unlisted' | 'private'
+  excerpt?: string
 }
 
 export default function CreateBlogPage() {
@@ -121,11 +123,12 @@ export default function CreateBlogPage() {
   }
 
   return (
-    <BlogEditor
+    <BlogEditorLight
       initialData={initialData}
       onSave={handleSave}
       onAutoSave={handleAutoSave}
       isSaving={isSaving}
+      versionsKey={versionsKey}
     />
   )
 } 

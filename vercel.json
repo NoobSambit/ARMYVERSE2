@@ -6,5 +6,11 @@
   },
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/trending/homepage-cache/cron",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }

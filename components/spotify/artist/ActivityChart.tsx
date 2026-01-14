@@ -50,10 +50,6 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
     )
   }
 
-  // Use dailyGain for the chart to show variance
-  // Find max absolute value for scaling (positive or negative)
-  const maxAbsValue = Math.max(...history.map(h => Math.abs(h.dailyGain)), 1)
-
   // Format large numbers
   const formatValue = (n: number) => {
     if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`
@@ -73,17 +69,14 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
   const step = Math.ceil(history.length / maxBars)
   const displayHistory = history.filter((_, i) => i % step === 0 || i === history.length - 1)
 
-  // Calculate bar height based on dailyGain (can be positive or negative)
-  const getBarHeightAndColor = (dailyGain: number) => {
-    const absValue = Math.abs(dailyGain)
-    const heightPercentage = Math.max(10, (absValue / maxAbsValue) * 90)
-    const isPositive = dailyGain >= 0
+  // Calculate positive and negative max values separately
+  const maxPositive = Math.max(...history.map(h => Math.max(0, h.dailyGain)), 1)
+  const maxNegative = Math.abs(Math.min(...history.map(h => Math.min(0, h.dailyGain)), 0))
+  const maxAbsValue = Math.max(maxPositive, maxNegative)
 
-    return {
-      height: heightPercentage,
-      isPositive
-    }
-  }
+  // Calculate zero line position (40% from bottom if we have negative values, otherwise 10%)
+  const hasNegativeValues = maxNegative > 0
+  const zeroLinePosition = hasNegativeValues ? 40 : 10
 
   return (
     <div className="bg-[#2e2249] rounded-xl p-4 sm:p-5 md:p-6 border border-white/5 flex flex-col h-full min-h-[200px] sm:min-h-[250px] md:min-h-[300px]">
@@ -95,43 +88,62 @@ export default function ActivityChart({ artist }: ActivityChartProps) {
       </div>
 
       {/* Chart */}
-      <div className="flex-1 w-full flex items-center gap-1 sm:gap-2 md:gap-3 px-1 sm:px-2 relative">
+      <div className="flex-1 w-full relative h-[180px] sm:h-[220px] md:h-[260px]">
         {/* Zero line */}
-        <div className="absolute inset-0 flex items-center pointer-events-none z-0">
-          <div className="w-full h-px bg-white/10" />
-        </div>
+        <div
+          className="absolute left-0 right-0 h-px bg-white/10 pointer-events-none z-0"
+          style={{ top: `${zeroLinePosition}%` }}
+        />
 
         {/* Bars */}
-        <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 md:gap-3 h-full w-full relative z-10">
+        <div className="absolute inset-0 flex items-end gap-1 sm:gap-1.5 md:gap-2 px-1 sm:px-2 pb-2">
           {displayHistory.map((data, i) => {
             const originalIndex = history.indexOf(data)
-            const { height, isPositive } = getBarHeightAndColor(data.dailyGain)
+            const dailyGain = data.dailyGain
+            const isPositive = dailyGain >= 0
             const isHovered = hoveredIndex === originalIndex
             const isLatest = originalIndex === history.length - 1
+
+            // Calculate bar height as percentage of max value
+            const absValue = Math.abs(dailyGain)
+            const barHeightPercent = Math.max(5, (absValue / maxAbsValue) * 35)
+
+            // Position the bar - positive bars go up from zero line, negative bars go down
+            let barStyle: React.CSSProperties = {}
+            if (isPositive) {
+              barStyle = {
+                bottom: `${zeroLinePosition}%`,
+                height: `${barHeightPercent}%`
+              }
+            } else {
+              barStyle = {
+                top: `${zeroLinePosition}%`,
+                height: `${barHeightPercent}%`
+              }
+            }
 
             return (
               <div
                 key={i}
-                className="flex-1 flex flex-col items-center justify-center"
-                style={{ minHeight: `${height}%` }}
+                className="flex-1 relative h-full"
               >
                 <div
-                  className={`w-full rounded-t-sm transition-all relative group ${
+                  className={`absolute left-1 right-1 transition-all rounded-sm ${
                     isLatest
                       ? 'bg-[#895af6] shadow-[0_0_15px_rgba(137,90,246,0.5)]'
                       : isPositive
                         ? 'bg-green-500/60 hover:bg-green-500'
                         : 'bg-red-500/60 hover:bg-red-500'
-                  }`}
-                  style={{ height: `${Math.max(height, 15)}%` }}
+                  } ${isPositive ? 'rounded-t-sm' : 'rounded-b-sm'}`}
+                  style={barStyle}
                   onMouseEnter={() => setHoveredIndex(originalIndex)}
                   onMouseLeave={() => setHoveredIndex(null)}
                 >
                   {/* Tooltip */}
-                  <div className={`absolute -top-10 sm:-top-12 md:-top-14 left-1/2 -translate-x-1/2 bg-white text-black text-[8px] sm:text-[9px] md:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap transition-opacity z-20 ${
+                  <div className={`absolute ${isPositive ? '-top-10 sm:-top-12 md:-top-14' : 'top-full mt-1 sm:mt-1.5 md:mt-2'} left-1/2 -translate-x-1/2 bg-white text-black text-[8px] sm:text-[9px] md:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap transition-opacity z-20 pointer-events-none ${
                     isHovered || isLatest ? 'opacity-100' : 'opacity-0'
                   }`}>
-                    <div>{formatValue(data.dailyGain)} daily</div>
+                    <div>{formatValue(dailyGain)} daily</div>
                     <div className="text-[7px] sm:text-[8px] font-normal text-gray-600">{formatDate(data.date)}</div>
                   </div>
                 </div>

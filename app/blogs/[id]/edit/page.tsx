@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import BlogEditor from '@/components/blog/BlogEditor'
+import { BlogEditorLight } from '@/components/blog/editor'
 
 interface BlogDoc {
   _id: string
@@ -12,6 +12,7 @@ interface BlogDoc {
   tags: string[]
   mood: string
   coverImage?: string
+  coverAlt?: string
   status: 'draft' | 'published'
   visibility?: 'public' | 'unlisted' | 'private'
   author: { id: string; name: string }
@@ -71,13 +72,14 @@ export default function EditBlogPage() {
   }
 
   return (
-    <BlogEditor
+    <BlogEditorLight
       initialContent={doc.content}
       initialData={{
         title: doc.title,
         tags: doc.tags,
         mood: doc.mood,
         coverImage: doc.coverImage,
+        coverAlt: doc.coverAlt,
         status: doc.status,
         visibility: doc.visibility || 'public',
       }}
@@ -94,6 +96,7 @@ export default function EditBlogPage() {
               tags: data.tags,
               mood: data.mood,
               coverImage: data.coverImage,
+              coverAlt: data.coverAlt,
               status: data.status,
               visibility: data.visibility,
             }),
@@ -110,5 +113,4 @@ export default function EditBlogPage() {
     />
   )
 }
-
 

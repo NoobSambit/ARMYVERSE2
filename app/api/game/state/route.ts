@@ -4,6 +4,7 @@ import { verifyAuth } from '@/lib/auth/verify'
 import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
 import { Badge } from '@/lib/models/Badge'
 import { UserBadge } from '@/lib/models/UserBadge'
+import { getLevelProgress } from '@/lib/game/leveling'
 
 export const runtime = 'nodejs'
 
@@ -33,6 +34,14 @@ export async function GET(request: NextRequest) {
 
     const dailyStreak = state?.streak?.dailyCount || 0
     const weeklyStreak = state?.streak?.weeklyCount || 0
+    const totalXp = state?.xp || 0
+    const levelProgress = getLevelProgress(totalXp)
+    if (state && state.level !== levelProgress.level) {
+      await UserGameState.updateOne(
+        { userId: user.uid, xp: totalXp },
+        { $set: { level: levelProgress.level } }
+      )
+    }
 
     // Calculate next milestones
     const dailyNextMilestone = getNextMilestone(dailyStreak)
@@ -95,8 +104,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       dust: state?.dust || 0,
-      totalXp: state?.xp || 0,
-      level: state?.level || 1,
+      totalXp,
+      level: levelProgress.level,
+      levelProgress: {
+        xpIntoLevel: levelProgress.xpIntoLevel,
+        xpForNextLevel: levelProgress.xpForNextLevel,
+        xpToNextLevel: levelProgress.xpToNextLevel,
+        progressPercent: levelProgress.progressPercent,
+        nextLevel: levelProgress.nextLevel
+      },
       streaks: {
         daily: {
           current: dailyStreak,

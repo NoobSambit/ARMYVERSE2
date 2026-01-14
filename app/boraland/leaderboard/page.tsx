@@ -6,14 +6,16 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
 import BoralandHeader from '@/components/boraland/BoralandHeader'
 import CommandCenter from '@/components/boraland/CommandCenter'
-import LeaderboardList from '@/components/boraland/LeaderboardList'
+import LeaderboardList, { type TimeFrame, type UserEntry } from '@/components/boraland/LeaderboardList'
+import LeaderboardRightSidebar from '@/components/boraland/LeaderboardRightSidebar'
 import MobileNav from '@/components/boraland/MobileNav'
 
 export default function Page() {
   const { user } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
-  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('weekly')
+  const [me, setMe] = useState<UserEntry | null>(null)
 
   useEffect(() => {
     if (user === null) {
@@ -35,7 +37,7 @@ export default function Page() {
   }
 
   return (
-    <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
+    <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col relative overflow-hidden">
         {/* Background Effects */}
         <div className="fixed inset-0 z-0 pointer-events-none">
             <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
@@ -43,12 +45,14 @@ export default function Page() {
             <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
         </div>
 
-        <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
-          setActiveTab(tab)
-          if (tab === 'home') router.push('/boraland')
-          else if (tab === 'fangate') router.push('/boraland')
-          else if (tab === 'armybattles') router.push('/boraland')
-        }} />
+        <BoralandHeader 
+          activeTab="leaderboard" 
+          onTabChange={(tab) => {
+            if (tab === 'home') router.push('/boraland')
+            else if (tab === 'fangate') router.push('/boraland?tab=fangate') // Assuming simple navigation for now
+            else if (tab === 'armybattles') router.push('/boraland?tab=armybattles')
+          }} 
+        />
 
         <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
             <div className="hidden lg:block w-64 shrink-0 overflow-y-auto scrollbar-hide">
@@ -56,7 +60,17 @@ export default function Page() {
             </div>
             
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <LeaderboardList />
+                <div className="max-w-5xl mx-auto relative z-10">
+                    <LeaderboardList
+                      timeFrame={timeFrame}
+                      onTimeFrameChange={setTimeFrame}
+                      onMeChange={setMe}
+                    />
+                </div>
+            </div>
+            
+            <div className="hidden lg:block w-80 shrink-0 overflow-y-auto scrollbar-hide">
+                <LeaderboardRightSidebar timeFrame={timeFrame} me={me} />
             </div>
         </main>
         

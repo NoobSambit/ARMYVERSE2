@@ -1,15 +1,16 @@
 # Cron Jobs Setup
 
-Automated scraping of trending BTS content from Spotify and YouTube.
+Automated scraping of trending BTS content from Spotify and YouTube, plus daily YouTube analytics.
 
 ## Overview
 
-Two cron jobs run daily to keep trending data fresh:
+Three cron jobs run daily to keep data fresh:
 
 | Job | Schedule | Time (UTC) | Frequency | Purpose |
 |-----|----------|-----------|-----------|---------|
 | Spotify | `30 1 * * *` | 1:30 AM | Daily | Scrape Spotify streaming data + album art |
 | YouTube | `35 1 * * *` | 1:35 AM | Daily | Scrape YouTube view data + thumbnails |
+| YouTube Detail Cache | `0 0 * * *` | Midnight | Daily | Refresh YouTube video detail cache |
 
 ## How It Works
 
@@ -69,6 +70,12 @@ Already configured in the repository:
   ]
 }
 ```
+
+**Note:** The `/youtube` page analytics are refreshed via the YouTube cron job at 1:35 AM UTC. The page at `/youtube` displays:
+- BTS (OT7) videos: ~151 videos
+- Solo member videos: Jungkook (15), V (2), Suga (11), RM (14), Jimin (10), Jin (9), J-Hope (16)
+- Total views, daily average, and video rankings
+- Detailed video statistics (cached for 24 hours)
 
 **Cron Schedule Format:** `minute hour day month dayOfWeek`
 
@@ -505,5 +512,6 @@ Runs weekly on Sunday at 2:00 AM UTC.
 
 - [Trending Content](../features/trending-content.md) - How trending system works
 - [Spotify Analytics](../features/spotify-analytics.md) - Related analytics features
+- [YouTube Analytics](../features/youtube-analytics.md) - YouTube video statistics and `/youtube` page
 - [Environment Variables](./environment-variables.md) - Required variables
 - [Deployment Guide](./deployment.md) - Setting up Vercel

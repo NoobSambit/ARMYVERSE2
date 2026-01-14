@@ -197,16 +197,24 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 - Badge rewards modal with animations
 
 #### **Leaderboard System**
-**Weekly Competition** (ISO Week-Based):
-- **Period Key Format**: `weekly-YYYY-WW` (e.g., weekly-2026-01)
-- **Ranking**: Score-based (quiz XP + quest completions + mastery)
-- **Display**: Top 100 rankings with cursor-based pagination
-- **User Rank Calculation**: `COUNT(score > my_score) + 1`
+**Multi-Period Competition:**
+- **Daily**: Resets at 00:00 UTC (`daily-YYYY-MM-DD`)
+- **Weekly**: ISO week, resets Monday at 00:00 UTC (`weekly-YYYY-WW`)
+- **All-Time**: Never resets, cumulative lifetime XP (`alltime`)
 
-**Rewards**:
-- Tier-based prizes (top 10/25/50/100)
-- Automatic distribution at week end
-- LeaderboardEntry model with periodKey, userId, score
+**Scoring:**
+- Score = Total XP earned during the period (accumulated, not max)
+- XP sources: Quiz completions, quest completions
+- Higher score = better rank
+
+**Features:**
+- XP-based scoring with progressive leveling curve
+- Rank change indicators (↑/↓/—)
+- Player level display
+- Stats tracking: quizzes played, correct answers, total questions
+- Cursor-based pagination
+- Top 3 podium display
+- Profile data sync (displayName, avatarUrl)
 
 #### **Sharing System**
 **Share Links**:
@@ -484,8 +492,8 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
   - Limits: quizStartsToday, dateKey
 - **MasteryProgress**: Member/era mastery tracking
   - Fields: userId, kind (member/era), key, xp, level
-- **LeaderboardEntry**: Weekly leaderboard rankings
-  - Fields: periodKey (ISO week), userId, score, displayName, avatarUrl
+- **LeaderboardEntry**: Multi-period leaderboard rankings
+  - Fields: periodKey (daily/weekly/alltime), userId, score (XP), level, stats, previousRank, rank
 
 #### **Game System - Quests & Badges**
 - **QuestDefinition**: Quest templates (daily/weekly)
@@ -618,11 +626,11 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 2. **XP → Rarity Calculation**: 5 XP bands with weighted random + pity override
 3. **Fuzzy Track Matching**: Normalization (lowercase, remove feat./remix, special chars)
 4. **Quest Progress**: Track-based counting + album completion verification (ALL tracks required)
-5. **Mastery Leveling**: `level = floor(xp / 100)` (100 XP per level)
-6. **Weekly Period Key**: ISO 8601 week format (`weekly-YYYY-WW`) for leaderboard/quests
+5. **Progressive Leveling Curve**: Non-linear XP requirements based on level (`lib/game/leveling.ts`)
+6. **Multi-Period Leaderboard**: Daily/Weekly/All-Time with XP accumulation (not max score)
 7. **AI Playlist Prompting**: 400+ line structured prompt with BTS discography verification
 8. **Token Bucket Rate Limiter**: 5 tokens max, 5 tokens/sec refill for Last.fm
-9. **Leaderboard Ranking**: `COUNT(score > my_score) + 1` for user rank
+9. **Leaderboard Scoring**: XP-based accumulation with rank change tracking
 10. **Read Time Estimation**: `ceil(wordCount / 200)` (200 words/min)
 
 ---
@@ -864,4 +872,4 @@ MIT License - See LICENSE file for details
 **Status**: Production Ready 🚀
 **Tech Stack**: Next.js 14 + TypeScript + MongoDB + Vercel
 **Database**: 21 models, 70+ API endpoints, 1000+ quiz questions
-**Game Systems**: Quiz, Photocards (150+), Crafting, Mastery, Quests, Badges (34), Leaderboard
+**Game Systems**: Quiz, Photocards (150+), Crafting, Mastery, Quests, Badges (34), Leaderboard (Daily/Weekly/All-Time)

@@ -1,6 +1,6 @@
 'use client'
 
-type Tab = 'home' | 'fangate' | 'armybattles'
+type Tab = 'home' | 'fangate' | 'armybattles' | 'leaderboard'
 
 export default function BoralandHeader({
   activeTab,

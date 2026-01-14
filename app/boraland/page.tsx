@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiFetch } from '@/lib/client/api'
 import BoralandLanding from '@/components/boraland/BoralandLanding'
@@ -36,10 +37,12 @@ export type PoolInfo = {
   categories?: number
 }
 
-type Tab = 'home' | 'fangate' | 'armybattles'
+type Tab = 'home' | 'fangate' | 'armybattles' | 'leaderboard'
 
 export default function Page() {
   const { user } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
   const [stats, setStats] = useState<GameStats | null>(null)
   const [pool, setPool] = useState<PoolInfo | null>(null)
@@ -47,7 +50,11 @@ export default function Page() {
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+    const tabParam = searchParams.get('tab') as Tab
+    if (tabParam && ['home', 'fangate', 'armybattles'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (!user) return
@@ -108,7 +115,16 @@ export default function Page() {
                 <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
             </div>
 
-            <BoralandHeader activeTab={activeTab} onTabChange={setActiveTab} />
+            <BoralandHeader 
+              activeTab={activeTab} 
+              onTabChange={(tab) => {
+                if (tab === 'leaderboard') {
+                  router.push('/boraland/leaderboard')
+                } else {
+                  setActiveTab(tab)
+                }
+              }} 
+            />
 
             <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
                 <div className="hidden lg:block w-64 shrink-0 overflow-y-auto scrollbar-hide">

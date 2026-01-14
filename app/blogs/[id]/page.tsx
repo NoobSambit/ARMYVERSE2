@@ -78,6 +78,20 @@ export default function BlogViewPage() {
     fetchBlog()
   }, [params.id])
 
+  useEffect(() => {
+    if (!blog?.content) return
+    if (!blog.content.includes('twitter-tweet')) return
+
+    const scriptId = 'twitter-widgets'
+    if (document.getElementById(scriptId)) return
+
+    const script = document.createElement('script')
+    script.id = scriptId
+    script.src = 'https://platform.twitter.com/widgets.js'
+    script.async = true
+    document.body.appendChild(script)
+  }, [blog?.content])
+
   const fetchBlog = async () => {
     try {
       const response = await fetch(`/api/blogs/${params.id}`)
@@ -198,28 +212,28 @@ export default function BlogViewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen page-gradient flex items-center justify-center">
-        <div className="text-white text-xl">Loading blog...</div>
+      <div className="min-h-screen editor-light-mode flex items-center justify-center">
+        <div className="text-gray-700 text-xl">Loading blog...</div>
       </div>
     )
   }
 
   if (!blog) {
     return (
-      <div className="min-h-screen page-gradient flex items-center justify-center">
-        <div className="text-white text-xl">Blog not found</div>
+      <div className="min-h-screen editor-light-mode flex items-center justify-center">
+        <div className="text-gray-700 text-xl">Blog not found</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen page-gradient">
+    <div className="min-h-screen editor-light-mode">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-purple-500/20"
+          className="card-light p-8 mb-8"
         >
           {/* Cover Image */}
           {blog.coverImage && (
@@ -233,15 +247,15 @@ export default function BlogViewPage() {
           )}
 
           {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 font-serif">
             {blog.title}
           </h1>
 
           {/* Meta Info */}
-          <div className="flex flex-wrap items-center gap-4 text-gray-300 mb-6">
+          <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-6">
             <button 
               onClick={() => setSelectedUserId(blog.author.id)}
-              className="flex items-center hover:text-purple-400 transition-colors"
+              className="flex items-center hover:text-purple-600 transition-colors"
             >
               <User className="w-4 h-4 mr-2" />
               {blog.author.name}
@@ -269,7 +283,7 @@ export default function BlogViewPage() {
             {blog.tags.map(tag => (
               <span
                 key={tag}
-                className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm"
+                className="tag-chip-light selected text-sm"
               >
                 {tag}
               </span>
@@ -285,8 +299,8 @@ export default function BlogViewPage() {
                   onClick={() => handleReaction('moved')}
                   className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                     userReactions.includes('moved')
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-black/50 text-gray-300 hover:bg-gray-700'
+                      ? 'btn-primary-light text-white'
+                      : 'btn-secondary-light text-gray-700'
                   }`}
                 >
                   💜 {blog.reactions.moved}
@@ -296,7 +310,7 @@ export default function BlogViewPage() {
                   className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                     userReactions.includes('loved')
                       ? 'bg-red-500 text-white'
-                      : 'bg-black/50 text-gray-300 hover:bg-gray-700'
+                      : 'btn-secondary-light text-gray-700'
                   }`}
                 >
                   😍 {blog.reactions.loved}
@@ -306,7 +320,7 @@ export default function BlogViewPage() {
                   className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                     userReactions.includes('surprised')
                       ? 'bg-yellow-500 text-white'
-                      : 'bg-black/50 text-gray-300 hover:bg-gray-700'
+                      : 'btn-secondary-light text-gray-700'
                   }`}
                 >
                   🤯 {blog.reactions.surprised}
@@ -320,8 +334,8 @@ export default function BlogViewPage() {
                 onClick={handleSave}
                 className={`flex items-center px-3 py-2 rounded-xl transition-all ${
                   userSaved
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-black/50 text-gray-300 hover:bg-gray-700'
+                    ? 'btn-primary-light text-white'
+                    : 'btn-secondary-light text-gray-700'
                 }`}
               >
                 <Bookmark className="w-4 h-4 mr-2" />
@@ -332,24 +346,24 @@ export default function BlogViewPage() {
               <div className="relative">
                 <button
                   onClick={() => setShowShareMenu(!showShareMenu)}
-                  className="flex items-center px-3 py-2 bg-black/50 text-gray-300 rounded-xl hover:bg-gray-700 transition-all"
+                  className="flex items-center px-3 py-2 btn-secondary-light text-gray-700 rounded-xl transition-all"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </button>
                 
                 {showShareMenu && (
-                  <div className="absolute right-0 top-full mt-2 bg-black/90 backdrop-blur-lg rounded-xl p-2 border border-purple-500/20">
+                  <div className="absolute right-0 top-full mt-2 bg-white rounded-xl p-2 border border-gray-200 shadow-lg">
                     <button
                       onClick={shareToTwitter}
-                      className="flex items-center w-full px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-all"
+                      className="flex items-center w-full px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-all"
                     >
                       <Twitter className="w-4 h-4 mr-2" />
                       Twitter
                     </button>
                     <button
                       onClick={shareToInstagram}
-                      className="flex items-center w-full px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-all"
+                      className="flex items-center w-full px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-all"
                     >
                       <Instagram className="w-4 h-4 mr-2" />
                       Instagram Story
@@ -357,7 +371,7 @@ export default function BlogViewPage() {
                     {user && user.uid === blog.author.id && (
                       <button
                         onClick={() => router.push(`/blogs/${blog._id}/edit`)}
-                        className="flex items-center w-full px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-all"
+                        className="flex items-center w-full px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-all"
                       >
                         Edit
                       </button>
@@ -374,10 +388,10 @@ export default function BlogViewPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-purple-500/20"
+          className="card-light p-8 mb-8"
         >
           <div 
-            className="prose prose-invert prose-purple max-w-none"
+            className="editor-content-light max-w-none"
             dangerouslySetInnerHTML={{ __html: blog.content }}
           />
         </motion.div>
@@ -387,9 +401,9 @@ export default function BlogViewPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20"
+          className="card-light p-8"
         >
-          <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
             <MessageCircle className="w-6 h-6 mr-2" />
             Comments ({blog.comments.length})
           </h3>
@@ -400,13 +414,13 @@ export default function BlogViewPage() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Share your thoughts... 💜"
-              className="w-full px-4 py-3 bg-black/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-purple-500 focus:outline-none resize-none"
               rows={3}
             />
             <button
               onClick={handleComment}
               disabled={!newComment.trim() || submittingComment}
-              className="mt-2 px-6 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-all disabled:opacity-50"
+              className="mt-2 px-6 py-2 btn-primary-light text-white rounded-xl transition-all disabled:opacity-50"
             >
               {submittingComment ? 'Posting...' : 'Post Comment'}
             </button>
@@ -417,15 +431,15 @@ export default function BlogViewPage() {
             {blog.comments.map((comment, index) => (
               <div
                 key={index}
-                className="bg-black/30 rounded-xl p-4 border border-gray-700"
+                className="bg-gray-50 rounded-xl p-4 border border-gray-200"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-white">{comment.name}</span>
-                  <span className="text-sm text-gray-400">
+                  <span className="font-semibold text-gray-900">{comment.name}</span>
+                  <span className="text-sm text-gray-500">
                     {formatDate(comment.createdAt)}
                   </span>
                 </div>
-                <p className="text-gray-300">{comment.content}</p>
+                <p className="text-gray-700">{comment.content}</p>
               </div>
             ))}
           </div>

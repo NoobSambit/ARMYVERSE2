@@ -32,6 +32,7 @@ Detailed guides for each feature of the platform:
 - **[Authentication](./features/authentication.md)** - Firebase Auth & JWT-based auth
 - **[Playlist Generation](./features/playlist-generation.md)** - AI & manual playlist creation
 - **[Spotify Analytics](./features/spotify-analytics.md)** - Dashboard & insights
+- **[YouTube Analytics](./features/youtube-analytics.md)** - Video statistics at `/youtube`
 - **[Blog Platform](./features/blog-platform.md)** - Rich text blogging with community features
 - **[Trending Content](./features/trending-content.md)** - Spotify & YouTube trending data
 - **[Game System (Boraverse)](./features/game-system.md)** - Quiz, rewards, and progression
@@ -113,7 +114,19 @@ Comprehensive auth system guides:
   - Global daily top 200 positions
   - All-time artist ranks and monthly listeners
 
-### 4. **Blog Platform**
+### 4. **YouTube Analytics**
+- Comprehensive video statistics at `/youtube`
+- BTS and all 7 solo members' video data
+- Daily view trends and rankings
+- Detailed video modal with:
+  - Historical daily, monthly, yearly views
+  - Chart performance tracking
+  - Milestone predictions
+  - Like counts and best day stats
+- Member filtering with emoji navigation
+- 24-hour cached detail data for optimal performance
+
+### 5. **Blog Platform**
 - Rich text editor powered by Tiptap
 - Markdown support, code blocks, tables, images
 - Community features: reactions (loved, moved, surprised), comments, saves
@@ -121,14 +134,14 @@ Comprehensive auth system guides:
 - Advanced filtering: tags, moods, authors, languages, post types
 - Trending algorithm and featured posts
 
-### 5. **Trending Content**
+### 6. **Trending Content**
 - **Spotify Trending**: Top BTS songs by daily streams
 - **YouTube Trending**: Top BTS videos by daily views
 - OT7 vs Solo member filtering
 - Automated daily data scraping via cron jobs
 - 24-hour caching for optimal performance
 
-### 6. **Game System (Boraverse)**
+### 7. **Game System (Boraverse)**
 - **Quiz System**: 10-question quizzes on BTS knowledge
   - Multiple categories (history, discography, members, lyrics)
   - Random photocard rewards (XP-gated)
@@ -160,7 +173,7 @@ Comprehensive auth system guides:
 
 - **Sharing**: Generate shareable photocard links
 
-### 7. **Profile Management**
+### 8. **Profile Management**
 - Comprehensive 5-tab profile modal:
   - Profile: Basic info and ARMY-specific fields
   - Personalization: Themes, colors, preferences
@@ -170,7 +183,7 @@ Comprehensive auth system guides:
 - Data export (GDPR compliance)
 - Account deletion
 
-### 8. **Landing Pages**
+### 9. **Landing Pages**
 - Premium homepage with feature showcase
 - Dedicated Boraverse game landing page
 - Responsive design with Framer Motion animations
@@ -322,9 +335,9 @@ Links to related docs
 
 ## 📊 Documentation Stats
 
-- **Total Docs**: 30+ markdown files
-- **API Endpoints Documented**: 50+
-- **Features Covered**: 8 major features
+- **Total Docs**: 35+ markdown files
+- **API Endpoints Documented**: 60+
+- **Features Covered**: 9 major features
 - **Setup Guides**: 5
 - **Architecture Docs**: 3
 - **Last Updated**: January 2026

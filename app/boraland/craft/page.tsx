@@ -13,7 +13,7 @@ export default function Page() {
   const { user } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
-  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
+  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard'>('home')
 
   useEffect(() => {
     if (user === null) {

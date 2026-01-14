@@ -62,7 +62,7 @@ export default function Page() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [masteryData, setMasteryData] = useState<MasteryResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
+  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard'>('home')
 
   useEffect(() => {
     if (user === null && !warnedRef.current) {

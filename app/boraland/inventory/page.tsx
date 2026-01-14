@@ -97,7 +97,7 @@ export default function Page() {
   const { showToast } = useToast()
 
   // Tab State for Header
-  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles'>('home')
+  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard'>('home')
 
   // View State (Cards or Badges)
   const [view, setView] = useState<'cards' | 'collection' | 'badges'>('cards')

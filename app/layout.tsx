@@ -1,18 +1,24 @@
 import type { Metadata } from 'next'
-import { Inter, Plus_Jakarta_Sans, Noto_Sans } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans, Noto_Sans, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ToastProvider } from '@/components/ui/Toast'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const plusJakartaSans = Plus_Jakarta_Sans({ 
-  subsets: ['latin'], 
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair-display',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+})
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
   variable: '--font-plus-jakarta-sans',
   display: 'swap',
 })
-const notoSans = Noto_Sans({ 
-  subsets: ['latin'], 
+const notoSans = Noto_Sans({
+  subsets: ['latin'],
   variable: '--font-noto-sans',
   weight: ['400', '500', '600', '700'],
   display: 'swap',
@@ -85,7 +91,7 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} ${plusJakartaSans.variable} ${notoSans.variable} font-body page-gradient`}>
+      <body className={`${inter.variable} ${playfairDisplay.variable} ${plusJakartaSans.variable} ${notoSans.variable} font-body page-gradient`}>
         <ToastProvider>
           <AuthProvider>
             <Navbar />
