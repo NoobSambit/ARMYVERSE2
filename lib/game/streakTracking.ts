@@ -332,12 +332,16 @@ export async function getUserBadges(userId: string): Promise<any[]> {
     .lean()
 
   return userBadges.map(ub => ({
-    code: (ub.badgeId as any).code,
-    name: (ub.badgeId as any).name,
-    description: (ub.badgeId as any).description,
-    icon: (ub.badgeId as any).icon,
-    rarity: (ub.badgeId as any).rarity,
+    id: (ub as any)._id.toString(),
+    badge: {
+      code: (ub.badgeId as any).code,
+      name: (ub.badgeId as any).name,
+      description: (ub.badgeId as any).description || '',
+      icon: (ub.badgeId as any).icon,
+      rarity: (ub.badgeId as any).rarity,
+      type: (ub.badgeId as any).type || 'achievement'
+    },
     earnedAt: ub.earnedAt,
-    metadata: ub.metadata
+    metadata: ub.metadata || {}
   }))
 }

@@ -86,6 +86,9 @@ type BadgeItem = {
   metadata?: {
     streakCount?: number
     milestoneNumber?: number
+    completionDate?: string
+    completionStreakCount?: number
+    completionType?: 'daily' | 'weekly'
   }
 }
 
@@ -167,9 +170,9 @@ export default function Page() {
       if (source) params.set('source', source)
       if (mode === 'new') params.set('newOnly', '1')
       const res = await apiFetch(`/api/game/inventory?${params.toString()}`)
-      
+
       const sanitized = (res.items as ApiItem[] | undefined)?.filter(hasCard) ?? []
-      
+
       setItems((prev) => {
         if (!next) {
           return sanitized
@@ -178,10 +181,10 @@ export default function Page() {
         for (const it of sanitized) map.set(it.id, it)
         return Array.from(map.values())
       })
-      
+
       setCursor(res.nextCursor || null)
       setFilteredCount(res.total || 0)
-      
+
     } catch (e: any) {
       setError(e?.message || 'Failed to load inventory')
     } finally {
@@ -206,14 +209,14 @@ export default function Page() {
 
   // Load User XP for Header
   const loadUserStats = async () => {
-      try {
-          const state = await apiFetch('/api/game/state')
-          setUserXp(state?.totalXp || 0)
+    try {
+      const state = await apiFetch('/api/game/state')
+      setUserXp(state?.totalXp || 0)
 
-          // Get total count separately to keep overall totals stable
-          const inventoryRes = await apiFetch('/api/game/inventory?limit=1')
-          setTotalCount(inventoryRes?.total || 0)
-      } catch (e) {}
+      // Get total count separately to keep overall totals stable
+      const inventoryRes = await apiFetch('/api/game/inventory?limit=1')
+      setTotalCount(inventoryRes?.total || 0)
+    } catch (e) { }
   }
 
   const loadCatalog = async () => {
@@ -263,12 +266,12 @@ export default function Page() {
       router.push('/boraland')
       return
     }
-    
+
     if (user && !loadedOnceRef.current) {
-        loadedOnceRef.current = true
-        loadBadges()
-        loadUserStats()
-        loadCatalog()
+      loadedOnceRef.current = true
+      loadBadges()
+      loadUserStats()
+      loadCatalog()
     }
   }, [user, router, showToast])
 
@@ -294,138 +297,135 @@ export default function Page() {
 
   return (
     <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
-        {/* Background Effects */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-            <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
-            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-bora-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-bora-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
+      </div>
+
+      <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
+        setActiveTab(tab)
+        if (tab === 'home') router.push('/boraland')
+        else if (tab === 'fangate') router.push('/boraland')
+        else if (tab === 'armybattles') router.push('/boraland')
+      }} />
+
+      <main className="flex-grow z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
+        <div className="hidden lg:block w-64 shrink-0">
+          <CommandCenter />
         </div>
 
-        <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
-          setActiveTab(tab)
-          if (tab === 'home') router.push('/boraland')
-          else if (tab === 'fangate') router.push('/boraland')
-          else if (tab === 'armybattles') router.push('/boraland')
-        }} />
+        <div className="flex-grow flex flex-col gap-3 md:gap-4 overflow-hidden">
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 md:gap-2 bora-glass-panel rounded-lg md:rounded-xl p-0.5 md:p-1 w-fit shrink-0">
+            <button
+              onClick={() => setView('cards')}
+              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${view === 'cards'
+                  ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                  : 'text-gray-400 hover:text-white'
+                }`}
+            >
+              <span className="flex items-center gap-1 md:gap-2">
+                <span className="material-symbols-outlined text-sm md:text-base">style</span>
+                <span className="hidden sm:inline">Photocards</span>
+                <span className="sm:hidden">Cards</span>
+              </span>
+            </button>
+            <button
+              onClick={() => setView('collection')}
+              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${view === 'collection'
+                  ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                  : 'text-gray-400 hover:text-white'
+                }`}
+            >
+              <span className="flex items-center gap-1 md:gap-2">
+                <span className="material-symbols-outlined text-sm md:text-base">collections_bookmark</span>
+                <span className="hidden sm:inline">Collection</span>
+                <span className="sm:hidden">Collection</span>
+              </span>
+            </button>
+            <button
+              onClick={() => setView('badges')}
+              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${view === 'badges'
+                  ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                  : 'text-gray-400 hover:text-white'
+                }`}
+            >
+              <span className="flex items-center gap-1 md:gap-2">
+                <span className="material-symbols-outlined text-sm md:text-base">military_tech</span>
+                Badges
+              </span>
+            </button>
+          </div>
 
-        <main className="flex-grow z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
-            <div className="hidden lg:block w-64 shrink-0">
-                <CommandCenter />
-            </div>
+          {/* Conditional Rendering */}
+          {view === 'cards' ? (
+            <InventoryGrid
+              items={items}
+              loading={loading}
+              error={error}
+              cursor={cursor}
+              loadMore={load}
+              totalCount={totalCount || items.length}
+              filteredCount={filteredCount || 0}
+              uniqueCount={uniqueCount}
+              categoryCount={categoryCount}
+              catalog={catalog}
+              catalogLoading={catalogLoading}
+              catalogError={catalogError}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filterMode={filterMode}
+              onFilterModeChange={setFilterMode}
+              selectedCategory={categoryFilter}
+              selectedSubcategory={subcategoryFilter}
+              sourceFilter={sourceFilter}
+              onSelectSource={setSourceFilter}
+              onSelectCategory={(value) => {
+                setCategoryFilter(value)
+                setSubcategoryFilter(null)
+              }}
+              onSelectSubcategory={(value, category) => {
+                if (category) setCategoryFilter(category)
+                setSubcategoryFilter(value)
+              }}
+            />
+          ) : view === 'collection' ? (
+            <CollectionGrid
+              groups={collectionGroups}
+              totalCards={collectionTotal}
+              collectedCards={collectionCollected}
+              loading={collectionLoading}
+              error={collectionError}
+              catalog={catalog}
+              catalogLoading={catalogLoading}
+              catalogError={catalogError}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedCategory={categoryFilter}
+              selectedSubcategory={subcategoryFilter}
+              onSelectCategory={(value) => {
+                setCategoryFilter(value)
+                setSubcategoryFilter(null)
+              }}
+              onSelectSubcategory={(value, category) => {
+                if (category) setCategoryFilter(category)
+                setSubcategoryFilter(value)
+              }}
+            />
+          ) : (
+            <BadgesGrid
+              badges={badges}
+              loading={badgesLoading}
+              error={badgesError}
+              totalCount={badgesTotalCount}
+            />
+          )}
+        </div>
+      </main>
 
-            <div className="flex-grow flex flex-col gap-3 md:gap-4 overflow-hidden">
-              {/* View Toggle */}
-              <div className="flex items-center gap-1 md:gap-2 bora-glass-panel rounded-lg md:rounded-xl p-0.5 md:p-1 w-fit shrink-0">
-                <button
-                  onClick={() => setView('cards')}
-                  className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
-                    view === 'cards'
-                      ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-1 md:gap-2">
-                    <span className="material-symbols-outlined text-sm md:text-base">style</span>
-                    <span className="hidden sm:inline">Photocards</span>
-                    <span className="sm:hidden">Cards</span>
-                  </span>
-                </button>
-                <button
-                  onClick={() => setView('collection')}
-                  className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
-                    view === 'collection'
-                      ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-1 md:gap-2">
-                    <span className="material-symbols-outlined text-sm md:text-base">collections_bookmark</span>
-                    <span className="hidden sm:inline">Collection</span>
-                    <span className="sm:hidden">Collection</span>
-                  </span>
-                </button>
-                <button
-                  onClick={() => setView('badges')}
-                  className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
-                    view === 'badges'
-                      ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-1 md:gap-2">
-                    <span className="material-symbols-outlined text-sm md:text-base">military_tech</span>
-                    Badges
-                  </span>
-                </button>
-              </div>
-
-              {/* Conditional Rendering */}
-              {view === 'cards' ? (
-                <InventoryGrid
-                  items={items}
-                  loading={loading}
-                  error={error}
-                  cursor={cursor}
-                  loadMore={load}
-                  totalCount={totalCount || items.length}
-                  filteredCount={filteredCount || 0}
-                  uniqueCount={uniqueCount}
-                  categoryCount={categoryCount}
-                  catalog={catalog}
-                  catalogLoading={catalogLoading}
-                  catalogError={catalogError}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  filterMode={filterMode}
-                  onFilterModeChange={setFilterMode}
-                  selectedCategory={categoryFilter}
-                  selectedSubcategory={subcategoryFilter}
-                  sourceFilter={sourceFilter}
-                  onSelectSource={setSourceFilter}
-                  onSelectCategory={(value) => {
-                    setCategoryFilter(value)
-                    setSubcategoryFilter(null)
-                  }}
-                  onSelectSubcategory={(value, category) => {
-                    if (category) setCategoryFilter(category)
-                    setSubcategoryFilter(value)
-                  }}
-                />
-              ) : view === 'collection' ? (
-                <CollectionGrid
-                  groups={collectionGroups}
-                  totalCards={collectionTotal}
-                  collectedCards={collectionCollected}
-                  loading={collectionLoading}
-                  error={collectionError}
-                  catalog={catalog}
-                  catalogLoading={catalogLoading}
-                  catalogError={catalogError}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  selectedCategory={categoryFilter}
-                  selectedSubcategory={subcategoryFilter}
-                  onSelectCategory={(value) => {
-                    setCategoryFilter(value)
-                    setSubcategoryFilter(null)
-                  }}
-                  onSelectSubcategory={(value, category) => {
-                    if (category) setCategoryFilter(category)
-                    setSubcategoryFilter(value)
-                  }}
-                />
-              ) : (
-                <BadgesGrid
-                  badges={badges}
-                  loading={badgesLoading}
-                  error={badgesError}
-                  totalCount={badgesTotalCount}
-                />
-              )}
-            </div>
-        </main>
-        
-        <MobileNav />
+      <MobileNav />
     </div>
   )
 }

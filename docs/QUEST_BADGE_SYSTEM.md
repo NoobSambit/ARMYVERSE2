@@ -147,6 +147,18 @@ Same cycling logic as daily streaks, but for weekly quest completions.
 - **daily_completion:** Awarded when user completes all daily quests (streaming + quiz)
 - **weekly_completion:** Awarded when user completes all weekly quests (streaming + quiz)
 
+#### Unique Streak Reward System (NEW)
+
+Completion badges use the corresponding **streak badge images** (streak-1 to streak-10) with the actual streak count displayed as an overlay in the corner. This creates a visual distinction for each streak achievement.
+
+**Visual Example:** Day 69 streak → Uses `daily-streak/streak-9.png` with "69" overlaid in the bottom-right corner
+
+**Key Rules:**
+- Completion badges are only awarded for **unique/first-time streak achievements**
+- If user breaks their streak and reaches the same count again, they do NOT receive the completion reward again
+- The system tracks all unique daily and weekly streaks ever achieved
+- This prevents "streak farming" where users could break and rebuild streaks for duplicate rewards
+
 ---
 
 ## Implementation Details
@@ -156,36 +168,48 @@ Same cycling logic as daily streaks, but for weekly quest completions.
 1. **Streak Counter:** Tracks total consecutive completions (1-50 max)
 2. **Cycle Position:** Determines which Set 1/3 badge to award (1-10)
 3. **Milestone Detection:** Checks if streak count is divisible by 10
+4. **Unique Streak Tracking:** Records all unique streaks achieved in `earnedStreaks` field
 
 **Example Flow:**
 
 ```
-Day 1:  Streak = 1  → Award daily_streak_1
-Day 2:  Streak = 2  → Award daily_streak_2
+Day 1:  Streak = 1  → Award daily_streak_1 (uses streak-1.png with "1" overlay)
+Day 2:  Streak = 2  → Award daily_streak_2 (uses streak-2.png with "2" overlay)
 ...
 Day 10: Streak = 10 → Award daily_streak_10 + daily_milestone_1 + Random Photocard
-Day 11: Streak = 11 → Award daily_streak_1 (cycle restarts)
+Day 11: Streak = 11 → Award daily_streak_1 (uses streak-1.png with "11" overlay)
 ...
-Day 20: Streak = 20 → Award daily_streak_10 + daily_milestone_2 + Random Photocard
+Day 69: Streak = 69 → Award daily_streak_9 (uses streak-9.png with "69" overlay)
 ...
 Day 50: Streak = 50 → Award daily_streak_10 + daily_milestone_5 + Random Photocard
 Day 51: Streak = 50 (max reached, stays at 50)
 ```
 
-### Streak Breaking
+### Streak Breaking & Unique Rewards
 
 - If user misses a day/week, streak resets to 1
-- All milestone tracking resets
-- User can start building streaks again from day/week 1
+- Streak badge milestones (10, 20, 30, 40, 50) reset
+- **NEW:** Completion badge rewards are NOT re-awarded for previously achieved streak counts
+- User's earned streak history is preserved in `UserGameState.earnedStreaks`
+- The highest daily/weekly streak ever achieved is tracked for display
+
+**Example:**
+```
+- User reaches Day 5 → Earns completion badge (streak-5.png with "5")
+- User misses Day 6 → Streak breaks, resets to 0
+- User starts again, reaches Day 5 again → NO completion badge (already earned streak 5)
+- User reaches Day 6 → Earns completion badge (streak-6.png with "6") - new achievement!
+```
 
 ### Badge Awarding Logic
 
 Badges are awarded in this order:
 
-1. **Completion Badge** (if all quests completed)
-2. **Set 1/3 Badge** (based on cycle position)
-3. **Set 2/4 Badge** (if at milestone: 10, 20, 30, 40, or 50)
-4. **Photocard** (with milestone badge)
+1. **Check Unique Streak:** Verify this streak count hasn't been rewarded before
+2. **Completion Badge** (if all quests completed AND unique streak)
+3. **Set 1/3 Badge** (based on cycle position)
+4. **Set 2/4 Badge** (if at milestone: 10, 20, 30, 40, or 50)
+5. **Photocard** (with milestone badge)
 
 ---
 

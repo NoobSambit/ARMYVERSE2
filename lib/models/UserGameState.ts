@@ -27,6 +27,13 @@ export interface IUserGameState {
     dailyStreakMilestoneCount: number // How many times reached 10-day streak
     weeklyStreakMilestoneCount: number // How many times reached 10-week streak
   }
+  // Track unique streaks that have been rewarded (prevents re-earning after breaking streak)
+  earnedStreaks: {
+    daily: number[] // Array of unique daily streak counts that were rewarded
+    weekly: number[] // Array of unique weekly streak counts that were rewarded
+    highestDaily: number // Highest daily streak ever achieved
+    highestWeekly: number // Highest weekly streak ever achieved
+  }
 }
 
 const userGameStateSchema = new mongoose.Schema<IUserGameState>({
@@ -54,6 +61,12 @@ const userGameStateSchema = new mongoose.Schema<IUserGameState>({
     lastWeeklyStreakMilestone: { type: Number, default: 0 },
     dailyStreakMilestoneCount: { type: Number, default: 0 },
     weeklyStreakMilestoneCount: { type: Number, default: 0 }
+  },
+  earnedStreaks: {
+    daily: { type: [Number], default: [] },
+    weekly: { type: [Number], default: [] },
+    highestDaily: { type: Number, default: 0 },
+    highestWeekly: { type: Number, default: 0 }
   }
 })
 

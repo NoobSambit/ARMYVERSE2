@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
 import { verifyAuth } from '@/lib/auth/verify'
 import { UserGameState, IUserGameState } from '@/lib/models/UserGameState'
+import { LeaderboardEntry, ILeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 import { Badge } from '@/lib/models/Badge'
 import { UserBadge } from '@/lib/models/UserBadge'
 import { getLevelProgress } from '@/lib/game/leveling'
@@ -31,6 +32,14 @@ export async function GET(request: NextRequest) {
     await connect()
 
     const state = await UserGameState.findOne({ userId: user.uid }).lean() as IUserGameState | null
+
+    // Fetch alltime leaderboard entry for quiz stats (accuracy calculation)
+    const alltimeEntry = await LeaderboardEntry.findOne({
+      periodKey: 'alltime',
+      userId: user.uid
+    }).lean() as ILeaderboardEntry | null
+
+    const quizStats = alltimeEntry?.stats || { quizzesPlayed: 0, questionsCorrect: 0, totalQuestions: 0 }
 
     const dailyStreak = state?.streak?.dailyCount || 0
     const weeklyStreak = state?.streak?.weeklyCount || 0
@@ -99,7 +108,9 @@ export async function GET(request: NextRequest) {
       name: (ub.badgeId as any).name,
       icon: (ub.badgeId as any).icon,
       rarity: (ub.badgeId as any).rarity,
-      earnedAt: ub.earnedAt
+      type: (ub.badgeId as any).type,
+      earnedAt: ub.earnedAt,
+      metadata: ub.metadata || {}
     }))
 
     return NextResponse.json({
@@ -124,6 +135,14 @@ export async function GET(request: NextRequest) {
           nextMilestone: weeklyNextMilestone?.nextMilestone || null,
           weeksRemaining: weeklyNextMilestone?.daysRemaining || null
         }
+      },
+      quizStats: {
+        quizzesPlayed: quizStats.quizzesPlayed,
+        questionsCorrect: quizStats.questionsCorrect,
+        totalQuestions: quizStats.totalQuestions,
+        accuracy: quizStats.totalQuestions > 0
+          ? Math.round((quizStats.questionsCorrect / quizStats.totalQuestions) * 100)
+          : null
       },
       potentialRewards: {
         dailyMilestoneBadge: potentialDailyBadge,

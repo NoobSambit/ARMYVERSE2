@@ -9,13 +9,41 @@ export type MasteryIncrement = {
 export type MasteryDefinition = { key: string; displayName?: string; coverImage?: string; order?: number }
 export type MasteryTrack = { kind: 'member' | 'era'; key: string; xp: number; level: number; claimedMilestones: number[]; xpToNext: number; nextMilestone: number | null; claimable: number[] }
 
-export const MASTERY_MILESTONES: { level: number; rewards: { xp: number; dust: number } }[] = [
-  { level: 5, rewards: { xp: 50, dust: 25 } },
-  { level: 10, rewards: { xp: 100, dust: 75 } },
-  { level: 25, rewards: { xp: 250, dust: 200 } },
-  { level: 50, rewards: { xp: 500, dust: 400 } },
-  { level: 100, rewards: { xp: 1500, dust: 1000 } }
-]
+export const MASTERY_MILESTONES: {
+  level: number
+  rewards: { xp: number; dust: number }
+  badge: {
+    rarity: 'common' | 'rare' | 'epic' | 'legendary'
+    description: string
+    isSpecialAtMax: boolean // true = special badge at lvl 100 for members
+  }
+}[] = [
+    {
+      level: 5,
+      rewards: { xp: 50, dust: 25 },
+      badge: { rarity: 'common', description: 'First steps towards mastery', isSpecialAtMax: false }
+    },
+    {
+      level: 10,
+      rewards: { xp: 100, dust: 75 },
+      badge: { rarity: 'rare', description: 'Growing dedication and knowledge', isSpecialAtMax: false }
+    },
+    {
+      level: 25,
+      rewards: { xp: 250, dust: 200 },
+      badge: { rarity: 'rare', description: 'Proven commitment to the journey', isSpecialAtMax: false }
+    },
+    {
+      level: 50,
+      rewards: { xp: 500, dust: 400 },
+      badge: { rarity: 'epic', description: 'An expert in the making', isSpecialAtMax: false }
+    },
+    {
+      level: 100,
+      rewards: { xp: 1500, dust: 1000 },
+      badge: { rarity: 'legendary', description: 'Ultimate mastery achieved - A true legend!', isSpecialAtMax: true }
+    }
+  ]
 
 const MEMBER_DEFS: MasteryDefinition[] = [
   { key: 'RM', order: 1 },
@@ -123,3 +151,33 @@ export function formatTrack(kind: 'member' | 'era', key: string, xp: number, cla
     claimable: claimableMilestones(xp, claimed, legacyLevel, divider)
   }
 }
+
+/**
+ * Generate a consistent badge code for mastery milestones
+ * Format: mastery_{kind}_{normalized_key}_{milestone}
+ * Example: mastery_member_rm_5, mastery_era_wings_100
+ */
+export function getMasteryBadgeCode(kind: 'member' | 'era', key: string, milestone: number): string {
+  // Normalize key: lowercase, replace spaces/special chars with underscores
+  const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+  return `mastery_${kind}_${normalizedKey}_${milestone}`
+}
+
+/**
+ * Get badge info for a specific milestone
+ */
+export function getMasteryBadgeInfo(kind: 'member' | 'era', key: string, milestone: number) {
+  const ms = MASTERY_MILESTONES.find(m => m.level === milestone)
+  if (!ms) return null
+
+  return {
+    code: getMasteryBadgeCode(kind, key, milestone),
+    rarity: ms.badge.rarity,
+    description: ms.badge.description,
+    isSpecial: milestone === 100 && kind === 'member' && ms.badge.isSpecialAtMax,
+    milestone,
+    kind,
+    key
+  }
+}
+

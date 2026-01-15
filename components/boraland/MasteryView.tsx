@@ -29,9 +29,9 @@ type MasteryResponse = {
 }
 
 interface MasteryViewProps {
-    data: MasteryResponse | null
-    loading: boolean
-    onRefresh: () => void
+  data: MasteryResponse | null
+  loading: boolean
+  onRefresh: () => void
 }
 
 export default function MasteryView({ data, loading, onRefresh }: MasteryViewProps) {
@@ -55,9 +55,13 @@ export default function MasteryView({ data, loading, onRefresh }: MasteryViewPro
   const claim = async (kind: 'member' | 'era', key: string, milestone?: number) => {
     try {
       setClaimingKey(`${kind}:${key}`)
-      await apiFetch('/api/game/mastery/claim', { method: 'POST', body: JSON.stringify({ kind, key, milestone }) })
+      const result = await apiFetch('/api/game/mastery/claim', { method: 'POST', body: JSON.stringify({ kind, key, milestone }) })
       onRefresh()
-      showToast('success', 'Reward claimed')
+
+      // Show detailed toast with badge info
+      const badgeInfo = result.badge ? ` 🏆 Badge unlocked!` : ''
+      const rewardInfo = `+${result.rewards?.xp || 0} XP, +${result.rewards?.dust || 0} Dust`
+      showToast('success', `Milestone ${result.milestone} claimed! ${rewardInfo}${badgeInfo}`)
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Unable to claim'
       setError(message)
@@ -69,26 +73,49 @@ export default function MasteryView({ data, loading, onRefresh }: MasteryViewPro
 
   const renderMilestones = (item: MasteryTrack) => {
     const isClaiming = claimingKey === `${item.track.kind}:${item.track.key}`
+
+    // Rarity colors based on milestone level
+    const rarityColors: Record<number, { bg: string; border: string; glow: string }> = {
+      5: { bg: 'bg-gray-500', border: 'border-gray-400', glow: '' },
+      10: { bg: 'bg-blue-500', border: 'border-blue-400', glow: 'shadow-[0_0_8px_rgba(59,130,246,0.4)]' },
+      25: { bg: 'bg-blue-600', border: 'border-blue-500', glow: 'shadow-[0_0_8px_rgba(59,130,246,0.4)]' },
+      50: { bg: 'bg-purple-500', border: 'border-purple-400', glow: 'shadow-[0_0_10px_rgba(168,85,247,0.4)]' },
+      100: { bg: 'bg-gradient-to-br from-yellow-400 to-amber-500', border: 'border-yellow-400', glow: 'shadow-[0_0_12px_rgba(234,179,8,0.5)]' }
+    }
+
     return (
-      <div className="flex items-center gap-3 mt-3">
+      <div className="flex items-center gap-2 mt-3">
         {data?.milestones.map((ms) => {
           const claimed = item.track.claimedMilestones.includes(ms.level)
           const claimable = item.track.claimable.includes(ms.level)
-          const baseClass = 'w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition shadow-sm'
+          const colors = rarityColors[ms.level] || rarityColors[5]
+
+          const baseClass = 'w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all border-2'
           const stateClass = claimed
-            ? 'bg-emerald-500 text-white shadow-[0_8px_16px_rgba(16,185,129,0.25)]'
+            ? `${colors.bg} text-white ${colors.border} ${colors.glow}`
             : claimable
-              ? 'bg-gradient-to-br from-primary to-secondary text-white cursor-pointer hover:translate-y-[1px]'
-              : 'bg-gray-100 text-gray-500'
+              ? `bg-gradient-to-br from-primary to-secondary text-white border-white/30 cursor-pointer hover:scale-105 animate-pulse ${colors.glow}`
+              : 'bg-white/5 text-gray-500 border-white/10'
+
           return (
             <button
               key={ms.level}
               disabled={!claimable || isClaiming}
               onClick={() => claimable && claim(item.track.kind, item.track.key, ms.level)}
               className={`${baseClass} ${stateClass} ${isClaiming ? 'opacity-60' : ''}`}
-              title={claimable ? `Claim +${ms.rewards.xp} XP / +${ms.rewards.dust} Dust` : ''}
+              title={claimable
+                ? `🏆 Claim Level ${ms.level}: +${ms.rewards.xp} XP, +${ms.rewards.dust} Dust + Badge!`
+                : claimed
+                  ? `✓ Level ${ms.level} claimed`
+                  : `Level ${ms.level} - Keep going!`}
             >
-              {claimed ? '✓' : ms.level}
+              {claimed ? (
+                <span className="material-symbols-outlined text-sm">verified</span>
+              ) : claimable ? (
+                <span className="material-symbols-outlined text-sm">redeem</span>
+              ) : (
+                ms.level
+              )}
             </button>
           )
         })}

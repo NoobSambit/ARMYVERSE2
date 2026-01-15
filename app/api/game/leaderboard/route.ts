@@ -149,9 +149,59 @@ export async function GET(request: NextRequest) {
     }
 
     let levelProgress = null
+    let statsForAccuracy = myEntry?.stats || { quizzesPlayed: 0, questionsCorrect: 0, totalQuestions: 0 }
+    let alltimeEntry: ILeaderboardEntry | null = null
+
+    // Always fetch user's game state and level progress
+    const state = await UserGameState.findOne({ userId: user.uid }).lean() as { xp?: number } | null
+    levelProgress = getLevelProgress(state?.xp ?? 0)
+
+    // For daily/weekly periods, if user hasn't played in this period (no stats),
+    // fall back to all-time stats for accuracy display
+    if (period !== 'alltime') {
+      alltimeEntry = await LeaderboardEntry.findOne({
+        periodKey: 'alltime',
+        userId: user.uid
+      }).lean() as ILeaderboardEntry | null
+
+      if (statsForAccuracy.totalQuestions === 0 && alltimeEntry?.stats && alltimeEntry.stats.totalQuestions > 0) {
+        statsForAccuracy = alltimeEntry.stats
+      }
+    }
+
+    // Build the me object - include it even if no period entry but user has all-time data
+    let meResponse = null
     if (myEntry) {
-      const state = await UserGameState.findOne({ userId: user.uid }).lean() as { xp?: number } | null
-      levelProgress = getLevelProgress(state?.xp ?? 0)
+      meResponse = {
+        score: myEntry.score || 0,
+        level: levelProgress?.level || myEntry.level || 1,
+        rank: myRank,
+        rankChange: myRankChange,
+        displayName: myEntry.displayName || 'You',
+        avatarUrl: myEntry.avatarUrl || '',
+        stats: statsForAccuracy,
+        totalXp: levelProgress?.totalXp ?? 0,
+        xpIntoLevel: levelProgress?.xpIntoLevel ?? 0,
+        xpForNextLevel: levelProgress?.xpForNextLevel ?? 0,
+        xpProgress: levelProgress?.progressPercent ?? 0,
+        xpToNextLevel: levelProgress?.xpToNextLevel ?? 0
+      }
+    } else if (period !== 'alltime' && alltimeEntry) {
+      // User hasn't played in this period but has all-time data - show their accuracy from all-time
+      meResponse = {
+        score: 0,
+        level: levelProgress?.level || alltimeEntry.level || 1,
+        rank: null,
+        rankChange: null,
+        displayName: alltimeEntry.displayName || 'You',
+        avatarUrl: alltimeEntry.avatarUrl || '',
+        stats: alltimeEntry.stats || { quizzesPlayed: 0, questionsCorrect: 0, totalQuestions: 0 },
+        totalXp: levelProgress?.totalXp ?? 0,
+        xpIntoLevel: levelProgress?.xpIntoLevel ?? 0,
+        xpForNextLevel: levelProgress?.xpForNextLevel ?? 0,
+        xpProgress: levelProgress?.progressPercent ?? 0,
+        xpToNextLevel: levelProgress?.xpToNextLevel ?? 0
+      }
     }
 
     return NextResponse.json({
@@ -170,20 +220,7 @@ export async function GET(request: NextRequest) {
         stats: r.stats || { quizzesPlayed: 0, questionsCorrect: 0, totalQuestions: 0 }
       })),
       nextCursor,
-      me: myEntry ? {
-        score: myEntry.score || 0,
-        level: levelProgress?.level || myEntry.level || 1,
-        rank: myRank,
-        rankChange: myRankChange,
-        displayName: myEntry.displayName || 'You',
-        avatarUrl: myEntry.avatarUrl || '',
-        stats: myEntry.stats || { quizzesPlayed: 0, questionsCorrect: 0, totalQuestions: 0 },
-        totalXp: levelProgress?.totalXp ?? 0,
-        xpIntoLevel: levelProgress?.xpIntoLevel ?? 0,
-        xpForNextLevel: levelProgress?.xpForNextLevel ?? 0,
-        xpProgress: levelProgress?.progressPercent ?? 0,
-        xpToNextLevel: levelProgress?.xpToNextLevel ?? 0
-      } : null
+      me: meResponse
     })
   } catch (error) {
     console.error('Leaderboard GET error:', error)

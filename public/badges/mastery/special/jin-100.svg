@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="special-jin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f472b6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fb7185;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow-jin">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <circle cx="60" cy="60" r="55" fill="url(#special-jin)" stroke="#fff" stroke-width="3" filter="url(#glow-jin)"/>
+  <polygon points="60,15 70,40 97,40 75,57 83,85 60,70 37,85 45,57 23,40 50,40" fill="#fef3c7"/>
+  <text x="60" y="105" text-anchor="middle" fill="#fef3c7" font-family="Arial" font-size="14" font-weight="bold">JIN</text>
+</svg>

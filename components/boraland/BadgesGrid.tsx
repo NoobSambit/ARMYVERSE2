@@ -2,6 +2,7 @@
 
 import { getBadgeImagePath, getBadgeRarityColors, getBadgeCategory } from '@/lib/utils/badgeImages'
 import Image from 'next/image'
+import StreakBadgeWithOverlay from './StreakBadgeWithOverlay'
 
 type BadgeItem = {
   id: string
@@ -17,6 +18,9 @@ type BadgeItem = {
   metadata?: {
     streakCount?: number
     milestoneNumber?: number
+    completionDate?: string
+    completionStreakCount?: number
+    completionType?: 'daily' | 'weekly'
   }
 }
 
@@ -98,31 +102,56 @@ export default function BadgesGrid({ badges, loading, error, totalCount }: Badge
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {categoryBadges.map((item) => {
                   const colors = getBadgeRarityColors(item.badge.rarity)
-                  const imagePath = getBadgeImagePath(item.badge.code)
+
+                  // For completion badges, use streak badge image with overlay
+                  const isCompletionBadge = item.badge.code.includes('completion')
+                  const hasStreakCount = !!(item.metadata?.completionStreakCount || item.metadata?.streakCount)
+                  const streakCount = item.metadata?.completionStreakCount || item.metadata?.streakCount || 0
+                  const completionType = item.metadata?.completionType ||
+                    (item.badge.code.includes('daily') ? 'daily' : 'weekly')
+
+                  // Calculate cycle position for completion badges (which streak-X.png to use)
+                  const cyclePosition = streakCount > 0 ? ((streakCount - 1) % 10) + 1 : 1
+
+                  // For completion badges, use the corresponding streak badge image path
+                  const imagePath = isCompletionBadge && hasStreakCount
+                    ? `/badges/${completionType}-streak/streak-${cyclePosition}.png`
+                    : getBadgeImagePath(item.badge.code)
 
                   return (
                     <div
                       key={item.id}
                       className={`group relative rounded-2xl overflow-hidden bora-glass-panel border ${colors.border} hover:border-bora-primary/50 transition-all duration-300 hover:-translate-y-1 ${colors.glow} p-4 flex flex-col items-center gap-3`}
                     >
-                      {/* Badge Image */}
+                      {/* Badge Image - Use StreakBadgeWithOverlay for completion badges */}
                       <div className={`relative w-20 h-20 rounded-full ${colors.bg} p-2 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <Image
-                          src={imagePath}
-                          alt={item.badge.name}
-                          width={80}
-                          height={80}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            // Fallback to emoji icon if image fails to load
-                            const target = e.target as HTMLImageElement
-                            target.style.display = 'none'
-                            const parent = target.parentElement
-                            if (parent) {
-                              parent.innerHTML = `<span class="text-3xl">${item.badge.icon}</span>`
-                            }
-                          }}
-                        />
+                        {isCompletionBadge && hasStreakCount ? (
+                          <StreakBadgeWithOverlay
+                            imagePath={imagePath}
+                            badgeName={item.badge.name}
+                            streakCount={streakCount}
+                            size="lg"
+                            fallbackIcon={item.badge.icon}
+                            type={completionType}
+                          />
+                        ) : (
+                          <Image
+                            src={imagePath}
+                            alt={item.badge.name}
+                            width={80}
+                            height={80}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              // Fallback to emoji icon if image fails to load
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                              const parent = target.parentElement
+                              if (parent) {
+                                parent.innerHTML = `<span class="text-3xl">${item.badge.icon}</span>`
+                              }
+                            }}
+                          />
+                        )}
                       </div>
 
                       {/* Badge Info */}

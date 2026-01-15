@@ -4,7 +4,7 @@ import { connect } from '@/lib/db/mongoose'
 import { verifyAuth } from '@/lib/auth/verify'
 import { MasteryProgress } from '@/lib/models/MasteryProgress'
 import { MasteryRewardLedger } from '@/lib/models/MasteryRewardLedger'
-import { getMasteryDefinitions, claimableMilestones as computeClaimable, MASTERY_MILESTONES, formatTrack, dividerFor } from '@/lib/game/mastery'
+import { getMasteryDefinitions, claimableMilestones as computeClaimable, MASTERY_MILESTONES, formatTrack, dividerFor, getMasteryBadgeCode } from '@/lib/game/mastery'
 import { Question } from '@/lib/models/Question'
 import { awardBalances } from '@/lib/game/rewards'
 
@@ -56,14 +56,20 @@ export async function POST(request: NextRequest) {
 
     const balances = await awardBalances(user.uid, { dust: reward.rewards.dust, xp: reward.rewards.xp })
 
-    // Ledger for audit (ignore duplicates)
+    // Generate badge code for this milestone
+    const badgeCode = getMasteryBadgeCode(input.data.kind, input.data.key, milestone)
+    const badgeRarity = reward.badge.rarity
+
+    // Ledger for audit (ignore duplicates) - now includes badge info
     try {
       await MasteryRewardLedger.create({
         userId: user.uid,
         kind: input.data.kind,
         key: input.data.key,
         milestone,
-        rewards: reward.rewards
+        rewards: reward.rewards,
+        badgeCode,
+        badgeRarity
       })
     } catch (err) {
       // noop on duplicate
@@ -74,6 +80,12 @@ export async function POST(request: NextRequest) {
       milestone,
       rewards: reward.rewards,
       balances,
+      badge: {
+        code: badgeCode,
+        rarity: badgeRarity,
+        description: reward.badge.description,
+        isSpecial: milestone === 100 && input.data.kind === 'member' && reward.badge.isSpecialAtMax
+      },
       track: updated ? formatTrack(input.data.kind, input.data.key, updated.xp || 0, updated.claimedMilestones || [], updated.level || 0) : null
     })
   } catch (error) {

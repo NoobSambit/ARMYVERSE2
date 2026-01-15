@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="special-ot7" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="14%" style="stop-color:#f472b6;stop-opacity:1" />
+      <stop offset="28%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="42%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="56%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="84%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow-ot7">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <circle cx="60" cy="60" r="55" fill="url(#special-ot7)" stroke="#fff" stroke-width="4" filter="url(#glow-ot7)"/>
+  <polygon points="60,12 72,38 100,38 77,56 86,85 60,68 34,85 43,56 20,38 48,38" fill="#fef3c7"/>
+  <text x="60" y="107" text-anchor="middle" fill="#fef3c7" font-family="Arial" font-size="16" font-weight="bold">OT7</text>
+</svg>

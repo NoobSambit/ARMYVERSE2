@@ -3,7 +3,63 @@
  * Maps badge codes to their corresponding image paths in /public/badges/
  */
 
+// Mastery milestone levels
+const MASTERY_MILESTONES = [5, 10, 25, 50, 100] as const
+
+// Member keys for special badges - normalized to lowercase for path matching
+const MEMBER_KEYS = ['rm', 'jin', 'suga', 'j-hope', 'jimin', 'v', 'jungkook', 'ot7'] as const
+
+/**
+ * Normalize member key for file path usage
+ * Handles special cases like "J-Hope" -> "jhope"
+ */
+function normalizeMemberKey(key: string): string {
+  return key.toLowerCase().replace(/-/g, '')
+}
+
+/**
+ * Get the image path for a mastery badge
+ * @param kind - 'member' or 'era'
+ * @param key - The member name or era name
+ * @param milestone - The milestone level (5, 10, 25, 50, 100)
+ */
+export function getMasteryBadgeImagePath(kind: 'member' | 'era', key: string, milestone: number): string {
+  // For level 100, use special member-specific badges for members
+  if (milestone === 100 && kind === 'member') {
+    const normalizedKey = normalizeMemberKey(key)
+    return `/badges/mastery/special/${normalizedKey}-100.svg`
+  }
+
+  // For all other milestones, use generic milestone badges
+  return `/badges/mastery/milestone-${milestone}.svg`
+}
+
+/**
+ * Get mastery badge rarity based on milestone level
+ */
+export function getMasteryBadgeRarity(milestone: number): 'common' | 'rare' | 'epic' | 'legendary' {
+  switch (milestone) {
+    case 5: return 'common'
+    case 10: return 'rare'
+    case 25: return 'rare'
+    case 50: return 'epic'
+    case 100: return 'legendary'
+    default: return 'common'
+  }
+}
+
 export function getBadgeImagePath(badgeCode: string): string {
+  // Handle mastery badges with pattern: mastery_{kind}_{key}_{milestone}
+  if (badgeCode.startsWith('mastery_')) {
+    const parts = badgeCode.split('_')
+    if (parts.length >= 4) {
+      const kind = parts[1] as 'member' | 'era'
+      const key = parts.slice(2, -1).join('_') // Handle keys with underscores
+      const milestone = parseInt(parts[parts.length - 1], 10)
+      return getMasteryBadgeImagePath(kind, key, milestone)
+    }
+  }
+
   const mapping: Record<string, string> = {
     // Completion badges
     'daily_completion': '/badges/completion/daily-completion.png',
@@ -38,6 +94,22 @@ export function getBadgeImagePath(badgeCode: string): string {
       Array.from({ length: 5 }, (_, i) => [
         `weekly_milestone_${i + 1}`,
         `/badges/weekly-milestone/milestone-${i + 1}.png`
+      ])
+    ),
+
+    // Mastery milestone badges (generic - for era badges or when no special badge exists)
+    ...Object.fromEntries(
+      MASTERY_MILESTONES.map(level => [
+        `mastery_milestone_${level}`,
+        `/badges/mastery/milestone-${level}.svg`
+      ])
+    ),
+
+    // Mastery special member badges (level 100)
+    ...Object.fromEntries(
+      MEMBER_KEYS.map(member => [
+        `mastery_member_${member}_100`,
+        `/badges/mastery/special/${normalizeMemberKey(member)}-100.svg`
       ])
     ),
   }
@@ -90,6 +162,9 @@ export function getBadgeRarityColors(rarity: string): {
  * Get badge category from code
  */
 export function getBadgeCategory(badgeCode: string): string {
+  if (badgeCode.startsWith('mastery_member')) return 'Member Mastery'
+  if (badgeCode.startsWith('mastery_era')) return 'Era Mastery'
+  if (badgeCode.startsWith('mastery_')) return 'Mastery'
   if (badgeCode.includes('daily_streak')) return 'Daily Streak'
   if (badgeCode.includes('daily_milestone')) return 'Daily Milestone'
   if (badgeCode.includes('weekly_streak')) return 'Weekly Streak'

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getBadgeImagePath } from '@/lib/utils/badgeImages'
 import BadgeRewardsModal from './BadgeRewardsModal'
+import StreakBadgeWithOverlay from '../StreakBadgeWithOverlay'
 
 type GameState = {
   dust: number
@@ -32,6 +33,11 @@ type Badge = {
   type?: string
   earnedAt?: string
   atStreak?: number
+  metadata?: {
+    streakCount?: number
+    completionStreakCount?: number
+    completionType?: 'daily' | 'weekly'
+  }
 }
 
 export default function QuestRightSidebar({ state }: { state: GameState | null }) {
@@ -84,10 +90,10 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
         <div className="grid grid-cols-2 gap-2 md:gap-3">
           {/* Photocard Preview */}
           <div className="bg-surface-lighter rounded-xl p-3 flex flex-col items-center justify-center text-center gap-2 border border-white/5 hover:border-bora-primary/50 transition-colors group cursor-pointer">
-             <div className="w-12 h-16 rounded bg-gray-800 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform border border-white/10">
-                <span className="text-xs text-gray-500">Random</span>
-             </div>
-             <p className="text-[10px] text-gray-400 leading-tight">Random Photocard</p>
+            <div className="w-12 h-16 rounded bg-gray-800 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform border border-white/10">
+              <span className="text-xs text-gray-500">Random</span>
+            </div>
+            <p className="text-[10px] text-gray-400 leading-tight">Random Photocard</p>
           </div>
 
           {/* Badge Preview */}
@@ -116,7 +122,7 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
               </div>
             )}
             <p className="text-[10px] text-gray-400 leading-tight">
-                {state.potentialRewards.dailyMilestoneBadge?.name || 'Milestone Badge'}
+              {state.potentialRewards.dailyMilestoneBadge?.name || 'Milestone Badge'}
             </p>
           </div>
         </div>
@@ -137,16 +143,33 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {state.latestBadges.length > 0 ? (
             state.latestBadges.map((badge, i) => {
+              const isCompletionBadge = badge.code.includes('completion')
+              const streakCount = badge.metadata?.completionStreakCount || badge.metadata?.streakCount || 0
+              const completionType = badge.metadata?.completionType || (badge.code.includes('daily') ? 'daily' : 'weekly')
+              const cyclePosition = streakCount > 0 ? ((streakCount - 1) % 10) + 1 : 1
+              const badgeImagePath = isCompletionBadge && streakCount > 0
+                ? `/badges/${completionType}-streak/streak-${cyclePosition}.png`
+                : getBadgeImagePath(badge.code)
+
               return (
-                <div key={i} className={`flex-shrink-0 w-12 h-12 rounded-full p-0.5 ${
-                    badge.rarity === 'legendary' ? 'bg-gradient-to-tr from-yellow-500 to-orange-600' :
-                    badge.rarity === 'epic' ? 'bg-gradient-to-tr from-purple-600 to-blue-500' :
+                <div key={i} className={`flex-shrink-0 w-12 h-12 rounded-full p-0.5 ${badge.rarity === 'legendary' ? 'bg-gradient-to-tr from-yellow-500 to-orange-600' :
+                  badge.rarity === 'epic' ? 'bg-gradient-to-tr from-purple-600 to-blue-500' :
                     badge.rarity === 'rare' ? 'bg-gradient-to-tr from-blue-500 to-cyan-500' :
-                    'bg-gray-700'
-                }`} title={badge.name}>
-                    <div className="w-full h-full rounded-full bg-surface-dark flex items-center justify-center relative overflow-hidden group cursor-help p-1">
+                      'bg-gray-700'
+                  }`} title={`${badge.name}${streakCount > 0 ? ` (Streak ${streakCount})` : ''}`}>
+                  <div className="w-full h-full rounded-full bg-surface-dark flex items-center justify-center relative overflow-hidden group cursor-help p-1">
+                    {isCompletionBadge && streakCount > 0 ? (
+                      <StreakBadgeWithOverlay
+                        imagePath={badgeImagePath}
+                        badgeName={badge.name}
+                        streakCount={streakCount}
+                        size="sm"
+                        fallbackIcon={badge.icon}
+                        type={completionType}
+                      />
+                    ) : (
                       <Image
-                        src={getBadgeImagePath(badge.code)}
+                        src={badgeImagePath}
                         alt={badge.name}
                         width={48}
                         height={48}
@@ -160,22 +183,23 @@ export default function QuestRightSidebar({ state }: { state: GameState | null }
                           }
                         }}
                       />
-                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
+                    )}
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  </div>
                 </div>
               )
             })
           ) : (
-             <div className="text-xs text-gray-500 italic">No badges yet</div>
+            <div className="text-xs text-gray-500 italic">No badges yet</div>
           )}
 
           {/* Placeholder/Locked badges visual filler if few badges */}
           {[...Array(Math.max(0, 4 - state.latestBadges.length))].map((_, i) => (
-             <div key={`locked-${i}`} className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-700 p-0.5 border border-dashed border-gray-500" title="Locked">
-                <div className="w-full h-full rounded-full bg-surface-dark flex items-center justify-center">
-                    <span className="material-symbols-outlined text-gray-500 text-lg">lock</span>
-                </div>
-             </div>
+            <div key={`locked-${i}`} className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-700 p-0.5 border border-dashed border-gray-500" title="Locked">
+              <div className="w-full h-full rounded-full bg-surface-dark flex items-center justify-center">
+                <span className="material-symbols-outlined text-gray-500 text-lg">lock</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>

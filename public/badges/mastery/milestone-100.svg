@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="grad100" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#eab308;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="45" fill="url(#grad100)" stroke="#ca8a04" stroke-width="3"/>
+  <path d="M50 15 L56 32 L74 32 L60 44 L65 62 L50 52 L35 62 L40 44 L26 32 L44 32 Z" fill="#fefce8"/>
+  <text x="50" y="85" text-anchor="middle" fill="#fefce8" font-family="Arial" font-size="11" font-weight="bold">LEGENDARY</text>
+</svg>

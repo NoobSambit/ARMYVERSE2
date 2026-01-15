@@ -1,15 +1,22 @@
 import { UserQuestProgress } from '@/lib/models/UserQuestProgress'
 import { Badge } from '@/lib/models/Badge'
 import { UserBadge } from '@/lib/models/UserBadge'
+import { UserGameState } from '@/lib/models/UserGameState'
 import { dailyKey, getActiveQuests, weeklyKey } from './quests'
 
 /**
  * Check if user has completed all daily quests (streaming + quiz)
- * and award completion badge if they have
+ * and award completion badge if they have.
+ * 
+ * NEW: Only awards completion badge for unique/first-time streak achievements.
+ * If user already achieved streak 5 before, they won't get the completion badge
+ * when reaching streak 5 again after breaking and restarting their streak.
  */
 export async function checkAndAwardDailyCompletionBadge(userId: string): Promise<{
   allCompleted: boolean
   badgeAwarded?: string
+  streakCount?: number
+  isUniqueStreak?: boolean
 }> {
   const dKey = dailyKey()
 
@@ -38,7 +45,28 @@ export async function checkAndAwardDailyCompletionBadge(userId: string): Promise
     return { allCompleted: false }
   }
 
-  // Award daily completion badge
+  // Get user's game state to check current streak and earned streaks
+  let state = await UserGameState.findOne({ userId })
+  if (!state) {
+    return { allCompleted: true }
+  }
+
+  const currentStreak = state.streak.dailyCount
+  const earnedDaily = state.earnedStreaks?.daily || []
+
+  // Check if this streak count has already been rewarded
+  const isUniqueStreak = !earnedDaily.includes(currentStreak)
+
+  if (!isUniqueStreak) {
+    // User already earned this streak before, don't award completion badge
+    return {
+      allCompleted: true,
+      streakCount: currentStreak,
+      isUniqueStreak: false
+    }
+  }
+
+  // Award daily completion badge for unique streak
   const badge = await Badge.findOne({
     code: 'daily_completion',
     type: 'completion',
@@ -51,25 +79,64 @@ export async function checkAndAwardDailyCompletionBadge(userId: string): Promise
         userId,
         badgeId: badge._id,
         earnedAt: new Date(),
-        metadata: { completionDate: dKey }
+        metadata: {
+          completionDate: dKey,
+          completionStreakCount: currentStreak,
+          completionType: 'daily'
+        }
       })
-      return { allCompleted: true, badgeAwarded: badge.code }
+
+      // Update earned streaks tracking
+      if (!state.earnedStreaks) {
+        state.earnedStreaks = {
+          daily: [],
+          weekly: [],
+          highestDaily: 0,
+          highestWeekly: 0
+        }
+      }
+      state.earnedStreaks.daily.push(currentStreak)
+      if (currentStreak > (state.earnedStreaks.highestDaily || 0)) {
+        state.earnedStreaks.highestDaily = currentStreak
+      }
+      await state.save()
+
+      return {
+        allCompleted: true,
+        badgeAwarded: badge.code,
+        streakCount: currentStreak,
+        isUniqueStreak: true
+      }
     } catch (err) {
       // Duplicate badge for this day - already awarded
-      return { allCompleted: true }
+      return {
+        allCompleted: true,
+        streakCount: currentStreak,
+        isUniqueStreak: true
+      }
     }
   }
 
-  return { allCompleted: true }
+  return {
+    allCompleted: true,
+    streakCount: currentStreak,
+    isUniqueStreak: true
+  }
 }
 
 /**
  * Check if user has completed all weekly quests (streaming + quiz)
- * and award completion badge if they have
+ * and award completion badge if they have.
+ * 
+ * NEW: Only awards completion badge for unique/first-time streak achievements.
+ * If user already achieved streak 5 before, they won't get the completion badge
+ * when reaching streak 5 again after breaking and restarting their streak.
  */
 export async function checkAndAwardWeeklyCompletionBadge(userId: string): Promise<{
   allCompleted: boolean
   badgeAwarded?: string
+  streakCount?: number
+  isUniqueStreak?: boolean
 }> {
   const wKey = weeklyKey()
 
@@ -98,7 +165,28 @@ export async function checkAndAwardWeeklyCompletionBadge(userId: string): Promis
     return { allCompleted: false }
   }
 
-  // Award weekly completion badge
+  // Get user's game state to check current streak and earned streaks
+  let state = await UserGameState.findOne({ userId })
+  if (!state) {
+    return { allCompleted: true }
+  }
+
+  const currentStreak = state.streak.weeklyCount
+  const earnedWeekly = state.earnedStreaks?.weekly || []
+
+  // Check if this streak count has already been rewarded
+  const isUniqueStreak = !earnedWeekly.includes(currentStreak)
+
+  if (!isUniqueStreak) {
+    // User already earned this streak before, don't award completion badge
+    return {
+      allCompleted: true,
+      streakCount: currentStreak,
+      isUniqueStreak: false
+    }
+  }
+
+  // Award weekly completion badge for unique streak
   const badge = await Badge.findOne({
     code: 'weekly_completion',
     type: 'completion',
@@ -111,14 +199,47 @@ export async function checkAndAwardWeeklyCompletionBadge(userId: string): Promis
         userId,
         badgeId: badge._id,
         earnedAt: new Date(),
-        metadata: { completionDate: wKey }
+        metadata: {
+          completionDate: wKey,
+          completionStreakCount: currentStreak,
+          completionType: 'weekly'
+        }
       })
-      return { allCompleted: true, badgeAwarded: badge.code }
+
+      // Update earned streaks tracking
+      if (!state.earnedStreaks) {
+        state.earnedStreaks = {
+          daily: [],
+          weekly: [],
+          highestDaily: 0,
+          highestWeekly: 0
+        }
+      }
+      state.earnedStreaks.weekly.push(currentStreak)
+      if (currentStreak > (state.earnedStreaks.highestWeekly || 0)) {
+        state.earnedStreaks.highestWeekly = currentStreak
+      }
+      await state.save()
+
+      return {
+        allCompleted: true,
+        badgeAwarded: badge.code,
+        streakCount: currentStreak,
+        isUniqueStreak: true
+      }
     } catch (err) {
       // Duplicate badge for this week - already awarded
-      return { allCompleted: true }
+      return {
+        allCompleted: true,
+        streakCount: currentStreak,
+        isUniqueStreak: true
+      }
     }
   }
 
-  return { allCompleted: true }
+  return {
+    allCompleted: true,
+    streakCount: currentStreak,
+    isUniqueStreak: true
+  }
 }
