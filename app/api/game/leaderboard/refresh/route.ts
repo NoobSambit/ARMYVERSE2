@@ -60,10 +60,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // For all-time: use $set to ensure the score reflects the true total XP.
+    // This is safe here because refresh is a manual sync operation used for:
+    // - Recovery from inconsistent states
+    // - Initial migration of existing users
+    // - Profile display updates
+    //
+    // Regular quiz completions use $inc (in lib/game/rewards.ts) to accumulate scores.
     if (period === 'alltime') {
       updateOp.$set.score = totalXp
       updateOp.$setOnInsert.score = totalXp
     } else {
+      // For time-bounded periods (daily/weekly), only set on insert.
+      // Regular gameplay uses $inc to accumulate.
       updateOp.$setOnInsert.score = 0
     }
 

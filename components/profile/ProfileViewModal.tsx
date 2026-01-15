@@ -26,9 +26,9 @@ export default function ProfileViewModal({ userId, onClose }: ProfileViewModalPr
       try {
         setLoading(true)
         setError(null)
-        
+
         const response = await fetch(`/api/user/${userId}/profile`)
-        
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
           throw new Error(errorData.error || 'Failed to load profile')
@@ -55,7 +55,7 @@ export default function ProfileViewModal({ userId, onClose }: ProfileViewModalPr
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -63,19 +63,18 @@ export default function ProfileViewModal({ userId, onClose }: ProfileViewModalPr
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-2xl max-h-[90vh] bg-[#0B0912] border border-purple-500/20 rounded-2xl shadow-2xl overflow-hidden"
+          className="relative w-[90vw] max-w-[450px] max-h-[95vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white/80 hover:text-white transition-all"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
           {/* Content */}
-          <div className="overflow-y-auto max-h-[90vh]">
+          <div className="overflow-y-auto max-h-[95vh] relative">
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute top-6 right-6 z-20 p-2.5 bg-black/60 hover:bg-black/80 rounded-full text-white/80 hover:text-white transition-all backdrop-blur-sm border border-white/10"
+            >
+              <X className="w-5 h-5" />
+            </button>
             {loading && (
               <div className="flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
@@ -91,7 +90,7 @@ export default function ProfileViewModal({ userId, onClose }: ProfileViewModalPr
             )}
 
             {!loading && !error && profile && (
-              <ProfilePreview profile={profile} />
+              <ProfilePreview profile={profile} variant="sidebar" />
             )}
           </div>
         </motion.div>

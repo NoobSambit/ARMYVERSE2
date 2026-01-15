@@ -112,11 +112,12 @@ export async function awardBalances(
         }
       }
 
-      if (period === 'alltime') {
-        update.$set.score = totalXp
-      } else {
-        update.$inc = { score: xpDelta }
-      }
+      // All periods use $inc for consistent score accumulation.
+      // This ensures that:
+      // 1. New users start at 0 and accumulate XP correctly
+      // 2. Race conditions don't cause score overwrites
+      // 3. All three leaderboards (daily, weekly, alltime) behave identically
+      update.$inc = { score: xpDelta }
 
       return LeaderboardEntry.updateOne(
         { periodKey, userId },

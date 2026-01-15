@@ -1,20 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Youtube, TrendingUp, Eye, Calendar, Search, X } from 'lucide-react'
+import { Youtube, TrendingUp, Eye, Calendar, Search, X, Loader2 } from 'lucide-react'
 import YouTubeSongList from '@/components/youtube/YouTubeSongList'
 import YouTubeVideoModal from '@/components/youtube/YouTubeVideoModal'
 
 // Artist member data
 const MEMBERS = [
-  { id: 'BTS', name: 'BTS', emoji: '💜' },
-  { id: 'Jungkook', name: 'Jungkook', emoji: '🐰' },
-  { id: 'V', name: 'V', emoji: '🐯' },
-  { id: 'Jimin', name: 'Jimin', emoji: '🐥' },
-  { id: 'Suga', name: 'Suga', emoji: '🐱' },
-  { id: 'RM', name: 'RM', emoji: '🦖' },
-  { id: 'Jin', name: 'Jin', emoji: '🐹' },
-  { id: 'J-Hope', name: 'J-Hope', emoji: '🌞' },
+  { id: 'BTS', name: 'BTS' },
+  { id: 'Jungkook', name: 'Jungkook' },
+  { id: 'V', name: 'V' },
+  { id: 'Jimin', name: 'Jimin' },
+  { id: 'Suga', name: 'Suga' },
+  { id: 'RM', name: 'RM' },
+  { id: 'Jin', name: 'Jin' },
+  { id: 'J-Hope', name: 'J-Hope' },
 ]
 
 export interface YouTubeSong {
@@ -153,177 +153,164 @@ export default function YouTubePage() {
   const hasActiveSearch = searchQuery.length > 0
 
   return (
-    <div className="min-h-screen page-gradient">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-black/40 backdrop-blur-xl sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                <Youtube className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">YouTube Analytics</h1>
-                <p className="text-xs text-white/60">
-                  BTS & Solo Members • Updated {formatTimestamp(lastRefreshedAt)}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={fetchYouTubeData}
-              className="btn-glass-ghost text-sm"
-              disabled={loading}
-            >
-              {loading ? 'Refreshing...' : 'Refresh'}
-            </button>
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-purple-500/30">
+      {/* Vibrant Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[128px]" />
+        <div className="absolute top-[20%] right-[-5%] w-[400px] h-[400px] bg-fuchsia-600/10 rounded-full blur-[128px]" />
+        <div className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] bg-violet-800/20 rounded-full blur-[128px]" />
+      </div>
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-10 md:py-14">
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12">
+          <div className="space-y-1.5 sm:space-y-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+              <span className="bg-gradient-to-r from-white via-purple-100 to-purple-200 bg-clip-text text-transparent">
+                YouTube Analytics
+              </span>
+            </h1>
+            <p className="text-sm sm:text-base text-purple-200/40 font-medium">
+              Real-time performance tracking • Updated {formatTimestamp(lastRefreshedAt)}
+            </p>
           </div>
-        </div>
-      </header>
 
-      {/* Member Navigation */}
-      <div className="border-b border-white/10 bg-black/20 backdrop-blur-lg sticky top-16 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
-            {MEMBERS.map((member) => (
-              <button
-                key={member.id}
-                onClick={() => handleMemberChange(member)}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
-                  ${selectedMember.id === member.id
-                    ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg'
-                    : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
-                  }
-                `}
-              >
-                <span>{member.emoji}</span>
-                <span>{member.name}</span>
-              </button>
-            ))}
-          </nav>
+          <p className="text-xs sm:text-sm text-purple-200/40 max-w-md md:text-right">
+            Data is scraped from kworb.net. Minor inaccuracies or delays can be present compared to official YouTube stats.
+          </p>
+        </header>
 
-          {/* Search Bar */}
-          <div className="mt-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+        {/* Navigation & Controls */}
+        <div className="sticky top-4 z-40 mb-8 md:mb-10">
+          <div className="p-1.5 bg-[#0A0A0A]/80 backdrop-blur-2xl border border-white/5 rounded-[24px] shadow-2xl shadow-purple-900/10 flex flex-col md:flex-row gap-2 md:gap-3 items-center">
+            {/* Member Tabs */}
+            <nav className="flex-1 w-full overflow-x-auto scrollbar-hide flex items-center gap-1 pb-1 md:pb-0">
+              {MEMBERS.map((member) => (
+                <button
+                  key={member.id}
+                  onClick={() => handleMemberChange(member)}
+                  className={`
+                    px-4 md:px-5 py-2 md:py-2.5 rounded-[18px] text-sm font-medium transition-all duration-300 whitespace-nowrap
+                    ${selectedMember.id === member.id
+                      ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/25 scale-[1.02]'
+                      : 'text-white/50 hover:text-white hover:bg-white/5'
+                    }
+                  `}
+                >
+                  {member.name}
+                </button>
+              ))}
+            </nav>
+
+            {/* Search */}
+            <div className="w-full md:w-auto relative group px-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-300/30 group-focus-within:text-purple-300/80 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`Search ${selectedMember.name} videos...`}
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all"
+                placeholder="Search..."
+                className="w-full md:w-72 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-purple-500/20 rounded-[18px] pl-11 pr-4 py-2.5 text-sm text-white placeholder-purple-200/30 focus:outline-none focus:bg-white/10 focus:border-purple-500/40 transition-all"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3 text-purple-200/40" />
                 </button>
               )}
             </div>
-            {hasActiveSearch && (
-              <p className="text-xs text-white/40 mt-2">
-                {filteredSongs.length} {filteredSongs.length === 1 ? 'result' : 'results'} found
-              </p>
-            )}
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Selected Member Stats */}
-        {data && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bento-card rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/20 flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-purple-400" />
+        {/* Dashboard Grid */}
+        <main>
+          {data && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+              {/* Total Views */}
+              <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
+                <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+                   <Eye className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
                 </div>
-                <span className="text-sm text-white/60">Total Views</span>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Total Views</p>
+                <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
+                  {data.totalViews ? formatNumber(data.totalViews) : '-'}
+                </p>
               </div>
-              <p className="text-2xl font-bold text-white">
-                {data.totalViews ? formatNumber(data.totalViews) : 'N/A'}
+
+              {/* Daily Average */}
+              <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
+                <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+                   <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-fuchsia-400" />
+                </div>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Daily Average</p>
+                <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
+                  {data.dailyAvg ? formatNumber(data.dailyAvg) : '-'}
+                </p>
+              </div>
+
+              {/* Total Videos */}
+              <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
+                <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+                   <Youtube className="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
+                </div>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Total Videos</p>
+                <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
+                  {data.totalSongs || data.songs?.length || 0}
+                </p>
+              </div>
+
+              {/* Artist Name */}
+              <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
+                <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+                   <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-purple-300" />
+                </div>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Artist</p>
+                <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
+                  {selectedMember.name}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Song List */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-32 space-y-4">
+              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+              <p className="text-purple-200/30 text-sm font-medium">Fetching analytics...</p>
+            </div>
+          ) : data && (hasActiveSearch ? filteredSongs : data.songs)?.length > 0 ? (
+            <YouTubeSongList
+              songs={hasActiveSearch ? filteredSongs : data.songs}
+              onSongClick={handleSongClick}
+              artist={selectedMember.name}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-32 space-y-4 border border-dashed border-white/10 rounded-[32px] bg-white/[0.02]">
+              <Search className="w-8 h-8 text-purple-200/20" />
+              <p className="text-purple-200/40 text-sm">
+                {hasActiveSearch
+                  ? `No videos match "${searchQuery}"`
+                  : `No videos found for ${selectedMember.name}`
+                }
               </p>
             </div>
+          )}
+        </main>
 
-            <div className="bento-card rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-green-600/20 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-green-400" />
-                </div>
-                <span className="text-sm text-white/60">Daily Average</span>
-              </div>
-              <p className="text-2xl font-bold text-white">
-                {data.dailyAvg ? formatNumber(data.dailyAvg) : 'N/A'}
-              </p>
-            </div>
-
-            <div className="bento-card rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center">
-                  <Youtube className="w-5 h-5 text-blue-400" />
-                </div>
-                <span className="text-sm text-white/60">Total Videos</span>
-              </div>
-              <p className="text-2xl font-bold text-white">
-                {data.totalSongs || data.songs?.length || 0}
-              </p>
-            </div>
-
-            <div className="bento-card rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-pink-600/20 flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-pink-400" />
-                </div>
-                <span className="text-sm text-white/60">Member</span>
-              </div>
-              <p className="text-2xl font-bold text-white">
-                {selectedMember.emoji} {selectedMember.name}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Song List */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" />
-              <p className="text-white/60">Loading YouTube data...</p>
-            </div>
-          </div>
-        ) : data && (hasActiveSearch ? filteredSongs : data.songs)?.length > 0 ? (
-          <YouTubeSongList
-            songs={hasActiveSearch ? filteredSongs : data.songs}
-            onSongClick={handleSongClick}
-            artist={selectedMember.name}
+        {/* Video Detail Modal */}
+        {modalOpen && (
+          <YouTubeVideoModal
+            videoDetail={selectedSong}
+            loading={detailLoading}
+            onClose={() => {
+              setModalOpen(false)
+              setSelectedSong(null)
+            }}
           />
-        ) : (
-          <div className="text-center py-20">
-            <Youtube className="w-16 h-16 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60">
-              {hasActiveSearch
-                ? `No videos found for "${searchQuery}"`
-                : `No videos found for ${selectedMember.name}`
-              }
-            </p>
-          </div>
         )}
-      </main>
-
-      {/* Video Detail Modal */}
-      {modalOpen && (
-        <YouTubeVideoModal
-          videoDetail={selectedSong}
-          loading={detailLoading}
-          onClose={() => {
-            setModalOpen(false)
-            setSelectedSong(null)
-          }}
-        />
-      )}
+      </div>
     </div>
   )
 }

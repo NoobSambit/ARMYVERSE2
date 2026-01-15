@@ -133,7 +133,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { name, songs } = body
+    const { name, songs, fallbackToOwner = false } = body
 
     if (!songs?.length) {
       return NextResponse.json({ error: 'No songs provided' }, { status: 400 })
@@ -143,6 +143,7 @@ export async function POST(req: Request) {
     let mode: 'user' | 'owner' = 'owner'
     let actingAccessToken: string
     let targetUserId: string
+    let usedFallback = false
 
     const maybeUserToken = getBearerFromRequest(req)
     if (maybeUserToken) {
@@ -153,7 +154,32 @@ export async function POST(req: Request) {
         targetUserId = userProfile.id
         console.log('Export mode=user; target userId:', targetUserId)
       } else {
-        return NextResponse.json({ error: 'Unauthorized: invalid or expired user token' }, { status: 401 })
+        // Token is invalid or expired
+        if (fallbackToOwner) {
+          // Gracefully fall back to owner mode
+          console.log('User token invalid/expired, falling back to owner mode')
+          try {
+            actingAccessToken = await getOwnerAccessToken()
+            targetUserId = await getOwnerUserId(actingAccessToken)
+            mode = 'owner'
+            usedFallback = true
+            console.log('Export mode=owner (fallback); owner userId:', targetUserId)
+          } catch (ownerError) {
+            console.error('Owner fallback also failed:', ownerError)
+            return NextResponse.json({
+              error: 'Your Spotify session expired and the backup export is temporarily unavailable. Please reconnect your Spotify account.',
+              code: 'FALLBACK_FAILED',
+              details: 'Both user and owner tokens are invalid'
+            }, { status: 503 })
+          }
+        } else {
+          // Return 401 to allow client to refresh token
+          return NextResponse.json({
+            error: 'Unauthorized: invalid or expired user token',
+            code: 'TOKEN_EXPIRED',
+            canFallback: true
+          }, { status: 401 })
+        }
       }
     } else {
       // No user token provided, use owner
@@ -181,14 +207,14 @@ export async function POST(req: Request) {
     if (!playlistResponse.ok) {
       const errorText = await playlistResponse.text()
       console.error('Failed to create Spotify playlist:', playlistResponse.status, errorText)
-      
+
       if (playlistResponse.status === 403) {
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: 'Insufficient permissions. Please ensure your Spotify account has playlist creation permissions.',
           details: 'Playlist creation permission denied'
         }, { status: 403 })
       }
-      
+
       throw new Error(`Failed to create Spotify playlist: ${playlistResponse.status} ${errorText}`)
     }
 
@@ -198,7 +224,7 @@ export async function POST(req: Request) {
     // 3. Search and add tracks
     const trackUris = []
     let searchErrors = []
-    
+
     for (const song of songs) {
       try {
         // Use the spotifyId if available, otherwise search
@@ -253,14 +279,14 @@ export async function POST(req: Request) {
       if (!addTracksResponse.ok) {
         const errorText = await addTracksResponse.text()
         console.error('Failed to add tracks to playlist:', addTracksResponse.status, errorText)
-        
+
         if (addTracksResponse.status === 403) {
-          return NextResponse.json({ 
+          return NextResponse.json({
             error: 'Insufficient permissions to add tracks to playlist. Please check your Spotify account permissions.',
             details: 'Track addition permission denied'
           }, { status: 403 })
         }
-        
+
         throw new Error(`Failed to add tracks to playlist: ${addTracksResponse.status} ${errorText}`)
       }
     }
@@ -271,7 +297,9 @@ export async function POST(req: Request) {
       tracksAdded: trackUris.length,
       totalSongs: songs.length,
       searchErrors: searchErrors.length > 0 ? searchErrors : undefined,
-      mode
+      mode,
+      usedFallback,
+      fallbackReason: usedFallback ? 'Your Spotify session expired. Playlist was created in the ArmyVerse account instead.' : undefined
     }
 
     console.log('Export completed successfully:', result)
@@ -279,7 +307,7 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error('Error exporting to Spotify:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to export playlist',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })

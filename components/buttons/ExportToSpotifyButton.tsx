@@ -16,7 +16,7 @@ interface Track {
 
 interface ExportToSpotifyButtonProps {
   tracks: Track[]
-  onExportSuccess?: (playlistUrl: string) => void
+  onExportSuccess?: (playlistUrl: string, fallbackReason?: string) => void
   onExportError?: (error: string) => void
 }
 
@@ -92,58 +92,81 @@ export default function ExportToSpotifyButton({
 
     try {
       const accessToken = await getValidAccessToken()
+
+      // Helper to make export request
+      const makeExportRequest = async (token: string | null, useFallback: boolean = false) => {
+        const requestBody = {
+          name: 'AI Generated BTS Playlist',
+          songs: tracks,
+          fallbackToOwner: useFallback
+        }
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        }
+
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
+        return fetch('/api/playlist/export', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(requestBody)
+        })
+      }
+
+      // First attempt with user token
       if (!accessToken) {
         onExportError?.('Spotify access token not available. Please reconnect your account.')
         return
       }
 
-      const requestBody = {
-        name: 'AI Generated BTS Playlist',
-        songs: tracks
-      }
-
-      const response = await fetch('/api/playlist/export', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      const data = await response.json()
+      let response = await makeExportRequest(accessToken, false)
+      let data = await response.json()
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Try to refresh the token first
           const refreshed = await refreshStatus()
           if (refreshed?.accessToken) {
-            const retryResponse = await fetch('/api/playlist/export', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${refreshed.accessToken}`
-              },
-              body: JSON.stringify(requestBody)
-            })
+            // Retry with refreshed token
+            response = await makeExportRequest(refreshed.accessToken, false)
+            data = await response.json()
 
-            const retryData = await retryResponse.json()
-            if (!retryResponse.ok) {
-              throw new Error(retryData.error || retryData.details || 'Failed to export playlist')
+            if (!response.ok) {
+              // If still failing, try fallback to owner
+              if (response.status === 401 && data.canFallback) {
+                console.log('Token refresh succeeded but still invalid, using fallback')
+                response = await makeExportRequest(refreshed.accessToken, true)
+                data = await response.json()
+              }
             }
-
-            onExportSuccess?.(retryData.playlistUrl)
-            return
+          } else {
+            // Refresh failed - use fallback with the original (expired) token
+            console.log('Token refresh failed, using owner fallback')
+            response = await makeExportRequest(accessToken, true)
+            data = await response.json()
           }
         }
 
-        throw new Error(data.error || data.details || 'Failed to export playlist')
+        // Check final response
+        if (!response.ok) {
+          throw new Error(data.error || data.details || 'Failed to export playlist')
+        }
       }
 
       if (data.searchErrors && data.searchErrors.length > 0) {
         console.warn('Some tracks could not be found:', data.searchErrors)
       }
 
-      onExportSuccess?.(data.playlistUrl)
+      // If fallback was used, we should notify the user through the success message
+      if (data.usedFallback && data.fallbackReason) {
+        // Still call success with the URL, but the parent can show a warning
+        onExportSuccess?.(data.playlistUrl, data.fallbackReason)
+      } else {
+        onExportSuccess?.(data.playlistUrl)
+      }
     } catch (error) {
       console.error('Error exporting playlist:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to export playlist'
@@ -158,13 +181,12 @@ export default function ExportToSpotifyButton({
       <button
         onClick={handleExport}
         disabled={!isAuthenticated || isExporting || !tracks?.length}
-        className={`flex items-center justify-center px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-          !isAuthenticated || !tracks?.length
-            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-            : isExporting
+        className={`flex items-center justify-center px-6 py-3 rounded-full font-semibold transition-all duration-300 ${!isAuthenticated || !tracks?.length
+          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+          : isExporting
             ? 'bg-green-600 text-white cursor-wait'
             : 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/25 hover:shadow-green-500/40 transform hover:scale-105'
-        }`}
+          }`}
       >
         {isExporting ? (
           <>
@@ -182,13 +204,12 @@ export default function ExportToSpotifyButton({
       <button
         onClick={debugToken}
         disabled={!isAuthenticated || isDebugging}
-        className={`flex items-center justify-center px-3 py-3 rounded-full font-semibold transition-all duration-300 ${
-          !isAuthenticated
-            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-            : isDebugging
+        className={`flex items-center justify-center px-3 py-3 rounded-full font-semibold transition-all duration-300 ${!isAuthenticated
+          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+          : isDebugging
             ? 'bg-blue-600 text-white cursor-wait'
             : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:scale-105'
-        }`}
+          }`}
         title="Debug Spotify token"
       >
         {isDebugging ? (

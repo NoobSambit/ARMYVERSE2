@@ -77,9 +77,63 @@ export async function GET(request: NextRequest) {
     const nextCursor = rows.length === limit ? String(rows[rows.length - 1]._id) : undefined
 
     // Find current user's entry and rank
-    const myEntry = await LeaderboardEntry.findOne({ periodKey, userId: user.uid }).lean() as ILeaderboardEntry | null
+    let myEntry = await LeaderboardEntry.findOne({ periodKey, userId: user.uid }).lean() as ILeaderboardEntry | null
     let myRank: number | null = null
     let myRankChange: number | null = null
+
+    // Auto-backfill for all-time: If user has XP but no entry (or entry has score 0),
+    // create/fix the entry to ensure accurate leaderboard representation.
+    // This handles edge cases like:
+    // - Users who played before the $inc fix
+    // - Database inconsistencies
+    // - Missing entries from failed upserts
+    if (period === 'alltime') {
+      const gameState = await UserGameState.findOne({ userId: user.uid }).lean() as { xp?: number } | null
+      const userTotalXp = gameState?.xp ?? 0
+
+      // Create/fix entry if: (no entry) OR (entry exists but score is 0 while user has XP)
+      const needsBackfill = !myEntry || ((myEntry.score || 0) === 0 && userTotalXp > 0)
+
+      if (needsBackfill) {
+        // Get user profile for display
+        let profileDisplayName = user.displayName || user.username || 'User'
+        let profileAvatarUrl = user.photoURL || ''
+
+        try {
+          const { getUserFromAuth } = await import('@/lib/auth/verify')
+          const userDoc = await getUserFromAuth(user)
+          profileDisplayName = (userDoc as any)?.profile?.displayName || profileDisplayName
+          profileAvatarUrl = (userDoc as any)?.profile?.avatarUrl || profileAvatarUrl
+        } catch {
+          // Fall back to Firebase profile data
+        }
+
+        const levelProgress = getLevelProgress(userTotalXp)
+        const { periodStart, periodEnd } = getPeriodKeys('alltime')
+
+        await LeaderboardEntry.updateOne(
+          { periodKey, userId: user.uid },
+          {
+            $set: {
+              score: userTotalXp,
+              level: levelProgress.level,
+              displayName: profileDisplayName,
+              avatarUrl: profileAvatarUrl,
+              updatedAt: new Date()
+            },
+            $setOnInsert: {
+              periodStart,
+              periodEnd,
+              stats: { quizzesPlayed: 0, questionsCorrect: 0, totalQuestions: 0 }
+            }
+          },
+          { upsert: true }
+        )
+
+        // Re-fetch the entry after backfill
+        myEntry = await LeaderboardEntry.findOne({ periodKey, userId: user.uid }).lean() as ILeaderboardEntry | null
+      }
+    }
 
     if (myEntry) {
       if (myEntry.rank) {

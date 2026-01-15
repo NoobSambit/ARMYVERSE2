@@ -115,17 +115,17 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
   const [showPreview, setShowPreview] = useState(true) // Default to true for desktop
   const [isDirty, setIsDirty] = useState(false)
   const [profile, setProfile] = useState<ProfileData>(getDefaultProfile())
-  
+
   const saveTimeoutRef = useRef<NodeJS.Timeout>()
   const formRef = useRef<HTMLFormElement>(null)
 
   // Load profile data
   const loadProfile = useCallback(async () => {
     if (!user) return
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       const token = await getAuthToken(user)
       const response = await fetch('/api/user/profile', {
@@ -136,7 +136,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       if (!response.ok) {
         throw new Error('Failed to load profile')
       }
-      
+
       const { profile: profileData } = await response.json()
       const mergedProfile = profileData || getDefaultProfile()
       setProfile(mergedProfile)
@@ -151,10 +151,10 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
   // Save profile data
   const saveProfile = useCallback(async (data: Partial<ProfileData>) => {
     if (!user) return
-    
+
     setSaving(true)
     setError(null)
-    
+
     try {
       const token = await getAuthToken(user)
       const response = await fetch('/api/user/profile', {
@@ -165,18 +165,18 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
         },
         body: JSON.stringify(data)
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to save profile')
       }
-      
+
       const { profile: savedProfile } = await response.json()
       const mergedProfile = savedProfile || profile
-      
+
       setProfile(mergedProfile)
       setIsDirty(false)
-      
+
       await track('profile_saved', { tab: activeTab })
     } catch (err) {
       console.error('Failed to save profile:', err)
@@ -191,7 +191,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
-    
+
     saveTimeoutRef.current = setTimeout(() => {
       saveProfile(data)
     }, 1000)
@@ -202,13 +202,13 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     const newProfile = { ...profile, ...updates }
     setProfile(newProfile)
     setIsDirty(true)
-    
+
     // Auto-save for certain fields
     const autoSaveFields = ['personalization', 'privacy', 'notifications']
-    const shouldAutoSave = Object.keys(updates).some(key => 
+    const shouldAutoSave = Object.keys(updates).some(key =>
       autoSaveFields.some(field => key.startsWith(field) || key === field)
     )
-    
+
     if (shouldAutoSave) {
       debouncedSave(updates)
     }
@@ -223,7 +223,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
   // Copy profile link
   const copyProfileLink = useCallback(async () => {
     if (!profile.handle) return
-    
+
     const url = `${window.location.origin}/u/${profile.handle}`
     try {
       await navigator.clipboard.writeText(url)
@@ -239,15 +239,15 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       // Track logout event (ignore if event name is not defined)
       try {
         await track('profile_logout' as any, { source: 'profile_modal' })
-      } catch {}
-      
+      } catch { }
+
       // Sign out based on auth type
       if (user?.authType === 'firebase') {
         await signOut()
       } else {
         clearStoredAuth()
       }
-      
+
       setOpen(false)
       // Redirect to home page
       window.location.href = '/'
@@ -290,11 +290,11 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
       <Dialog.Trigger asChild>
         <span>{trigger}</span>
       </Dialog.Trigger>
-      
+
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-200" />
-        
-        <Dialog.Content 
+
+        <Dialog.Content
           className="fixed z-50 top-[2%] left-[2%] right-[2%] bottom-[2%] max-w-[1600px] mx-auto rounded-[2.5rem] border border-white/10 bg-[#0A0A0A] shadow-2xl overflow-hidden focus:outline-none flex flex-col md:flex-row animate-in zoom-in-95 duration-200"
           aria-labelledby="profile-modal-title"
           onOpenAutoFocus={(e) => e.preventDefault()}
@@ -323,7 +323,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                   </motion.div>
                 )}
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowPreview(!showPreview)}
@@ -347,7 +347,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                 >
                   <LogOut className="w-5 h-5" />
                 </button>
-                
+
                 <div className="w-px h-8 bg-white/10 mx-1" />
 
                 <Dialog.Close className="px-5 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl font-bold text-sm transition-colors">
@@ -391,7 +391,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                   })}
                 </Tabs.List>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
                 <form ref={formRef} onSubmit={handleSave} className="max-w-4xl mx-auto w-full py-2">
                   <AnimatePresence mode="wait">
@@ -410,7 +410,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                           error={error}
                         />
                       </Tabs.Content>
-                      
+
                       <Tabs.Content value="personalization" className="outline-none">
                         <PersonalizationForm
                           profile={profile}
@@ -419,7 +419,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                           error={error}
                         />
                       </Tabs.Content>
-                      
+
                       <Tabs.Content value="connections" className="outline-none">
                         <ConnectionsForm
                           profile={profile}
@@ -428,7 +428,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                           error={error}
                         />
                       </Tabs.Content>
-                      
+
                       <Tabs.Content value="privacy" className="outline-none">
                         <PrivacyForm
                           profile={profile}
@@ -437,7 +437,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                           error={error}
                         />
                       </Tabs.Content>
-                      
+
                       <Tabs.Content value="notifications" className="outline-none">
                         <NotificationsForm
                           profile={profile}
@@ -457,7 +457,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
           {showPreview && (
             <div className="w-full md:w-[480px] lg:w-[520px] bg-[#0F0F11] border-l border-white/10 flex flex-col h-full absolute md:relative z-20 md:z-auto inset-0 md:inset-auto">
               {/* Mobile Close Preview */}
-              <button 
+              <button
                 onClick={() => setShowPreview(false)}
                 className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full md:hidden z-30"
               >
@@ -473,9 +473,9 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
 
               <div className="flex-1 overflow-y-auto p-8 bg-[#0F0F11] custom-scrollbar flex flex-col">
                 <div className="flex-1 flex items-center justify-center min-h-[500px]">
-                  <ProfilePreview profile={profile} />
+                  <ProfilePreview profile={profile} variant="sidebar" />
                 </div>
-                
+
                 <div className="mt-8 flex gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
                   <div className="shrink-0 pt-0.5">
                     <AlertIcon className="w-4 h-4 text-yellow-500" />
@@ -495,14 +495,14 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
 
 function AlertIcon({ className }: { className?: string }) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className={className}
     >
       <circle cx="12" cy="12" r="10" />

@@ -1,6 +1,6 @@
 'use client'
 
-import { Youtube, Eye, TrendingUp, ExternalLink } from 'lucide-react'
+import { Youtube, Eye, TrendingUp, ChevronRight, Play } from 'lucide-react'
 import Image from 'next/image'
 import { YouTubeSong as IYouTubeSong } from '@/app/youtube/page'
 
@@ -34,100 +34,86 @@ export default function YouTubeSongList({ songs, onSongClick, artist }: YouTubeS
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-white">{artist} Videos</h2>
-          <p className="text-sm text-white/60 mt-1">
-            {songs.length} videos • Sorted by daily views
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* List Header */}
+      <div className="flex items-end justify-between px-2">
+        <h2 className="text-xl font-medium text-white tracking-tight">Top Videos</h2>
+        <span className="text-sm font-medium text-purple-200/40">{songs.length} videos</span>
       </div>
 
       {/* Song List */}
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         {songs.map((song, index) => (
-          <button
+          <div
             key={song.videoId || song.title || index}
             onClick={() => onSongClick(song)}
             className="
-              w-full bento-card rounded-2xl p-4 transition-all duration-200
-              hover:bg-white/10 hover:scale-[1.01] active:scale-[0.99]
-              flex items-center gap-4 text-left group
+              group relative flex items-center gap-4 p-2 rounded-[24px] 
+              hover:bg-purple-900/10 border border-transparent hover:border-purple-500/20 
+              transition-all duration-300 cursor-pointer w-full
             "
           >
-            {/* Rank Badge */}
-            <div className="
-              flex-shrink-0 w-8 h-8 rounded-lg
-              bg-gradient-to-br from-purple-500/20 to-pink-500/20
-              flex items-center justify-center
-              border border-purple-500/30
-            ">
-              <span className="text-sm font-bold text-white/80">#{song.rank || index + 1}</span>
+            {/* Rank */}
+            <div className="w-10 sm:w-14 shrink-0 text-center">
+              <span className={`
+                text-sm sm:text-lg font-bold tabular-nums
+                ${index < 3 ? 'text-purple-400' : 'text-white/20'}
+              `}>
+                #{song.rank || index + 1}
+              </span>
             </div>
 
             {/* Thumbnail */}
-            <div className="relative flex-shrink-0 w-32 h-20 rounded-xl overflow-hidden bg-black/50">
+            <div className="relative w-28 sm:w-40 aspect-video rounded-xl overflow-hidden bg-[#111] shrink-0 shadow-lg shadow-black/20 group-hover:shadow-purple-900/20 transition-all">
               <Image
                 src={getThumbnailUrl(song)}
                 alt={song.title}
                 fill
-                className="object-cover"
-                sizes="128px"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 640px) 112px, 160px"
               />
               {/* Play overlay */}
-              <div className="
-                absolute inset-0 bg-black/40 flex items-center justify-center
-                opacity-0 group-hover:opacity-100 transition-opacity duration-200
-              ">
-                <div className="w-10 h-10 rounded-full bg-red-500/90 flex items-center justify-center">
-                  <Youtube className="w-5 h-5 text-white" />
+              <div className="absolute inset-0 bg-purple-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
+                <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                  <Play className="w-3.5 h-3.5 text-purple-900 fill-purple-900 ml-0.5" />
                 </div>
               </div>
             </div>
 
-            {/* Song Info */}
-            <div className="flex-1 min-w-0">
-              <h3 className="text-white font-medium truncate group-hover:text-purple-400 transition-colors">
+            {/* Info */}
+            <div className="flex-1 min-w-0 py-1 flex flex-col justify-center h-full">
+              <h3 className="font-medium text-white/90 truncate group-hover:text-purple-200 transition-colors text-sm sm:text-base pr-4">
                 {song.title}
               </h3>
-              <p className="text-sm text-white/60 mt-0.5">
-                {formatDate(song.published)}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="flex-shrink-0 flex items-center gap-6">
-              {/* Total Views */}
-              <div className="hidden sm:flex items-center gap-2">
-                <Eye className="w-4 h-4 text-white/40" />
-                <span className="text-white/80 font-medium">{formatNumber(song.views)}</span>
-              </div>
-
-              {/* Yesterday Views */}
-              <div className="
-                flex items-center gap-2 px-3 py-1.5 rounded-full
-                bg-green-500/10 border border-green-500/20
-              ">
-                <TrendingUp className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-green-400 font-medium text-sm">+{formatNumber(song.yesterday)}</span>
-              </div>
-
-              {/* External Link */}
-              <div className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
-                <ExternalLink className="w-4 h-4 text-white/40" />
+              <div className="flex items-center gap-3 mt-1.5">
+                <span className="text-xs text-white/40 font-medium">{formatDate(song.published)}</span>
+                <span className="hidden sm:block w-0.5 h-0.5 rounded-full bg-white/20" />
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                   <TrendingUp className="w-3 h-3 text-purple-400" />
+                   <span className="text-xs text-purple-400 font-medium">+{formatNumber(song.yesterday)}</span>
+                </div>
               </div>
             </div>
-          </button>
+
+            {/* Stats - Desktop */}
+            <div className="hidden sm:flex items-center gap-6 sm:gap-12 shrink-0 pr-4">
+              <div className="text-right min-w-[80px]">
+                <p className="text-sm font-bold text-white tabular-nums">{formatNumber(song.views)}</p>
+                <p className="text-[10px] uppercase tracking-wider text-purple-200/30 font-medium">Total Views</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0">
+                <ChevronRight className="w-4 h-4 text-purple-300" />
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Empty State */}
       {songs.length === 0 && (
-        <div className="text-center py-12">
-          <Youtube className="w-12 h-12 text-white/20 mx-auto mb-3" />
-          <p className="text-white/60">No videos found</p>
+        <div className="text-center py-20 border border-dashed border-white/10 rounded-[32px] bg-white/[0.02]">
+          <Youtube className="w-10 h-10 text-white/20 mx-auto mb-3" />
+          <p className="text-white/40 text-sm">No videos found</p>
         </div>
       )}
     </div>

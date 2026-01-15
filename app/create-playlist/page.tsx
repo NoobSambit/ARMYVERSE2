@@ -46,7 +46,7 @@ export default function CreatePlaylist() {
     const totalAppearances = selectedTracks.reduce((sum, t) => sum + t.appearances, 0)
     const uniqueAlbums = new Set(selectedTracks.map(t => t.album)).size
     const diversity = selectedTracks.length >= 5 && uniqueAlbums >= 3 ? 'High' :
-                      selectedTracks.length >= 3 ? 'Medium' : 'Low'
+      selectedTracks.length >= 3 ? 'Medium' : 'Low'
 
     return {
       tracks: playlistTracks.length,
@@ -231,13 +231,14 @@ export default function CreatePlaylist() {
         accessToken = refreshed?.accessToken || null
       }
 
-      const makeBody = () => ({
+      const makeBody = (useFallback: boolean = false) => ({
         name: playlistName,
         songs: tracks.map(track => ({
           title: track.name,
           artist: track.artist,
           spotifyId: track.spotifyId
-        }))
+        })),
+        fallbackToOwner: useFallback
       })
 
       const makeHeaders = (token?: string | null) => {
@@ -249,36 +250,59 @@ export default function CreatePlaylist() {
       let response = await fetch('/api/playlist/export', {
         method: 'POST',
         headers: makeHeaders(accessToken),
-        body: JSON.stringify(makeBody())
+        body: JSON.stringify(makeBody(false))
       })
 
-      const data = await response.json()
+      let data = await response.json()
 
       if (!response.ok) {
         if (response.status === 401 && accessToken) {
+          // Try to refresh the token
           const refreshed = await refreshStatus()
           if (refreshed?.accessToken) {
             response = await fetch('/api/playlist/export', {
               method: 'POST',
               headers: makeHeaders(refreshed.accessToken),
-              body: JSON.stringify(makeBody())
+              body: JSON.stringify(makeBody(false))
             })
-            const retryData = await response.json()
-            if (!response.ok) {
-              throw new Error(retryData.error || 'Failed to save playlist to Spotify')
+            data = await response.json()
+
+            // If still failing with 401, try fallback
+            if (!response.ok && response.status === 401 && data.canFallback) {
+              console.log('Token refresh succeeded but still invalid, using fallback')
+              response = await fetch('/api/playlist/export', {
+                method: 'POST',
+                headers: makeHeaders(refreshed.accessToken),
+                body: JSON.stringify(makeBody(true))
+              })
+              data = await response.json()
             }
-            setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
-            setSavedPlaylistUrl(retryData.playlistUrl)
-            setTimeout(() => setSaveSuccess(null), 5000)
-            return
+          } else {
+            // Refresh failed - use fallback
+            console.log('Token refresh failed, using owner fallback')
+            response = await fetch('/api/playlist/export', {
+              method: 'POST',
+              headers: makeHeaders(accessToken),
+              body: JSON.stringify(makeBody(true))
+            })
+            data = await response.json()
           }
         }
-        throw new Error(data.error || data.details || 'Failed to save playlist to Spotify')
+
+        // Check final response
+        if (!response.ok) {
+          throw new Error(data.error || data.details || 'Failed to save playlist to Spotify')
+        }
       }
 
-      setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
+      // Show appropriate message based on whether fallback was used
+      if (data.usedFallback) {
+        setSaveSuccess(`Playlist "${playlistName}" saved to ArmyVerse Spotify account. Your session expired - please reconnect your Spotify.`)
+      } else {
+        setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
+      }
       setSavedPlaylistUrl(data.playlistUrl)
-      setTimeout(() => setSaveSuccess(null), 5000)
+      setTimeout(() => setSaveSuccess(null), 8000) // Longer timeout for fallback message
     } catch (error) {
       console.error('Error saving playlist:', error)
       setSaveError(error instanceof Error ? error.message : 'Failed to save playlist')
@@ -300,22 +324,20 @@ export default function CreatePlaylist() {
           <div className="flex h-10 sm:h-12 items-center bg-surface-light p-1 rounded-xl w-full sm:w-auto">
             <button
               onClick={() => setMode('manual')}
-              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${
-                mode === 'manual'
+              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${mode === 'manual'
                   ? 'bg-background-dark text-white shadow-sm'
                   : 'text-text-muted hover:text-white'
-              }`}
+                }`}
             >
               <Edit3 className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />
               <span className="text-xs sm:text-sm font-semibold">Manual</span>
             </button>
             <button
               onClick={() => setMode('streaming')}
-              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-colors ${
-                mode === 'streaming'
+              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-colors ${mode === 'streaming'
                   ? 'bg-background-dark text-white shadow-sm'
                   : 'text-text-muted hover:text-white'
-              }`}
+                }`}
             >
               <TrendingUp className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />
               <span className="text-xs sm:text-sm font-medium">Streaming</span>
@@ -353,10 +375,9 @@ export default function CreatePlaylist() {
               </div>
               <div className="bg-surface-light/50 border border-border-dark p-2 sm:p-3 rounded-xl flex flex-col items-center justify-center text-center">
                 <span className="text-[9px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">Diversity</span>
-                <span className={`text-base sm:text-xl font-bold ${
-                  playlistStats.diversity === 'High' ? 'text-emerald-400' :
-                  playlistStats.diversity === 'Medium' ? 'text-yellow-400' : 'text-red-400'
-                }`}>{playlistStats.diversity}</span>
+                <span className={`text-base sm:text-xl font-bold ${playlistStats.diversity === 'High' ? 'text-emerald-400' :
+                    playlistStats.diversity === 'Medium' ? 'text-yellow-400' : 'text-red-400'
+                  }`}>{playlistStats.diversity}</span>
               </div>
             </div>
 
@@ -432,11 +453,10 @@ export default function CreatePlaylist() {
                           <button
                             onClick={() => addToSelected(track)}
                             disabled={!!isSelected}
-                            className={`size-7 sm:size-9 rounded-full flex items-center justify-center transition-colors ${
-                              isSelected
+                            className={`size-7 sm:size-9 rounded-full flex items-center justify-center transition-colors ${isSelected
                                 ? 'bg-primary/20 text-primary cursor-not-allowed'
                                 : 'hover:bg-primary/20 text-text-muted hover:text-primary'
-                            }`}
+                              }`}
                           >
                             {isSelected ? (
                               <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -581,11 +601,10 @@ export default function CreatePlaylist() {
               <div className="flex flex-col gap-2 sm:gap-3 pb-3 sm:pb-4 border-b border-white/5">
                 <div className="flex justify-between items-center mb-1">
                   <h3 className="text-white font-bold text-base sm:text-lg">Playlist Preview</h3>
-                  <span className={`text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
-                    playlistTracks.length > 0
+                  <span className={`text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${playlistTracks.length > 0
                       ? 'bg-green-500/20 text-green-400'
                       : 'bg-gray-500/20 text-gray-400'
-                  }`}>
+                    }`}>
                     {playlistTracks.length > 0 ? 'Ready' : 'Empty'}
                   </span>
                 </div>
@@ -604,11 +623,10 @@ export default function CreatePlaylist() {
                     <span className="text-[9px] sm:text-[10px] uppercase font-bold text-text-muted tracking-wider">Skip Risk</span>
                     <div className="w-full bg-surface-light rounded-full h-1.5 sm:h-2 overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ${
-                          playlistQuality.skipRisk === 'Low' ? 'bg-gradient-to-r from-green-400 to-emerald-500 w-[15%]' :
-                          playlistQuality.skipRisk === 'Medium' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 w-[50%]' :
-                          'bg-gradient-to-r from-red-400 to-red-600 w-[85%]'
-                        }`}
+                        className={`h-full transition-all duration-500 ${playlistQuality.skipRisk === 'Low' ? 'bg-gradient-to-r from-green-400 to-emerald-500 w-[15%]' :
+                            playlistQuality.skipRisk === 'Medium' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 w-[50%]' :
+                              'bg-gradient-to-r from-red-400 to-red-600 w-[85%]'
+                          }`}
                       ></div>
                     </div>
                     <span className="text-[10px] sm:text-xs font-bold text-white text-right">{playlistQuality.skipRisk}</span>
@@ -647,13 +665,12 @@ export default function CreatePlaylist() {
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDrop={(e) => handleDrop(e, index)}
                       onDragEnd={handleDragEnd}
-                      className={`group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 pr-2 sm:pr-3 rounded-xl transition-colors border cursor-move ${
-                        draggedIndex === index
+                      className={`group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 pr-2 sm:pr-3 rounded-xl transition-colors border cursor-move ${draggedIndex === index
                           ? 'opacity-50 bg-surface-light/50 border-primary/30'
                           : dragOverIndex === index
-                          ? 'bg-primary/10 border-primary/30'
-                          : 'border-transparent hover:border-white/5 hover:bg-surface-light/50'
-                      }`}
+                            ? 'bg-primary/10 border-primary/30'
+                            : 'border-transparent hover:border-white/5 hover:bg-surface-light/50'
+                        }`}
                     >
                       <GripVertical className="text-text-muted group-hover:text-white w-3.5 sm:w-4 h-3.5 sm:h-4 flex-shrink-0" />
                       <span className="text-text-muted text-[10px] sm:text-xs font-mono w-3 sm:w-4">{String(index + 1).padStart(2, '0')}</span>
@@ -706,7 +723,7 @@ export default function CreatePlaylist() {
                     className="w-full bg-[#1db954] hover:bg-[#1ed760] text-white font-bold py-2.5 sm:py-3.5 rounded-2xl shadow-lg shadow-[#1db954]/20 transition-all flex items-center justify-center gap-2 sm:gap-3 group disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     <svg className="w-5 sm:w-6 h-5 sm:h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
                     </svg>
                     <span>{isSaving ? 'Creating...' : 'Export to Spotify'}</span>
                   </button>

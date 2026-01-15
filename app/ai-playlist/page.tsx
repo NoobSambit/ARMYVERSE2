@@ -1,7 +1,7 @@
 'use client'
 /* eslint-disable @typescript-eslint/no-unused-vars, react/no-unescaped-entities */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Sparkles,
   Music,
@@ -24,12 +24,14 @@ import {
   Loader2,
   Download,
   Check,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react'
 import { ToastProvider, useToast } from '@/components/ui/Toast'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 import { useAuth } from '@/contexts/AuthContext'
 import SeedTracksModal from '@/components/ai-playlist/SeedTracksModal'
+import SharePlaylistModal from '@/components/ai-playlist/SharePlaylistModal'
 import dynamic from 'next/dynamic'
 
 // Lazy load heavy components
@@ -214,6 +216,16 @@ function AIPlaylistContent() {
   const [isEvolving, setIsEvolving] = useState(false)
   const [showGenreMixModal, setShowGenreMixModal] = useState(false)
 
+  // Share modal and Spotify export state
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [currentSpotifyUrl, setCurrentSpotifyUrl] = useState<string | null>(null)
+  const [currentPlaylistDbId, setCurrentPlaylistDbId] = useState<string | null>(null)
+  const [historyTab, setHistoryTab] = useState<'recent' | 'saved'>('recent')
+  const [isExporting, setIsExporting] = useState(false)
+
+  // Ref for auto-scrolling to playlist result
+  const playlistResultRef = useRef<HTMLDivElement>(null)
+
   // Config presets
   const [savedConfigs, setSavedConfigs] = useState<PlaylistConfig[]>([])
   const [showSaveConfigModal, setShowSaveConfigModal] = useState(false)
@@ -254,6 +266,50 @@ function AIPlaylistContent() {
     } catch (error) {
       console.error('Failed to fetch configs:', error)
     }
+  }
+
+  // Load a playlist from history
+  const loadPlaylistFromHistory = (historyItem: any) => {
+    if (!historyItem.tracks || historyItem.tracks.length === 0) {
+      showToast('error', 'This playlist has no tracks to restore')
+      return
+    }
+
+    // Map tracks to the expected format
+    const restoredTracks = historyItem.tracks.map((track: any) => ({
+      title: track.name || track.title,
+      name: track.name || track.title,
+      artist: track.artist,
+      album: track.album,
+      spotifyId: track.spotifyId,
+      albumArt: track.albumArt,
+      duration: track.duration,
+      popularity: track.popularity,
+      bpm: track.bpm
+    }))
+
+    // Set playlist state
+    setPlaylist(restoredTracks)
+    setPlaylistName(historyItem.name)
+    setPrompt(historyItem.prompt || '')
+    setCurrentPlaylistDbId(historyItem.id)
+
+    // If this playlist was exported to Spotify, restore that URL too
+    if (historyItem.spotifyPlaylistUrl) {
+      setCurrentSpotifyUrl(historyItem.spotifyPlaylistUrl)
+    } else {
+      setCurrentSpotifyUrl(null)
+    }
+
+    showToast('success', `Restored "${historyItem.name}" with ${restoredTracks.length} tracks`)
+
+    // Scroll to the playlist section
+    setTimeout(() => {
+      playlistResultRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }, 100)
   }
 
   const toggleMood = (moodId: string) => {
@@ -409,6 +465,8 @@ function AIPlaylistContent() {
 
     setIsGenerating(true)
     setPlaylist([])
+    setCurrentSpotifyUrl(null) // Reset Spotify URL for new playlist
+    setCurrentPlaylistDbId(null)
     showToast('info', 'Generating your personalized playlist...')
 
     try {
@@ -448,11 +506,25 @@ function AIPlaylistContent() {
 
       const data: GeneratedPlaylist = await response.json()
       setPlaylist(data.playlist)
+
+      // Capture the playlist database ID for later use
+      if (data.playlistId) {
+        setCurrentPlaylistDbId(data.playlistId)
+      }
+
       showToast('success', `Generated ${data.playlist.length} songs for your playlist!`)
 
       if (data.saved) {
         await fetchPlaylistHistory()
       }
+
+      // Auto-scroll to the playlist result section after a short delay
+      setTimeout(() => {
+        playlistResultRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }, 100)
     } catch (error) {
       console.error('Error generating playlist:', error)
       showToast('error', 'Failed to generate playlist. Please try again.')
@@ -464,6 +536,12 @@ function AIPlaylistContent() {
   const exportToSpotify = async () => {
     if (playlist.length === 0) {
       showToast('error', 'No playlist to export!')
+      return
+    }
+
+    // If already exported, show the share modal instead of exporting again
+    if (currentSpotifyUrl) {
+      setShowShareModal(true)
       return
     }
 
@@ -484,32 +562,97 @@ function AIPlaylistContent() {
       return
     }
 
+    setIsExporting(true)
     showToast('info', 'Exporting to Spotify...')
 
-    try {
-      const response = await fetch('/api/playlist/export', {
+    // Helper to make export request
+    const makeExportRequest = async (token: string, useFallback: boolean = false) => {
+      return fetch('/api/playlist/export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: playlistName || `AI Generated BTS Playlist - ${prompt}`,
           songs: playlist,
+          fallbackToOwner: useFallback,
         }),
       })
+    }
 
-      const data = await response.json()
+    try {
+      let response = await makeExportRequest(accessToken, false)
+      let data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to export playlist')
+        if (response.status === 401) {
+          // Try to refresh the token
+          const refreshed = await refreshStatus()
+          if (refreshed?.accessToken) {
+            response = await makeExportRequest(refreshed.accessToken, false)
+            data = await response.json()
+
+            // If still failing with 401, try fallback
+            if (!response.ok && response.status === 401 && data.canFallback) {
+              console.log('Token refresh succeeded but still invalid, using fallback')
+              response = await makeExportRequest(refreshed.accessToken, true)
+              data = await response.json()
+            }
+          } else {
+            // Refresh failed - use fallback
+            console.log('Token refresh failed, using owner fallback')
+            response = await makeExportRequest(accessToken, true)
+            data = await response.json()
+          }
+        }
+
+        // Check final response
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to export playlist')
+        }
       }
 
-      window.open(data.playlistUrl, '_blank')
-      showToast('success', 'Playlist exported to Spotify!')
+      // Extract Spotify playlist ID from URL (format: https://open.spotify.com/playlist/PLAYLIST_ID)
+      const spotifyPlaylistId = data.playlistUrl?.split('/playlist/')?.[1]?.split('?')?.[0] || null
+
+      // Save the Spotify URL to the database if we have a playlist ID
+      if (currentPlaylistDbId && user?.uid && data.playlistUrl) {
+        try {
+          await fetch('/api/playlist/history', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              playlistId: currentPlaylistDbId,
+              firebaseUid: user.uid,
+              spotifyPlaylistId,
+              spotifyPlaylistUrl: data.playlistUrl
+            })
+          })
+          // Refresh history to show updated data
+          await fetchPlaylistHistory()
+        } catch (err) {
+          console.error('Failed to save Spotify URL to database:', err)
+        }
+      }
+
+      // Store the URL for the share modal
+      setCurrentSpotifyUrl(data.playlistUrl)
+
+      // Show appropriate message based on whether fallback was used
+      if (data.usedFallback) {
+        showToast('warning', data.fallbackReason || 'Your session expired. Playlist was created in the ArmyVerse account. Please reconnect your Spotify account.')
+      } else {
+        showToast('success', 'Playlist exported to Spotify!')
+      }
+
+      // Show the share modal instead of automatically opening Spotify
+      setShowShareModal(true)
     } catch (error) {
       console.error('Error exporting to Spotify:', error)
       showToast('error', error instanceof Error ? error.message : 'Failed to export to Spotify.')
+    } finally {
+      setIsExporting(false)
     }
   }
 
@@ -653,8 +796,8 @@ function AIPlaylistContent() {
                   <div className="pt-1.5 sm:pt-2">
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1 sm:gap-2">
                       {MOOD_OPTIONS.map(mood => {
-                         const isSelected = selectedMoods.includes(mood.id)
-                         const colorMap: Record<string, string> = {
+                        const isSelected = selectedMoods.includes(mood.id)
+                        const colorMap: Record<string, string> = {
                           yellow: 'bg-yellow-400',
                           purple: 'bg-purple-400',
                           pink: 'bg-pink-400',
@@ -667,9 +810,8 @@ function AIPlaylistContent() {
                           <button
                             key={mood.id}
                             onClick={() => toggleMood(mood.id)}
-                            className={`h-8 sm:h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-${mood.color}-600/20 hover:border-${mood.color}-500 text-[10px] sm:text-xs font-medium transition-all flex items-center justify-center gap-0.5 sm:gap-1 group/pill ${
-                              isSelected ? `bg-${mood.color}-900/40 border-${mood.color}-500/50 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]` : 'text-gray-300 hover:text-white'
-                            }`}
+                            className={`h-8 sm:h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-${mood.color}-600/20 hover:border-${mood.color}-500 text-[10px] sm:text-xs font-medium transition-all flex items-center justify-center gap-0.5 sm:gap-1 group/pill ${isSelected ? `bg-${mood.color}-900/40 border-${mood.color}-500/50 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]` : 'text-gray-300 hover:text-white'
+                              }`}
                           >
                             <span className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${colorMap[mood.color]} group-hover/pill:animate-pulse`}></span> {mood.label}
                           </button>
@@ -689,8 +831,8 @@ function AIPlaylistContent() {
               </div>
               <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {MEMBER_OPTIONS.map(member => {
-                   const isSelected = selectedMembers.includes(member.value)
-                   return (
+                  const isSelected = selectedMembers.includes(member.value)
+                  return (
                     <button
                       key={member.value}
                       onClick={() => toggleMember(member.value)}
@@ -703,7 +845,7 @@ function AIPlaylistContent() {
                         {member.name === 'BTS (OT7)' ? 'OT7' : member.name}
                       </span>
                     </button>
-                   )
+                  )
                 })}
               </div>
               <div className="relative">
@@ -746,11 +888,10 @@ function AIPlaylistContent() {
                   <button
                     key={fmt.value}
                     onClick={() => setFormat(fmt.value)}
-                    className={`py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-medium border transition-all ${
-                      format === fmt.value
-                        ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20'
-                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border-transparent'
-                    }`}
+                    className={`py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-medium border transition-all ${format === fmt.value
+                      ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20'
+                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border-transparent'
+                      }`}
                   >
                     {fmt.label}
                   </button>
@@ -782,12 +923,12 @@ function AIPlaylistContent() {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_white]"></div>
               </div>
               <div className="grid grid-cols-2 gap-1 w-full mt-4 px-1 text-[9px] text-gray-400 font-mono z-10">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{backgroundColor: GENRE_COLORS.ballad}}></span>Ballad</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{backgroundColor: GENRE_COLORS.hiphop}}></span>Hip-Hop</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{backgroundColor: GENRE_COLORS.edm}}></span>EDM</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{backgroundColor: GENRE_COLORS.rnb}}></span>R&B</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{backgroundColor: GENRE_COLORS.rock}}></span>Rock</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{backgroundColor: GENRE_COLORS.dancePop}}></span>Dance-Pop</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: GENRE_COLORS.ballad }}></span>Ballad</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: GENRE_COLORS.hiphop }}></span>Hip-Hop</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: GENRE_COLORS.edm }}></span>EDM</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: GENRE_COLORS.rnb }}></span>R&B</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: GENRE_COLORS.rock }}></span>Rock</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: GENRE_COLORS.dancePop }}></span>Dance-Pop</span>
               </div>
             </div>
 
@@ -946,9 +1087,8 @@ function AIPlaylistContent() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setLyricalMatch(!lyricalMatch)}
-                  className={`glass-panel rounded-3xl p-3 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                    lyricalMatch ? 'bg-purple-600/20 border border-purple-500/50' : 'hover:bg-white/5'
-                  }`}
+                  className={`glass-panel rounded-3xl p-3 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${lyricalMatch ? 'bg-purple-600/20 border border-purple-500/50' : 'hover:bg-white/5'
+                    }`}
                 >
                   <Mic2 className={`text-xl w-5 h-5 ${lyricalMatch ? 'text-purple-400' : 'text-gray-400'}`} />
                   <span className={`text-[10px] ${lyricalMatch ? 'text-purple-300' : 'text-gray-400'}`}>Lyrical Match</span>
@@ -963,9 +1103,8 @@ function AIPlaylistContent() {
                       <button
                         key={ctx.value}
                         onClick={() => setContext(ctx.value)}
-                        className={`w-full px-4 py-2 text-left hover:bg-white/10 transition-colors ${
-                          context === ctx.value ? 'bg-purple-600/20 text-purple-300' : 'text-gray-300'
-                        }`}
+                        className={`w-full px-4 py-2 text-left hover:bg-white/10 transition-colors ${context === ctx.value ? 'bg-purple-600/20 text-purple-300' : 'text-gray-300'
+                          }`}
                       >
                         <span className="text-xs font-medium">{ctx.label}</span>
                       </button>
@@ -1080,54 +1219,112 @@ function AIPlaylistContent() {
 
             <div className="glass-panel rounded-3xl p-5 max-h-64 overflow-y-auto">
               <div className="flex gap-4 mb-4 border-b border-white/10 pb-2">
-                <button className="text-sm font-medium text-white">Recent</button>
-                <button className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Saved</button>
+                <button
+                  onClick={() => setHistoryTab('recent')}
+                  className={`text-sm font-medium transition-colors ${historyTab === 'recent' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                >
+                  Recent
+                </button>
+                <button
+                  onClick={() => setHistoryTab('saved')}
+                  className={`text-sm font-medium transition-colors ${historyTab === 'saved' ? 'text-white' : 'text-gray-500 hover:text-white'}`}
+                >
+                  Saved to Spotify
+                </button>
               </div>
               <div className="space-y-3">
-                {playlistHistory.length > 0 ? (
-                  playlistHistory.slice(0, 3).map(hist => (
-                     <div key={hist.id} className="flex items-center justify-between group cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold">
-                           {hist.name.substring(0, 3).toUpperCase()}
+                {historyTab === 'recent' ? (
+                  // Recent tab - shows all playlists
+                  playlistHistory.length > 0 ? (
+                    playlistHistory.slice(0, 5).map(hist => (
+                      <div
+                        key={hist.id}
+                        onClick={() => loadPlaylistFromHistory(hist)}
+                        className="flex items-center justify-between group cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${hist.spotifyPlaylistUrl
+                            ? 'bg-gradient-to-br from-green-500 to-green-600'
+                            : 'bg-gradient-to-br from-indigo-500 to-purple-500'
+                            }`}>
+                            {hist.spotifyPlaylistUrl ? '✓' : hist.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-200">{hist.name}</p>
+                            <p className="text-[10px] text-gray-500">{hist.trackCount} tracks</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-medium text-gray-200">{hist.name}</p>
-                          <p className="text-[10px] text-gray-500">{hist.trackCount} tracks</p>
+                        <div className="flex items-center gap-1">
+                          {hist.spotifyPlaylistUrl && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); window.open(hist.spotifyPlaylistUrl, '_blank') }}
+                              className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center hover:bg-green-500 transition-all"
+                              title="Open in Spotify"
+                            >
+                              <ExternalLink className="text-green-400 hover:text-white w-3 h-3" />
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); loadPlaylistFromHistory(hist) }}
+                            className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-purple-500 transition-all"
+                            title="Restore this playlist"
+                          >
+                            <RefreshCw className="text-[14px] w-3 h-3" />
+                          </button>
                         </div>
                       </div>
-                      <button className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-purple-500 transition-all">
-                        <RefreshCw className="text-[14px] w-3 h-3" />
-                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 text-xs">
+                      No playlists generated yet
                     </div>
-                  ))
+                  )
                 ) : (
-                  <>
-                     <div className="flex items-center justify-between group cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-colors">
-                        <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold">GYM</div>
-                        <div>
-                        <p className="text-xs font-medium text-gray-200">Gym Hype Mix</p>
-                        <p className="text-[10px] text-gray-500">2 hrs ago • 14 tracks</p>
+                  // Saved tab - shows only exported playlists
+                  (() => {
+                    const savedPlaylists = playlistHistory.filter(p => p.spotifyPlaylistUrl)
+                    return savedPlaylists.length > 0 ? (
+                      savedPlaylists.map(hist => (
+                        <div
+                          key={hist.id}
+                          onClick={() => loadPlaylistFromHistory(hist)}
+                          className="flex items-center justify-between group cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify" className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-200">{hist.name}</p>
+                              <p className="text-[10px] text-gray-500">{hist.trackCount} tracks • Exported</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); window.open(hist.spotifyPlaylistUrl, '_blank') }}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/20 text-green-400 text-[10px] font-medium hover:bg-green-500 hover:text-white transition-all"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Open
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); loadPlaylistFromHistory(hist) }}
+                              className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-purple-500 transition-all"
+                              title="Restore this playlist"
+                            >
+                              <RefreshCw className="text-[14px] w-3 h-3" />
+                            </button>
+                          </div>
                         </div>
-                        </div>
-                        <button className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-purple-500 transition-all">
-                        <RefreshCw className="text-[14px] w-3 h-3" />
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between group cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-colors">
-                        <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-[10px] font-bold">DRV</div>
-                        <div>
-                        <p className="text-xs font-medium text-gray-200">Sunset Drive</p>
-                        <p className="text-[10px] text-gray-500">Yesterday • 22 tracks</p>
-                        </div>
-                        </div>
-                        <button className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-purple-500 transition-all">
-                        <RefreshCw className="text-[14px] w-3 h-3" />
-                        </button>
-                    </div>
-                  </>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-gray-500">
+                        <Share2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-xs">No playlists exported to Spotify yet</p>
+                        <p className="text-[10px] mt-1">Export a playlist to see it here</p>
+                      </div>
+                    )
+                  })()
                 )}
               </div>
             </div>
@@ -1135,58 +1332,96 @@ function AIPlaylistContent() {
 
           {/* Result Section (Full Width below) */}
           {playlist.length > 0 && (
-             <div className="lg:col-span-12 mt-8">
-                <div className="glass-panel rounded-3xl p-1 relative overflow-hidden group border-purple-500/30">
+            <div ref={playlistResultRef} className="lg:col-span-12 mt-8">
+              <div className="glass-panel rounded-3xl p-1 relative overflow-hidden group border-purple-500/30">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none"></div>
                 <div className="bg-black/40 rounded-2xl p-6 md:p-8">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                <span className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-1 block">Successfully Generated</span>
-                <h2 className="text-3xl font-bold text-white">Your Playlist: {playlistName || 'Late Night Seoul Drive'}</h2>
-                </div>
-                <div className="flex gap-3">
-                <button
-                  onClick={exportToSpotify}
-                  className="px-5 py-2.5 rounded-full bg-white text-black font-bold text-sm hover:scale-105 transition-transform flex items-center gap-2"
-                >
-                <img alt="Spotify" className="w-5 h-5" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" />
-                                                    Export to Spotify
-                                                </button>
-                <button
-                  onClick={addToCompare}
-                  className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
-                >
-                <ArrowLeftRight className="w-4 h-4" />
-                </button>
-                <button className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
-                <Share2 className="w-4 h-4" />
-                </button>
-                </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {playlist.map((track, i) => (
-                    <div key={i} className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer group/track border border-transparent hover:border-purple-500/30">
-                    <div className="w-12 h-12 rounded-xl bg-gray-700 relative overflow-hidden">
-                    <img className="object-cover w-full h-full" src={track.albumArt || "https://lh3.googleusercontent.com/aida-public/AB6AXuA07zQuSmrleW6jiu0hrlj-oab5DKsTafMbikd4Wksqs87u5LHtkNcQArsBXSCchif79IjkGVaR5wHqZOL3zD9sOoei0MKSyWYdkdn867f9lvCl61fCmFPUyj9BatZpBrIBxcRdKn8pGYqYyAwxG64QIVZ4UnDW0l7ssvblrVkSAKVoxp9ZoDyo74tyZbXb_NPgNSYqF1nJJuhPMUNItEfWPYZ0UVkm3DW-KsgPqqfnPok-Uyy_vGDwZLvAR0NtfVzMaCR6DT8krmk"} />
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/track:opacity-100 transition-opacity">
-                    <Play className="text-white text-lg w-5 h-5" />
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                      <span className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-1 block">
+                        {currentSpotifyUrl ? 'Exported to Spotify' : 'Successfully Generated'}
+                      </span>
+                      <h2 className="text-3xl font-bold text-white">Your Playlist: {playlistName || 'Late Night Seoul Drive'}</h2>
                     </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={exportToSpotify}
+                        disabled={isExporting}
+                        className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 ${currentSpotifyUrl
+                          ? 'bg-[#1DB954] text-white hover:bg-[#1ed760]'
+                          : 'bg-white text-black hover:scale-105'
+                          } ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
+                      >
+                        {isExporting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Exporting...
+                          </>
+                        ) : currentSpotifyUrl ? (
+                          <>
+                            <img alt="Spotify" className="w-5 h-5" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" />
+                            View on Spotify
+                          </>
+                        ) : (
+                          <>
+                            <img alt="Spotify" className="w-5 h-5" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" />
+                            Export to Spotify
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={addToCompare}
+                        className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
+                      >
+                        <ArrowLeftRight className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setShowShareModal(true)}
+                        className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${currentSpotifyUrl
+                          ? 'border-green-500/50 bg-green-500/10 hover:bg-green-500/20'
+                          : 'border-white/20 hover:bg-white/10'
+                          }`}
+                        title={currentSpotifyUrl ? 'Share playlist link' : 'Export first to share'}
+                      >
+                        <Share2 className={`w-4 h-4 ${currentSpotifyUrl ? 'text-green-400' : ''}`} />
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-sm text-gray-200 truncate group-hover/track:text-purple-300">{track.title}</h4>
-                    <p className="text-xs text-gray-500 truncate">{track.artist}</p>
-                    </div>
-                    <div className="text-[10px] text-gray-600 font-mono">{track.bpm || '118'} BPM</div>
-                    </div>
-                  ))}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {playlist.map((track, i) => {
+                      const spotifyUrl = track.spotifyId ? `https://open.spotify.com/track/${track.spotifyId}` : null
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => spotifyUrl && window.open(spotifyUrl, '_blank')}
+                          className={`flex items-center gap-4 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group/track border border-transparent hover:border-purple-500/30 ${spotifyUrl ? 'cursor-pointer' : ''}`}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-gray-700 relative overflow-hidden">
+                            <img className="object-cover w-full h-full" src={track.albumArt || "https://lh3.googleusercontent.com/aida-public/AB6AXuA07zQuSmrleW6jiu0hrlj-oab5DKsTafMbikd4Wksqs87u5LHtkNcQArsBXSCchif79IjkGVaR5wHqZOL3zD9sOoei0MKSyWYdkdn867f9lvCl61fCmFPUyj9BatZpBrIBxcRdKn8pGYqYyAwxG64QIVZ4UnDW0l7ssvblrVkSAKVoxp9ZoDyo74tyZbXb_NPgNSYqF1nJJuhPMUNItEfWPYZ0UVkm3DW-KsgPqqfnPok-Uyy_vGDwZLvAR0NtfVzMaCR6DT8krmk"} />
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/track:opacity-100 transition-opacity">
+                              {spotifyUrl ? (
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Open in Spotify" className="w-5 h-5" />
+                              ) : (
+                                <Play className="text-white text-lg w-5 h-5" />
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-sm text-gray-200 truncate group-hover/track:text-purple-300">{track.title}</h4>
+                            <p className="text-xs text-gray-500 truncate">{track.artist}</p>
+                          </div>
+                          <div className="text-[10px] text-gray-600 font-mono">{track.bpm || '118'} BPM</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="mt-6 flex justify-center">
+                    <button className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors">
+                      Show all {playlist.length} tracks <ChevronDown className="text-sm w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-6 flex justify-center">
-                <button className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors">
-                                                Show all {playlist.length} tracks <ChevronDown className="text-sm w-4 h-4" />
-                </button>
-                </div>
-                </div>
-                </div>
+              </div>
             </div>
           )}
         </div>
@@ -1209,6 +1444,14 @@ function AIPlaylistContent() {
         onClose={() => setShowSeedModal(false)}
         selectedTracks={seedTracks}
         onTracksSelected={setSeedTracks}
+      />
+
+      <SharePlaylistModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        playlistName={playlistName || 'AI Generated Playlist'}
+        spotifyUrl={currentSpotifyUrl}
+        trackCount={playlist.length}
       />
 
       {showTemplateGallery && (
