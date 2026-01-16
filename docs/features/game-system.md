@@ -3,6 +3,7 @@
 ## What It Is
 
 Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
+
 - **Quiz System** - 10-question quizzes testing BTS knowledge
 - **Photocard Collection** - Fandom gallery catalog with random drops
 - **Crafting System** - Convert duplicates to Dust and craft specific cards
@@ -16,6 +17,7 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 ### Quiz System
 
 **Quiz Structure:**
+
 - 10 multiple-choice questions per quiz
 - Questions pulled from MongoDB database
 - Uniform random sample across the approved question pool for the locale (no difficulty buckets)
@@ -23,6 +25,7 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - Score based on correct answers
 
 **Question Categories:**
+
 - Discography (songs, albums, releases)
 - Members (birthdays, facts, solo work)
 - History (debut, milestones, achievements)
@@ -30,6 +33,7 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - MVs & Performances (visual identification)
 
 **XP-Gated Rewards:**
+
 - XP is difficulty-weighted (+1 easy, +2 medium, +3 hard)
 - Below 5 XP: No card drop (XP still awarded)
 - 5+ XP: Random photocard from the Fandom catalog
@@ -41,9 +45,11 @@ Rarity tiers and pity tracking were part of the legacy photocard pipeline. The c
 ### Crafting System
 
 **Dust Economy:**
+
 - Duplicate cards convert to Dust
 
 **Crafting Options:**
+
 1. **Craft Specific Card**: Spend Stardust to get exact card you want
    - Fixed 50 dust per craft
 
@@ -53,32 +59,45 @@ Rarity tiers and pity tracking were part of the legacy photocard pipeline. The c
 ### Mastery System
 
 **XP Progression:**
+
 - Earn XP for each correctly answered quiz question (difficulty-weighted)
 - Member/Era XP sourced from question metadata (not from reward cards)
 
 **Mastery Tracks:**
+
 - **Member Mastery**: Individual progress for each BTS member, plus **OT7** (OT7 requires 7× XP per level)
 - **Era Mastery**: Progress for each album/era, derived dynamically from questions
 
-**Milestone Rewards (XP + Dust):**
-- Level 5: +50 XP, +25 Dust
-- Level 10: +100 XP, +75 Dust
-- Level 25: +250 XP, +200 Dust
-- Level 50: +500 XP, +400 Dust
-- Level 100: +1500 XP, +1000 Dust
+**Milestone Rewards (XP + Dust + Badges):**
+
+- Level 5: +50 XP, +25 Dust + Common badge
+- Level 10: +100 XP, +75 Dust + Rare badge
+- Level 25: +250 XP, +200 Dust + Rare badge
+- Level 50: +500 XP, +400 Dust + Epic badge
+- Level 100: +1500 XP, +1000 Dust + Legendary badge (member-specific for members, standard for eras)
+
+**Badge System:**
+
+- Unique badge codes: `mastery_{kind}_{key}_{milestone}`
+- Standard milestone badges for all levels (display level number)
+- Special member badges at level 100 (unique design per member + OT7)
+- View all earned badges via `/api/game/mastery/badges`
 
 ### Quest System
 
 **Daily Quests:**
+
 - Mix of streaming and quiz goals
 - Rewards: dust + XP
 - Some quests include a photocard ticket (random drop)
 
 **Weekly Quests:**
+
 - Higher-volume streaming and quiz goals
 - Rewards: dust + XP + optional photocard ticket (random drop)
 
 **Special Events:**
+
 - Birthday quests (member birthdays)
 - Comeback quests (new release periods)
 - Holiday events (special themes)
@@ -90,45 +109,51 @@ Rarity tiers and pity tracking were part of the legacy photocard pipeline. The c
 The leaderboard is a competitive ranking system that tracks player progress across multiple time periods. It features XP-based scoring, level tracking, and rank change indicators.
 
 **Periods:**
+
 - **Daily**: `daily-YYYY-MM-DD` - Resets at 00:00 UTC
 - **Weekly**: `weekly-YYYY-WW` - ISO week format, resets Monday at 00:00 UTC
 - **All-Time**: `alltime` - Never resets, cumulative lifetime XP
 
 **Scoring:**
+
 - Score is based on **total XP earned** during the period (not quiz completion count)
 - XP is accumulated from quiz completions and quest completions
 - Daily/Weekly scores start at 0 and accumulate during the period
 - All-Time score represents total lifetime XP
 
 **Leveling:**
+
 - Player levels use a **progressive curve** (see `/lib/game/leveling.ts`)
 - Level is calculated from total XP and displayed on the leaderboard
 - Levels are updated in real-time as users earn XP
 
 **Stats Tracked:**
+
 - `quizzesPlayed` - Number of quizzes completed in the period
 - `questionsCorrect` - Total correct answers in the period
 - `totalQuestions` - Total questions answered in the period
 
 **Rank System:**
+
 - Ranks are calculated based on score (higher score = better rank)
 - Rank changes are tracked to show movement (↑/↓ indicators)
 - Previous rank is stored to enable rank change calculation
 
 **Data Model:**
+
 ```typescript
 interface ILeaderboardEntry {
-  periodKey: string          // "daily-2026-01-10", "weekly-2026-02", "alltime"
+  periodKey: string // "daily-2026-01-10", "weekly-2026-02", "alltime"
   userId: string
-  score: number              // Total XP for period (accumulated, not max)
-  level: number              // Player level
+  score: number // Total XP for period (accumulated, not max)
+  level: number // Player level
   stats: {
     quizzesPlayed: number
     questionsCorrect: number
     totalQuestions: number
   }
-  previousRank?: number      // Previous rank for change calculation
-  rank?: number              // Current rank
+  previousRank?: number // Previous rank for change calculation
+  rank?: number // Current rank
   displayName: string
   avatarUrl: string
   lastPlayedAt?: Date
@@ -139,6 +164,7 @@ interface ILeaderboardEntry {
 ```
 
 **API Endpoints:**
+
 - `GET /api/game/leaderboard?period=daily|weekly|alltime&limit=20&cursor=xxx`
   - Returns paginated leaderboard entries
   - Includes current user's rank and stats
@@ -149,6 +175,7 @@ interface ILeaderboardEntry {
   - Creates entries if they don't exist (useful for all-time initialization)
 
 **UI Features:**
+
 - Podium display for top 3 players (1st/2nd/3rd place styling)
 - Rank change indicators (↑3 ↓2 —0)
 - Player level badges
@@ -158,6 +185,7 @@ interface ILeaderboardEntry {
 
 **How Scores Are Added:**
 When a quiz is completed in ranked mode:
+
 1. XP is awarded to UserGameState
 2. Daily, Weekly, and All-Time leaderboard entries are updated in parallel
 3. Score is incremented by the XP earned (`$inc` operation)
@@ -170,6 +198,7 @@ When a quiz is completed in ranked mode:
 Generate shareable photocard links from the Fandom catalog.
 
 **Features:**
+
 - Returns page or anchor URL for the card
 - Works for any inventory item
 - Category + subcategory context
@@ -239,6 +268,7 @@ Authoritative API docs live in `docs/api/game.md`. Key endpoints:
 - `POST /api/game/craft`
 - `GET /api/game/mastery`
 - `POST /api/game/mastery/claim`
+- `GET /api/game/mastery/badges`
 - `GET /api/game/quests`
 - `POST /api/game/quests/claim`
 - `GET /api/game/badges`
@@ -267,6 +297,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 ## Database Models
 
 ### Question
+
 ```typescript
 {
   question: String,
@@ -280,6 +311,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 ### Photocard
+
 ```typescript
 {
   sourceKey: String,
@@ -296,6 +328,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 ### InventoryItem
+
 ```typescript
 {
   userId: String,
@@ -310,6 +343,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 ### UserGameState
+
 ```typescript
 {
   userId: String,
@@ -341,6 +375,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 ### LeaderboardEntry
+
 ```typescript
 {
   periodKey: String,          // "daily-YYYY-MM-DD", "weekly-YYYY-WW", "alltime"
@@ -366,6 +401,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 ## Best Practices
 
 ### For Players
+
 - ✅ Complete daily quests for consistent Stardust income
 - ✅ Focus on mastery for dust/XP milestones
 - ✅ Save Stardust for specific cards you want
@@ -373,6 +409,7 @@ CLOUDINARY_API_SECRET=your-api-secret
 - ✅ Aim for 5+ XP per quiz run to earn a card drop
 
 ### For Developers
+
 - ✅ Validate quiz sessions before completion
 - ✅ Implement rate limiting on quiz starts
 - ✅ Cache photocard images for faster catalog loads
@@ -394,3 +431,5 @@ CLOUDINARY_API_SECRET=your-api-secret
 - [API Reference](../api/game.md) - Complete game API documentation
 - [Database Schema](../architecture/database.md) - Game data models
 - [Leveling System](../features/leveling.md) - Player progression details
+- [Mastery Badge System](../MASTERY_BADGE_SYSTEM.md) - Mastery badge rewards
+- [Quest Badge System](../QUEST_BADGE_SYSTEM.md) - Quest badge rewards

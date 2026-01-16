@@ -23,6 +23,7 @@ Complete guides for the quest and badge system:
 - **[Quick Start (4 Steps)](./QUEST_SYSTEM.md#quick-start)** - 10-minute setup
 - **[Complete Quest System Guide](./QUEST_SYSTEM.md)** - Full system reference
 - **[Badge System Integration](./QUEST_BADGE_SYSTEM.md)** - UI implementation guide
+- **[Mastery Badge System](./MASTERY_BADGE_SYSTEM.md)** - Mastery milestone badges
 - **[Quick Setup Script](./QUICK_START.md)** - Automated setup
 
 ### 🎯 Features Documentation
@@ -87,6 +88,7 @@ Comprehensive auth system guides:
 ## 🎯 Feature Overview
 
 ### 1. **Authentication System**
+
 - Firebase Authentication for social login (Google, Twitter)
 - JWT-based username/password authentication
 - Email is optional - privacy-first approach
@@ -94,6 +96,7 @@ Comprehensive auth system guides:
 - Unified auth verification on server
 
 ### 2. **Playlist Generation**
+
 - **AI Playlists**: Groq Llama 3.3 70B-powered creation
   - Seed track selection from BTS library
   - 6-genre mix control (Ballad, Hip-Hop, EDM, R&B, Rock, Dance-Pop)
@@ -106,6 +109,7 @@ Comprehensive auth system guides:
 - **Export to Spotify**: One-click export with error handling
 
 ### 3. **Spotify Analytics**
+
 - Personal listening statistics and trends
 - BTS-specific analytics and insights
 - Top artists, tracks, and listening patterns
@@ -115,6 +119,7 @@ Comprehensive auth system guides:
   - All-time artist ranks and monthly listeners
 
 ### 4. **YouTube Analytics**
+
 - Comprehensive video statistics at `/youtube`
 - BTS and all 7 solo members' video data
 - Daily view trends and rankings
@@ -127,6 +132,7 @@ Comprehensive auth system guides:
 - 24-hour cached detail data for optimal performance
 
 ### 5. **Blog Platform**
+
 - Rich text editor powered by Tiptap
 - Markdown support, code blocks, tables, images
 - Community features: reactions (loved, moved, surprised), comments, saves
@@ -135,6 +141,7 @@ Comprehensive auth system guides:
 - Trending algorithm and featured posts
 
 ### 6. **Trending Content**
+
 - **Spotify Trending**: Top BTS songs by daily streams
 - **YouTube Trending**: Top BTS videos by daily views
 - OT7 vs Solo member filtering
@@ -142,6 +149,7 @@ Comprehensive auth system guides:
 - 24-hour caching for optimal performance
 
 ### 7. **Game System (Boraverse)**
+
 - **Quiz System**: 10-question quizzes on BTS knowledge
   - Multiple categories (history, discography, members, lyrics)
   - Random photocard rewards (XP-gated)
@@ -160,6 +168,8 @@ Comprehensive auth system guides:
   - Individual member progression
   - Era-based progression
   - Dust + XP milestone rewards
+  - Badge rewards at milestone levels (5, 10, 25, 50, 100)
+  - Special member-specific badges at level 100
 
 - **Quest & Badge System**: Complete daily/weekly streaming quests
   - Last.fm integration for streaming verification
@@ -174,6 +184,7 @@ Comprehensive auth system guides:
 - **Sharing**: Generate shareable photocard links
 
 ### 8. **Profile Management**
+
 - Comprehensive 5-tab profile modal:
   - Profile: Basic info and ARMY-specific fields
   - Personalization: Themes, colors, preferences
@@ -184,6 +195,7 @@ Comprehensive auth system guides:
 - Account deletion
 
 ### 9. **Landing Pages**
+
 - Premium homepage with feature showcase
 - Dedicated Boraverse game landing page
 - Responsive design with Framer Motion animations
@@ -212,16 +224,20 @@ Comprehensive auth system guides:
 ## 📖 Documentation Conventions
 
 ### Code Examples
+
 All code examples are tested and production-ready. Copy-paste with confidence.
 
 ### API Endpoints
+
 - **Method** and **Path** are clearly specified
 - **Authentication** requirements are noted
 - **Request/Response** examples are provided
 - **Error cases** are documented
 
 ### Feature Documentation
+
 Each feature doc includes:
+
 - **What**: Description of the feature
 - **How It Works**: Technical implementation details
 - **Workflow**: Step-by-step user/system flow
@@ -251,6 +267,8 @@ Each feature doc includes:
 → [Game Feature](./features/game-system.md)
 → [Game APIs](./api/game.md)
 → [Quest System](./QUEST_SYSTEM.md)
+→ [Quest Badge System](./QUEST_BADGE_SYSTEM.md)
+→ [Mastery Badge System](./MASTERY_BADGE_SYSTEM.md)
 
 **Deploy to production**
 → [Deployment Guide](./setup/deployment.md)
@@ -283,24 +301,31 @@ When adding new features:
 # Feature Name
 
 ## What It Is
+
 Brief description
 
 ## How It Works
+
 Technical details
 
 ## Workflow
+
 Step-by-step process
 
 ## API Reference
+
 Related endpoints with examples
 
 ## Configuration
+
 Required setup
 
 ## Usage Examples
+
 Code snippets
 
 ## Related Documentation
+
 Links to related docs
 ```
 
@@ -309,6 +334,7 @@ Links to related docs
 ## 📝 Changelog
 
 ### Version 2.1 (January 2026)
+
 - ✅ Comprehensive API documentation created
 - ✅ Architecture documentation added
 - ✅ Updated all feature guides
@@ -317,6 +343,7 @@ Links to related docs
 - ✅ Updated environment variables guide
 
 ### Version 2.0 (January 2026)
+
 - ✅ Quest & Badge system fully documented
 - ✅ Last.fm integration documented
 - ✅ JWT authentication added
@@ -351,4 +378,4 @@ Links to related docs
 
 ---
 
-*This documentation is maintained alongside the codebase. If you find any discrepancies or outdated information, please open an issue.*
+_This documentation is maintained alongside the codebase. If you find any discrepancies or outdated information, please open an issue._
