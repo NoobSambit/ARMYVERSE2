@@ -116,14 +116,14 @@ const QUICK_STARTS = [
 ]
 
 const MEMBER_OPTIONS = [
-  { name: 'BTS (OT7)', value: 'BTS', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD60w16bEkHNRYucLpgyxK2aD_Khjw479oobYPacFY-nfG42Y2fWRM9MH_PCYTRBdvNKh1qTTzl0-0z5Fo1rzJPFr_attAFnU-8W4nttTmETlF2Kd4XeeggK_mEL7eAVYmvInYgRWmRn6zQgwOOrIiuU9wFjk2NVmfAIHJK8KOoxeGyFoFQr_TBP7F391OitxrW_IQuzXDBYXxVzRvWHsaN_qCSNVCtj2MTdQM-22eN9o20PSSpuhvbKcvQp93SanxxU-5G_skWf9k' },
-  { name: 'RM', value: 'RM', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCM_8l37LGjV7JfWjJO6C4Fl1HriPqh09WHr6tCidF9gZ0_n2obuk9-PQ-qEB668W-h5kY8NMGXlzev-LjTgdgKUrTyDFBr8KgIolJzuRx6Y45ChtmPdH0j_lzp4lm2JVBjH8LeLbhMNAswN87ujaziMsY0kr0jnJNOElwVMJ6717VxzXbvPzdgv9eW79AURoSptiTG_hTibRzMYPPsz0FCgnLILkvXHZCMQ6pDTDFjWEGhxO0Q0V-9J-DYiCsTW1zvwARyQXCAO10' },
-  { name: 'Jin', value: 'Jin', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCv2BpipBN8sIbqy5tRTk6rVkjKGoYTIsdzthzPJ3H9ivyTcfIFiMFIoMJi3I0PaXsmM84nri8IlWCZS9-o7_RdW1VDZl4902uAvkzYJkwat5F6WDwXAqaeAyMytmYijo2sofzmFR1plzKvMPsjEYuJrZF4uNRCMZykesA2VioprCa2aIz0XMB3P8DrT66TCfMVq_gAsl5sQCQaaeiqJRDSWT78CEYvH1cDZmj55YBmN42mKe2uZWKb8dJkD80WCDVeioGmGnHufSI' },
-  { name: 'SUGA', value: 'SUGA', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAk90tfB5AoWHM-mSIxDJr3KWBEWTOZRGE4Ha127LsBN7V6G4X7itnDiw6a78jhaDd08d4eo0-GgTFC6AtW_7CmawuEExNQ194NS0bDxHRwIZM7Ycxxcs-i7-5lYBjeCr8wtX0Wc0hbdblnfofaMcwNaOBYXO00eJ1e1OPofaM-GfS33NREXz05GuI1nmhW5tiFbfX0wHIugjqUlZPA2SjhRXejpHicxc72Bb6t3-XZnAMIf61ClJO0tAH_GEEYansHDZF1mIYCH0Y' },
-  { name: 'j-hope', value: 'j-hope', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBd-Tc-HLAj7t9vDaKH8VPzAq1pUKs_fQUvPKY' },
-  { name: 'Jimin', value: 'Jimin', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBsxc0-t6PkOfgQbrZ0Z9Q1dlHmHiSZtRFNq0nHCUYt-oy13SyPMykXIz2oO1YwCtza7innOFY3FYrYhRo2JuXoRDtTtR3495Z9pIn7aWVXU2z6YHhbIIlMFijConQy0wd9HMdHrFSK2CUQoUlS8RAf4NT-8bxP4s0wEczwMOe_gNtLtEDIzbJxanVGUlqnurhFbeO74g5KOot_5Z9fjB87a6NP62g7C12g6WLkrBVn8HMVNdNA5JBSsBkbYJG7XC1LLS9buW-xSgE' },
-  { name: 'V', value: 'V', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuADAL7Ekf8ratmokMbF-5CFsXY6hDITMndKBWjn3kxRT535NUF1N4_gjoRxhIZr_kr8SWHc7Ywu1SB_mn3kXCNyOb81DkYqH694Pxo_aTgFq5HhVpqaD5ECMKkzPackQxqgP3bbf0o66q2QtzoPTy3Kn8rgB8iBczzWe27ckxfwJUnduDNh0Sxv0v0dVeOK-jV9CS4mnd-vj7Zh9b4WsP8HqCW9F74ZJk4mdu9CYhJEy1K3cJDmDcYJappkhbjP7sDlTzd_LHSaYLc' },
-  { name: 'Jung Kook', value: 'Jung Kook', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBl0U4rvfhPw4cEuQpQ6Y1dOpa7YPk9yBRgZZmhKGkprylu6J5ko9bJLsLF_isb5V4r0dJu1_fxx1R6ZUdgbU4473KX9B9kOF8jngPPhdhqutv1fw4cvsVc9N6AIwE2ew1hP4wiFozi_JFd1yyuemwW-bW8PFI7lYil3w2Ghb1K_Tsl8RAiAFHJZCelRsNsZNs2JUfR0-HPet9maAGZvcgMfQyDRVoG9OBzOjg9B_dVotXCsZbCS_-0MczZTYdAIJUmr4WAosoZFHo' }
+  { name: 'BTS (OT7)', value: 'BTS', image: '/profile-icons/7.png' },
+  { name: 'RM', value: 'RM', image: '/profile-icons/RM.png' },
+  { name: 'Jin', value: 'Jin', image: '/profile-icons/JIN.png' },
+  { name: 'SUGA', value: 'SUGA', image: '/profile-icons/SUGA.png' },
+  { name: 'j-hope', value: 'j-hope', image: '/profile-icons/JHOPE.png' },
+  { name: 'Jimin', value: 'Jimin', image: '/profile-icons/JIMIN.png' },
+  { name: 'V', value: 'V', image: '/profile-icons/V.png' },
+  { name: 'Jung Kook', value: 'Jung Kook', image: '/profile-icons/JUNGKOOK.png' }
 ]
 
 const ERA_OPTIONS = [
@@ -727,7 +727,7 @@ function AIPlaylistContent() {
               AI Playlist Architect
             </h1>
             <p className="text-gray-400 text-xs sm:text-sm md:text-base max-w-2xl">
-              Craft the perfect soundscape using Galaxy AI. Mix eras, moods, and members for your ultimate ARMY experience.
+              Craft the perfect soundscape. Mix eras, moods, and members for your ultimate ARMY experience.
             </p>
           </div>
           <div className="flex gap-2 sm:gap-3">

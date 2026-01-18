@@ -135,7 +135,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
   const isDeleteEnabled = deleteConfirmText === 'DELETE'
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {error && (
         <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
           <p className="text-red-400 text-sm">{error}</p>
@@ -144,14 +144,14 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
 
       {/* Header */}
       <div>
-         <h2 className="text-xl font-bold text-white flex items-center gap-2">
+         <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
            Privacy & Safety
          </h2>
-         <p className="text-sm text-gray-400 mt-1">Manage who can see your profile and data.</p>
+         <p className="text-xs sm:text-sm text-gray-400 mt-1">Manage who can see your profile and data.</p>
       </div>
 
       {/* Profile Visibility */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 overflow-hidden p-5 sm:p-6 md:p-8">
         <div className="flex items-center gap-2 mb-6">
           <Shield className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-bold text-white">Profile Visibility</h3>
@@ -194,7 +194,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Field-Level Visibility */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 overflow-hidden p-5 sm:p-6 md:p-8">
         <div className="flex items-center gap-2 mb-2">
           <Eye className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-bold text-white">Field Visibility</h3>
@@ -235,7 +235,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Content & Communication */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 overflow-hidden p-5 sm:p-6 md:p-8">
         <div className="flex items-center gap-2 mb-6">
           <AlertTriangle className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-bold text-white">Content & Communication</h3>
@@ -305,7 +305,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Blocked Users */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 overflow-hidden p-5 sm:p-6 md:p-8">
         <div className="flex items-center gap-2 mb-2">
           <UserX className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-bold text-white">Blocked Users</h3>
@@ -341,7 +341,7 @@ export default function PrivacyForm({ profile, onUpdate, error, onError }: Priva
       </div>
 
       {/* Data Controls */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden p-8">
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 overflow-hidden p-5 sm:p-6 md:p-8">
         <div className="flex items-center gap-2 mb-6">
           <Download className="w-5 h-5 text-purple-400" />
           <h3 className="text-lg font-bold text-white">Data Controls</h3>

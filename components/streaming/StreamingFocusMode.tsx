@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
-import { Search, AlertCircle, CheckCircle, Music, GripVertical, Trash2, ChevronDown, Flag, Info, Loader2, Download, GitCompare, Calendar, Zap, Clock, Edit3 } from 'lucide-react'
+import { Search, AlertCircle, CheckCircle, Music, GripVertical, Trash2, ChevronDown, Flag, Info, Loader2, Hash, Zap, Clock, Edit3, ExternalLink, Share2 } from 'lucide-react'
 
 interface Props {
   focusResult: SongDoc[] | null
@@ -15,6 +15,7 @@ interface Props {
   saveError: string | null
   saveSuccess: string | null
   savedPlaylistUrl: string | null
+  onOpenShareModal: () => void
   handleSaveToSpotify: (songs?: SongDoc[]) => Promise<void>
   removeFromFocusResult: (index: number) => void
   focusDraggedIndex: number | null
@@ -75,7 +76,7 @@ export default function StreamingFocusMode(props: Props) {
 
   // Form state
   const [platform, setPlatform] = useState('spotify')
-  const [targetDuration, setTargetDuration] = useState('3h 15m')
+  const [targetLengthInput, setTargetLengthInput] = useState('60')
   const [focusTrackId, setFocusTrackId] = useState('')
   const [focusSearch, setFocusSearch] = useState('')
   const [gapRange, setGapRange] = useState([2, 4])
@@ -144,10 +145,12 @@ export default function StreamingFocusMode(props: Props) {
     if (!focusTrackId) return
     setGenerating(true)
 
+    const parsedLength = Number.parseInt(targetLengthInput, 10)
+    const totalLength = Number.isFinite(parsedLength) ? Math.max(1, parsedLength) : 60
     const payload: any = {
       mode: gapMode,
       primaryTrackId: focusTrackId,
-      totalLength: 60, // Can be calculated from targetDuration
+      totalLength,
     }
 
     if (gapMode === 'auto') {
@@ -233,15 +236,31 @@ export default function StreamingFocusMode(props: Props) {
               </label>
 
               <label className="flex flex-col gap-1 sm:gap-1.5">
-                <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">Duration</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">Playlist Length (songs)</span>
                 <div className="relative">
                   <input
                     type="text"
-                    value={targetDuration}
-                    onChange={(e) => setTargetDuration(e.target.value)}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={targetLengthInput}
+                    onChange={(e) => {
+                      const nextValue = e.target.value
+                      if (nextValue === '' || /^[0-9]+$/.test(nextValue)) {
+                        setTargetLengthInput(nextValue)
+                      }
+                    }}
+                    onBlur={() => {
+                      if (targetLengthInput.trim() === '') {
+                        setTargetLengthInput('60')
+                        return
+                      }
+                      const parsed = Number.parseInt(targetLengthInput, 10)
+                      const normalized = Number.isFinite(parsed) ? Math.max(1, parsed) : 60
+                      setTargetLengthInput(String(normalized))
+                    }}
                     className="w-full bg-background-dark border border-border-dark text-white text-xs sm:text-sm rounded-xl h-9 sm:h-10 px-2 sm:px-3 pr-7 sm:pr-8 focus:ring-1 focus:ring-primary focus:border-primary font-mono"
                   />
-                  <Calendar className="absolute right-2.5 sm:right-3 top-2.5 text-text-muted w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                  <Hash className="absolute right-2.5 sm:right-3 top-2.5 text-text-muted w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 </div>
               </label>
             </div>
@@ -769,15 +788,6 @@ export default function StreamingFocusMode(props: Props) {
 
           {/* Footer Actions */}
           <div className="mt-auto flex flex-col gap-2 sm:gap-3 pt-2">
-            <div className="relative">
-              <select className="w-full bg-surface-dark border border-border-dark text-text-muted text-xs sm:text-sm rounded-xl h-9 sm:h-10 px-2 sm:px-3 appearance-none cursor-pointer hover:border-primary/50 transition-colors">
-                <option>Load Template: Comeback Stream</option>
-                <option>Load Template: Maintenance Loop</option>
-              </select>
-              <svg className="w-4 sm:w-5 h-4 sm:h-5 absolute right-2.5 sm:right-3 top-2.5 text-text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
-            </div>
             <button
               onClick={handleGenerate}
               disabled={!focusTrackId || generating}
@@ -959,44 +969,42 @@ export default function StreamingFocusMode(props: Props) {
 
               {/* Bottom Action Bar */}
               <div className="p-2.5 sm:p-4 bg-[#171023] border-t border-border-dark shrink-0">
-                <div className="flex flex-col md:flex-row gap-2 sm:gap-3 items-center justify-between">
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <button className="text-text-muted hover:text-white text-[10px] sm:text-sm flex items-center gap-1">
-                      <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Export Options
-                    </button>
-                    <span className="text-border-dark">|</span>
-                    <button className="text-text-muted hover:text-white text-[10px] sm:text-sm flex items-center gap-1">
-                      <GitCompare className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                      Compare
-                    </button>
+                {props.savedPlaylistUrl && (
+                  <div className="mb-2 sm:mb-3 flex items-center justify-between gap-2">
+                    <span className="text-[10px] sm:text-xs text-text-muted">Playlist link ready</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => window.open(props.savedPlaylistUrl!, '_blank')}
+                        className="text-[10px] sm:text-xs text-primary hover:text-primary-dark flex items-center gap-1"
+                      >
+                        Open <ExternalLink className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={props.onOpenShareModal}
+                        className="text-[10px] sm:text-xs text-primary hover:text-primary-dark flex items-center gap-1"
+                      >
+                        Share <Share2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
-
-                  <div className="flex gap-2 sm:gap-3 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none h-8 sm:h-10 px-3 sm:px-4 rounded-full border border-border-dark bg-surface-dark text-white text-xs sm:text-sm font-bold hover:bg-border-dark transition-colors flex items-center justify-center gap-1.5 sm:gap-2">
-                      <Download className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                      <span>CSV</span>
-                    </button>
-                    <button
-                      onClick={() => props.handleSaveToSpotify(props.focusResult!)}
-                      disabled={props.isSaving}
-                      className="flex-1 md:flex-none h-8 sm:h-10 px-4 sm:px-6 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-white text-xs sm:text-sm font-bold shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-1.5 sm:gap-2 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {props.isSaving ? (
-                        <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
-                      ) : (
-                        <>
-                          <svg className="w-4 sm:w-5 h-4 sm:h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                          </svg>
-                          <span>Create</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                )}
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => props.handleSaveToSpotify(props.focusResult!)}
+                    disabled={props.isSaving}
+                    className="h-8 sm:h-10 px-4 sm:px-6 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-white text-xs sm:text-sm font-bold shadow-lg shadow-green-900/20 transition-all flex items-center justify-center gap-1.5 sm:gap-2 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {props.isSaving ? (
+                      <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <svg className="w-4 sm:w-5 h-4 sm:h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                        </svg>
+                        <span>Create</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 {/* Error/Success Messages */}

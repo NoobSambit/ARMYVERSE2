@@ -6,7 +6,7 @@ const createJestConfig = nextJest({
 
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
@@ -15,9 +15,12 @@ const customJestConfig = {
   collectCoverageFrom: [
     'components/**/*.{ts,tsx}',
     'app/**/*.{ts,tsx}',
+    'lib/game/**/*.{ts,tsx}',
     '!**/index.ts',
     '!**/types.ts',
   ],
+  // Only run tests from test directory
+  testMatch: ['<rootDir>/test/**/*.test.{ts,tsx}'],
 }
 
 module.exports = createJestConfig(customJestConfig)

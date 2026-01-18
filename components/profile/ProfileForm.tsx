@@ -95,7 +95,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
   }, [onUpdate, profile.handle, checkHandleAvailability])
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Error display */}
       {error && (
         <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
@@ -105,10 +105,10 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
       )}
 
       {/* Profile Images Section */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 p-8">
-        <h3 className="text-lg font-bold text-white mb-6">Profile Images</h3>
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 p-5 sm:p-6 md:p-8">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6">Profile Images</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Avatar */}
           <div className="col-span-1">
             <label className="block text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Avatar</label>
@@ -138,10 +138,10 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
       </div>
 
       {/* Basic Information Section */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 p-8">
-        <h3 className="text-lg font-bold text-white mb-6">Basic Information</h3>
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 p-5 sm:p-6 md:p-8">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6">Basic Information</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5 sm:mb-6">
           {/* Display Name */}
           <div>
             <label htmlFor="displayName" className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Display Name</label>
@@ -243,9 +243,9 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
       </div>
 
       {/* ARMY Information Toggle */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 p-8">
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 p-5 sm:p-6 md:p-8">
         <div className="flex items-center justify-between cursor-pointer group" onClick={() => setShowMore(!showMore)}>
-           <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">ARMY Details</h3>
+           <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-purple-400 transition-colors">ARMY Details</h3>
            <motion.div animate={{ rotate: showMore ? 180 : 0 }}>
              <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
            </motion.div>
@@ -256,7 +256,7 @@ export default function ProfileForm({ profile, onUpdate, loading, error }: Profi
            animate={{ height: showMore ? 'auto' : 0, opacity: showMore ? 1 : 0 }}
            className="overflow-hidden"
         >
-           <div className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="pt-4 sm:pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
              {/* Bias */}
              <div className="col-span-1 md:col-span-2">
                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Your Bias</label>

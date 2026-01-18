@@ -61,6 +61,7 @@ const SCOPE_TAGS: Record<string, string> = {
 
 export default function ConnectionsForm({ profile, onUpdate, error }: ConnectionsFormProps) {
   const { user } = useAuth()
+  const redirectUri = 'https://armyverse.vercel.app/api/spotify/callback'
   const [spotifyStatus, setSpotifyStatus] = useState<SpotifyStatusData>({
     connected: false,
     loading: true
@@ -252,27 +253,6 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     })
   }, [onUpdate, profile.socials])
 
-  // Standard Spotify connect (owner app)
-  const connectSpotify = useCallback(async () => {
-    if (!user) return
-    setReconnecting(true)
-    try {
-      const token = await getAuthToken(user)
-      const response = await fetch('/api/spotify/auth-url', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.ok) {
-        const { url } = await response.json()
-        await track('connection_connected', { platform: 'spotify' })
-        window.location.href = url
-      }
-    } catch (err) {
-      console.error('Failed to get Spotify auth URL:', err)
-    } finally {
-      setReconnecting(false)
-    }
-  }, [user])
-
   // Disconnect standard Spotify
   const disconnectSpotify = useCallback(async () => {
     if (!user) return
@@ -302,14 +282,11 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
     }
   }, [user, checkSpotifyStatus])
 
-  // Smart reconnect: uses BYO credentials if available, otherwise standard
+  // Reconnect using saved BYO credentials
   const handleReconnect = useCallback(() => {
-    if (spotifyStatus.mode === 'byo' || spotifyStatus.hasByoCredentials) {
-      reconnectBYO()
-    } else {
-      connectSpotify()
-    }
-  }, [spotifyStatus.mode, spotifyStatus.hasByoCredentials, reconnectBYO, connectSpotify])
+    if (!spotifyStatus.hasByoCredentials && spotifyStatus.mode !== 'byo') return
+    reconnectBYO()
+  }, [spotifyStatus.mode, spotifyStatus.hasByoCredentials, reconnectBYO])
 
   // Smart disconnect: uses BYO disconnect if in BYO mode
   const handleDisconnect = useCallback(() => {
@@ -321,13 +298,13 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
   }, [spotifyStatus.mode, disconnectBYO, disconnectSpotify])
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
           Connections
         </h2>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-xs sm:text-sm text-gray-400 mt-1">
           Manage your external accounts and social links for your profile.
         </p>
       </div>
@@ -339,15 +316,24 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
         </div>
       )}
 
-      {/* Spotify Integration Card */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden">
-        <div className="p-8">
-          <div className="flex items-center gap-3 mb-6">
+      {/* Spotify Connection (BYO Required) */}
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 overflow-hidden">
+        <div className="p-5 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-green-500/10 rounded-xl">
               <Music className="w-6 h-6 text-green-500" />
             </div>
-            <h3 className="text-lg font-bold text-white">Spotify Integration</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white">Spotify Connection</h3>
+              <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs font-bold rounded-lg uppercase tracking-wide">
+                BYO Required
+              </span>
+            </div>
           </div>
+
+          <p className="text-sm text-gray-400 leading-relaxed font-medium">
+            Spotify is in developer mode, so each user must connect with their own Spotify Developer App. We still send you through Spotify OAuth; your app credentials just identify the app and unlock your personal rate limits.
+          </p>
 
           <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
             {spotifyStatus.loading ? (
@@ -356,51 +342,21 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                 <span>Checking status...</span>
               </div>
             ) : spotifyStatus.connected ? (
-              // Connected state
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-green-900/20">
-                    {spotifyStatus.displayName?.[0]?.toUpperCase() || 'S'}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-white">Connected to Spotify</h4>
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      Logged in as <span className="text-white font-medium">{spotifyStatus.displayName || 'User'}</span>
-                    </p>
-
-                    {/* Scopes Badges */}
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {(spotifyStatus.scopes || []).slice(0, 3).map(scope => (
-                        <span key={scope} className="px-2 py-0.5 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                          {SCOPE_TAGS[scope] || 'ACCESS'}
-                        </span>
-                      ))}
+              spotifyStatus.mode === 'standard' ? (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                    <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-yellow-400 mb-1">Standard connection detected</h4>
+                      <p className="text-sm text-yellow-200/80">
+                        Standard OAuth is disabled during developer mode. Please disconnect and reconnect using your own app below.
+                      </p>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex gap-3 w-full md:w-auto">
-                  <button
-                    onClick={handleReconnect}
-                    disabled={reconnecting}
-                    className="flex-1 md:flex-none px-5 py-2.5 bg-[#2E2E32] hover:bg-[#3E3E42] disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
-                  >
-                    {reconnecting ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        Reconnecting...
-                      </>
-                    ) : (
-                      'Reconnect'
-                    )}
-                  </button>
                   <button
                     onClick={handleDisconnect}
                     disabled={disconnecting}
-                    className="flex-1 md:flex-none px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                    className="w-full px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
                   >
                     {disconnecting ? (
                       <>
@@ -408,30 +364,153 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                         Disconnecting...
                       </>
                     ) : (
-                      'Disconnect'
+                      'Disconnect Standard Connection'
                     )}
                   </button>
                 </div>
-              </div>
-            ) : spotifyStatus.needsReauth ? (
-              // Needs re-authorization state (token expired/revoked)
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-                  <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-yellow-400 mb-1">Connection Issue</h4>
-                    <p className="text-sm text-yellow-200/80">{spotifyStatus.message || 'Your Spotify connection needs to be refreshed.'}</p>
-                    {spotifyStatus.displayName && (
-                      <p className="text-xs text-gray-400 mt-2">Previously connected as: {spotifyStatus.displayName}</p>
-                    )}
+              ) : (
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-green-900/20">
+                      {spotifyStatus.displayName?.[0]?.toUpperCase() || 'S'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white">Connected via your app</h4>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        Logged in as <span className="text-white font-medium">{spotifyStatus.displayName || 'User'}</span>
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {(spotifyStatus.scopes || []).slice(0, 3).map(scope => (
+                          <span key={scope} className="px-2 py-0.5 bg-white/5 border border-white/5 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                            {SCOPE_TAGS[scope] || 'ACCESS'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 w-full md:w-auto">
+                    <button
+                      onClick={handleReconnect}
+                      disabled={reconnecting}
+                      className="flex-1 md:flex-none px-5 py-2.5 bg-[#2E2E32] hover:bg-[#3E3E42] disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                    >
+                      {reconnecting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Reconnecting...
+                        </>
+                      ) : (
+                        'Reconnect'
+                      )}
+                    </button>
+                    <button
+                      onClick={handleDisconnect}
+                      disabled={disconnecting}
+                      className="flex-1 md:flex-none px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                    >
+                      {disconnecting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Disconnecting...
+                        </>
+                      ) : (
+                        'Disconnect'
+                      )}
+                    </button>
                   </div>
                 </div>
+              )
+            ) : spotifyStatus.needsReauth ? (
+              spotifyStatus.mode === 'standard' ? (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                    <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-yellow-400 mb-1">Standard connection expired</h4>
+                      <p className="text-sm text-yellow-200/80">
+                        Standard OAuth is disabled during developer mode. Disconnect and reconnect using your own app below.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleDisconnect}
+                    disabled={disconnecting}
+                    className="w-full px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  >
+                    {disconnecting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Disconnecting...
+                      </>
+                    ) : (
+                      'Disconnect Standard Connection'
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                    <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-yellow-400 mb-1">Connection issue</h4>
+                      <p className="text-sm text-yellow-200/80">{spotifyStatus.message || 'Your Spotify connection needs to be refreshed.'}</p>
+                      {spotifyStatus.displayName && (
+                        <p className="text-xs text-gray-400 mt-2">Previously connected as: {spotifyStatus.displayName}</p>
+                      )}
+                    </div>
+                  </div>
 
-                <div className="flex gap-3">
+                  {spotifyStatus.hasByoCredentials ? (
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleReconnect}
+                        disabled={reconnecting}
+                        className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        {reconnecting ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            Reconnecting...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="w-4 h-4" />
+                            Reconnect Now
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleDisconnect}
+                        disabled={disconnecting}
+                        className="px-5 py-3 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors"
+                      >
+                        {disconnecting ? 'Removing...' : 'Remove'}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">
+                      Enter your app credentials below to reconnect.
+                    </p>
+                  )}
+                </div>
+              )
+            ) : (
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-bold text-white">Not connected</h4>
+                  <p className="text-sm text-gray-400">
+                    Set up your Spotify Developer App below to connect your account.
+                  </p>
+                </div>
+                {spotifyStatus.hasByoCredentials && (
                   <button
                     onClick={handleReconnect}
                     disabled={reconnecting}
-                    className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                    className="px-6 py-3 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
                   >
                     {reconnecting ? (
                       <>
@@ -441,69 +520,30 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                     ) : (
                       <>
                         <RefreshCw className="w-4 h-4" />
-                        Reconnect Now
+                        Reconnect Saved App
                       </>
                     )}
                   </button>
-                  {(spotifyStatus.mode === 'byo' || spotifyStatus.hasByoCredentials) && (
-                    <button
-                      onClick={handleDisconnect}
-                      disabled={disconnecting}
-                      className="px-5 py-3 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 text-red-500 border border-red-500/20 rounded-xl text-sm font-bold transition-colors"
-                    >
-                      {disconnecting ? 'Removing...' : 'Remove'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              // Not connected state
-              <div className="text-center py-6">
-                <p className="text-gray-400 mb-6 font-medium">Connect to show your listening activity and favorites.</p>
-                <button
-                  onClick={connectSpotify}
-                  disabled={reconnecting}
-                  className="px-8 py-3.5 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-2xl font-bold shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 mx-auto uppercase tracking-wide text-sm"
-                >
-                  {reconnecting ? (
-                    <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Music className="w-5 h-5" />
-                      Connect Spotify
-                    </>
-                  )}
-                </button>
+                )}
               </div>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* BYOA Card */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden">
-        <div className="p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-purple-500/10 rounded-xl">
-              <Settings className="w-6 h-6 text-purple-500" />
+          <div className="space-y-5">
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-purple-400" />
+              <h4 className="text-sm font-bold text-white">Use your own Spotify app</h4>
             </div>
-            <h3 className="text-lg font-bold text-white">Bring Your Own App</h3>
-            {spotifyStatus.mode === 'byo' && spotifyStatus.connected && (
-              <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded-lg flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" />
-                Active
-              </span>
-            )}
-          </div>
 
-          <p className="text-sm text-gray-400 mb-8 leading-relaxed font-medium">
-            Using your own Spotify Developer App credentials provides higher rate limits and stability for your profile widgets.
-          </p>
+            <div className="text-sm text-gray-400 space-y-1">
+              <p>1) Create an app in the Spotify Developer Dashboard.</p>
+              <p>2) Add this Redirect URI:</p>
+              <div className="px-3 py-2 bg-black/30 border border-white/10 rounded-xl text-xs text-white font-mono break-all">
+                {redirectUri || 'Redirect URI not configured'}
+              </div>
+              <p>3) In developer mode, add your Spotify account under Users and Access.</p>
+            </div>
 
-          <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Client ID</label>
@@ -516,7 +556,7 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Client Secret</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Client Secret (Optional)</label>
                 <input
                   type="password"
                   value={byo.clientSecret}
@@ -558,13 +598,17 @@ export default function ConnectionsForm({ profile, onUpdate, error }: Connection
                 </>
               )}
             </button>
+
+            <p className="text-xs text-gray-500">
+              We encrypt your client secret and tokens at rest.
+            </p>
           </div>
         </div>
       </div>
 
       {/* Social Links (Simplified to list styling) */}
-      <div className="bg-[#151518] rounded-[2rem] border border-white/5 overflow-hidden">
-        <div className="p-8">
+      <div className="bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 overflow-hidden">
+        <div className="p-5 sm:p-6 md:p-8">
           <h3 className="text-lg font-bold text-white mb-6">Social Links</h3>
           <div className="space-y-5">
             {SOCIAL_PLATFORMS.map(platform => {

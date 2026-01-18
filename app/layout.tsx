@@ -4,6 +4,7 @@ import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ToastProvider } from '@/components/ui/Toast'
+import Footer from '@/components/layout/Footer'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfairDisplay = Playfair_Display({
@@ -96,6 +97,7 @@ export default function RootLayout({
           <AuthProvider>
             <Navbar />
             {children}
+            <Footer />
           </AuthProvider>
         </ToastProvider>
       </body>

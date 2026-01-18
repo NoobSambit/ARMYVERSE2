@@ -3,6 +3,9 @@ import { User } from '@/lib/models/User'
 import { connect } from '@/lib/db/mongoose'
 import { z } from 'zod'
 import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
+import { UserGameState } from '@/lib/models/UserGameState'
+import { InventoryItem } from '@/lib/models/InventoryItem'
+import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
 
 // Validation schemas - Clean and consistent approach
 const profileUpdateSchema = z.object({
@@ -114,10 +117,10 @@ export async function GET(request: NextRequest) {
     }
 
     await connect()
-    
+
     // Find or create user based on auth type
     let dbUser = await getUserFromAuth(authUser)
-    
+
     // If user doesn't exist, create them with minimal profile (mainly for Firebase users)
     if (!dbUser && authUser.authType === 'firebase' && authUser.email) {
       dbUser = await User.findOneAndUpdate(
@@ -135,8 +138,8 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        { 
-          upsert: true, 
+        {
+          upsert: true,
           new: true,
           projection: { profile: 1, email: 1, name: 1, firebaseUid: 1, username: 1 }
         }
@@ -155,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     // Extract profile data from Mongoose document
     const savedProfile = dbUser.profile ? dbUser.profile.toObject() : {}
-    
+
     const profile = {
       // Start with auth data as base
       displayName: authUser.displayName || authUser.username || 'User',
@@ -169,6 +172,36 @@ export async function GET(request: NextRequest) {
       ...savedProfile
     }
 
+    // Determine the ID to use for game stats (prefer firebaseUid as it's the primary key for game data for imported users)
+    const gameUserId = dbUser.firebaseUid || dbUser._id.toString()
+
+    // Fetch Boraland stats
+    const [gameState, totalCards, leaderboardEntry] = await Promise.all([
+      UserGameState.findOne({ userId: gameUserId }).lean() as any,
+      InventoryItem.countDocuments({ userId: gameUserId }),
+      LeaderboardEntry.findOne({ userId: gameUserId, periodKey: 'alltime' }).lean() as any
+    ])
+
+    // Calculate rank fallback
+    let rank = leaderboardEntry?.rank || 0
+    if (!rank && gameState?.xp) {
+      // Estimate rank if not found or 0 (optional, could be expensive so skip for now or do simple count)
+      // For performance, we'll stick to 0 or null if not indexed
+      // Actually, let's try to get it if it's missing but we have XP
+      // rank = await LeaderboardEntry.countDocuments({ periodKey: 'alltime', score: { $gt: gameState.xp } }) + 1
+    }
+
+    const gameStats = {
+      totalCards: totalCards || 0,
+      totalXp: gameState?.xp || 0,
+      leaderboardRank: rank
+    }
+
+    profile.stats = {
+      ...profile.stats,
+      ...gameStats
+    }
+
     console.log('GET - dbUser.profile (raw):', dbUser.profile)
     console.log('GET - savedProfile (clean):', savedProfile)
     console.log('GET - merged profile:', profile)
@@ -176,7 +209,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ profile })
   } catch (error) {
     console.error('Profile GET error:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       ...(process.env.NODE_ENV === 'development' && { details: error instanceof Error ? error.message : 'Unknown error' })
     }, { status: 500 })
@@ -186,28 +219,28 @@ export async function GET(request: NextRequest) {
 // Helper function to sanitize and validate request body
 function sanitizeRequestBody(body: Record<string, unknown>) {
   const sanitized: Record<string, unknown> = {}
-  
+
   Object.entries(body).forEach(([key, value]) => {
     // Skip null/undefined values
     if (value === null || value === undefined) {
       return
     }
-    
+
     // Handle empty strings - convert to undefined for optional fields
     if (typeof value === 'string' && value.trim() === '') {
       sanitized[key] = undefined
       return
     }
-    
+
     // Handle empty objects
     if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) {
       return
     }
-    
+
     // Keep valid values
     sanitized[key] = value as unknown
   })
-  
+
   return sanitized
 }
 
@@ -236,10 +269,10 @@ export async function PUT(request: NextRequest) {
       const query = authUser.authType === 'firebase' && authUser.email
         ? { 'profile.handle': validatedData.handle, email: { $ne: authUser.email } }
         : { 'profile.handle': validatedData.handle, username: { $ne: authUser.username } }
-        
+
       const existingUser = await User.findOne(query)
       if (existingUser) {
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: 'Handle already taken',
           field: 'handle'
         }, { status: 409 })
@@ -248,7 +281,7 @@ export async function PUT(request: NextRequest) {
 
     // Find user - use upsert for efficiency
     const updateFields: Record<string, unknown> = {}
-    
+
     // Build update fields dynamically
     Object.keys(validatedData).forEach(key => {
       const value = validatedData[key as keyof typeof validatedData]
@@ -267,14 +300,14 @@ export async function PUT(request: NextRequest) {
 
     // Check if user exists first
     const existingUser = await getUserFromAuth(authUser)
-    
+
     let dbUser
     if (existingUser) {
       // Update existing user
       const updateQuery = authUser.authType === 'firebase' && authUser.email
         ? { email: authUser.email }
         : { username: authUser.username }
-        
+
       dbUser = await User.findOneAndUpdate(
         updateQuery,
         {
@@ -285,7 +318,7 @@ export async function PUT(request: NextRequest) {
             ...updateFields
           }
         },
-        { 
+        {
           new: true,
           runValidators: true
         }
@@ -308,8 +341,8 @@ export async function PUT(request: NextRequest) {
             }
           }
         },
-        { 
-          upsert: true, 
+        {
+          upsert: true,
           new: true,
           runValidators: true
         }
@@ -320,15 +353,15 @@ export async function PUT(request: NextRequest) {
 
     console.log('PUT - saved profile:', dbUser.profile)
 
-    return NextResponse.json({ 
-      success: true, 
-      profile: dbUser.profile 
+    return NextResponse.json({
+      success: true,
+      profile: dbUser.profile
     })
   } catch (error) {
     console.error('Profile PUT error:', error)
-    
+
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Validation error',
         details: error.errors.map(err => ({
           field: err.path.join('.'),
@@ -341,21 +374,21 @@ export async function PUT(request: NextRequest) {
     if (error instanceof Error) {
       // Handle specific MongoDB errors
       if (error.message.includes('duplicate key')) {
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: 'Handle already taken',
           field: 'handle'
         }, { status: 409 })
       }
-      
+
       if (error.message.includes('validation failed')) {
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: 'Invalid data format',
           details: error.message
         }, { status: 400 })
       }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       ...(process.env.NODE_ENV === 'development' && { details: error instanceof Error ? error.message : 'Unknown error' })
     }, { status: 500 })

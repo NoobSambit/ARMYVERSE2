@@ -5,6 +5,7 @@ export type StreamRow = {
   totalStreams: number
   dailyGain?: number
   url?: string
+  spotifyId?: string
   albumArt?: string
 }
 
@@ -57,5 +58,4 @@ export type ArtistAlbumsGroup = {
   totals: ArtistTotals
   albums: AlbumRow[]
 }
-
 

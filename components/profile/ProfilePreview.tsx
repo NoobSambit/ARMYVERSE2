@@ -35,7 +35,14 @@ interface PublicProfileShape {
   topAlbum?: { name: string; artist: string } | null
   location?: string
   socials?: Record<string, unknown>
-  stats?: { totalPlaylists?: number; totalLikes?: number; totalSaves?: number }
+  stats?: {
+    totalPlaylists?: number;
+    totalLikes?: number;
+    totalSaves?: number;
+    totalCards?: number;
+    totalXp?: number;
+    leaderboardRank?: number;
+  }
   privacy?: unknown
   personalization?: {
     accentColor?: string
@@ -88,6 +95,8 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
 
   const getSocialUrl = (platform: string, handle: string) => {
     if (!handle) return ''
+    if (handle.startsWith('http')) return handle
+
     switch (platform) {
       case 'twitter': return `https://twitter.com/${handle.replace('@', '')}`
       case 'instagram': return `https://instagram.com/${handle.replace('@', '')}`
@@ -105,7 +114,7 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, type: "spring", stiffness: 100 }}
-          className={`w-full ${isSidebar ? 'max-w-none' : 'max-w-4xl'} rounded-[2rem] overflow-hidden relative shadow-2xl`}
+          className={`w-full ${isSidebar ? 'max-w-none' : 'max-w-4xl'} rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden relative shadow-2xl`}
           style={{
             boxShadow: `0 20px 40px -10px ${withAlpha(accentColor, 0.15)}`,
             border: `1px solid ${withAlpha(accentColor, 0.1)}`,
@@ -113,7 +122,7 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
           }}
         >
           {/* Banner Area */}
-          <div className="h-32 relative w-full overflow-hidden rounded-t-[2rem]">
+          <div className="h-24 sm:h-28 md:h-32 relative w-full overflow-hidden rounded-t-[1.5rem] sm:rounded-t-[2rem]">
             {publicProfile.bannerUrl ? (
               <Image
                 src={publicProfile.bannerUrl}
@@ -127,12 +136,12 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
           </div>
 
           {/* Profile Content */}
-          <div className="px-6 pb-6 relative"
+          <div className="px-4 pb-5 sm:px-5 sm:pb-5 md:px-6 md:pb-6 relative"
           >
             {/* Avatar */}
-            <div className="relative -mt-12 mb-4 flex justify-between items-end">
+            <div className="relative -mt-10 sm:-mt-12 mb-4 flex justify-between items-end">
               <div
-                className="w-24 h-24 rounded-full p-1 relative z-10 bg-black/40 backdrop-blur-md"
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full p-1 relative z-10 bg-black/40 backdrop-blur-md"
               >
                 <div className="w-full h-full rounded-full overflow-hidden relative border-2 border-white/10">
                   <Image
@@ -143,31 +152,20 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
                   />
                 </div>
                 {/* Online Status Dot */}
-                <div className="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-black" />
+                <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-black" />
               </div>
 
               <div className="flex gap-2 mb-1">
-                <button
-                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70 transition-colors border border-white/5"
-                  title="Message (Preview)"
-                >
-                  <Mail className="w-4 h-4" />
-                </button>
-                <button
-                  className="px-6 py-1.5 rounded-full text-sm font-semibold text-white transition-colors shadow-lg shadow-purple-900/20"
-                  style={{ backgroundColor: accentColor }}
-                >
-                  Follow
-                </button>
+                {/* Removed Message/Follow buttons as requested */}
               </div>
             </div>
 
             {/* Name & Handle */}
             <div className="mb-4">
-              <h2 className="text-xl font-bold text-white leading-tight drop-shadow-sm">
+              <h2 className="text-lg sm:text-xl font-bold text-white leading-tight drop-shadow-sm">
                 {publicProfile.displayName || 'ARMY Member'}
               </h2>
-              <div className="flex items-center gap-2 text-sm text-gray-300 mt-1">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-300 mt-0.5 sm:mt-1">
                 <span>{publicProfile.handle ? `@${publicProfile.handle}` : '@username'}</span>
                 <span className="w-1 h-1 rounded-full bg-gray-500" />
                 <span>{publicProfile.pronouns || 'They/Them'}</span>
@@ -176,36 +174,55 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
 
             {/* Bio */}
             {publicProfile.bio && (
-              <p className="text-sm text-gray-200 leading-relaxed mb-4 line-clamp-3 font-medium">
+              <p className="text-xs sm:text-sm text-gray-200 leading-relaxed mb-4 line-clamp-3 font-medium">
                 {publicProfile.bio}
               </p>
             )}
 
             {/* Private Profile Notice */}
             {isPrivate && (
-              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/5 mb-6">
-                <Lock className="w-5 h-5 text-gray-400" />
-                <p className="text-sm text-gray-400">This account is private</p>
+              <div className="flex items-center gap-3 p-3 sm:p-4 bg-white/5 rounded-xl sm:rounded-2xl border border-white/5 mb-4 sm:mb-6">
+                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <p className="text-xs sm:text-sm text-gray-400">This account is private</p>
               </div>
             )}
 
-            {/* Tags (Bias, Year) */}
+            {/* Tags (Bias, Wrecker, Era, Year) */}
             {!isPrivate && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {/* Bias Badge */}
-                {isFieldVisible('bias', originalPrivacy) && publicProfile.bias && publicProfile.bias.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+                {/* Bias Badges */}
+                {isFieldVisible('bias', originalPrivacy) && publicProfile.bias && publicProfile.bias.map((biasMember: string) => (
                   <span
-                    className="px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase shadow-sm"
+                    key={biasMember}
+                    className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase shadow-sm border border-white/5"
                     style={{ backgroundColor: accentSoft, color: accentText }}
                   >
-                    {publicProfile.bias[0]} BIAS
+                    {biasMember} BIAS
+                  </span>
+                ))}
+
+                {/* Bias Wrecker */}
+                {isFieldVisible('bias', originalPrivacy) && publicProfile.biasWrecker && (
+                  <span
+                    className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase bg-pink-500/10 text-pink-300 border border-pink-500/20"
+                  >
+                    {publicProfile.biasWrecker} WRECKER
+                  </span>
+                )}
+
+                {/* Favorite Era */}
+                {isFieldVisible('era', originalPrivacy) && publicProfile.favoriteEra && (
+                  <span
+                    className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase bg-purple-500/10 text-purple-300 border border-purple-500/20"
+                  >
+                    {publicProfile.favoriteEra} ERA
                   </span>
                 )}
 
                 {/* ARMY Year Badge */}
                 {publicProfile.armySinceYear && (
                   <span
-                    className="px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase bg-black/40 text-gray-300 border border-white/10"
+                    className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase bg-black/40 text-gray-300 border border-white/10"
                   >
                     {formatDate(publicProfile.armySinceYear)}
                   </span>
@@ -213,23 +230,29 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
               </div>
             )}
 
-            {/* Stats Row */}
+            {/* Boraland Stats Row */}
             {!isPrivate && isFieldVisible('stats', originalPrivacy) && (
-              <div className="grid grid-cols-3 gap-4 py-4 border-t border-white/10 mb-6">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 py-3 sm:py-4 border-t border-white/10 mb-4 sm:mb-6 bg-white/5 rounded-xl sm:rounded-2xl mx-0.5 sm:mx-1">
                 <div className="text-center">
-                  <p className="text-lg font-bold text-white drop-shadow-sm">{publicProfile.stats?.totalPlaylists || 0}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Playlists</p>
+                  <p className="text-base sm:text-lg font-bold text-white drop-shadow-sm">{publicProfile.stats?.totalCards || 0}</p>
+                  <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total Cards</p>
                 </div>
                 <div className="text-center border-l border-white/10">
-                  <p className="text-lg font-bold text-white drop-shadow-sm">{publicProfile.stats?.totalLikes || 0}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Likes</p>
+                  <p className="text-base sm:text-lg font-bold text-white drop-shadow-sm">
+                    {publicProfile.stats?.totalXp ? Math.floor(publicProfile.stats.totalXp).toLocaleString() : 0}
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total XP</p>
                 </div>
                 <div className="text-center border-l border-white/10">
                   <div className="flex items-center justify-center gap-1">
                     <Activity className="w-3 h-3 text-yellow-500" />
-                    <span className="text-lg font-bold text-white drop-shadow-sm">42</span>
+                    <span className="text-base sm:text-lg font-bold text-white drop-shadow-sm">
+                      {publicProfile.stats?.leaderboardRank && publicProfile.stats.leaderboardRank > 0
+                        ? `#${publicProfile.stats.leaderboardRank}`
+                        : '-'}
+                    </span>
                   </div>
-                  <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Activity</p>
+                  <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-gray-400 font-bold">Rank</p>
                 </div>
               </div>
             )}
@@ -237,7 +260,7 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
             {/* Listening To Widget */}
             {!isPrivate && (publicProfile.topSong || publicProfile.topAlbum) && (
               <div
-                className="p-3 rounded-2xl flex items-center gap-3 relative overflow-hidden group cursor-default backdrop-blur-md"
+                className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl flex items-center gap-3 relative overflow-hidden group cursor-default backdrop-blur-md"
                 style={{ backgroundColor: withAlpha(accentColor, 0.1), border: `1px solid ${withAlpha(accentColor, 0.2)}` }}
               >
                 {/* Animated EQ Bars (Mock) */}
@@ -261,23 +284,33 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
 
                 <div className="flex-1 min-w-0 z-10">
                   <p className="text-[10px] font-bold text-green-500 uppercase tracking-wider mb-0.5">Listening To</p>
-                  <p className="text-sm font-bold text-white truncate shadow-black drop-shadow-sm">
+                  <p className="text-xs sm:text-sm font-bold text-white truncate shadow-black drop-shadow-sm">
                     {publicProfile.topSong?.name || publicProfile.topAlbum?.name || 'Nothing playing'}
                   </p>
-                  <p className="text-xs text-gray-300 truncate">
+                  <p className="text-[11px] sm:text-xs text-gray-300 truncate">
                     {publicProfile.topSong?.artist || publicProfile.topAlbum?.artist || ''}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Social Links (if no song playing or extra space needed) */}
-            {!isPrivate && isFieldVisible('socials', originalPrivacy) && publicProfile.socials && Object.keys(publicProfile.socials).length > 0 && !publicProfile.topSong && (
-              <div className="flex justify-center gap-4 mt-4">
+            {/* Social Links (Prominent) */}
+            {!isPrivate && isFieldVisible('socials', originalPrivacy) && publicProfile.socials && Object.keys(publicProfile.socials).length > 0 && (
+              <div className="flex justify-center gap-3 mt-4 sm:mt-6">
                 {Object.entries(publicProfile.socials).map(([platform, handle]) => {
                   if (!handle || platform === 'visibility') return null
                   const url = getSocialUrl(platform, handle as string)
                   if (!url) return null
+
+                  // Platform specific colors/styling
+                  const getPlatformStyle = (p: string) => {
+                    switch (p) {
+                      case 'twitter': return 'hover:bg-[#1DA1F2]/20 hover:text-[#1DA1F2] hover:border-[#1DA1F2]/30';
+                      case 'instagram': return 'hover:bg-[#E1306C]/20 hover:text-[#E1306C] hover:border-[#E1306C]/30';
+                      case 'youtube': return 'hover:bg-[#FF0000]/20 hover:text-[#FF0000] hover:border-[#FF0000]/30';
+                      default: return 'hover:bg-white/20 hover:text-white hover:border-white/30';
+                    }
+                  }
 
                   return (
                     <a
@@ -285,9 +318,9 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className={`p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/5 text-gray-400 transition-all duration-300 ${getPlatformStyle(platform)}`}
                     >
-                      {getSocialIcon(platform)}
+                      {React.cloneElement(getSocialIcon(platform) as React.ReactElement, { className: "w-4 h-4 sm:w-5 sm:h-5" })}
                     </a>
                   )
                 })}

@@ -7,7 +7,16 @@
 const MASTERY_MILESTONES = [5, 10, 25, 50, 100] as const
 
 // Member keys for special badges - normalized to lowercase for path matching
-const MEMBER_KEYS = ['rm', 'jin', 'suga', 'j-hope', 'jimin', 'v', 'jungkook', 'ot7'] as const
+const MEMBER_KEYS = [
+  'rm',
+  'jin',
+  'suga',
+  'j-hope',
+  'jimin',
+  'v',
+  'jungkook',
+  'ot7',
+] as const
 
 /**
  * Normalize member key for file path usage
@@ -23,7 +32,11 @@ function normalizeMemberKey(key: string): string {
  * @param key - The member name or era name
  * @param milestone - The milestone level (5, 10, 25, 50, 100)
  */
-export function getMasteryBadgeImagePath(kind: 'member' | 'era', key: string, milestone: number): string {
+export function getMasteryBadgeImagePath(
+  kind: 'member' | 'era',
+  key: string,
+  milestone: number
+): string {
   // For level 100, use special member-specific badges for members
   if (milestone === 100 && kind === 'member') {
     const normalizedKey = normalizeMemberKey(key)
@@ -31,20 +44,28 @@ export function getMasteryBadgeImagePath(kind: 'member' | 'era', key: string, mi
   }
 
   // For all other milestones, use generic milestone badges
-  return `/badges/mastery/milestone-${milestone}.svg`
+  return `/badges/mastery/milestone-${milestone}.png`
 }
 
 /**
  * Get mastery badge rarity based on milestone level
  */
-export function getMasteryBadgeRarity(milestone: number): 'common' | 'rare' | 'epic' | 'legendary' {
+export function getMasteryBadgeRarity(
+  milestone: number
+): 'common' | 'rare' | 'epic' | 'legendary' {
   switch (milestone) {
-    case 5: return 'common'
-    case 10: return 'rare'
-    case 25: return 'rare'
-    case 50: return 'epic'
-    case 100: return 'legendary'
-    default: return 'common'
+    case 5:
+      return 'common'
+    case 10:
+      return 'rare'
+    case 25:
+      return 'rare'
+    case 50:
+      return 'epic'
+    case 100:
+      return 'legendary'
+    default:
+      return 'common'
   }
 }
 
@@ -62,14 +83,14 @@ export function getBadgeImagePath(badgeCode: string): string {
 
   const mapping: Record<string, string> = {
     // Completion badges
-    'daily_completion': '/badges/completion/daily-completion.png',
-    'weekly_completion': '/badges/completion/weekly-completion.png',
+    daily_completion: '/badges/completion/daily-completion.png',
+    weekly_completion: '/badges/completion/weekly-completion.png',
 
     // Daily streak badges (1-10)
     ...Object.fromEntries(
       Array.from({ length: 10 }, (_, i) => [
         `daily_streak_${i + 1}`,
-        `/badges/daily-streak/streak-${i + 1}.png`
+        `/badges/daily-streak/streak-${i + 1}.png`,
       ])
     ),
 
@@ -77,7 +98,7 @@ export function getBadgeImagePath(badgeCode: string): string {
     ...Object.fromEntries(
       Array.from({ length: 5 }, (_, i) => [
         `daily_milestone_${i + 1}`,
-        `/badges/daily-milestone/milestone-${i + 1}.png`
+        `/badges/daily-milestone/milestone-${i + 1}.png`,
       ])
     ),
 
@@ -85,7 +106,7 @@ export function getBadgeImagePath(badgeCode: string): string {
     ...Object.fromEntries(
       Array.from({ length: 10 }, (_, i) => [
         `weekly_streak_${i + 1}`,
-        `/badges/weekly-streak/streak-${i + 1}.png`
+        `/badges/weekly-streak/streak-${i + 1}.png`,
       ])
     ),
 
@@ -93,7 +114,7 @@ export function getBadgeImagePath(badgeCode: string): string {
     ...Object.fromEntries(
       Array.from({ length: 5 }, (_, i) => [
         `weekly_milestone_${i + 1}`,
-        `/badges/weekly-milestone/milestone-${i + 1}.png`
+        `/badges/weekly-milestone/milestone-${i + 1}.png`,
       ])
     ),
 
@@ -101,7 +122,7 @@ export function getBadgeImagePath(badgeCode: string): string {
     ...Object.fromEntries(
       MASTERY_MILESTONES.map(level => [
         `mastery_milestone_${level}`,
-        `/badges/mastery/milestone-${level}.svg`
+        `/badges/mastery/milestone-${level}.png`,
       ])
     ),
 
@@ -109,7 +130,23 @@ export function getBadgeImagePath(badgeCode: string): string {
     ...Object.fromEntries(
       MEMBER_KEYS.map(member => [
         `mastery_member_${member}_100`,
-        `/badges/mastery/special/${normalizeMemberKey(member)}-100.svg`
+        `/badges/mastery/special/${normalizeMemberKey(member)}-100.svg`,
+      ])
+    ),
+
+    // Mastery special member badges (level 100)
+    ...Object.fromEntries(
+      MEMBER_KEYS.map(member => [
+        `mastery_member_${member}_100`,
+        `/badges/mastery/special/${normalizeMemberKey(member)}-100.png`,
+      ])
+    ),
+
+    // Mastery special member badges (level 100)
+    ...Object.fromEntries(
+      MEMBER_KEYS.map(member => [
+        `mastery_member_${member}_100`,
+        `/badges/mastery/special/${normalizeMemberKey(member)}-100.svg`,
       ])
     ),
   }
@@ -132,28 +169,28 @@ export function getBadgeRarityColors(rarity: string): {
         border: 'border-yellow-500/50',
         bg: 'bg-yellow-500/20',
         text: 'text-yellow-400',
-        glow: 'shadow-[0_0_20px_rgba(234,179,8,0.4)]'
+        glow: 'shadow-[0_0_20px_rgba(234,179,8,0.4)]',
       }
     case 'epic':
       return {
         border: 'border-purple-500/50',
         bg: 'bg-purple-500/20',
         text: 'text-purple-400',
-        glow: 'shadow-[0_0_20px_rgba(168,85,247,0.4)]'
+        glow: 'shadow-[0_0_20px_rgba(168,85,247,0.4)]',
       }
     case 'rare':
       return {
         border: 'border-blue-500/50',
         bg: 'bg-blue-500/20',
         text: 'text-blue-400',
-        glow: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]'
+        glow: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]',
       }
     default: // common
       return {
         border: 'border-gray-500/50',
         bg: 'bg-gray-500/20',
         text: 'text-gray-400',
-        glow: ''
+        glow: '',
       }
   }
 }

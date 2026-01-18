@@ -10,17 +10,31 @@ interface YouTubeSongListProps {
   artist: string
 }
 
-export default function YouTubeSongList({ songs, onSongClick, artist }: YouTubeSongListProps) {
+export default function YouTubeSongList({
+  songs,
+  onSongClick,
+  artist,
+}: YouTubeSongListProps) {
   const formatNumber = (num: number) => {
-    if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B'
-    if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M'
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
     return num.toLocaleString()
   }
 
   const formatDate = (dateStr: string) => {
     const [year, month] = dateStr.split('/')
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ]
     return `${monthNames[parseInt(month) - 1]} ${year}`
   }
 
@@ -37,8 +51,12 @@ export default function YouTubeSongList({ songs, onSongClick, artist }: YouTubeS
     <div className="space-y-6">
       {/* List Header */}
       <div className="flex items-end justify-between px-2">
-        <h2 className="text-xl font-medium text-white tracking-tight">Top Videos</h2>
-        <span className="text-sm font-medium text-purple-200/40">{songs.length} videos</span>
+        <h2 className="text-xl font-medium text-white tracking-tight">
+          Top Videos
+        </h2>
+        <span className="text-sm font-medium text-purple-200/40">
+          {songs.length} videos
+        </span>
       </div>
 
       {/* Song List */}
@@ -55,10 +73,12 @@ export default function YouTubeSongList({ songs, onSongClick, artist }: YouTubeS
           >
             {/* Rank */}
             <div className="w-10 sm:w-14 shrink-0 text-center">
-              <span className={`
+              <span
+                className={`
                 text-sm sm:text-lg font-bold tabular-nums
                 ${index < 3 ? 'text-purple-400' : 'text-white/20'}
-              `}>
+              `}
+              >
                 #{song.rank || index + 1}
               </span>
             </div>
@@ -86,11 +106,15 @@ export default function YouTubeSongList({ songs, onSongClick, artist }: YouTubeS
                 {song.title}
               </h3>
               <div className="flex items-center gap-3 mt-1.5">
-                <span className="text-xs text-white/40 font-medium">{formatDate(song.published)}</span>
+                <span className="text-xs text-white/40 font-medium">
+                  {formatDate(song.published)}
+                </span>
                 <span className="hidden sm:block w-0.5 h-0.5 rounded-full bg-white/20" />
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                   <TrendingUp className="w-3 h-3 text-purple-400" />
-                   <span className="text-xs text-purple-400 font-medium">+{formatNumber(song.yesterday)}</span>
+                  <TrendingUp className="w-3 h-3 text-purple-400" />
+                  <span className="text-xs text-purple-400 font-medium">
+                    +{formatNumber(song.yesterday)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -98,8 +122,12 @@ export default function YouTubeSongList({ songs, onSongClick, artist }: YouTubeS
             {/* Stats - Desktop */}
             <div className="hidden sm:flex items-center gap-6 sm:gap-12 shrink-0 pr-4">
               <div className="text-right min-w-[80px]">
-                <p className="text-sm font-bold text-white tabular-nums">{formatNumber(song.views)}</p>
-                <p className="text-[10px] uppercase tracking-wider text-purple-200/30 font-medium">Total Views</p>
+                <p className="text-sm font-bold text-white tabular-nums">
+                  {formatNumber(song.views)}
+                </p>
+                <p className="text-[10px] uppercase tracking-wider text-purple-200/30 font-medium">
+                  Total Views
+                </p>
               </div>
               <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0">
                 <ChevronRight className="w-4 h-4 text-purple-300" />

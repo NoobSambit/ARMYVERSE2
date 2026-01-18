@@ -11,13 +11,12 @@ import { SnapshotComparison } from '@/lib/spotify/kworbSnapshotTypes'
 export default function SpotifyAnalyticsPage() {
   const [data, setData] = useState<SnapshotComparison | null>(null)
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [expandedArtists, setExpandedArtists] = useState<Set<string>>(new Set())
 
   const fetchData = async () => {
     try {
       const res = await fetch('/api/spotify/kworb/latest?includeChanges=true', {
-        cache: 'no-store'
+        cache: 'no-store',
       })
       const json = await res.json()
 
@@ -32,31 +31,12 @@ export default function SpotifyAnalyticsPage() {
       console.error('Failed to fetch data:', err)
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
   useEffect(() => {
     fetchData()
   }, [])
-
-  const handleRefresh = () => {
-    setRefreshing(true)
-    fetchData()
-  }
-
-  const handleExport = () => {
-    // Mock export functionality
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `spotify-analytics-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
 
   const toggleArtist = (artist: string) => {
     setExpandedArtists(prev => {
@@ -79,7 +59,9 @@ export default function SpotifyAnalyticsPage() {
             <StatCard key={i} title="" value={0} loading />
           ))}
         </div>
-        <div className="text-white/50 text-center mt-12 sm:mt-20 text-sm sm:text-base">Loading analytics...</div>
+        <div className="text-white/50 text-center mt-12 sm:mt-20 text-sm sm:text-base">
+          Loading analytics...
+        </div>
       </div>
     )
   }
@@ -94,12 +76,7 @@ export default function SpotifyAnalyticsPage() {
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-10 space-y-6 sm:space-y-8 lg:space-y-10">
       {/* Header */}
-      <SpotifyAnalyticsHeader
-        lastUpdated={snap.dateKey}
-        onRefresh={handleRefresh}
-        onExport={handleExport}
-        refreshing={refreshing}
-      />
+      <SpotifyAnalyticsHeader lastUpdated={snap.dateKey} />
 
       {/* Top Statistics Cards */}
       <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
@@ -134,8 +111,10 @@ export default function SpotifyAnalyticsPage() {
       {/* Songs by Artist */}
       <section className="space-y-4 sm:space-y-6">
         <div className="flex items-center gap-2 sm:gap-3">
-           <Disc3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-           <h2 className="text-lg sm:text-xl font-bold text-white">Songs by Artist</h2>
+          <Disc3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+          <h2 className="text-lg sm:text-xl font-bold text-white">
+            Songs by Artist
+          </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {snap.songsByArtist?.map((group: any) => (
@@ -157,15 +136,18 @@ export default function SpotifyAnalyticsPage() {
 
       {/* Global Daily Top 200 */}
       <section className="space-y-4 sm:space-y-6">
-         <div className="flex items-center gap-2 sm:gap-3">
-           <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-           <h2 className="text-lg sm:text-xl font-bold text-white">Global Daily Top 200</h2>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+          <h2 className="text-lg sm:text-xl font-bold text-white">
+            Global Daily Top 200
+          </h2>
         </div>
         <RankingTable
           title="Global Daily Top 200 (BTS & Members)"
-          headers={['Rank', 'Artist/Track', 'Streams (+/-)']}
+          headers={['Rank (Δ)', 'Artist/Track', 'Streams (+/-)']}
           rows={snap.daily200 || []}
           maxRows={10}
+          exactDaily
         />
       </section>
 
@@ -173,13 +155,15 @@ export default function SpotifyAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Most Streamed Artists (All Time) */}
         <section className="space-y-4 sm:space-y-6">
-           <div className="flex items-center gap-2 sm:gap-3">
-             <Music className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-             <h2 className="text-lg sm:text-xl font-bold text-white">Most Streamed Artists</h2>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Music className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+            <h2 className="text-lg sm:text-xl font-bold text-white">
+              Most Streamed Artists
+            </h2>
           </div>
           <RankingTable
             title="Most Streamed Artists"
-            headers={['Rank', 'Artist', 'Streams (M)', 'Daily', 'Rank Δ']}
+            headers={['Rank', 'Artist', 'Streams', 'Daily (+/-)', 'Rank Δ']}
             rows={snap.artistsAllTime || []}
             changes24h={changes24h?.artistsAllTime}
             changes7d={changes7d?.artistsAllTime}
@@ -189,9 +173,11 @@ export default function SpotifyAnalyticsPage() {
 
         {/* Monthly Listener Rankings */}
         <section className="space-y-4 sm:space-y-6">
-           <div className="flex items-center gap-2 sm:gap-3">
-             <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
-             <h2 className="text-lg sm:text-xl font-bold text-white">Monthly Listeners</h2>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+            <h2 className="text-lg sm:text-xl font-bold text-white">
+              Monthly Listeners
+            </h2>
           </div>
           <RankingTable
             title="Monthly Listener Rankings"

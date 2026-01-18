@@ -14,14 +14,14 @@ type Song = {
 }
 
 const members = [
-  { id: 'all', name: 'All', image: 'https://i.pravatar.cc/150?img=1' },
-  { id: 'RM', name: 'RM', image: 'https://i.pravatar.cc/150?img=13' },
-  { id: 'Jin', name: 'Jin', image: 'https://i.pravatar.cc/150?img=14' },
-  { id: 'Suga', name: 'Suga', image: 'https://i.pravatar.cc/150?img=15' },
-  { id: 'J-Hope', name: 'J-Hope', image: 'https://i.pravatar.cc/150?img=33' },
-  { id: 'Jimin', name: 'Jimin', image: 'https://i.pravatar.cc/150?img=26' },
-  { id: 'V', name: 'V', image: 'https://i.pravatar.cc/150?img=68' },
-  { id: 'Jungkook', name: 'Jungkook', image: 'https://i.pravatar.cc/150?img=52' },
+  { id: 'all', name: 'All', image: '/profile-icons/7.png' },
+  { id: 'RM', name: 'RM', image: '/profile-icons/RM.png' },
+  { id: 'Jin', name: 'Jin', image: '/profile-icons/JIN.png' },
+  { id: 'Suga', name: 'Suga', image: '/profile-icons/SUGA.png' },
+  { id: 'J-Hope', name: 'J-Hope', image: '/profile-icons/JHOPE.png' },
+  { id: 'Jimin', name: 'Jimin', image: '/profile-icons/JIMIN.png' },
+  { id: 'V', name: 'V', image: '/profile-icons/V.png' },
+  { id: 'Jungkook', name: 'Jungkook', image: '/profile-icons/JUNGKOOK.png' },
 ]
 
 const formatNumber = (num: number) => {
@@ -149,17 +149,15 @@ export default function TrendingWidget() {
               setCategory('ot7')
               setSelectedMember('all')
             }}
-            className={`px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold transition-colors rounded-md ${
-              category === 'ot7' ? 'text-white bg-primary shadow-sm' : 'text-gray-400 hover:text-white'
-            }`}
+            className={`px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold transition-colors rounded-md ${category === 'ot7' ? 'text-white bg-primary shadow-sm' : 'text-gray-400 hover:text-white'
+              }`}
           >
             OT7
           </button>
           <button
             onClick={() => setCategory('solo')}
-            className={`px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold transition-colors rounded-md ${
-              category === 'solo' ? 'text-white bg-primary shadow-sm' : 'text-gray-400 hover:text-white'
-            }`}
+            className={`px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold transition-colors rounded-md ${category === 'solo' ? 'text-white bg-primary shadow-sm' : 'text-gray-400 hover:text-white'
+              }`}
           >
             Solo
           </button>
@@ -173,13 +171,11 @@ export default function TrendingWidget() {
             <button
               key={member.id}
               onClick={() => setSelectedMember(member.id)}
-              className={`flex flex-col items-center gap-1 shrink-0 ${
-                selectedMember === member.id ? '' : 'opacity-50 hover:opacity-100'
-              } transition-opacity`}
+              className={`flex flex-col items-center gap-1 shrink-0 ${selectedMember === member.id ? '' : 'opacity-50 hover:opacity-100'
+                } transition-opacity`}
             >
-              <div className={`size-10 sm:size-12 rounded-full overflow-hidden border-2 ${
-                selectedMember === member.id ? 'border-primary' : 'border-transparent'
-              } transition-colors`}>
+              <div className={`size-10 sm:size-12 rounded-full overflow-hidden border-2 ${selectedMember === member.id ? 'border-primary' : 'border-transparent'
+                } transition-colors`}>
                 <img
                   src={member.image}
                   alt={member.name}
@@ -252,38 +248,38 @@ export default function TrendingWidget() {
 }
 
 function TrendingItem({ rank, title, artist, thumbnail, isYoutube, views, dailyStreams, totalStreams, yesterday }: { rank: number, title: string, artist: string, thumbnail?: string, isYoutube?: boolean, views?: number, dailyStreams?: number, totalStreams?: number, yesterday?: number }) {
-    const displayViews = isYoutube ? views : totalStreams
-    const dailyChange = isYoutube ? yesterday : dailyStreams
+  const displayViews = isYoutube ? views : totalStreams
+  const dailyChange = isYoutube ? yesterday : dailyStreams
 
-    return (
-        <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
-            {!isYoutube && <span className="text-base sm:text-lg font-bold text-gray-500 w-3 sm:w-4 shrink-0">{rank}</span>}
-            <div
-              className="size-8 sm:size-10 rounded bg-gray-700 bg-cover shrink-0"
-              style={{ backgroundImage: thumbnail ? `url('${thumbnail}')` : `url('https://api.dicebear.com/7.x/shapes/svg?seed=${title}')` }}
-            ></div>
-            <div className="flex-1 min-w-0">
-                <p className={`text-xs sm:text-sm font-bold text-white truncate ${isYoutube ? 'group-hover:text-red-500' : 'group-hover:text-accent-green'}`}>{title}</p>
-                <div className="flex items-center gap-2">
-                    <p className="text-[10px] sm:text-xs text-gray-400 truncate">{artist}</p>
-                    {displayViews !== undefined && (
-                        <>
-                            <span className="text-gray-600">•</span>
-                            <p className="text-[10px] sm:text-xs text-gray-400">
-                                {isYoutube ? `${formatNumber(displayViews)} views` : formatNumber(displayViews)}
-                            </p>
-                        </>
-                    )}
-                    {dailyChange !== undefined && dailyChange > 0 && (
-                        <>
-                            <span className="text-gray-600">•</span>
-                            <p className="text-[10px] sm:text-xs text-green-400">
-                                +{formatNumber(dailyChange)}
-                            </p>
-                        </>
-                    )}
-                </div>
-            </div>
+  return (
+    <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
+      {!isYoutube && <span className="text-base sm:text-lg font-bold text-gray-500 w-3 sm:w-4 shrink-0">{rank}</span>}
+      <div
+        className="size-8 sm:size-10 rounded bg-gray-700 bg-cover shrink-0"
+        style={{ backgroundImage: thumbnail ? `url('${thumbnail}')` : `url('https://api.dicebear.com/7.x/shapes/svg?seed=${title}')` }}
+      ></div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-xs sm:text-sm font-bold text-white truncate ${isYoutube ? 'group-hover:text-red-500' : 'group-hover:text-accent-green'}`}>{title}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-[10px] sm:text-xs text-gray-400 truncate">{artist}</p>
+          {displayViews !== undefined && (
+            <>
+              <span className="text-gray-600">•</span>
+              <p className="text-[10px] sm:text-xs text-gray-400">
+                {isYoutube ? `${formatNumber(displayViews)} views` : formatNumber(displayViews)}
+              </p>
+            </>
+          )}
+          {dailyChange !== undefined && dailyChange > 0 && (
+            <>
+              <span className="text-gray-600">•</span>
+              <p className="text-[10px] sm:text-xs text-green-400">
+                +{formatNumber(dailyChange)}
+              </p>
+            </>
+          )}
         </div>
-    )
+      </div>
+    </div>
+  )
 }

@@ -94,6 +94,9 @@ interface ProfileData {
     totalPlaylists: number
     totalLikes: number
     totalSaves: number
+    totalCards?: number
+    totalXp?: number
+    leaderboardRank?: number
   }
 }
 
@@ -112,7 +115,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showPreview, setShowPreview] = useState(true) // Default to true for desktop
+  const [showPreview, setShowPreview] = useState(true) // Default to true; reset on open based on viewport
   const [isDirty, setIsDirty] = useState(false)
   const [profile, setProfile] = useState<ProfileData>(getDefaultProfile())
 
@@ -272,6 +275,12 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    if (typeof window === 'undefined') return
+    setShowPreview(window.matchMedia('(min-width: 768px)').matches)
+  }, [open])
+
   // Clean up timeout
   useEffect(() => {
     return () => {
@@ -295,20 +304,20 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
         <Dialog.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-in fade-in duration-200" />
 
         <Dialog.Content
-          className="fixed z-50 top-[2%] left-[2%] right-[2%] bottom-[2%] max-w-[1600px] mx-auto rounded-[2.5rem] border border-white/10 bg-[#0A0A0A] shadow-2xl overflow-hidden focus:outline-none flex flex-col md:flex-row animate-in zoom-in-95 duration-200"
+          className="fixed z-50 inset-0 md:top-[2%] md:left-[2%] md:right-[2%] md:bottom-[2%] md:max-w-[1600px] md:mx-auto rounded-none md:rounded-[2.5rem] border border-white/10 bg-[#0A0A0A] shadow-2xl overflow-hidden focus:outline-none flex flex-col md:flex-row animate-in zoom-in-95 duration-200"
           aria-labelledby="profile-modal-title"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           {/* Left Column - Settings */}
-          <div className="flex-1 flex flex-col min-w-0 h-full md:border-r border-white/10">
+          <div className={`flex-1 flex flex-col min-w-0 h-full ${showPreview ? 'md:border-r md:border-white/10' : ''}`}>
             {/* Header */}
-            <div className="flex items-center justify-between p-8 pb-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-5 sm:p-6 md:p-8 pb-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-purple-500/20 rounded-2xl">
-                    <User className="w-5 h-5 text-purple-400" />
+                  <div className="p-2 sm:p-3 bg-purple-500/20 rounded-xl sm:rounded-2xl">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                   </div>
-                  <Dialog.Title id="profile-modal-title" className="text-2xl font-bold text-white tracking-tight">
+                  <Dialog.Title id="profile-modal-title" className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                     Your Profile
                   </Dialog.Title>
                 </div>
@@ -316,7 +325,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider ml-14 mt-1"
+                    className="flex items-center gap-2 text-amber-400 text-[11px] font-bold uppercase tracking-wider ml-12 sm:ml-14 mt-1"
                   >
                     <AlertIcon className="w-3 h-3" />
                     Unsaved changes
@@ -324,40 +333,45 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
                   onClick={() => setShowPreview(!showPreview)}
-                  className="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl transition-colors md:hidden"
+                  className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl sm:rounded-2xl transition-colors"
+                  aria-pressed={showPreview}
+                  title={showPreview ? 'Hide preview' : 'Show preview'}
                 >
-                  {showPreview ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPreview ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  <span className="hidden sm:inline text-sm font-semibold">
+                    {showPreview ? 'Hide Preview' : 'Show Preview'}
+                  </span>
                 </button>
 
                 <button
                   onClick={copyProfileLink}
-                  className="p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl transition-colors"
+                  className="p-2 sm:p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl sm:rounded-2xl transition-colors"
                   title="Copy Profile Link"
                 >
-                  <LinkIcon className="w-5 h-5" />
+                  <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
                 <button
                   onClick={handleLogout}
-                  className="p-3 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-2xl transition-colors"
+                  className="p-2 sm:p-3 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl sm:rounded-2xl transition-colors"
                   title="Logout"
                 >
-                  <LogOut className="w-5 h-5" />
+                  <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
-                <div className="w-px h-8 bg-white/10 mx-1" />
+                <div className="hidden sm:block w-px h-8 bg-white/10 mx-1" />
 
-                <Dialog.Close className="px-5 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-2xl font-bold text-sm transition-colors">
+                <Dialog.Close className="px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-colors">
                   Close
                 </Dialog.Close>
 
                 <button
                   onClick={handleSave}
                   disabled={saving || !isDirty}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm shadow-lg shadow-purple-900/20"
+                  className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 bg-purple-600 text-white rounded-xl sm:rounded-2xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-xs sm:text-sm shadow-lg shadow-purple-900/20"
                 >
                   {saving ? (
                     <>
@@ -372,7 +386,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
             </div>
 
             <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-              <div className="px-8 pt-2 pb-6">
+              <div className="px-4 sm:px-6 md:px-8 pt-2 pb-4 sm:pb-6">
                 <Tabs.List className="flex gap-2 p-1.5 bg-white/5 rounded-2xl overflow-x-auto no-scrollbar" role="tablist">
                   {tabs.map((tab) => {
                     const Icon = tab.icon
@@ -380,11 +394,11 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                       <Tabs.Trigger
                         key={tab.id}
                         value={tab.id}
-                        className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-gray-400 rounded-xl transition-all
+                        className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm sm:px-4 sm:py-2.5 md:px-5 md:py-3 font-bold text-gray-400 rounded-xl transition-all
                           hover:text-white hover:bg-white/5
                           data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg"
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         <span className="whitespace-nowrap">{tab.label}</span>
                       </Tabs.Trigger>
                     )
@@ -392,7 +406,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                 </Tabs.List>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 custom-scrollbar">
                 <form ref={formRef} onSubmit={handleSave} className="max-w-4xl mx-auto w-full py-2">
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -455,7 +469,7 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
 
           {/* Right Column - Preview */}
           {showPreview && (
-            <div className="w-full md:w-[480px] lg:w-[520px] bg-[#0F0F11] border-l border-white/10 flex flex-col h-full absolute md:relative z-20 md:z-auto inset-0 md:inset-auto">
+            <div className="w-full md:w-[480px] lg:w-[520px] bg-[#0F0F11] md:border-l md:border-white/10 flex flex-col h-full absolute md:relative z-20 md:z-auto inset-0 md:inset-auto">
               {/* Mobile Close Preview */}
               <button
                 onClick={() => setShowPreview(false)}
@@ -464,19 +478,19 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-8 border-b border-white/10 flex items-center justify-between bg-[#0F0F11]">
+              <div className="p-5 sm:p-6 md:p-8 border-b border-white/10 flex items-center justify-between bg-[#0F0F11]">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Preview</h3>
                 <div className="px-3 py-1.5 bg-white/5 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-wider border border-white/10">
                   Public View
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 bg-[#0F0F11] custom-scrollbar flex flex-col">
-                <div className="flex-1 flex items-center justify-center min-h-[500px]">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 bg-[#0F0F11] custom-scrollbar flex flex-col">
+                <div className="flex-1 flex items-start justify-start md:items-center md:justify-center min-h-[360px] sm:min-h-[420px] md:min-h-[500px]">
                   <ProfilePreview profile={profile} variant="sidebar" />
                 </div>
 
-                <div className="mt-8 flex gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
+                <div className="mt-6 sm:mt-8 flex gap-3 p-3 sm:p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
                   <div className="shrink-0 pt-0.5">
                     <AlertIcon className="w-4 h-4 text-yellow-500" />
                   </div>

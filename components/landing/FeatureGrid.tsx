@@ -1,12 +1,16 @@
 'use client'
 
-import { BarChart3, Gamepad2, Music2, ListMusic, BarChart, User, ArrowRight, Info } from 'lucide-react'
+/* Existing imports */
+/* Existing imports */
+import { BarChart3, Gamepad2, Music2, ListMusic, BarChart, User, ArrowRight, Info, Youtube, X, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import FeatureInfoModal from '@/components/ui/FeatureInfoModal'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function FeatureGrid() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [streamingModalOpen, setStreamingModalOpen] = useState(false)
   const [selectedFeature, setSelectedFeature] = useState<any>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -15,19 +19,19 @@ export default function FeatureGrid() {
 
   const features = [
     {
-      title: 'BTS + Solo Trends',
-      description: 'Live charts across Spotify and YouTube.',
-      longDescription: 'Stay updated with real-time trending data for BTS and solo artists across multiple platforms.',
-      icon: BarChart3,
-      color: 'from-pink-500 to-purple-600',
+      title: 'ARMY Blog',
+      description: 'Stories, guides, and updates for ARMY.',
+      longDescription: 'Your central hub for everything BTS. Read deep dives, streaming guides, community stories, and the latest updates from the purple universe.',
+      icon: BookOpen,
+      color: 'from-pink-500 to-rose-600',
       accentColor: '#ec4899',
-      href: '/trending',
+      href: '/blog',
       features: [
-        'Live Spotify and YouTube streaming charts',
-        'Track popularity trends for BTS group and individual members',
-        'Compare performance across different platforms',
-        'Historical data and trend analysis',
-        'Real-time updates as new data comes in'
+        'In-depth articles and fan theories',
+        'Comprehensive streaming guides',
+        'Community spotlights and stories',
+        'Archive of major events and milestones',
+        'Tutorials for new ARMYs'
       ]
     },
     {
@@ -87,7 +91,7 @@ export default function FeatureGrid() {
       icon: BarChart,
       color: 'from-orange-500 to-red-600',
       accentColor: '#f97316',
-      href: '/spotify',
+      href: '/spotify', // Default, we will intercept
       features: [
         'Global streaming statistics',
         'Real-time performance tracking',
@@ -123,6 +127,13 @@ export default function FeatureGrid() {
     setModalOpen(true)
   }
 
+  const handleCardClick = (e: React.MouseEvent, feature: any) => {
+    if (feature.title === 'Streaming Stats') {
+      e.preventDefault()
+      setStreamingModalOpen(true)
+    }
+  }
+
   // Auto-scroll functionality
   useEffect(() => {
     const startAutoScroll = () => {
@@ -130,7 +141,7 @@ export default function FeatureGrid() {
         if (!isPaused && scrollContainerRef.current) {
           setCurrentIndex((prevIndex) => {
             const nextIndex = (prevIndex + 1) % features.length
-            
+
             // Scroll to the next card
             const container = scrollContainerRef.current
             if (container) {
@@ -140,7 +151,7 @@ export default function FeatureGrid() {
                 behavior: 'smooth'
               })
             }
-            
+
             return nextIndex
           })
         }
@@ -187,7 +198,7 @@ export default function FeatureGrid() {
     <>
       {/* Mobile: Horizontal Scrolling Carousel */}
       <div className="md:hidden col-span-1 md:col-span-2 lg:col-span-3 md:row-span-2">
-        <div 
+        <div
           ref={scrollContainerRef}
           className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2 -mx-3 px-3"
           onTouchStart={handleTouchStart}
@@ -200,6 +211,7 @@ export default function FeatureGrid() {
               <Link
                 href={feature.href}
                 key={idx}
+                onClick={(e) => handleCardClick(e, feature)}
                 className="glass-panel glass-panel-hover rounded-2xl p-5 flex flex-col justify-between group cursor-pointer relative overflow-hidden min-h-[180px] w-[85vw] max-w-[340px] shrink-0 snap-center"
               >
                 {feature.overlay && (
@@ -236,13 +248,12 @@ export default function FeatureGrid() {
         {/* Scroll indicator dots */}
         <div className="flex justify-center gap-1.5 mt-3">
           {features.map((_, idx) => (
-            <div 
-              key={idx} 
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                idx === currentIndex 
-                  ? 'bg-primary w-4' 
-                  : 'bg-white/20'
-              }`}
+            <div
+              key={idx}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex
+                ? 'bg-primary w-4'
+                : 'bg-white/20'
+                }`}
             ></div>
           ))}
         </div>
@@ -256,6 +267,7 @@ export default function FeatureGrid() {
             <Link
               href={feature.href}
               key={idx}
+              onClick={(e) => handleCardClick(e, feature)}
               className="glass-panel glass-panel-hover rounded-2xl p-5 flex flex-col justify-between group cursor-pointer h-full relative overflow-hidden min-h-[160px]"
             >
               {feature.overlay && (
@@ -305,6 +317,73 @@ export default function FeatureGrid() {
           }}
         />
       )}
+
+      {/* Streaming Stats Platform Selection Modal */}
+      <AnimatePresence>
+        {streamingModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setStreamingModalOpen(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto overflow-x-hidden flex items-center justify-center p-4 md:p-6"
+            />
+            <div className="fixed inset-0 z-[51] flex items-center justify-center p-4 pointer-events-none">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="bg-[#121212] border border-white/10 rounded-[28px] w-full max-w-lg shadow-2xl relative overflow-hidden pointer-events-auto"
+              >
+                {/* Decorative gradient */}
+                <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-purple-500/10 to-transparent pointer-events-none" />
+
+                {/* Close button */}
+                <button
+                  onClick={() => setStreamingModalOpen(false)}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors z-10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="p-8 text-center relative z-0">
+                  <div className="size-16 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-orange-900/20">
+                    <BarChart className="text-white w-8 h-8" />
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-white mb-2">Streaming Stats</h3>
+                  <p className="text-white/60 mb-8 max-w-sm mx-auto">
+                    Track streaming performance across platforms. Which one would you like to view?
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Link
+                      href="/spotify"
+                      className="group relative overflow-hidden rounded-2xl bg-[#1DB954] p-1 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-green-900/20"
+                    >
+                      <div className="relative h-full px-6 py-5 flex flex-col items-center justify-center gap-3 bg-[#1DB954] group-hover:bg-[#1ed760] transition-colors rounded-xl">
+                        <Music2 className="w-8 h-8 text-black" />
+                        <span className="font-bold text-black text-lg">Spotify</span>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/youtube"
+                      className="group relative overflow-hidden rounded-2xl bg-[#FF0000] p-1 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-red-900/20"
+                    >
+                      <div className="relative h-full px-6 py-5 flex flex-col items-center justify-center gap-3 bg-[#FF0000] group-hover:bg-[#ff1a1a] transition-colors rounded-xl">
+                        <Youtube className="w-8 h-8 text-white" />
+                        <span className="font-bold text-white text-lg">YouTube</span>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   )
 }

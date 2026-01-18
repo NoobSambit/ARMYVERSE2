@@ -332,7 +332,7 @@ Get all mastery badges earned by the user.
       "key": "Jungkook",
       "milestone": 10,
       "rarity": "rare",
-      "imagePath": "/badges/mastery/milestone-10.svg",
+      "imagePath": "/badges/mastery/milestone-10.png",
       "earnedAt": "2026-01-06T10:00:00.000Z"
     },
     {

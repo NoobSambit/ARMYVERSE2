@@ -57,15 +57,15 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
   const backgroundStyle = profile.personalization?.backgroundStyle || defaults.backgroundStyle
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Palette className="w-5 h-5 text-purple-400" />
+          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+            <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
             Personalize your profile
           </h2>
-          <p className="text-sm text-gray-400 mt-1">Fine-tune colors and presentation instantly</p>
+          <p className="text-xs sm:text-sm text-gray-400 mt-1">Fine-tune colors and presentation instantly</p>
         </div>
         <button
           type="button"
@@ -78,21 +78,21 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
       </div>
 
       {/* Sync Banner */}
-      <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-2xl flex items-center gap-3">
+      <div className="p-3 sm:p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-2xl flex items-center gap-3">
         <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-        <p className="text-sm text-purple-200/80 font-medium">
+        <p className="text-xs sm:text-sm text-purple-200/80 font-medium">
           Adjustments are synced instantly with the preview and saved automatically.
         </p>
       </div>
 
       {/* Accent Color Section */}
-      <div className="p-8 bg-[#151518] rounded-[2rem] border border-white/5">
+      <div className="p-5 sm:p-6 md:p-8 bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-purple-500" />
           Accent Color
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {/* Presets */}
           <div>
             <label className="block text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">PRESETS</label>
@@ -131,7 +131,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
           {/* Custom Color */}
           <div>
             <label className="block text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">CUSTOM COLOR</label>
-            <div className="p-4 bg-black/20 rounded-2xl border border-white/5 flex items-center gap-4">
+            <div className="p-3 sm:p-4 bg-black/20 rounded-2xl border border-white/5 flex items-center gap-4">
                <div className="relative group cursor-pointer">
                  <input
                     type="color"
@@ -171,13 +171,13 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
       </div>
 
       {/* Theme Intensity */}
-      <div className="p-8 bg-[#151518] rounded-[2rem] border border-white/5">
-        <div className="flex items-center justify-between mb-8">
+      <div className="p-5 sm:p-6 md:p-8 bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
             <Monitor className="w-4 h-4" />
             Theme Intensity
           </h3>
-          <span className="text-3xl font-bold text-white tracking-tight">{themeIntensity}%</span>
+          <span className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{themeIntensity}%</span>
         </div>
 
         <div className="space-y-4">
@@ -210,7 +210,7 @@ export default function PersonalizationForm({ profile, onUpdate, error }: Person
       </div>
 
       {/* Background Style */}
-      <div className="p-8 bg-[#151518] rounded-[2rem] border border-white/5">
+      <div className="p-5 sm:p-6 md:p-8 bg-[#151518] rounded-[1.5rem] sm:rounded-[2rem] border border-white/5">
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
           <ImageIcon className="w-4 h-4" />
           Background Style

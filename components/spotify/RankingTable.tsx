@@ -7,6 +7,7 @@ import ChangeIndicator from './ChangeIndicator'
 
 interface RankRow {
   rank: number
+  rankChange?: number
   artist?: string
   name?: string
   streams?: number
@@ -20,10 +21,11 @@ interface RankingTableProps {
   title: string
   headers: string[]
   rows: RankRow[]
-  changes24h?: Record<string, { rankChange?: number, streamsChange?: number }>
-  changes7d?: Record<string, { rankChange?: number, streamsChange?: number }>
+  changes24h?: Record<string, { rankChange?: number; streamsChange?: number }>
+  changes7d?: Record<string, { rankChange?: number; streamsChange?: number }>
   maxRows?: number
   showStreamChanges?: boolean
+  exactDaily?: boolean
 }
 
 export default function RankingTable({
@@ -33,7 +35,8 @@ export default function RankingTable({
   changes24h,
   changes7d,
   maxRows = 50,
-  showStreamChanges = false
+  showStreamChanges = false,
+  exactDaily = false,
 }: RankingTableProps) {
   const [showAll, setShowAll] = useState(false)
   const displayRows = showAll ? rows : rows.slice(0, maxRows)
@@ -46,25 +49,39 @@ export default function RankingTable({
     return n.toLocaleString()
   }
 
-  const formatChange = (n?: number) => {
+  const formatNumberExact = (n?: number) => {
     if (typeof n !== 'number') return '-'
-    const formatted = formatNumber(n)
+    return n.toLocaleString()
+  }
+
+  const formatChange = (n?: number, exact = false) => {
+    if (typeof n !== 'number') return '-'
+    const formatted = exact ? formatNumberExact(n) : formatNumber(n)
     return n > 0 ? `+${formatted}` : formatted
   }
 
   const getChangeIndicator = (row: RankRow) => {
     const key = `${row.rank}-${row.name || row.artist}`
-    const change24h_data = changes24h?.[key] || changes24h?.[row.artist || row.name || '']
-    const change7d_data = changes7d?.[key] || changes7d?.[row.artist || row.name || '']
+    const change24h_data =
+      changes24h?.[key] || changes24h?.[row.artist || row.name || '']
+    const change7d_data =
+      changes7d?.[key] || changes7d?.[row.artist || row.name || '']
 
     if (showStreamChanges) {
       // Show stream changes for Daily 200
       const streamChange24 = change24h_data?.streamsChange
       const streamChange7d = change7d_data?.streamsChange
 
-      if (streamChange24 === undefined && streamChange7d === undefined) return null
+      if (streamChange24 === undefined && streamChange7d === undefined)
+        return null
 
-      return <ChangeIndicator change24h={streamChange24} change7d={streamChange7d} mode="pill" />
+      return (
+        <ChangeIndicator
+          change24h={streamChange24}
+          change7d={streamChange7d}
+          mode="pill"
+        />
+      )
     } else {
       // Show rank changes for All-Time and Monthly Listeners
       const rankChange24 = change24h_data?.rankChange
@@ -82,8 +99,14 @@ export default function RankingTable({
       return (
         <div className="flex gap-1">
           {rankChange24 !== undefined && rankChange24 !== 0 && (
-            <span className={`inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded ${rankChange24 > 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>
-              {rankChange24 > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            <span
+              className={`inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded ${rankChange24 > 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}
+            >
+              {rankChange24 > 0 ? (
+                <TrendingUp className="w-3 h-3" />
+              ) : (
+                <TrendingDown className="w-3 h-3" />
+              )}
               {Math.abs(rankChange24)}
             </span>
           )}
@@ -123,14 +146,24 @@ export default function RankingTable({
           </thead>
           <tbody className="divide-y divide-white/5">
             {displayRows.map((row, idx) => (
-              <tr
-                key={idx}
-                className="hover:bg-white/[0.02] transition-colors"
-              >
-                <td className="px-6 py-4 font-medium text-white/50 w-16">{row.rank}</td>
+              <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                <td className="px-6 py-4 font-medium text-white/50 w-16">
+                  <div className="flex items-center gap-2">
+                    <span>{row.rank}</span>
+                    {row.rankChange !== undefined && row.rankChange !== 0 && (
+                      <span
+                        className={`text-[10px] sm:text-xs font-bold ${row.rankChange > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                      >
+                        {row.rankChange > 0
+                          ? `+${row.rankChange}`
+                          : row.rankChange}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                     {/* Add image placeholder if available in row data, though RankRow might not have it always */}
+                    {/* Add image placeholder if available in row data, though RankRow might not have it always */}
                     {row.url ? (
                       <a
                         href={row.url}
@@ -138,36 +171,56 @@ export default function RankingTable({
                         rel="noopener noreferrer"
                         className="font-semibold text-white hover:text-purple-400 transition-colors inline-flex items-center gap-1"
                       >
-                        {row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}
+                        {row.name
+                          ? `${row.artist} - ${row.name}`
+                          : row.artist || ''}
                       </a>
                     ) : (
-                      <span className="font-semibold text-white">{row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}</span>
+                      <span className="font-semibold text-white">
+                        {row.name
+                          ? `${row.artist} - ${row.name}`
+                          : row.artist || ''}
+                      </span>
                     )}
                   </div>
                 </td>
-                {row.streams !== undefined && row.daily !== undefined && (
+                {row.streams !== undefined && (
                   <td className="px-6 py-4 font-mono text-white/80">
-                    {formatNumber(row.streams)} <span className={`text-xs ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>({formatChange(row.daily)})</span>
+                    {formatNumber(row.streams)}
                   </td>
                 )}
-                {row.streams !== undefined && row.daily === undefined && (
-                  <td className="px-6 py-4 font-mono text-white/80">{formatNumber(row.streams)}</td>
-                )}
-                {row.daily !== undefined && row.streams === undefined && (
-                  <td className={`px-6 py-4 font-mono text-right ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    <span className={row.daily !== 0 ? 'inline-flex items-center px-2 py-0.5 rounded' + (row.daily > 0 ? ' bg-emerald-500/10' : ' bg-rose-500/10') : ''}>
-                      {formatChange(row.daily)}
+                {row.daily !== undefined && (
+                  <td
+                    className={`px-6 py-4 font-mono text-left ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                  >
+                    <span
+                      className={
+                        row.daily !== 0
+                          ? 'inline-flex items-center px-2 py-0.5 rounded' +
+                            (row.daily > 0
+                              ? ' bg-emerald-500/10'
+                              : ' bg-rose-500/10')
+                          : ''
+                      }
+                    >
+                      {formatChange(row.daily, exactDaily)}
                     </span>
                   </td>
                 )}
                 {row.listeners !== undefined && (
-                  <td className="px-6 py-4 font-mono text-white/80">{formatNumber(row.listeners)}</td>
+                  <td className="px-6 py-4 font-mono text-white/80">
+                    {formatNumber(row.listeners)}
+                  </td>
                 )}
                 {row.dailyChange !== undefined && (
-                  <td className={`px-6 py-4 font-mono text-right ${row.dailyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                     <span className={`inline-flex items-center px-2 py-0.5 rounded ${row.dailyChange >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                        {formatChange(row.dailyChange)}
-                     </span>
+                  <td
+                    className={`px-6 py-4 font-mono text-left ${row.dailyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                  >
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded ${row.dailyChange >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}
+                    >
+                      {formatChange(row.dailyChange, exactDaily)}
+                    </span>
                   </td>
                 )}
                 {(changes24h || changes7d || showStreamChanges) && (
@@ -190,8 +243,15 @@ export default function RankingTable({
           >
             <div className="flex items-center gap-4">
               {/* Rank */}
-              <div className="text-lg sm:text-xl font-bold text-white/50 w-8 flex-shrink-0">
-                {row.rank}
+              <div className="flex items-center gap-2 text-lg sm:text-xl font-bold text-white/50 w-8 flex-shrink-0">
+                <span>{row.rank}</span>
+                {row.rankChange !== undefined && row.rankChange !== 0 && (
+                  <span
+                    className={`text-xs font-bold ${row.rankChange > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                  >
+                    {row.rankChange > 0 ? `+${row.rankChange}` : row.rankChange}
+                  </span>
+                )}
               </div>
 
               {/* Main Content */}
@@ -205,11 +265,15 @@ export default function RankingTable({
                       rel="noopener noreferrer"
                       className="font-semibold text-white hover:text-purple-400 transition-colors text-sm"
                     >
-                      {row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}
+                      {row.name
+                        ? `${row.artist} - ${row.name}`
+                        : row.artist || ''}
                     </a>
                   ) : (
                     <span className="font-semibold text-white text-sm">
-                      {row.name ? `${row.artist} - ${row.name}` : (row.artist || '')}
+                      {row.name
+                        ? `${row.artist} - ${row.name}`
+                        : row.artist || ''}
                     </span>
                   )}
                 </div>
@@ -222,11 +286,15 @@ export default function RankingTable({
                       <span className="font-mono text-white font-medium">
                         {formatNumber(row.streams)}
                       </span>
-                      {row.daily !== undefined && (
-                        <span className={`font-medium ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          ({formatChange(row.daily)})
-                        </span>
-                      )}
+                    </div>
+                  )}
+
+                  {row.daily !== undefined && (
+                    <div
+                      className={`flex items-center gap-1 font-medium ${row.daily >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                    >
+                      <span className="text-white/40">Daily:</span>
+                      <span>{formatChange(row.daily)}</span>
                     </div>
                   )}
 
@@ -240,18 +308,21 @@ export default function RankingTable({
                   )}
 
                   {row.dailyChange !== undefined && (
-                    <div className={`flex items-center gap-1 font-medium ${row.dailyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <div
+                      className={`flex items-center gap-1 font-medium ${row.dailyChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                    >
                       <span className="text-white/40">Daily:</span>
                       <span>{formatChange(row.dailyChange)}</span>
                     </div>
                   )}
 
                   {/* Change Indicator */}
-                  {(changes24h || changes7d || showStreamChanges) && getChangeIndicator(row) && (
-                    <div className="flex items-center">
-                      {getChangeIndicator(row)}
-                    </div>
-                  )}
+                  {(changes24h || changes7d || showStreamChanges) &&
+                    getChangeIndicator(row) && (
+                      <div className="flex items-center">
+                        {getChangeIndicator(row)}
+                      </div>
+                    )}
                 </div>
               </div>
             </div>

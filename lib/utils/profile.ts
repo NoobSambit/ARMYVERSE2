@@ -105,20 +105,20 @@ export const slugifyHandle = (input: string): string => {
 
 export const formatSocialUrl = (url: string, platform: string): string => {
   if (!url) return ''
-  
+
   try {
     const urlObj = new URL(url)
-    
+
     // Ensure https
     if (urlObj.protocol !== 'https:') {
       urlObj.protocol = 'https:'
     }
-    
+
     return urlObj.toString()
   } catch {
     // If URL is invalid, try to construct a valid one
     const cleanUrl = url.replace(/^https?:\/\//, '').replace(/^www\./, '')
-    
+
     switch (platform) {
       case 'twitter':
         return `https://twitter.com/${cleanUrl.replace('@', '')}`
@@ -137,11 +137,11 @@ export const formatSocialUrl = (url: string, platform: string): string => {
 
 export const extractSocialHandle = (url: string, platform: string): string => {
   if (!url) return ''
-  
+
   try {
     const urlObj = new URL(url)
     const pathname = urlObj.pathname
-    
+
     switch (platform) {
       case 'twitter':
         return pathname.replace('/', '').replace('@', '')
@@ -235,36 +235,38 @@ export const getDefaultProfile = () => ({
   stats: {
     totalPlaylists: 0,
     totalLikes: 0,
-    totalSaves: 0
+    totalSaves: 0,
+    totalCards: 0,
+    totalXp: 0,
+    leaderboardRank: 0
   }
 })
 
 // Profile visibility helpers
 export const isFieldVisible = (field: string, privacy: any, isOwnProfile: boolean = false): boolean => {
   if (isOwnProfile) return true
-  
+
   // Handle undefined privacy object
   if (!privacy) return true
-  
+
   if (privacy.visibility === 'private') return false
   if (privacy.visibility === 'followers') {
     // TODO: Implement follower check
     return true
   }
-  
+
   return privacy.fieldVisibility?.[field] ?? true
 }
 
 export const getPublicProfile = (profile: any) => {
   if (!profile) return {}
-  
+
   const publicProfile = { ...profile }
-  
+
   // Remove private fields
   delete publicProfile.privacy
   delete publicProfile.notifications
-  delete publicProfile.stats
-  
+
   // Filter socials based on visibility
   if (publicProfile.socials && publicProfile.socials.visibility) {
     Object.keys(publicProfile.socials.visibility).forEach(platform => {
@@ -273,6 +275,6 @@ export const getPublicProfile = (profile: any) => {
       }
     })
   }
-  
+
   return publicProfile
 }

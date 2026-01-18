@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useCallback, useMemo } from 'react'
-import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle, Sparkles, GripVertical, RotateCw, Minus, SlidersHorizontal, TrendingUp, Edit3 } from 'lucide-react'
+import { Search, Plus, Trash2, Music, ExternalLink, CheckCircle, AlertCircle, Sparkles, GripVertical, RotateCw, Minus, SlidersHorizontal, TrendingUp, Edit3, Share2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import StreamingFocusMode from '@/components/streaming/StreamingFocusMode'
+import SharePlaylistModal from '@/components/ai-playlist/SharePlaylistModal'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 
@@ -24,6 +25,8 @@ export default function CreatePlaylist() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(null)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [lastExportCount, setLastExportCount] = useState(0)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [focusDraggedIndex, setFocusDraggedIndex] = useState<number | null>(null)
@@ -301,7 +304,11 @@ export default function CreatePlaylist() {
       } else {
         setSaveSuccess(`Playlist "${playlistName}" saved to Spotify successfully!`)
       }
-      setSavedPlaylistUrl(data.playlistUrl)
+      setSavedPlaylistUrl(data.playlistUrl || null)
+      if (data.playlistUrl) {
+        setLastExportCount(tracks.length)
+        setShowShareModal(true)
+      }
       setTimeout(() => setSaveSuccess(null), 8000) // Longer timeout for fallback message
     } catch (error) {
       console.error('Error saving playlist:', error)
@@ -733,12 +740,20 @@ export default function CreatePlaylist() {
                       {status?.displayName || 'Not connected'}
                     </span>
                     {savedPlaylistUrl && (
-                      <button
-                        onClick={() => window.open(savedPlaylistUrl, '_blank')}
-                        className="text-[10px] sm:text-xs text-primary hover:text-primary-dark ml-1 underline flex items-center gap-1"
-                      >
-                        Open <ExternalLink className="w-2.5 sm:w-3 h-2.5 sm:h-3" />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => window.open(savedPlaylistUrl, '_blank')}
+                          className="text-[10px] sm:text-xs text-primary hover:text-primary-dark ml-1 underline flex items-center gap-1"
+                        >
+                          Open <ExternalLink className="w-2.5 sm:w-3 h-2.5 sm:h-3" />
+                        </button>
+                        <button
+                          onClick={() => setShowShareModal(true)}
+                          className="text-[10px] sm:text-xs text-primary hover:text-primary-dark ml-2 underline flex items-center gap-1"
+                        >
+                          Share <Share2 className="w-2.5 sm:w-3 h-2.5 sm:h-3" />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -760,6 +775,7 @@ export default function CreatePlaylist() {
           saveError={saveError}
           saveSuccess={saveSuccess}
           savedPlaylistUrl={savedPlaylistUrl}
+          onOpenShareModal={() => setShowShareModal(true)}
           handleSaveToSpotify={handleSaveToSpotify}
           removeFromFocusResult={removeFromFocusResult}
           focusDraggedIndex={focusDraggedIndex}
@@ -770,6 +786,14 @@ export default function CreatePlaylist() {
           handleFocusDragEnd={handleFocusDragEnd}
         />
       )}
+
+      <SharePlaylistModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        playlistName={playlistName || 'Streaming Playlist'}
+        spotifyUrl={savedPlaylistUrl}
+        trackCount={lastExportCount || (mode === 'streaming' ? focusResult?.length || 0 : playlistTracks.length)}
+      />
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {

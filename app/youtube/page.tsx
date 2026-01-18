@@ -1,7 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Youtube, TrendingUp, Eye, Calendar, Search, X, Loader2 } from 'lucide-react'
+import {
+  Youtube,
+  TrendingUp,
+  Eye,
+  Calendar,
+  Search,
+  X,
+  Loader2,
+} from 'lucide-react'
 import YouTubeSongList from '@/components/youtube/YouTubeSongList'
 import YouTubeVideoModal from '@/components/youtube/YouTubeVideoModal'
 
@@ -65,7 +73,9 @@ export default function YouTubePage() {
   const [data, setData] = useState<YouTubeArtistGroup | null>(null)
   const [allMembersData, setAllMembersData] = useState<YouTubeArtistGroup[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedSong, setSelectedSong] = useState<YouTubeVideoDetail | null>(null)
+  const [selectedSong, setSelectedSong] = useState<YouTubeVideoDetail | null>(
+    null
+  )
   const [modalOpen, setModalOpen] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
   const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null)
@@ -85,7 +95,9 @@ export default function YouTubePage() {
       setLastRefreshedAt(json.lastRefreshedAt || null)
 
       // Set initial data for BTS
-      const btsData = json.artistGroups?.find((g: YouTubeArtistGroup) => g.artist === 'BTS')
+      const btsData = json.artistGroups?.find(
+        (g: YouTubeArtistGroup) => g.artist === 'BTS'
+      )
       if (btsData) {
         setData(btsData)
       }
@@ -96,7 +108,7 @@ export default function YouTubePage() {
     }
   }
 
-  const handleMemberChange = (member: typeof MEMBERS[0]) => {
+  const handleMemberChange = (member: (typeof MEMBERS)[0]) => {
     setSelectedMember(member)
     setSearchQuery('') // Clear search when switching members
     const memberData = allMembersData.find(
@@ -125,30 +137,31 @@ export default function YouTubePage() {
   }
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B'
-    if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M'
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
     return num.toLocaleString()
   }
 
   const formatTimestamp = (timestamp: string | null) => {
     if (!timestamp) return 'Unknown'
     const date = new Date(timestamp)
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'UTC'
-    }) + ' UTC'
+    return (
+      date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'UTC',
+      }) + ' UTC'
+    )
   }
 
   // Filter songs by search query
-  const filteredSongs = data?.songs?.filter(song =>
-    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    song.artist?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || []
+  const filteredSongs =
+    data?.songs?.filter(
+      song =>
+        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.artist?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || []
 
   const hasActiveSearch = searchQuery.length > 0
 
@@ -171,12 +184,14 @@ export default function YouTubePage() {
               </span>
             </h1>
             <p className="text-sm sm:text-base text-purple-200/40 font-medium">
-              Real-time performance tracking • Updated {formatTimestamp(lastRefreshedAt)}
+              Real-time performance tracking • Updated{' '}
+              {formatTimestamp(lastRefreshedAt)}
             </p>
           </div>
 
           <p className="text-xs sm:text-sm text-purple-200/40 max-w-md md:text-right">
-            Data is scraped from kworb.net. Minor inaccuracies or delays can be present compared to official YouTube stats.
+            Data is scraped from kworb.net. Minor inaccuracies or delays can be
+            present compared to official YouTube stats.
           </p>
         </header>
 
@@ -185,15 +200,16 @@ export default function YouTubePage() {
           <div className="p-1.5 bg-[#0A0A0A]/80 backdrop-blur-2xl border border-white/5 rounded-[24px] shadow-2xl shadow-purple-900/10 flex flex-col md:flex-row gap-2 md:gap-3 items-center">
             {/* Member Tabs */}
             <nav className="flex-1 w-full overflow-x-auto scrollbar-hide flex items-center gap-1 pb-1 md:pb-0">
-              {MEMBERS.map((member) => (
+              {MEMBERS.map(member => (
                 <button
                   key={member.id}
                   onClick={() => handleMemberChange(member)}
                   className={`
                     px-4 md:px-5 py-2 md:py-2.5 rounded-[18px] text-sm font-medium transition-all duration-300 whitespace-nowrap
-                    ${selectedMember.id === member.id
-                      ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/25 scale-[1.02]'
-                      : 'text-white/50 hover:text-white hover:bg-white/5'
+                    ${
+                      selectedMember.id === member.id
+                        ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/25 scale-[1.02]'
+                        : 'text-white/50 hover:text-white hover:bg-white/5'
                     }
                   `}
                 >
@@ -208,7 +224,7 @@ export default function YouTubePage() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search..."
                 className="w-full md:w-72 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-purple-500/20 rounded-[18px] pl-11 pr-4 py-2.5 text-sm text-white placeholder-purple-200/30 focus:outline-none focus:bg-white/10 focus:border-purple-500/40 transition-all"
               />
@@ -231,9 +247,11 @@ export default function YouTubePage() {
               {/* Total Views */}
               <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
                 <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
-                   <Eye className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
+                  <Eye className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" />
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Total Views</p>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">
+                  Total Views
+                </p>
                 <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
                   {data.totalViews ? formatNumber(data.totalViews) : '-'}
                 </p>
@@ -242,9 +260,11 @@ export default function YouTubePage() {
               {/* Daily Average */}
               <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
                 <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
-                   <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-fuchsia-400" />
+                  <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-fuchsia-400" />
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Daily Average</p>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">
+                  Daily Average
+                </p>
                 <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
                   {data.dailyAvg ? formatNumber(data.dailyAvg) : '-'}
                 </p>
@@ -253,9 +273,11 @@ export default function YouTubePage() {
               {/* Total Videos */}
               <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
                 <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
-                   <Youtube className="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
+                  <Youtube className="w-6 h-6 sm:w-8 sm:h-8 text-violet-500" />
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Total Videos</p>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">
+                  Total Videos
+                </p>
                 <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
                   {data.totalSongs || data.songs?.length || 0}
                 </p>
@@ -264,9 +286,11 @@ export default function YouTubePage() {
               {/* Artist Name */}
               <div className="p-4 sm:p-6 rounded-[20px] sm:rounded-[24px] bg-[#0F0F0F] border border-white/5 relative overflow-hidden group hover:border-purple-500/20 transition-colors">
                 <div className="absolute top-0 right-0 p-4 sm:p-6 opacity-20 group-hover:opacity-40 transition-opacity">
-                   <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-purple-300" />
+                  <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-purple-300" />
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">Artist</p>
+                <p className="text-xs sm:text-sm font-medium text-purple-200/40 mb-1 sm:mb-2">
+                  Artist
+                </p>
                 <p className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
                   {selectedMember.name}
                 </p>
@@ -278,9 +302,12 @@ export default function YouTubePage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
               <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-              <p className="text-purple-200/30 text-sm font-medium">Fetching analytics...</p>
+              <p className="text-purple-200/30 text-sm font-medium">
+                Fetching analytics...
+              </p>
             </div>
-          ) : data && (hasActiveSearch ? filteredSongs : data.songs)?.length > 0 ? (
+          ) : data &&
+            (hasActiveSearch ? filteredSongs : data.songs)?.length > 0 ? (
             <YouTubeSongList
               songs={hasActiveSearch ? filteredSongs : data.songs}
               onSongClick={handleSongClick}
@@ -292,8 +319,7 @@ export default function YouTubePage() {
               <p className="text-purple-200/40 text-sm">
                 {hasActiveSearch
                   ? `No videos match "${searchQuery}"`
-                  : `No videos found for ${selectedMember.name}`
-                }
+                  : `No videos found for ${selectedMember.name}`}
               </p>
             </div>
           )}
