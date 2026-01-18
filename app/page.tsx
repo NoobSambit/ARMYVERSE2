@@ -1,6 +1,12 @@
 export default function Home() {
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-background-dark text-white font-display overflow-x-hidden selection:bg-primary selection:text-white">
+      <style>{`
+        body > div.sticky,
+        body > footer {
+          display: none !important;
+        }
+      `}</style>
       <div className="fixed inset-0 z-0 bg-aurora pointer-events-none opacity-40"></div>
       <div className="fixed inset-0 z-0 bg-noise pointer-events-none opacity-50 mix-blend-overlay"></div>
       <div className="fixed top-[-20%] left-[20%] w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] bg-primary rounded-full blur-[150px] opacity-20 z-0 pointer-events-none"></div>
