@@ -9,7 +9,8 @@ const SOURCE_LABELS: Record<string, string> = {
   craft: 'Crafting',
   event: 'Event',
   daily_milestone: 'Daily Streak',
-  weekly_milestone: 'Weekly Streak'
+  weekly_milestone: 'Weekly Streak',
+  borarush: 'BoraRush'
 }
 
 const formatSourceLabel = (value: string) =>

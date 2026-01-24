@@ -90,6 +90,7 @@ const config: Config = {
         'spin-slow': 'spin 3s linear infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'marquee': 'marquee 25s linear infinite',
+        'marquee-slow': 'marquee-seamless 60s linear infinite',
       },
       keyframes: {
         blob: {
@@ -109,6 +110,10 @@ const config: Config = {
         marquee: {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(-100%)' },
+        },
+        'marquee-seamless': {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
         }
       },
     },

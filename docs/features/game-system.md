@@ -38,6 +38,35 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - Below 5 XP: No card drop (XP still awarded)
 - 5+ XP: Random photocard from the Fandom catalog
 
+### BoraRush (ARMY Ladder Rush)
+
+**What it is:**
+
+- External Snake & Ladder trivia game hosted separately (Netlify)
+- Users earn Armyverse XP when they finish the board
+- XP scales by how many turns the winning player takes to reach tile 100
+
+**XP Tiers (Generous Curve):**
+
+- 1–20 turns: 200 XP (speedrun)
+- 21–30 turns: 170 XP (swift)
+- 31–40 turns: 140 XP (steady)
+- 41–50 turns: 115 XP (gritty)
+- 51–60 turns: 95 XP (survivor)
+- 61–80 turns: 80 XP (survivor)
+- 81+ turns: 60 XP (finish)
+
+**Security Model:**
+
+- Armyverse issues a short-lived BoraRush handoff token
+- BoraRush submits run results with that token to the XP award endpoint
+- Armyverse verifies the handoff token and awards XP
+
+**Photocard Reward:**
+
+- Every completed Solo Run also grants a random photocard
+- Duplicate cards convert into Dust (consistent with quiz rewards)
+
 ### Rarity (Deprecated)
 
 Rarity tiers and pity tracking were part of the legacy photocard pipeline. The current catalog uses random drops from `fandom_gallery_images`, and rewards are stored with `rarity: "random"` for audit consistency.

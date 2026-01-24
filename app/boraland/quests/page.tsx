@@ -37,7 +37,7 @@ export default function Page() {
   const warnedRef = useRef(false)
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard'>('home')
+  const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard' | 'borarush'>('home')
 
   useEffect(() => {
     if (user === null && !warnedRef.current) {
@@ -87,6 +87,7 @@ export default function Page() {
           if (tab === 'home') router.push('/boraland')
           else if (tab === 'fangate') router.push('/boraland')
           else if (tab === 'armybattles') router.push('/boraland')
+          else if (tab === 'borarush') router.push('/boraland?tab=borarush')
         }} />
 
         <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">

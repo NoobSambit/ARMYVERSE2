@@ -40,7 +40,7 @@ export function getMasteryBadgeImagePath(
   // For level 100, use special member-specific badges for members
   if (milestone === 100 && kind === 'member') {
     const normalizedKey = normalizeMemberKey(key)
-    return `/badges/mastery/special/${normalizedKey}-100.svg`
+    return `/badges/mastery/special/${normalizedKey}-100.png`
   }
 
   // For all other milestones, use generic milestone badges
@@ -130,23 +130,7 @@ export function getBadgeImagePath(badgeCode: string): string {
     ...Object.fromEntries(
       MEMBER_KEYS.map(member => [
         `mastery_member_${member}_100`,
-        `/badges/mastery/special/${normalizeMemberKey(member)}-100.svg`,
-      ])
-    ),
-
-    // Mastery special member badges (level 100)
-    ...Object.fromEntries(
-      MEMBER_KEYS.map(member => [
-        `mastery_member_${member}_100`,
         `/badges/mastery/special/${normalizeMemberKey(member)}-100.png`,
-      ])
-    ),
-
-    // Mastery special member badges (level 100)
-    ...Object.fromEntries(
-      MEMBER_KEYS.map(member => [
-        `mastery_member_${member}_100`,
-        `/badges/mastery/special/${normalizeMemberKey(member)}-100.svg`,
       ])
     ),
   }

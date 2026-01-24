@@ -180,6 +180,22 @@ Or use: `openssl rand -hex 64`
 
 ---
 
+### BoraRush Integration
+
+```env
+GAME_HANDOFF_SECRET=your-long-random-secret
+BORARUSH_ORIGIN=https://borarush.netlify.app
+BORARUSH_ORIGIN_DEV=http://localhost:3000
+NEXT_PUBLIC_BORARUSH_URL=https://borarush.netlify.app
+```
+
+**Used for:**
+- Short-lived handoff tokens for BoraRush XP awards
+- CORS allowlist for cross-origin XP submissions
+- Client-side launch URL for BoraRush
+
+---
+
 ### Last.fm API (Quest Verification)
 
 ```env

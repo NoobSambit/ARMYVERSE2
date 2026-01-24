@@ -106,6 +106,95 @@ Submit quiz answers and receive photocard reward.
 
 ---
 
+## BoraRush (ARMY Ladder Rush)
+
+### POST /api/game/borarush/handoff
+
+Generate a short-lived handoff token for the BoraRush game.
+
+**Authentication**: Required (Firebase or JWT)
+
+**Request Body:**
+
+```json
+{}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "token": "eyJhbGciOi...",
+  "expiresAt": "2026-01-06T12:20:00.000Z"
+}
+```
+
+---
+
+### POST /api/game/borarush/complete
+
+Submit a completed BoraRush run and award XP based on turns.
+
+**Authentication**: Required (BoraRush handoff token)
+
+**Request Body:**
+
+```json
+{
+  "runId": "run_1c3a8b9e",
+  "turns": 37,
+  "playerCount": 1,
+  "winnerId": 1
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "ok": true,
+  "duplicate": false,
+  "runDuplicate": false,
+  "runId": "run_1c3a8b9e",
+  "turns": 37,
+  "xpAwarded": 140,
+  "tier": "steady",
+  "reward": {
+    "cardId": "6960e7ce2d95902a438cace4",
+    "title": "Melon Profile",
+    "category": "D-DAY",
+    "categoryPath": "D-DAY/Gallery",
+    "subcategory": "Promo Pictures",
+    "subcategoryPath": "Promo_Pictures",
+    "imageUrl": "https://static.wikia.nocookie.net/...",
+    "thumbUrl": "https://static.wikia.nocookie.net/...",
+    "sourceUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery#Promo_Pictures",
+    "pageUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery",
+    "rarity": "random"
+  },
+  "duplicateCard": false,
+  "dustAwarded": 0,
+  "balances": {
+    "dust": 0,
+    "xp": 1240,
+    "level": 3,
+    "xpIntoLevel": 40,
+    "xpForNextLevel": 156,
+    "xpToNextLevel": 116,
+    "progressPercent": 26
+  }
+}
+```
+
+**Notes:**
+
+- `runId` is used to ensure idempotency (`duplicate` + `runDuplicate` true when a run is re-submitted).
+- `turns` is clamped to a safe range on the server.
+- CORS is enabled for `BORARUSH_ORIGIN`.
+- `duplicateCard` indicates the photocard was already owned and converted to Dust.
+
+---
+
 ## Inventory
 
 ### GET /api/game/inventory

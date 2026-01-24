@@ -10,13 +10,24 @@ function formatDateKey(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
 }
 
+function getSnapshotTotal(snapshot: any, type: 'songs' | 'albums'): number {
+  if (snapshot[type]?.length > 0) return snapshot[type].length
+
+  const groupKey = type === 'songs' ? 'songsByArtist' : 'albumsByArtist'
+  if (Array.isArray(snapshot[groupKey])) {
+    return snapshot[groupKey].reduce((acc: number, group: any) => acc + (group[type]?.length || 0), 0)
+  }
+
+  return 0
+}
+
 function compareSnapshots(current: any, previous: any | null): ChangeData | null {
   if (!previous) return null
 
   const changes: ChangeData = {
     songsByArtist: {},
-    totalSongs: (current.songs?.length || 0) - (previous.songs?.length || 0),
-    totalAlbums: (current.albums?.length || 0) - (previous.albums?.length || 0),
+    totalSongs: getSnapshotTotal(current, 'songs') - getSnapshotTotal(previous, 'songs'),
+    totalAlbums: getSnapshotTotal(current, 'albums') - getSnapshotTotal(previous, 'albums'),
     daily200Entries: (current.daily200?.length || 0) - (previous.daily200?.length || 0),
     daily200: {},
     artistsAllTime: {},

@@ -33,7 +33,7 @@ export default function BentoHero() {
           </span>
         </h1>
         <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mb-5 sm:mb-6 md:mb-8 max-w-xl font-body font-medium leading-relaxed">
-          Take 10-question BTS quizzes, earn performance-based photocard drops, and chase weekly leaderboard rewards.
+          Play BTS-related fun games, earn XP and photocards, and chase leaderboard streak based rewards.
         </p>
 
         {/* CTA Buttons */}

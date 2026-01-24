@@ -164,7 +164,8 @@ export default function ArtistPage() {
         name={artistName}
         heroImage={artistMeta.imageUrl} // Use metadata image as hero bg (often suitable)
         avatarImage={artistMeta.imageUrl}
-        tags={['K-Pop', 'Verified']}
+        verified={false}
+        tags={[]}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">

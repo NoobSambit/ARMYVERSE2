@@ -11,6 +11,7 @@ import MainContent from '@/components/boraland/MainContent'
 import RightSidebar from '@/components/boraland/RightSidebar'
 import FangateContent from '@/components/boraland/FangateContent'
 import ArmyBattlesContent from '@/components/boraland/ArmyBattlesContent'
+import BoraRushContent from '@/components/boraland/BoraRushContent'
 import MobileNav from '@/components/boraland/MobileNav'
 import MobileStatsDrawer from '@/components/boraland/MobileStatsDrawer'
 
@@ -43,7 +44,7 @@ export type PoolInfo = {
   categories?: number
 }
 
-type Tab = 'home' | 'fangate' | 'armybattles' | 'leaderboard'
+type Tab = 'home' | 'fangate' | 'armybattles' | 'leaderboard' | 'borarush'
 
 export default function Page() {
   const { user } = useAuth()
@@ -57,7 +58,7 @@ export default function Page() {
   useEffect(() => {
     setMounted(true)
     const tabParam = searchParams.get('tab') as Tab
-    if (tabParam && ['home', 'fangate', 'armybattles'].includes(tabParam)) {
+    if (tabParam && ['home', 'fangate', 'armybattles', 'borarush'].includes(tabParam)) {
       setActiveTab(tabParam)
     }
   }, [searchParams])
@@ -145,6 +146,7 @@ export default function Page() {
           <div className="flex-1 overflow-y-auto scrollbar-hide">
             {activeTab === 'home' && <MainContent pool={pool} onTabChange={setActiveTab} />}
             {activeTab === 'fangate' && <FangateContent />}
+            {activeTab === 'borarush' && <BoraRushContent />}
             {activeTab === 'armybattles' && <ArmyBattlesContent />}
           </div>
 

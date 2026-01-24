@@ -73,6 +73,11 @@ export default function SpotifyAnalyticsPage() {
   // Get artist metadata
   const artistMetadata = (snap.artistMetadata as any) || {}
 
+  // Calculate totals - fallback to aggregation if main arrays are empty
+  const totalSongs = snap.songs?.length || (snap.songsByArtist?.reduce((acc: number, group: any) => acc + (group.songs?.length || 0), 0) || 0)
+
+  const totalAlbums = snap.albums?.length || (snap.albumsByArtist?.reduce((acc: number, group: any) => acc + (group.albums?.length || 0), 0) || 0)
+
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-10 space-y-6 sm:space-y-8 lg:space-y-10">
       {/* Header */}
@@ -82,14 +87,14 @@ export default function SpotifyAnalyticsPage() {
       <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <StatCard
           title="Total Songs"
-          value={snap.songs?.length || 0}
+          value={totalSongs}
           change24h={changes24h?.totalSongs}
           change7d={changes7d?.totalSongs}
           variant="purple"
         />
         <StatCard
           title="Total Albums"
-          value={snap.albums?.length || 0}
+          value={totalAlbums}
           change24h={changes24h?.totalAlbums}
           change7d={changes7d?.totalAlbums}
           variant="blue"

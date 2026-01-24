@@ -49,23 +49,6 @@ export default function StatsLandingPage({ onSubmit, error }: StatsLandingPagePr
         <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-[#330df2]/5 blur-[50px] md:blur-[80px]"></div>
       </div>
 
-      {/* Header */}
-      <header className="relative z-20 border-b border-[#292249] bg-[#131023]/80 backdrop-blur-md px-4 md:px-6 py-3 md:py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="size-6 md:size-8 text-[#330df2]">
-              <BarChart3 className="w-6 h-6 md:w-8 md:h-8" />
-            </div>
-            <h2 className="text-white text-lg md:text-xl font-bold tracking-tight">ARMYVERSE</h2>
-          </div>
-          <a
-            href="/"
-            className="text-xs md:text-sm font-medium text-gray-300 hover:text-white transition-colors"
-          >
-            Home
-          </a>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="relative z-10 flex-grow flex flex-col items-center justify-center p-3 md:p-4 lg:p-8 xl:p-12 py-8 md:py-12">
@@ -280,23 +263,6 @@ export default function StatsLandingPage({ onSubmit, error }: StatsLandingPagePr
         </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-20 border-t border-white/5 bg-[#131023]/60 backdrop-blur-md mt-auto">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 text-center md:text-left">
-          <p className="text-gray-500 text-[10px] md:text-xs lg:text-sm">© 2024 ARMYVERSE. Fan project, not affiliated with HYBE.</p>
-          <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-center">
-            <a className="text-gray-400 hover:text-white text-[10px] md:text-xs lg:text-sm transition-colors" href="/privacy">
-              Privacy Policy
-            </a>
-            <div className="h-3 md:h-4 w-px bg-white/10"></div>
-            <a className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs lg:text-sm text-gray-300 hover:text-white transition-colors group" href="https://www.last.fm/join" target="_blank" rel="noopener noreferrer">
-              <span className="hidden sm:inline">Don&apos;t have an account?</span>
-              <span className="text-[#330df2] font-bold group-hover:underline">Join Last.fm</span>
-              <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

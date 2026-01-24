@@ -115,7 +115,7 @@ export default function Page() {
 
   // Tab State for Header
   const [activeTab, setActiveTab] = useState<
-    'home' | 'fangate' | 'armybattles' | 'leaderboard'
+    'home' | 'fangate' | 'armybattles' | 'leaderboard' | 'borarush'
   >('home')
 
   // View State (Cards or Badges)
@@ -369,6 +369,7 @@ export default function Page() {
           if (tab === 'home') router.push('/boraland')
           else if (tab === 'fangate') router.push('/boraland')
           else if (tab === 'armybattles') router.push('/boraland')
+          else if (tab === 'borarush') router.push('/boraland?tab=borarush')
         }}
       />
 
