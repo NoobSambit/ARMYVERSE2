@@ -12,6 +12,20 @@ export type BoraRushXpResult = {
   tier: BoraRushXpTier
 }
 
+export type BoraRushDailyCapsInput = {
+  xp: number
+  xpAwardsToday: number
+  cardAwardsToday: number
+  xpLimit: number
+  cardLimit: number
+}
+
+export type BoraRushDailyCapsResult = {
+  xpAwarded: number
+  xpCapped: boolean
+  cardCapped: boolean
+}
+
 const XP_TIERS: Array<{ maxTurns: number; xp: number; tier: BoraRushXpTier }> = [
   { maxTurns: 20, xp: 200, tier: 'speedrun' },
   { maxTurns: 30, xp: 170, tier: 'swift' },
@@ -36,4 +50,22 @@ export function calculateBoraRushXp(turns: number): BoraRushXpResult {
     }
   }
   return { turns: normalized, xp: 60, tier: 'finish' }
+}
+
+export function applyBoraRushDailyCaps({
+  xp,
+  xpAwardsToday,
+  cardAwardsToday,
+  xpLimit,
+  cardLimit
+}: BoraRushDailyCapsInput): BoraRushDailyCapsResult {
+  const safeXpLimit = Math.max(0, xpLimit)
+  const safeCardLimit = Math.max(0, cardLimit)
+  const xpCapped = xpAwardsToday >= safeXpLimit
+  const cardCapped = cardAwardsToday >= safeCardLimit
+  return {
+    xpAwarded: xpCapped ? 0 : xp,
+    xpCapped,
+    cardCapped
+  }
 }

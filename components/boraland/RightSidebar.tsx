@@ -1,7 +1,43 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
 import { GameStats } from '@/app/boraland/page'
 import { getLevelProgress } from '@/lib/game/leveling'
 
+const buildScaledUrl = (url?: string, width?: number) => {
+  if (!url || !width) return url
+  if (url.includes('/scale-to-width-down/')) {
+    return url.replace(/\/scale-to-width-down\/\d+/i, `/scale-to-width-down/${width}`)
+  }
+  if (url.includes('/revision/latest')) {
+    return url.replace('/revision/latest', `/revision/latest/scale-to-width-down/${width}`)
+  }
+  return url
+}
+
+const normalizeImageUrl = (url?: string) => {
+  if (!url) return ''
+  if (url.startsWith('//')) return `https:${url}`
+  if (url.startsWith('http://')) return `https://${url.slice(7)}`
+  return url
+}
+
 export default function RightSidebar({ stats }: { stats: GameStats | null }) {
+  const showcaseItems = useMemo(() => {
+    if (stats?.showcaseItems && stats.showcaseItems.length > 0) {
+      return stats.showcaseItems
+    }
+    return stats?.latest ? [stats.latest] : []
+  }, [stats])
+  const [showcaseIndex, setShowcaseIndex] = useState(0)
+
+  useEffect(() => {
+    if (showcaseItems.length === 0) return
+    if (showcaseIndex >= showcaseItems.length) {
+      setShowcaseIndex(0)
+    }
+  }, [showcaseItems.length, showcaseIndex])
+
   const totalXp = stats?.totalXp || 0
   const levelProgress = getLevelProgress(totalXp)
   const progressPercent = levelProgress.progressPercent
@@ -12,6 +48,13 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
   const dust = stats?.dust || 0
   const accuracy = stats?.quizStats?.accuracy
   const fmt = (value: number) => value.toLocaleString()
+  const activeItem = showcaseItems[showcaseIndex]
+  const activeCard = activeItem?.card
+  const cardTitle = activeCard?.title || activeCard?.subcategory || activeCard?.category || 'Card'
+  const fallbackImage = `https://placehold.co/400x600/2a1b3d/ffffff?text=${encodeURIComponent(cardTitle)}`
+  const rawImageUrl = normalizeImageUrl(activeCard?.imageUrl || activeCard?.thumbUrl)
+  const cardImage = buildScaledUrl(rawImageUrl, 640) || fallbackImage
+  const canRotate = showcaseItems.length > 1
 
   return (
     <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 md:gap-6">
@@ -75,19 +118,33 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bora-primary/10"></div>
         <div className="flex justify-between items-center mb-3 md:mb-4 z-10">
           <h3 className="font-display text-xs md:text-sm font-bold text-white uppercase tracking-wider">Showcase</h3>
-          <span className="text-[10px] md:text-xs text-accent-pink border border-accent-pink/30 px-1.5 md:px-2 py-0.5 rounded bg-accent-pink/10">{stats?.latest?.card?.category || 'RANDOM'}</span>
+          <span className="text-[10px] md:text-xs text-accent-pink border border-accent-pink/30 px-1.5 md:px-2 py-0.5 rounded bg-accent-pink/10">
+            {activeCard?.category || 'RANDOM'}
+          </span>
         </div>
         <div className="flex-grow flex items-center justify-center py-3 md:py-4 relative z-10 perspective-1000">
           <div className="absolute w-32 h-44 md:w-40 md:h-56 bg-gradient-to-tr from-accent-pink to-bora-primary rounded-xl blur-[30px] opacity-40 animate-pulse"></div>
           <div className="w-40 h-60 md:w-48 md:h-72 bg-gray-900 rounded-xl border border-white/10 relative overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500 group">
-            {stats?.latest?.card ? (
+            {activeCard ? (
               <>
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${stats.latest.card.imageUrl || `https://placehold.co/400x600/2a1b3d/ffffff?text=${encodeURIComponent(stats.latest.card.title || stats.latest.card.category || 'Card')}`}')` }}></div>
+                <img
+                  src={cardImage}
+                  alt={`${cardTitle} photocard`}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={(event) => {
+                    const target = event.currentTarget
+                    if (target.dataset.fallbackApplied === 'true') return
+                    target.dataset.fallbackApplied = 'true'
+                    target.src = fallbackImage
+                  }}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700" style={{ backgroundSize: '200% 200%', animation: 'shine 3s infinite' }}></div>
                 <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4">
-                  <h4 className="font-display font-bold text-base md:text-xl text-white">{stats.latest.card.title || stats.latest.card.subcategory || stats.latest.card.category}</h4>
-                  <p className="text-[10px] md:text-xs text-gray-300">{stats.latest.card.subcategory || stats.latest.card.category}</p>
+                  <h4 className="font-display font-bold text-base md:text-xl text-white">{activeCard?.title || activeCard?.subcategory || activeCard?.category}</h4>
+                  <p className="text-[10px] md:text-xs text-gray-300">{activeCard?.subcategory || activeCard?.category}</p>
                 </div>
               </>
             ) : (
@@ -98,7 +155,16 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
           </div>
         </div>
         <div className="text-center z-10 mt-auto">
-          <button className="text-xs text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-1 w-full">
+          <button
+            onClick={() => {
+              if (!canRotate) return
+              setShowcaseIndex((prev) => (prev + 1) % showcaseItems.length)
+            }}
+            disabled={!canRotate}
+            className={`text-xs transition-colors flex items-center justify-center gap-1 w-full ${
+              canRotate ? 'text-gray-400 hover:text-white' : 'text-gray-600 cursor-not-allowed'
+            }`}
+          >
             <span className="material-symbols-outlined text-sm">autorenew</span> Rotate Showcase
           </button>
         </div>

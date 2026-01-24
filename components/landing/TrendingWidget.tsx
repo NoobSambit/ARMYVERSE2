@@ -53,14 +53,14 @@ export default function TrendingWidget() {
       setError(null)
 
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
-
-        // For solo category, fetch specific member or all solo artists
-        const memberParam = category === 'solo' && selectedMember !== 'all' ? `&member=${selectedMember}` : ''
+        // For solo category, fetch specific member or all solo artists.
+        const memberParam = category === 'solo' && selectedMember !== 'all'
+          ? `&member=${encodeURIComponent(selectedMember)}`
+          : ''
 
         const [spotifyRes, youtubeRes] = await Promise.all([
-          fetch(`${baseUrl}/api/trending/top-songs?platform=spotify&category=${category}${memberParam}`),
-          fetch(`${baseUrl}/api/trending/top-songs?platform=youtube&category=${category}${memberParam}`)
+          fetch(`/api/trending/top-songs?platform=spotify&category=${category}${memberParam}`),
+          fetch(`/api/trending/top-songs?platform=youtube&category=${category}${memberParam}`)
         ])
 
         // Handle Spotify response

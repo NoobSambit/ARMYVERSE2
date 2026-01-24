@@ -174,6 +174,10 @@ Submit a completed BoraRush run and award XP based on turns.
   },
   "duplicateCard": false,
   "dustAwarded": 0,
+  "xpCapped": false,
+  "cardCapped": false,
+  "xpDailyLimit": 2,
+  "cardDailyLimit": 10,
   "balances": {
     "dust": 0,
     "xp": 1240,
@@ -192,6 +196,7 @@ Submit a completed BoraRush run and award XP based on turns.
 - `turns` is clamped to a safe range on the server.
 - CORS is enabled for `BORARUSH_ORIGIN`.
 - `duplicateCard` indicates the photocard was already owned and converted to Dust.
+- Daily caps apply: XP is limited to 2 awards/day and photocards to 10 awards/day (UTC).
 
 ---
 

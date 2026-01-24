@@ -12,8 +12,19 @@ export default function BoraRushContent() {
     const [error, setError] = useState<string | null>(null)
 
     const launchGame = async () => {
+        const popup = window.open('', '_blank')
+        if (popup) {
+            popup.opener = null
+        }
+
         if (!user?.getIdToken) {
-            window.location.href = `${BORARUSH_URL}/game`
+            const target = `${BORARUSH_URL}/game`
+            if (popup) {
+                popup.location.href = target
+                popup.focus()
+            } else {
+                window.open(target, '_blank', 'noopener,noreferrer')
+            }
             return
         }
 
@@ -35,10 +46,18 @@ export default function BoraRushContent() {
             }
 
             const target = `${BORARUSH_URL}/game?token=${encodeURIComponent(data.token)}`
-            window.location.href = target
+            if (popup) {
+                popup.location.href = target
+                popup.focus()
+            } else {
+                window.open(target, '_blank', 'noopener,noreferrer')
+            }
         } catch (err: any) {
             console.error('[BoraRush] Launch failed:', err)
             setError(err?.message || 'Failed to launch BoraRush')
+            if (popup && !popup.closed) {
+                popup.close()
+            }
         } finally {
             setLaunching(false)
         }
@@ -78,6 +97,9 @@ export default function BoraRushContent() {
                         <div className="flex items-center gap-2 text-purple-400 text-sm font-medium">
                             <Trophy className="w-5 h-5" />
                             Win by reaching tile 100 and earn XP + a photocard!
+                        </div>
+                        <div className="text-xs text-gray-400">
+                            Daily rewards: 2 XP syncs • 10 photocards
                         </div>
                     </div>
                     {error && (

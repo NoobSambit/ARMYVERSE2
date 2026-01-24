@@ -29,4 +29,6 @@ const boraRushRunSchema = new mongoose.Schema<IBoraRushRun>({
   timestamps: true
 })
 
+boraRushRunSchema.index({ userId: 1, completedAt: 1 })
+
 export const BoraRushRun = mongoose.models.BoraRushRun || mongoose.model<IBoraRushRun>('BoraRushRun', boraRushRunSchema)

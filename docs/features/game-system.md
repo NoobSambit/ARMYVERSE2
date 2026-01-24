@@ -66,6 +66,7 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 
 - Every completed Solo Run also grants a random photocard
 - Duplicate cards convert into Dust (consistent with quiz rewards)
+- Daily caps: 2 XP awards and 10 photocard awards per user (UTC)
 
 ### Rarity (Deprecated)
 

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Music, Crown, Clock, Trophy, Play } from 'lucide-react'
+import { Calendar, Music, Clock, Trophy, Play } from 'lucide-react'
 
 interface UserData {
   name: string
@@ -77,18 +77,9 @@ export default function UserProfile({ user, overview, loading = false }: UserPro
                   className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full object-cover border-3 md:border-4 border-[#0F0720]"
                 />
              </motion.div>
-             <div className="absolute -bottom-1.5 -right-1.5 md:-bottom-2 md:-right-2 bg-[#0F0720] rounded-full p-1 md:p-1.5 border border-white/10">
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-[8px] md:text-[10px] font-bold text-black px-1.5 md:px-2 py-0.5 rounded-full flex items-center gap-0.5 md:gap-1 shadow-lg">
-                  <span className="font-display text-[10px] md:text-xs">LVL 42</span>
-                </div>
-             </div>
           </div>
 
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1">{user.name}</h2>
-          <div className="flex items-center gap-1.5 md:gap-2 text-purple-300 text-xs md:text-sm font-medium bg-purple-500/10 px-2.5 md:px-3 py-1 rounded-full border border-purple-500/20">
-            <Crown className="w-3 h-3" />
-            <span>Pro Member</span>
-          </div>
           <p className="text-gray-400 text-xs md:text-sm mt-2 md:mt-3 flex items-center gap-1.5 md:gap-2">
              <Calendar className="w-3 h-3" />
              Joined {new Date(user.registered).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}

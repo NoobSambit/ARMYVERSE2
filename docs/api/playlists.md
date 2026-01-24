@@ -265,25 +265,37 @@ Get user's playlist generation history.
 
 Export playlist to Spotify.
 
-**Authentication**: Required (Spotify connected)
+**Authentication**: Optional
 
 **Request Body:**
 ```json
 {
-  "playlistId": "playlist_abc123",
   "name": "My BTS Workout Mix",
-  "public": true
+  "songs": [
+    { "title": "Run BTS", "artist": "BTS", "spotifyId": "1G7..." }
+  ],
+  "fallbackToOwner": false
 }
 ```
 
 **Success Response (200):**
 ```json
 {
-  "ok": true,
-  "spotifyPlaylistId": "3cEYpjA9oz9GiPac4AsH4n",
-  "url": "https://open.spotify.com/playlist/3cEYpjA9oz9GiPac4AsH4n"
+  "success": true,
+  "playlistUrl": "https://open.spotify.com/playlist/3cEYpjA9oz9GiPac4AsH4n",
+  "tracksAdded": 18,
+  "totalSongs": 20,
+  "mode": "user",
+  "usedFallback": false,
+  "fallbackReason": null
 }
 ```
+
+**Notes:**
+
+- If `Authorization: Bearer <spotify_access_token>` is provided and valid, the playlist is created in the user's Spotify account (`mode: "user"`).
+- If no Authorization header is provided, the export uses the ArmyVerse owner account (`mode: "owner"`).
+- If the Authorization header is present but invalid/expired, the API returns `401` with `canFallback: true` so the client can retry with `fallbackToOwner: true`.
 
 ---
 

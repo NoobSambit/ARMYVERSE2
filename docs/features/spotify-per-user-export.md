@@ -24,6 +24,7 @@ This feature allows users to export playlists directly to their own Spotify acco
   - Standard connection: user authorizes with the ArmyVerse Spotify app and we store tokens in `integrations.spotify`.
   - BYO connection: user enters their own Spotify app Client ID and optional Client Secret, we generate an authorization URL, and store tokens in `integrations.spotifyByo` encrypted.
 - Export buttons/pages try to include a Spotify user access token if available; otherwise they rely on owner fallback.
+- If the API response returns `mode: "owner"`, the UI should warn that the playlist was saved under the ArmyVerse account.
 
 ## Implementation
 
@@ -89,14 +90,14 @@ See `docs/setup/environment-variables.md` and `env.local.example`.
   - Disconnects via `POST /api/spotify/disconnect-byo`.
 
 - `components/buttons/ExportToSpotifyButton.tsx`
-  - Already sends `Authorization: Bearer <token>` fetched from `/api/spotify/status` and retries on `401`.
+  - Sends `Authorization: Bearer <token>` when available and retries on `401`. If no token, exports in owner mode.
 
 - Manual + streaming focused page: `app/create-playlist/page.tsx`
   - Updated `handleSaveToSpotify()` to include the Spotify user token when available (retrieved via `useSpotifyAuth`) and retry once on `401`. If no token, falls back to owner mode automatically.
   - Updated info banner copy to reflect user export vs owner fallback.
 
 - AI playlist page: `app/ai-playlist/page.tsx`
-  - Already posts with `Authorization` header from `useSpotifyAuth` and retries on `401`.
+  - Posts with `Authorization` from `useSpotifyAuth` when available and retries on `401`. If no token, exports in owner mode.
 
 ## Client integration example
 

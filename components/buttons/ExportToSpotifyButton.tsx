@@ -28,6 +28,8 @@ export default function ExportToSpotifyButton({
   const [isExporting, setIsExporting] = useState(false)
   const [isDebugging, setIsDebugging] = useState(false)
   const { isAuthenticated, status, refreshStatus } = useSpotifyAuth()
+  const isTrackEmpty = !tracks?.length
+  const isExportDisabled = isExporting || isTrackEmpty
 
   const getValidAccessToken = useCallback(async () => {
     let accessToken = status?.accessToken
@@ -78,11 +80,6 @@ export default function ExportToSpotifyButton({
   }, [isAuthenticated, getValidAccessToken, onExportError, onExportSuccess])
 
   const handleExport = useCallback(async () => {
-    if (!isAuthenticated) {
-      onExportError?.('Please connect your Spotify account first')
-      return
-    }
-
     if (!tracks || tracks.length === 0) {
       onExportError?.('No tracks to export')
       return
@@ -94,7 +91,7 @@ export default function ExportToSpotifyButton({
       const accessToken = await getValidAccessToken()
 
       // Helper to make export request
-      const makeExportRequest = async (token: string | null, useFallback: boolean = false) => {
+      const makeExportRequest = async (token?: string | null, useFallback: boolean = false) => {
         const requestBody = {
           name: 'AI Generated BTS Playlist',
           songs: tracks,
@@ -116,41 +113,46 @@ export default function ExportToSpotifyButton({
         })
       }
 
-      // First attempt with user token
-      if (!accessToken) {
-        onExportError?.('Spotify access token not available. Please reconnect your account.')
-        return
-      }
+      let response: Response
+      let data: any
 
-      let response = await makeExportRequest(accessToken, false)
-      let data = await response.json()
+      if (accessToken) {
+        response = await makeExportRequest(accessToken, false)
+        data = await response.json()
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Try to refresh the token first
-          const refreshed = await refreshStatus()
-          if (refreshed?.accessToken) {
-            // Retry with refreshed token
-            response = await makeExportRequest(refreshed.accessToken, false)
-            data = await response.json()
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Try to refresh the token first
+            const refreshed = await refreshStatus()
+            if (refreshed?.accessToken) {
+              // Retry with refreshed token
+              response = await makeExportRequest(refreshed.accessToken, false)
+              data = await response.json()
 
-            if (!response.ok) {
-              // If still failing, try fallback to owner
-              if (response.status === 401 && data.canFallback) {
-                console.log('Token refresh succeeded but still invalid, using fallback')
-                response = await makeExportRequest(refreshed.accessToken, true)
-                data = await response.json()
+              if (!response.ok) {
+                // If still failing, try fallback to owner
+                if (response.status === 401 && data.canFallback) {
+                  console.log('Token refresh succeeded but still invalid, using fallback')
+                  response = await makeExportRequest(refreshed.accessToken, true)
+                  data = await response.json()
+                }
               }
+            } else {
+              // Refresh failed - use fallback with the original (expired) token
+              console.log('Token refresh failed, using owner fallback')
+              response = await makeExportRequest(accessToken, true)
+              data = await response.json()
             }
-          } else {
-            // Refresh failed - use fallback with the original (expired) token
-            console.log('Token refresh failed, using owner fallback')
-            response = await makeExportRequest(accessToken, true)
-            data = await response.json()
+          }
+
+          // Check final response
+          if (!response.ok) {
+            throw new Error(data.error || data.details || 'Failed to export playlist')
           }
         }
-
-        // Check final response
+      } else {
+        response = await makeExportRequest(null, false)
+        data = await response.json()
         if (!response.ok) {
           throw new Error(data.error || data.details || 'Failed to export playlist')
         }
@@ -164,6 +166,8 @@ export default function ExportToSpotifyButton({
       if (data.usedFallback && data.fallbackReason) {
         // Still call success with the URL, but the parent can show a warning
         onExportSuccess?.(data.playlistUrl, data.fallbackReason)
+      } else if (data.mode === 'owner') {
+        onExportSuccess?.(data.playlistUrl, 'Playlist created in the Armyverse Spotify account.')
       } else {
         onExportSuccess?.(data.playlistUrl)
       }
@@ -174,14 +178,14 @@ export default function ExportToSpotifyButton({
     } finally {
       setIsExporting(false)
     }
-  }, [isAuthenticated, tracks, getValidAccessToken, onExportError, onExportSuccess, refreshStatus])
+  }, [tracks, getValidAccessToken, onExportError, onExportSuccess, refreshStatus])
 
   return (
     <div className="flex gap-2">
       <button
         onClick={handleExport}
-        disabled={!isAuthenticated || isExporting || !tracks?.length}
-        className={`flex items-center justify-center px-6 py-3 rounded-full font-semibold transition-all duration-300 ${!isAuthenticated || !tracks?.length
+        disabled={isExportDisabled}
+        className={`flex items-center justify-center px-6 py-3 rounded-full font-semibold transition-all duration-300 ${isTrackEmpty
           ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
           : isExporting
             ? 'bg-green-600 text-white cursor-wait'

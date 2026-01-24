@@ -16,11 +16,13 @@ import MobileNav from '@/components/boraland/MobileNav'
 import MobileStatsDrawer from '@/components/boraland/MobileStatsDrawer'
 
 export type InventoryItem = {
+  id?: string
   card?: {
     title?: string | null
     category?: string
     subcategory?: string | null
     imageUrl?: string
+    thumbUrl?: string
     sourceUrl?: string
   }
 }
@@ -28,6 +30,7 @@ export type InventoryItem = {
 export type GameStats = {
   total?: number
   latest?: InventoryItem | null
+  showcaseItems?: InventoryItem[]
   totalXp?: number
   dust?: number
   quizStats?: {
@@ -69,9 +72,10 @@ export default function Page() {
     let active = true
       ; (async () => {
         try {
-          // Fetch inventory count and latest item
-          const res = await apiFetch('/api/game/inventory?limit=1')
+          // Fetch recent inventory items for showcase rotation.
+          const res = await apiFetch('/api/game/inventory?limit=8')
           if (!active) return
+          const showcaseItems = Array.isArray(res?.items) ? res.items : []
 
           let totalXp = 0
           let dust = 0
@@ -89,7 +93,8 @@ export default function Page() {
 
           setStats({
             total: res?.total || 0,
-            latest: res?.items?.[0],
+            latest: showcaseItems[0],
+            showcaseItems,
             totalXp,
             dust,
             quizStats

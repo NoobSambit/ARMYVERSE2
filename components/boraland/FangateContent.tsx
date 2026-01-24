@@ -36,7 +36,7 @@ export default function FangateContent() {
             </a>
             <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
               <span className="material-symbols-outlined text-lg">verified_user</span>
-              Official ARMY Membership Required
+              Fan Score verification unlocks access
             </div>
           </div>
         </div>

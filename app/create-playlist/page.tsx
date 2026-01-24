@@ -344,9 +344,12 @@ export default function CreatePlaylist() {
         }
 
         // Show appropriate message based on whether fallback was used
-        if (data.usedFallback) {
+        if (data.mode === 'owner') {
+          const suffix = data.usedFallback
+            ? ' Your session expired - please reconnect your Spotify.'
+            : ' Connect Spotify to export to your own account.'
           setSaveSuccess(
-            `Playlist "${playlistName}" saved to ArmyVerse Spotify account. Your session expired - please reconnect your Spotify.`
+            `Playlist "${playlistName}" saved to ArmyVerse Spotify account.${suffix}`
           )
         } else {
           setSaveSuccess(

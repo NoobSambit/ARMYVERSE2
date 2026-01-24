@@ -9,6 +9,7 @@ import { Photocard } from '@/lib/models/Photocard'
 import { InventoryItem } from '@/lib/models/InventoryItem'
 import { InventoryGrantAudit } from '@/lib/models/InventoryGrantAudit'
 import { mapPhotocardSummary, type PhotocardDoc } from '@/lib/game/photocardMapper'
+import { BoraRushDailyLimit } from '@/lib/models/BoraRushDailyLimit'
 
 export const runtime = 'nodejs'
 
@@ -21,10 +22,49 @@ const AwardSchema = z.object({
 
 const BORARUSH_ORIGIN = process.env.BORARUSH_ORIGIN || 'https://borarush.netlify.app'
 const BORARUSH_ORIGIN_DEV = process.env.BORARUSH_ORIGIN_DEV || ''
+const BORARUSH_DAILY_XP_CAP = 2
+const BORARUSH_DAILY_CARD_CAP = 10
 
 const allowedOrigins = new Set(
   [BORARUSH_ORIGIN, BORARUSH_ORIGIN_DEV].filter(Boolean)
 )
+
+type DailyCounterField = 'xpAwards' | 'cardAwards'
+
+function getUtcDateKey(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+async function ensureDailyLimitDoc(userId: string, dateKey: string) {
+  try {
+    await BoraRushDailyLimit.updateOne(
+      { userId, dateKey },
+      {
+        $setOnInsert: {
+          userId,
+          dateKey,
+          xpAwards: 0,
+          cardAwards: 0
+        }
+      },
+      { upsert: true }
+    )
+  } catch (error: any) {
+    if (error?.code !== 11000) {
+      throw error
+    }
+  }
+}
+
+async function reserveDailyAward(userId: string, dateKey: string, field: DailyCounterField, limit: number) {
+  if (limit <= 0) return false
+  const updated = await BoraRushDailyLimit.findOneAndUpdate(
+    { userId, dateKey, [field]: { $lt: limit } },
+    { $inc: { [field]: 1 } },
+    { new: true }
+  ).lean()
+  return !!updated
+}
 
 function getCorsHeaders(origin: string | null) {
   const resolvedOrigin = origin && allowedOrigins.has(origin) ? origin : BORARUSH_ORIGIN
@@ -44,6 +84,14 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  let userId = ''
+  let dateKey = ''
+  let xpReserved = false
+  let cardReserved = false
+  let xpAwardApplied = false
+  let cardAwardApplied = false
+  let runRecorded = false
+
   try {
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -55,6 +103,7 @@ export async function POST(request: NextRequest) {
     if (!handoff) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders(request.headers.get('origin')) })
     }
+    userId = handoff.sub
 
     const body = await request.json().catch(() => ({}))
     const input = AwardSchema.safeParse(body)
@@ -97,57 +146,75 @@ export async function POST(request: NextRequest) {
 
     const xpResult = calculateBoraRushXp(input.data.turns)
     const activityAt = new Date()
+    dateKey = getUtcDateKey(activityAt)
 
-    let balances = await awardBalances(handoff.sub, { xp: xpResult.xp }, {
-      activityAt,
-      leaderboardProfile: {
-        displayName: handoff.displayName || handoff.username || 'Player',
-        avatarUrl: handoff.photoURL || ''
-      }
-    })
+    await ensureDailyLimitDoc(userId, dateKey)
+    xpReserved = await reserveDailyAward(userId, dateKey, 'xpAwards', BORARUSH_DAILY_XP_CAP)
+
+    const xpCapped = !xpReserved
+    const xpAwarded = xpReserved ? xpResult.xp : 0
+
+    let balances = null as any
+    if (xpAwarded > 0) {
+      balances = await awardBalances(userId, { xp: xpAwarded }, {
+        activityAt,
+        leaderboardProfile: {
+          displayName: handoff.displayName || handoff.username || 'Player',
+          avatarUrl: handoff.photoURL || ''
+        }
+      })
+      xpAwardApplied = true
+    }
 
     let reward = null
     let duplicateCard = false
     let dustAwarded = 0
     let cardId = undefined as any
+    let cardCapped = false
 
     const cardAgg = await Photocard.aggregate([{ $sample: { size: 1 } }])
     const card = cardAgg[0] || null
     if (card) {
-      cardId = card._id
-      await InventoryGrantAudit.create({
-        userId: handoff.sub,
-        sessionId: undefined,
-        cardId: card._id,
-        rarity: 'random',
-        seed: input.data.runId,
-        poolSlug: '',
-        reason: 'borarush',
-        anomaly: false,
-        xp: xpResult.xp
-      })
+      cardReserved = await reserveDailyAward(userId, dateKey, 'cardAwards', BORARUSH_DAILY_CARD_CAP)
+      cardCapped = !cardReserved
 
-      const existingOwned = await InventoryItem.findOne({ userId: handoff.sub, cardId: card._id })
-      if (existingOwned) {
-        duplicateCard = true
-        dustAwarded = duplicateDustForRarity('random')
-        balances = await awardBalances(handoff.sub, { dust: dustAwarded })
-      } else {
-        await InventoryItem.create({
-          userId: handoff.sub,
+      if (cardReserved) {
+        cardId = card._id
+        await InventoryGrantAudit.create({
+          userId,
+          sessionId: undefined,
           cardId: card._id,
-          acquiredAt: activityAt,
-          source: { type: 'borarush' }
+          rarity: 'random',
+          seed: input.data.runId,
+          poolSlug: '',
+          reason: 'borarush',
+          anomaly: false,
+          xp: xpAwarded
         })
+
+        const existingOwned = await InventoryItem.findOne({ userId, cardId: card._id })
+        if (existingOwned) {
+          duplicateCard = true
+          dustAwarded = duplicateDustForRarity('random')
+          balances = await awardBalances(userId, { dust: dustAwarded })
+        } else {
+          await InventoryItem.create({
+            userId,
+            cardId: card._id,
+            acquiredAt: activityAt,
+            source: { type: 'borarush' }
+          })
+        }
+        reward = { ...mapPhotocardSummary(card), rarity: 'random' }
+        cardAwardApplied = true
       }
-      reward = { ...mapPhotocardSummary(card), rarity: 'random' }
     }
 
     await BoraRushRun.create({
-      userId: handoff.sub,
+      userId,
       runId: input.data.runId,
       turns: xpResult.turns,
-      xpAwarded: xpResult.xp,
+      xpAwarded,
       cardId,
       duplicate: duplicateCard,
       dustAwarded,
@@ -155,6 +222,7 @@ export async function POST(request: NextRequest) {
       winnerId: input.data.winnerId || 1,
       completedAt: activityAt
     })
+    runRecorded = true
 
     return NextResponse.json({
       ok: true,
@@ -162,14 +230,44 @@ export async function POST(request: NextRequest) {
       runDuplicate: false,
       runId: input.data.runId,
       turns: xpResult.turns,
-      xpAwarded: xpResult.xp,
+      xpAwarded,
       tier: xpResult.tier,
       reward,
       duplicateCard,
       dustAwarded,
+      xpCapped,
+      cardCapped,
+      xpDailyLimit: BORARUSH_DAILY_XP_CAP,
+      cardDailyLimit: BORARUSH_DAILY_CARD_CAP,
       balances
     }, { headers: getCorsHeaders(request.headers.get('origin')) })
   } catch (error) {
+    if (!runRecorded && userId && dateKey && (xpReserved || cardReserved)) {
+      try {
+        const rollbackOps: Array<Promise<unknown>> = []
+        if (xpReserved && !xpAwardApplied) {
+          rollbackOps.push(
+            BoraRushDailyLimit.updateOne(
+              { userId, dateKey, xpAwards: { $gt: 0 } },
+              { $inc: { xpAwards: -1 } }
+            )
+          )
+        }
+        if (cardReserved && !cardAwardApplied) {
+          rollbackOps.push(
+            BoraRushDailyLimit.updateOne(
+              { userId, dateKey, cardAwards: { $gt: 0 } },
+              { $inc: { cardAwards: -1 } }
+            )
+          )
+        }
+        if (rollbackOps.length) {
+          await Promise.all(rollbackOps)
+        }
+      } catch (rollbackError) {
+        console.error('BoraRush cap rollback error:', rollbackError)
+      }
+    }
     console.error('BoraRush award error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: getCorsHeaders(request.headers.get('origin')) })
   }

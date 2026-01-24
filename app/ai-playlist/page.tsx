@@ -602,11 +602,6 @@ function AIPlaylistContent() {
       return
     }
 
-    if (!isAuthenticated) {
-      showToast('error', 'Please connect your Spotify account first!')
-      return
-    }
-
     let accessToken = status?.accessToken
 
     if (!accessToken) {
@@ -614,27 +609,22 @@ function AIPlaylistContent() {
       accessToken = refreshed?.accessToken
     }
 
-    if (!accessToken) {
-      showToast(
-        'error',
-        'Unable to retrieve Spotify access token. Please reconnect your account.'
-      )
-      return
-    }
-
     setIsExporting(true)
-    showToast('info', 'Exporting to Spotify...')
+    showToast(
+      'info',
+      accessToken ? 'Exporting to Spotify...' : 'Exporting to Armyverse...'
+    )
 
     // Helper to make export request
     const makeExportRequest = async (
-      token: string,
+      token?: string | null,
       useFallback: boolean = false
     ) => {
       return fetch('/api/playlist/export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           name: playlistName || `AI Generated BTS Playlist - ${prompt}`,
@@ -645,34 +635,46 @@ function AIPlaylistContent() {
     }
 
     try {
-      let response = await makeExportRequest(accessToken, false)
-      let data = await response.json()
+      let response: Response
+      let data: any
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Try to refresh the token
-          const refreshed = await refreshStatus()
-          if (refreshed?.accessToken) {
-            response = await makeExportRequest(refreshed.accessToken, false)
-            data = await response.json()
+      if (accessToken) {
+        response = await makeExportRequest(accessToken, false)
+        data = await response.json()
 
-            // If still failing with 401, try fallback
-            if (!response.ok && response.status === 401 && data.canFallback) {
-              console.log(
-                'Token refresh succeeded but still invalid, using fallback'
-              )
-              response = await makeExportRequest(refreshed.accessToken, true)
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Try to refresh the token
+            const refreshed = await refreshStatus()
+            if (refreshed?.accessToken) {
+              response = await makeExportRequest(refreshed.accessToken, false)
+              data = await response.json()
+
+              // If still failing with 401, try fallback
+              if (!response.ok && response.status === 401 && data.canFallback) {
+                console.log(
+                  'Token refresh succeeded but still invalid, using fallback'
+                )
+                response = await makeExportRequest(refreshed.accessToken, true)
+                data = await response.json()
+              }
+            } else {
+              // Refresh failed - use fallback
+              console.log('Token refresh failed, using owner fallback')
+              response = await makeExportRequest(accessToken, true)
               data = await response.json()
             }
-          } else {
-            // Refresh failed - use fallback
-            console.log('Token refresh failed, using owner fallback')
-            response = await makeExportRequest(accessToken, true)
-            data = await response.json()
+          }
+
+          // Check final response
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to export playlist')
           }
         }
+      } else {
+        response = await makeExportRequest(null, false)
+        data = await response.json()
 
-        // Check final response
         if (!response.ok) {
           throw new Error(data.error || 'Failed to export playlist')
         }
@@ -706,11 +708,11 @@ function AIPlaylistContent() {
       setCurrentSpotifyUrl(data.playlistUrl)
 
       // Show appropriate message based on whether fallback was used
-      if (data.usedFallback) {
+      if (data.usedFallback || data.mode === 'owner') {
         showToast(
           'warning',
           data.fallbackReason ||
-            'Your session expired. Playlist was created in the ArmyVerse account. Please reconnect your Spotify account.'
+            'Playlist created in the Armyverse Spotify account. Connect Spotify to export to your own account.'
         )
       } else {
         showToast('success', 'Playlist exported to Spotify!')

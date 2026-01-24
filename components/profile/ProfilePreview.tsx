@@ -167,8 +167,12 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
               </h2>
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-300 mt-0.5 sm:mt-1">
                 <span>{publicProfile.handle ? `@${publicProfile.handle}` : '@username'}</span>
-                <span className="w-1 h-1 rounded-full bg-gray-500" />
-                <span>{publicProfile.pronouns || 'They/Them'}</span>
+                {publicProfile.pronouns?.trim() && (
+                  <>
+                    <span className="w-1 h-1 rounded-full bg-gray-500" />
+                    <span>{publicProfile.pronouns}</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -191,22 +195,21 @@ export default function ProfilePreview({ profile, variant = 'full' }: ProfilePre
             {!isPrivate && (
               <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
                 {/* Bias Badges */}
-                {isFieldVisible('bias', originalPrivacy) && publicProfile.bias && publicProfile.bias.map((biasMember: string) => (
+                {isFieldVisible('bias', originalPrivacy) && publicProfile.bias && publicProfile.bias.length > 0 && (
                   <span
-                    key={biasMember}
                     className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase shadow-sm border border-white/5"
                     style={{ backgroundColor: accentSoft, color: accentText }}
                   >
-                    {biasMember} BIAS
+                    Bias: {publicProfile.bias.join(', ')}
                   </span>
-                ))}
+                )}
 
                 {/* Bias Wrecker */}
                 {isFieldVisible('bias', originalPrivacy) && publicProfile.biasWrecker && (
                   <span
                     className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase bg-pink-500/10 text-pink-300 border border-pink-500/20"
                   >
-                    {publicProfile.biasWrecker} WRECKER
+                    Bias Wrecker: {publicProfile.biasWrecker}
                   </span>
                 )}
 
