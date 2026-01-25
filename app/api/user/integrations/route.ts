@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { connect } from '@/lib/db/mongoose'
-import { verifyAuth } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { User } from '@/lib/models/User'
 import { getLastFmClient } from '@/lib/lastfm/client'
 
@@ -18,10 +18,39 @@ const Schema = z.object({
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await verifyAuth(request)
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authUser = await verifyAuth(request)
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     await connect()
+
+    let dbUser = await getUserFromAuth(authUser)
+    if (!dbUser && authUser.authType === 'firebase' && authUser.email) {
+      dbUser = await User.findOneAndUpdate(
+        { email: authUser.email },
+        {
+          $setOnInsert: {
+            username: authUser.username || authUser.email.split('@')[0],
+            name: authUser.displayName || authUser.email.split('@')[0] || 'User',
+            email: authUser.email,
+            firebaseUid: authUser.uid,
+            createdAt: new Date(),
+            profile: {
+              displayName: authUser.displayName || authUser.email.split('@')[0] || 'User',
+              avatarUrl: authUser.photoURL || '',
+            }
+          }
+        },
+        { upsert: true, new: true }
+      )
+    }
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    if (authUser.authType === 'firebase' && (!dbUser.firebaseUid || dbUser.firebaseUid !== authUser.uid)) {
+      await User.updateOne({ _id: dbUser._id }, { $set: { firebaseUid: authUser.uid } })
+    }
 
     const body = await request.json().catch(() => ({}))
     const input = Schema.safeParse(body)
@@ -72,11 +101,7 @@ export async function PATCH(request: NextRequest) {
     if (Object.keys(unsets).length > 0) updateOps.$unset = unsets
 
     if (Object.keys(updateOps).length > 0) {
-      await User.findOneAndUpdate(
-        { firebaseUid: user.uid },
-        updateOps,
-        { upsert: false }
-      )
+      await User.updateOne({ _id: dbUser._id }, updateOps)
     }
 
     return NextResponse.json({ success: true })
@@ -92,16 +117,19 @@ export async function PATCH(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyAuth(request)
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authUser = await verifyAuth(request)
+    if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     await connect()
 
-    const userData = await User.findOne({ firebaseUid: user.uid }).lean() as any
+    const userData = await getUserFromAuth(authUser)
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
-      lastfm: userData?.integrations?.lastfm || null,
-      statsfm: userData?.integrations?.statsfm || null
+      lastfm: userData.integrations?.lastfm || null,
+      statsfm: userData.integrations?.statsfm || null
     })
   } catch (error) {
     console.error('Integration fetch error:', error)
