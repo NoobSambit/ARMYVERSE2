@@ -54,14 +54,21 @@ export async function POST(request: NextRequest) {
     }
 
     const { usernameOrEmail, password } = validatedData
+    const normalizedUsernameOrEmail = usernameOrEmail.trim()
+    if (!normalizedUsernameOrEmail) {
+      return NextResponse.json(
+        { error: 'Username or email is required', field: 'usernameOrEmail' },
+        { status: 400 }
+      )
+    }
 
     await connect()
 
     // Find user by username or email
-    const isEmail = usernameOrEmail.includes('@')
+    const isEmail = normalizedUsernameOrEmail.includes('@')
     const query = isEmail 
-      ? { email: usernameOrEmail.toLowerCase() }
-      : { username: usernameOrEmail.toLowerCase() }
+      ? { email: normalizedUsernameOrEmail.toLowerCase() }
+      : { username: normalizedUsernameOrEmail.toLowerCase() }
 
     const user = await User.findOne(query)
 

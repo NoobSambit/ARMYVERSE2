@@ -48,63 +48,102 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authType, setAuthType] = useState<'firebase' | 'jwt' | null>(null)
 
   useEffect(() => {
-    // Check for JWT auth first
-    const storedAuthType = getStoredAuthType()
-    
-    if (storedAuthType === 'jwt') {
-      // Handle JWT authentication
-      getCurrentJWTUser()
-        .then((jwtUser) => {
-          if (jwtUser) {
-            setUser({
-              uid: jwtUser.uid,
-              displayName: jwtUser.displayName || jwtUser.username,
-              email: jwtUser.email || null,
-              photoURL: jwtUser.photoURL || null,
-              username: jwtUser.username,
-              authType: 'jwt',
-              getIdToken: async () => {
-                const token = localStorage.getItem('auth_token')
-                if (!token) throw new Error('No JWT token found')
-                return token
-              }
-            })
-            setAuthType('jwt')
-          } else {
-            setUser(null)
-            setAuthType(null)
-          }
-          setLoading(false)
-        })
-        .catch((error) => {
-          console.error('JWT auth error:', error)
-          clearStoredAuth()
-          setUser(null)
-          setAuthType(null)
-          setLoading(false)
-        })
-    } else {
-      // Handle Firebase authentication
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    let isMounted = true
+
+    const applyJwtUser = (jwtUser: JWTUser) => {
+      setUser({
+        uid: jwtUser.uid,
+        displayName: jwtUser.displayName || jwtUser.username,
+        email: jwtUser.email || null,
+        photoURL: jwtUser.photoURL || null,
+        username: jwtUser.username,
+        authType: 'jwt',
+        getIdToken: async () => {
+          const token = localStorage.getItem('auth_token')
+          if (!token) throw new Error('No JWT token found')
+          return token
+        }
+      })
+      setAuthType('jwt')
+    }
+
+    const applyFirebaseUser = (firebaseUser: User) => {
+      setUser({
+        uid: firebaseUser.uid,
+        displayName: firebaseUser.displayName,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL,
+        username: firebaseUser.email?.split('@')[0],
+        authType: 'firebase',
+        getIdToken: () => firebaseUser.getIdToken()
+      })
+      setAuthType('firebase')
+    }
+
+    const syncJwtAuth = async () => {
+      const storedAuthType = getStoredAuthType()
+      if (storedAuthType !== 'jwt') {
+        const firebaseUser = auth.currentUser
         if (firebaseUser) {
-          setUser({
-            uid: firebaseUser.uid,
-            displayName: firebaseUser.displayName,
-            email: firebaseUser.email,
-            photoURL: firebaseUser.photoURL,
-            username: firebaseUser.email?.split('@')[0],
-            authType: 'firebase',
-            getIdToken: () => firebaseUser.getIdToken()
-          })
-          setAuthType('firebase')
+          applyFirebaseUser(firebaseUser)
         } else {
           setUser(null)
           setAuthType(null)
         }
         setLoading(false)
-      })
+        return
+      }
 
-      return () => unsubscribe()
+      setLoading(true)
+      try {
+        const jwtUser = await getCurrentJWTUser()
+        if (!isMounted) return
+
+        if (jwtUser) {
+          applyJwtUser(jwtUser)
+        } else {
+          setUser(null)
+          setAuthType(null)
+        }
+      } catch (error) {
+        console.error('JWT auth error:', error)
+        clearStoredAuth()
+        setUser(null)
+        setAuthType(null)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    const handleAuthChanged = () => {
+      void syncJwtAuth()
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      const storedAuthType = getStoredAuthType()
+      if (storedAuthType === 'jwt') {
+        return
+      }
+
+      if (firebaseUser) {
+        applyFirebaseUser(firebaseUser)
+      } else {
+        setUser(null)
+        setAuthType(null)
+      }
+      setLoading(false)
+    })
+
+    void syncJwtAuth()
+
+    window.addEventListener('auth-changed', handleAuthChanged)
+    window.addEventListener('storage', handleAuthChanged)
+
+    return () => {
+      isMounted = false
+      unsubscribe()
+      window.removeEventListener('auth-changed', handleAuthChanged)
+      window.removeEventListener('storage', handleAuthChanged)
     }
   }, [])
 

@@ -63,9 +63,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { username, password, name, email } = validatedData
+    const normalizedUsername = username.trim()
+    const normalizedName = name?.trim() || undefined
+    const normalizedEmail = email?.trim().toLowerCase() || undefined
 
     // Validate username
-    const usernameValidation = validateUsername(username)
+    const usernameValidation = validateUsername(normalizedUsername)
     if (!usernameValidation.valid) {
       return NextResponse.json(
         { error: usernameValidation.error, field: 'username' },
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
     await connect()
 
     // Check if username is taken
-    if (await isUsernameTaken(username)) {
+    if (await isUsernameTaken(normalizedUsername)) {
       return NextResponse.json(
         { error: 'Username is already taken', field: 'username' },
         { status: 409 }
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email is taken (if provided)
-    if (email && await isEmailTaken(email)) {
+    if (normalizedEmail && await isEmailTaken(normalizedEmail)) {
       return NextResponse.json(
         { error: 'Email is already registered', field: 'email' },
         { status: 409 }
@@ -105,14 +108,14 @@ export async function POST(request: NextRequest) {
 
     // Create user
     const user = await User.create({
-      username: username.toLowerCase(),
-      name: name || username,
-      email: email?.toLowerCase(),
+      username: normalizedUsername.toLowerCase(),
+      name: normalizedName || normalizedUsername,
+      email: normalizedEmail,
       password: hashedPassword,
       createdAt: new Date(),
       updatedAt: new Date(),
       profile: {
-        displayName: name || username,
+        displayName: normalizedName || normalizedUsername,
       }
     })
 

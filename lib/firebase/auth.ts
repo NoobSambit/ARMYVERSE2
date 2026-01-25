@@ -43,6 +43,11 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 })
 
+const notifyAuthChanged = () => {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new Event('auth-changed'))
+}
+
 export interface AuthError {
   code: string
   message: string
@@ -171,6 +176,7 @@ export const signUpWithUsername = async (data: UsernameSignUpData): Promise<JWTA
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', result.token)
       localStorage.setItem('auth_type', 'jwt')
+      notifyAuthChanged()
     }
 
     return result
@@ -211,6 +217,7 @@ export const signInWithUsername = async (data: UsernameSignInData): Promise<JWTA
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', result.token)
       localStorage.setItem('auth_type', 'jwt')
+      notifyAuthChanged()
     }
 
     return result
@@ -249,6 +256,7 @@ export const clearStoredAuth = (): void => {
   if (typeof window === 'undefined') return
   localStorage.removeItem('auth_token')
   localStorage.removeItem('auth_type')
+  notifyAuthChanged()
 }
 
 /**

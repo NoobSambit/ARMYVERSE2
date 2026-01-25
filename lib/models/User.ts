@@ -261,11 +261,9 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    unique: true,
-    sparse: true, // Allow null values, but enforce uniqueness when present
     trim: true,
     lowercase: true,
-    index: true
+    default: undefined
   },
   firebaseUid: {
     type: String,
@@ -372,7 +370,10 @@ userSchema.index({
   'username': 'text'
 })
 
-// Add compound index for username lookups (case-insensitive)
-userSchema.index({ username: 1 }, { unique: true })
+// Only enforce uniqueness when email is present and a string
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: 'string' } } }
+)
 
 export const User = mongoose.models.User || mongoose.model('User', userSchema) 

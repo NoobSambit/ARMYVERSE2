@@ -196,8 +196,8 @@ export async function POST(req: Request) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        name: name || 'AI Generated BTS Playlist',
-        description: 'Created with ArmyVerse AI Playlist Generator',
+        name: name || 'armyverse.vercel.app generated BTS playlist',
+        description: 'Created with armyverse.vercel.app playlist generator',
         public: false
       })
     })
