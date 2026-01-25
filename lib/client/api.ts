@@ -2,6 +2,7 @@
 
 import { User } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
+import { getStoredAuthType, getStoredToken } from '@/lib/firebase/auth'
 
 export async function getToken(user: User | null) {
   if (!user) return null
@@ -20,7 +21,10 @@ export class ApiError extends Error {
 
 export async function apiFetch(path: string, init: RequestInit = {}) {
   const user = auth.currentUser
-  const token = await getToken(user)
+  let token = await getToken(user)
+  if (!token && getStoredAuthType() === 'jwt') {
+    token = getStoredToken()
+  }
   const headers = new Headers(init.headers || {})
   headers.set('Content-Type', headers.get('Content-Type') || 'application/json')
   if (token) headers.set('Authorization', `Bearer ${token}`)
@@ -52,5 +56,4 @@ export function withAuth<T extends any[], R>(fn: (...args: T) => Promise<R>) {
     return await fn(...args)
   }
 }
-
 

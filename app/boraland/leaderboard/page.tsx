@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
@@ -11,20 +11,22 @@ import LeaderboardRightSidebar from '@/components/boraland/LeaderboardRightSideb
 import MobileNav from '@/components/boraland/MobileNav'
 
 export default function Page() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('weekly')
   const [me, setMe] = useState<UserEntry | null>(null)
+  const warnedRef = useRef(false)
 
   useEffect(() => {
-    if (user === null) {
+    if (!authLoading && user === null && !warnedRef.current) {
+      warnedRef.current = true
       showToast('warning', 'Sign in to view leaderboard')
       router.push('/boraland')
     }
-  }, [user, router, showToast])
+  }, [authLoading, user, router, showToast])
 
-  if (user === undefined) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>

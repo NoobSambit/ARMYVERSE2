@@ -113,7 +113,7 @@ type BadgeItem = {
 const hasCard = (item: ApiItem): item is Item => Boolean(item.card)
 
 export default function Page() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
   const searchParams = useSearchParams()
@@ -141,6 +141,7 @@ export default function Page() {
   const [totalCount, setTotalCount] = useState(0)
   const [filteredCount, setFilteredCount] = useState(0)
   const loadedOnceRef = useRef(false)
+  const warnedRef = useRef(false)
   const [, setUserXp] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
@@ -308,8 +309,15 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (user === null) {
-      showToast('warning', 'Sign in to access your inventory')
+    if (authLoading) {
+      return
+    }
+
+    if (!user) {
+      if (!warnedRef.current) {
+        warnedRef.current = true
+        showToast('warning', 'Sign in to access your inventory')
+      }
       router.push('/boraland')
       return
     }
@@ -330,10 +338,10 @@ export default function Page() {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () =>
       document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [user, router, showToast, view])
+  }, [authLoading, user, router, showToast, view])
 
   useEffect(() => {
-    if (!user || !loadedOnceRef.current) return
+    if (authLoading || !user || !loadedOnceRef.current) return
     const timer = setTimeout(
       () => {
         if (view === 'cards') {
@@ -362,6 +370,14 @@ export default function Page() {
     sourceFilter,
     filterMode,
   ])
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F0B1E] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    )
+  }
 
   if (!user) return null
 

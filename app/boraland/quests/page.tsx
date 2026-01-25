@@ -31,7 +31,7 @@ type GameState = {
 }
 
 export default function Page() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
   const warnedRef = useRef(false)
@@ -40,12 +40,12 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard' | 'borarush'>('home')
 
   useEffect(() => {
-    if (user === null && !warnedRef.current) {
+    if (!authLoading && user === null && !warnedRef.current) {
       warnedRef.current = true
       showToast('warning', 'Sign in to access quests')
       router.push('/boraland')
     }
-  }, [user, router, showToast])
+  }, [authLoading, user, router, showToast])
 
   const fetchState = useCallback(async () => {
     try {
@@ -63,7 +63,7 @@ export default function Page() {
     fetchState()
   }, [user, fetchState])
 
-  if (user === undefined || (loading && !gameState)) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-[#0F0B1E] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
@@ -72,6 +72,14 @@ export default function Page() {
   }
 
   if (!user) return null
+
+  if (loading && !gameState) {
+    return (
+      <div className="min-h-screen bg-[#0F0B1E] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
