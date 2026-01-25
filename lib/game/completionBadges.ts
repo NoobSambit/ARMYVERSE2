@@ -5,14 +5,17 @@ import { UserGameState } from '@/lib/models/UserGameState'
 import { dailyKey, getActiveQuests, weeklyKey } from './quests'
 
 /**
- * Check if user has completed all daily quests (streaming + quiz)
- * and award completion badge if they have.
+ * Check if user has completed all daily quests (streaming + quiz).
+ * When awardCompletionBadge is true, award completion badge if they have.
  * 
  * NEW: Only awards completion badge for unique/first-time streak achievements.
  * If user already achieved streak 5 before, they won't get the completion badge
  * when reaching streak 5 again after breaking and restarting their streak.
  */
-export async function checkAndAwardDailyCompletionBadge(userId: string): Promise<{
+export async function checkAndAwardDailyCompletionBadge(
+  userId: string,
+  options: { awardCompletionBadge?: boolean } = {}
+): Promise<{
   allCompleted: boolean
   badgeAwarded?: string
   streakCount?: number
@@ -43,6 +46,10 @@ export async function checkAndAwardDailyCompletionBadge(userId: string): Promise
 
   if (!allCompleted) {
     return { allCompleted: false }
+  }
+
+  if (!options.awardCompletionBadge) {
+    return { allCompleted: true }
   }
 
   // Get user's game state to check current streak and earned streaks
@@ -125,14 +132,17 @@ export async function checkAndAwardDailyCompletionBadge(userId: string): Promise
 }
 
 /**
- * Check if user has completed all weekly quests (streaming + quiz)
- * and award completion badge if they have.
+ * Check if user has completed all weekly quests (streaming + quiz).
+ * When awardCompletionBadge is true, award completion badge if they have.
  * 
  * NEW: Only awards completion badge for unique/first-time streak achievements.
  * If user already achieved streak 5 before, they won't get the completion badge
  * when reaching streak 5 again after breaking and restarting their streak.
  */
-export async function checkAndAwardWeeklyCompletionBadge(userId: string): Promise<{
+export async function checkAndAwardWeeklyCompletionBadge(
+  userId: string,
+  options: { awardCompletionBadge?: boolean } = {}
+): Promise<{
   allCompleted: boolean
   badgeAwarded?: string
   streakCount?: number
@@ -163,6 +173,10 @@ export async function checkAndAwardWeeklyCompletionBadge(userId: string): Promis
 
   if (!allCompleted) {
     return { allCompleted: false }
+  }
+
+  if (!options.awardCompletionBadge) {
+    return { allCompleted: true }
   }
 
   // Get user's game state to check current streak and earned streaks

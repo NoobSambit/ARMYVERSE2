@@ -7,10 +7,16 @@ import { getLevelProgress } from '@/lib/game/leveling'
 const buildScaledUrl = (url?: string, width?: number) => {
   if (!url || !width) return url
   if (url.includes('/scale-to-width-down/')) {
-    return url.replace(/\/scale-to-width-down\/\d+/i, `/scale-to-width-down/${width}`)
+    return url.replace(
+      /\/scale-to-width-down\/\d+/i,
+      `/scale-to-width-down/${width}`
+    )
   }
   if (url.includes('/revision/latest')) {
-    return url.replace('/revision/latest', `/revision/latest/scale-to-width-down/${width}`)
+    return url.replace(
+      '/revision/latest',
+      `/revision/latest/scale-to-width-down/${width}`
+    )
   }
   return url
 }
@@ -50,9 +56,15 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
   const fmt = (value: number) => value.toLocaleString()
   const activeItem = showcaseItems[showcaseIndex]
   const activeCard = activeItem?.card
-  const cardTitle = activeCard?.title || activeCard?.subcategory || activeCard?.category || 'Card'
+  const cardTitle =
+    activeCard?.title ||
+    activeCard?.subcategory ||
+    activeCard?.category ||
+    'Card'
   const fallbackImage = `https://placehold.co/400x600/2a1b3d/ffffff?text=${encodeURIComponent(cardTitle)}`
-  const rawImageUrl = normalizeImageUrl(activeCard?.imageUrl || activeCard?.thumbUrl)
+  const rawImageUrl = normalizeImageUrl(
+    activeCard?.imageUrl || activeCard?.thumbUrl
+  )
   const cardImage = buildScaledUrl(rawImageUrl, 640) || fallbackImage
   const canRotate = showcaseItems.length > 1
 
@@ -60,47 +72,78 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
     <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 md:gap-6">
       <div className="bora-glass-panel rounded-2xl p-4 md:p-6">
         <h3 className="font-display text-base md:text-lg font-bold text-white mb-4 md:mb-6 flex items-center gap-2">
-          <span className="material-symbols-outlined text-accent-cyan text-lg md:text-xl">bar_chart</span> Performance
+          <span className="material-symbols-outlined text-accent-cyan text-lg md:text-xl">
+            bar_chart
+          </span>{' '}
+          Performance
         </h3>
         <div className="space-y-4 md:space-y-6">
           <div>
             <div className="flex justify-between text-xs md:text-sm mb-2">
               <span className="text-gray-400">Level {level}</span>
-              <span className="text-white font-bold">{fmt(xpIntoLevel)} <span className="text-gray-500 font-normal">/ {fmt(xpForNextLevel)}</span></span>
+              <span className="text-white font-bold">
+                {fmt(xpIntoLevel)}{' '}
+                <span className="text-gray-500 font-normal">
+                  / {fmt(xpForNextLevel)}
+                </span>
+              </span>
             </div>
             <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-accent-cyan to-blue-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" style={{ width: `${progressPercent}%` }}></div>
+              <div
+                className="h-full bg-gradient-to-r from-accent-cyan to-blue-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                style={{ width: `${progressPercent}%` }}
+              ></div>
             </div>
             <div className="flex justify-between text-[10px] md:text-xs text-gray-500 mt-2">
               <span>Total XP {fmt(totalXp)}</span>
-              <span>{fmt(xpToNextLevel)} XP to Lvl {level + 1}</span>
+              <span>
+                {fmt(xpToNextLevel)} XP to Lvl {level + 1}
+              </span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 md:gap-4">
             <div className="bg-white/5 rounded-xl p-2 md:p-3 border border-white/5 text-center">
-              <div className="text-[10px] md:text-xs text-gray-500 mb-1">Streak</div>
+              <div className="text-[10px] md:text-xs text-gray-500 mb-1">
+                Streak
+              </div>
               <div className="text-lg md:text-xl font-bold text-white flex justify-center items-center gap-1">
-                <span className="material-symbols-outlined text-orange-500 text-base md:text-lg">local_fire_department</span>
+                <span className="material-symbols-outlined text-orange-500 text-base md:text-lg">
+                  local_fire_department
+                </span>
                 {/* Mocked for now as API doesn't return streak yet */}
                 --
               </div>
             </div>
             <div className="bg-white/5 rounded-xl p-2 md:p-3 border border-white/5 text-center">
-              <div className="text-[10px] md:text-xs text-gray-500 mb-1">Dust</div>
+              <div className="text-[10px] md:text-xs text-gray-500 mb-1">
+                Dust
+              </div>
               <div className="text-lg md:text-xl font-bold text-white flex justify-center items-center gap-1">
-                <span className="material-symbols-outlined text-amber-400 text-base md:text-lg">sparkles</span>
+                <span className="material-symbols-outlined text-amber-400 text-base md:text-lg">
+                  auto_awesome
+                </span>
                 {dust}
               </div>
             </div>
             <div className="bg-white/5 rounded-xl p-2 md:p-3 border border-white/5 text-center">
-              <div className="text-[10px] md:text-xs text-gray-500 mb-1">Accuracy</div>
-              <div className="text-lg md:text-xl font-bold text-white">{accuracy !== null && accuracy !== undefined ? `${accuracy}%` : '--'}</div>
+              <div className="text-[10px] md:text-xs text-gray-500 mb-1">
+                Accuracy
+              </div>
+              <div className="text-lg md:text-xl font-bold text-white">
+                {accuracy !== null && accuracy !== undefined
+                  ? `${accuracy}%`
+                  : '--'}
+              </div>
             </div>
           </div>
           <div className="pt-3 md:pt-4 border-t border-white/5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs md:text-sm text-gray-400">Total Cards</span>
-              <span className="text-xs md:text-sm text-white font-bold">{stats?.total || 0}</span>
+              <span className="text-xs md:text-sm text-gray-400">
+                Total Cards
+              </span>
+              <span className="text-xs md:text-sm text-white font-bold">
+                {stats?.total || 0}
+              </span>
             </div>
             {/* Simplified bar chart for visualization - static for now */}
             <div className="flex items-end gap-0.5 md:gap-1 h-10 md:h-12">
@@ -117,7 +160,9 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
       <div className="bora-glass-panel rounded-2xl p-4 md:p-6 relative overflow-hidden flex-grow flex flex-col">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bora-primary/10"></div>
         <div className="flex justify-between items-center mb-3 md:mb-4 z-10">
-          <h3 className="font-display text-xs md:text-sm font-bold text-white uppercase tracking-wider">Showcase</h3>
+          <h3 className="font-display text-xs md:text-sm font-bold text-white uppercase tracking-wider">
+            Showcase
+          </h3>
           <span className="text-[10px] md:text-xs text-accent-pink border border-accent-pink/30 px-1.5 md:px-2 py-0.5 rounded bg-accent-pink/10">
             {activeCard?.category || 'RANDOM'}
           </span>
@@ -133,7 +178,7 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
                   className="absolute inset-0 h-full w-full object-cover"
                   loading="lazy"
                   referrerPolicy="no-referrer"
-                  onError={(event) => {
+                  onError={event => {
                     const target = event.currentTarget
                     if (target.dataset.fallbackApplied === 'true') return
                     target.dataset.fallbackApplied = 'true'
@@ -141,10 +186,22 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700" style={{ backgroundSize: '200% 200%', animation: 'shine 3s infinite' }}></div>
+                <div
+                  className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                  style={{
+                    backgroundSize: '200% 200%',
+                    animation: 'shine 3s infinite',
+                  }}
+                ></div>
                 <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4">
-                  <h4 className="font-display font-bold text-base md:text-xl text-white">{activeCard?.title || activeCard?.subcategory || activeCard?.category}</h4>
-                  <p className="text-[10px] md:text-xs text-gray-300">{activeCard?.subcategory || activeCard?.category}</p>
+                  <h4 className="font-display font-bold text-base md:text-xl text-white">
+                    {activeCard?.title ||
+                      activeCard?.subcategory ||
+                      activeCard?.category}
+                  </h4>
+                  <p className="text-[10px] md:text-xs text-gray-300">
+                    {activeCard?.subcategory || activeCard?.category}
+                  </p>
                 </div>
               </>
             ) : (
@@ -158,14 +215,17 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
           <button
             onClick={() => {
               if (!canRotate) return
-              setShowcaseIndex((prev) => (prev + 1) % showcaseItems.length)
+              setShowcaseIndex(prev => (prev + 1) % showcaseItems.length)
             }}
             disabled={!canRotate}
             className={`text-xs transition-colors flex items-center justify-center gap-1 w-full ${
-              canRotate ? 'text-gray-400 hover:text-white' : 'text-gray-600 cursor-not-allowed'
+              canRotate
+                ? 'text-gray-400 hover:text-white'
+                : 'text-gray-600 cursor-not-allowed'
             }`}
           >
-            <span className="material-symbols-outlined text-sm">autorenew</span> Rotate Showcase
+            <span className="material-symbols-outlined text-sm">autorenew</span>{' '}
+            Rotate Showcase
           </button>
         </div>
       </div>

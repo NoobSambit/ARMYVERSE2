@@ -1,7 +1,7 @@
 # Quest & Badge System Documentation
 
-**Last Updated:** January 2, 2026
-**Version:** 1.1.0
+**Last Updated:** January 25, 2026
+**Version:** 1.2.0
 
 ---
 
@@ -31,9 +31,10 @@ The Quest & Badge System is a gamification feature that rewards users for:
 
 1. Users complete **daily quests** (streaming + quiz)
 2. Users complete **weekly quests** (streaming + quiz)
-3. Completing ALL quests in a period awards **completion badges**
+3. Completing ALL quests in a period updates **streaks** and awards a **random photocard**
 4. Consecutive completions build **streaks** (1-50 days/weeks)
-5. Streak milestones (10, 20, 30, 40, 50) award **milestone badges + photocards**
+5. Streak milestones (10, 20, 30, 40, 50) award **milestone badges**
+6. Completion badges exist but are **disabled by default** in the claim flow
 
 ---
 
@@ -108,15 +109,15 @@ These badges cycle repeatedly as users progress through streaks:
 
 **Badges:** `daily_milestone_1` through `daily_milestone_5`
 
-These are **separate, unique badges** awarded at specific milestones:
+These are **separate, unique badges** awarded at specific milestones (photocards come from completion rewards):
 
-| Streak Count | Badge | Name | Rarity | Photocard |
-|--------------|-------|------|---------|-----------|
-| 10 | daily_milestone_1 | Dedicated Devotee | Epic | Random |
-| 20 | daily_milestone_2 | Persistent Pioneer | Epic | Random |
-| 30 | daily_milestone_3 | Consistent Champion | Legendary | Random |
-| 40 | daily_milestone_4 | Legendary Loyalist | Legendary | Random |
-| 50 | daily_milestone_5 | Ultimate ARMY | Legendary | Random |
+| Streak Count | Badge | Name | Rarity |
+|--------------|-------|------|---------|
+| 10 | daily_milestone_1 | Dedicated Devotee | Epic |
+| 20 | daily_milestone_2 | Persistent Pioneer | Epic |
+| 30 | daily_milestone_3 | Consistent Champion | Legendary |
+| 40 | daily_milestone_4 | Legendary Loyalist | Legendary |
+| 50 | daily_milestone_5 | Ultimate ARMY | Legendary |
 
 **Icons:** 🏆 (1-4), 👑 (5)
 
@@ -132,32 +133,36 @@ Same cycling logic as daily streaks, but for weekly quest completions.
 
 **Badges:** `weekly_milestone_1` through `weekly_milestone_5`
 
-| Streak Count | Badge | Name | Rarity | Photocard |
-|--------------|-------|------|---------|-----------|
-| 10 | weekly_milestone_1 | Weekly Warrior | Epic | Random |
-| 20 | weekly_milestone_2 | Marathon Master | Epic | Random |
-| 30 | weekly_milestone_3 | Endurance Elite | Legendary | Random |
-| 40 | weekly_milestone_4 | Unstoppable Force | Legendary | Random |
-| 50 | weekly_milestone_5 | Eternal Devotion | Legendary | Random |
+| Streak Count | Badge | Name | Rarity |
+|--------------|-------|------|---------|
+| 10 | weekly_milestone_1 | Weekly Warrior | Epic |
+| 20 | weekly_milestone_2 | Marathon Master | Epic |
+| 30 | weekly_milestone_3 | Endurance Elite | Legendary |
+| 40 | weekly_milestone_4 | Unstoppable Force | Legendary |
+| 50 | weekly_milestone_5 | Eternal Devotion | Legendary |
 
 **Icons:** 💫 (1-4), 👑 (5)
 
 ### Completion Badges (2 badges)
 
-- **daily_completion:** Awarded when user completes all daily quests (streaming + quiz)
-- **weekly_completion:** Awarded when user completes all weekly quests (streaming + quiz)
+Completion badges are defined but **not awarded by default** in the quest claim flow.
+
+- **daily_completion:** Defined for completing all daily quests (streaming + quiz)
+- **weekly_completion:** Defined for completing all weekly quests (streaming + quiz)
+
+To enable them, pass `{ awardCompletionBadge: true }` to the completion badge checks.
 
 #### Unique Streak Reward System (NEW)
 
-Completion badges use the corresponding **streak badge images** (streak-1 to streak-10) with the actual streak count displayed as an overlay in the corner. This creates a visual distinction for each streak achievement.
+Streak badges reuse the corresponding **streak badge images** (streak-1 to streak-10) with the actual streak count displayed as an overlay in the corner. This creates a visual distinction for each streak achievement.
 
 **Visual Example:** Day 69 streak → Uses `daily-streak/streak-9.png` with "69" overlaid in the bottom-right corner
 
 **Key Rules:**
-- Completion badges are only awarded for **unique/first-time streak achievements**
-- If user breaks their streak and reaches the same count again, they do NOT receive the completion reward again
-- The system tracks all unique daily and weekly streaks ever achieved
-- This prevents "streak farming" where users could break and rebuild streaks for duplicate rewards
+- Streak badges are only awarded for **new personal highs**
+- If a user breaks their streak and reaches the same count again, they do NOT receive the streak badge again
+- The system tracks the highest daily and weekly streak achieved
+- Photocards still award on **every** daily/weekly completion
 
 ---
 
@@ -173,13 +178,13 @@ Completion badges use the corresponding **streak badge images** (streak-1 to str
 **Example Flow:**
 
 ```
-Day 1:  Streak = 1  → Award daily_streak_1 (uses streak-1.png with "1" overlay)
-Day 2:  Streak = 2  → Award daily_streak_2 (uses streak-2.png with "2" overlay)
+Day 1:  Streak = 1  → Award daily_streak_1 + Random Photocard (uses streak-1.png with "1" overlay)
+Day 2:  Streak = 2  → Award daily_streak_2 + Random Photocard (uses streak-2.png with "2" overlay)
 ...
 Day 10: Streak = 10 → Award daily_streak_10 + daily_milestone_1 + Random Photocard
-Day 11: Streak = 11 → Award daily_streak_1 (uses streak-1.png with "11" overlay)
+Day 11: Streak = 11 → Award daily_streak_1 + Random Photocard (uses streak-1.png with "11" overlay)
 ...
-Day 69: Streak = 69 → Award daily_streak_9 (uses streak-9.png with "69" overlay)
+Day 69: Streak = 69 → Award daily_streak_9 + Random Photocard (uses streak-9.png with "69" overlay)
 ...
 Day 50: Streak = 50 → Award daily_streak_10 + daily_milestone_5 + Random Photocard
 Day 51: Streak = 50 (max reached, stays at 50)
@@ -188,28 +193,28 @@ Day 51: Streak = 50 (max reached, stays at 50)
 ### Streak Breaking & Unique Rewards
 
 - If user misses a day/week, streak resets to 1
-- Streak badge milestones (10, 20, 30, 40, 50) reset
-- **NEW:** Completion badge rewards are NOT re-awarded for previously achieved streak counts
+- Milestone badges (10, 20, 30, 40, 50) are one-time awards (duplicates ignored)
+- Streak badges are NOT re-awarded for previously achieved streak counts
 - User's earned streak history is preserved in `UserGameState.earnedStreaks`
 - The highest daily/weekly streak ever achieved is tracked for display
 
 **Example:**
 ```
-- User reaches Day 5 → Earns completion badge (streak-5.png with "5")
-- User misses Day 6 → Streak breaks, resets to 0
-- User starts again, reaches Day 5 again → NO completion badge (already earned streak 5)
-- User reaches Day 6 → Earns completion badge (streak-6.png with "6") - new achievement!
+- User reaches Day 5 → Earns daily_streak_5 + photocard
+- User misses Day 6 → Streak breaks, resets to 1
+- User starts again, reaches Day 5 again → No streak badge (already earned), photocard still awarded
+- User reaches Day 6 → Earns daily_streak_6 + photocard (new high)
 ```
 
 ### Badge Awarding Logic
 
 Badges are awarded in this order:
 
-1. **Check Unique Streak:** Verify this streak count hasn't been rewarded before
-2. **Completion Badge** (if all quests completed AND unique streak)
-3. **Set 1/3 Badge** (based on cycle position)
+1. **Verify completion:** All quests completed for the period
+2. **Completion Photocard** (random drop on every daily/weekly completion)
+3. **Set 1/3 Badge** (new personal high; based on cycle position)
 4. **Set 2/4 Badge** (if at milestone: 10, 20, 30, 40, or 50)
-5. **Photocard** (with milestone badge)
+5. **Optional Completion Badge** (disabled by default; enable via `awardCompletionBadge`)
 
 ---
 
@@ -376,6 +381,8 @@ npx tsx scripts/seed-quest-badges.ts
 
 ✅ Successfully seeded 34 quest badges
 ```
+
+**Note:** Completion badges are seeded for future use, but the claim flow disables awarding them by default.
 
 #### 2. Populate Track Database
 

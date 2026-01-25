@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
 
     // Check for completion badges first
     const completionResult = def.period === 'daily'
-      ? await checkAndAwardDailyCompletionBadge(user.uid)
-      : await checkAndAwardWeeklyCompletionBadge(user.uid)
+      ? await checkAndAwardDailyCompletionBadge(user.uid, { awardCompletionBadge: false })
+      : await checkAndAwardWeeklyCompletionBadge(user.uid, { awardCompletionBadge: false })
 
     const allBadgesAwarded: string[] = []
     let photocardAwarded: any = undefined

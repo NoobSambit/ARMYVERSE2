@@ -12,8 +12,9 @@ import { dailyKey, weeklyKey } from './quests'
  * - Set 1: Daily streak badges 1-10 (awarded for days 1-10 of each cycle)
  * - Set 2: Milestone badges (awarded at 10, 20, 30, 40, 50 total streaks)
  *
- * Flow: User completes streaks 1-10, then it loops back to 1-10 again
- * At every 10th streak (10, 20, 30, 40, 50), award milestone badge + photocard
+ * Flow: User completes streaks 1-10, then it loops back to 1-10 again for new highs.
+ * After a streak break, badges resume only when surpassing the previous high.
+ * Every completed day awards a photocard; milestones award the milestone badge.
  */
 export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
   newStreak: number
@@ -31,6 +32,38 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
         weeklyStreakMilestoneCount: 0
       }
     })
+  }
+  if (!state.badges) {
+    state.badges = {
+      lastDailyStreakMilestone: 0,
+      lastWeeklyStreakMilestone: 0,
+      dailyStreakMilestoneCount: 0,
+      weeklyStreakMilestoneCount: 0
+    }
+  }
+  if (!state.earnedStreaks) {
+    state.earnedStreaks = {
+      daily: [],
+      weekly: [],
+      highestDaily: 0,
+      highestWeekly: 0
+    }
+  }
+  if (!state.badges) {
+    state.badges = {
+      lastDailyStreakMilestone: 0,
+      lastWeeklyStreakMilestone: 0,
+      dailyStreakMilestoneCount: 0,
+      weeklyStreakMilestoneCount: 0
+    }
+  }
+  if (!state.earnedStreaks) {
+    state.earnedStreaks = {
+      daily: [],
+      weekly: [],
+      highestDaily: 0,
+      highestWeekly: 0
+    }
   }
 
   const today = dailyKey()
@@ -59,9 +92,6 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
   } else {
     // Streak broken - reset to 1
     totalStreak = 1
-    if (state.badges) {
-      state.badges.lastDailyStreakMilestone = 0
-    }
   }
 
   // Update state
@@ -69,8 +99,30 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
   state.streak.lastDailyQuestCompletionAt = new Date()
 
   const badgesAwarded: string[] = []
-  const lastMilestone = state.badges?.lastDailyStreakMilestone || 0
+  const lastMilestone = Math.max(
+    state.badges?.lastDailyStreakMilestone || 0,
+    state.earnedStreaks?.highestDaily || 0
+  )
   let photocardAwarded: any = undefined
+
+  // Award photocard for completing all daily quests (every day).
+  const dailyRoll = await rollRarityAndCardV2({ userId })
+  if (dailyRoll.card) {
+    await InventoryItem.create({
+      userId,
+      cardId: dailyRoll.card._id,
+      acquiredAt: new Date(),
+      source: { type: 'daily_completion', totalStreak }
+    })
+    photocardAwarded = {
+      cardId: dailyRoll.card._id.toString(),
+      rarity: dailyRoll.rarity,
+      category: dailyRoll.card.categoryDisplay,
+      subcategory: dailyRoll.card.subcategoryPath || null,
+      imageUrl: dailyRoll.card.imageUrl,
+      sourceUrl: dailyRoll.card.sourceUrl || dailyRoll.card.pageUrl
+    }
+  }
 
   // Calculate which badge in the 1-10 cycle to award
   const cyclePosition = ((totalStreak - 1) % 10) + 1 // 1-10, 1-10, 1-10...
@@ -82,6 +134,7 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
       active: true
     })
 
+    let streakBadgeAwarded = false
     if (badge) {
       try {
         await UserBadge.create({
@@ -91,21 +144,27 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
           metadata: { streakCount: totalStreak, cyclePosition }
         })
         badgesAwarded.push(badge.code)
-      } catch (err) {
-        // Duplicate badge (already awarded) - ignore
+        streakBadgeAwarded = true
+      } catch (err: any) {
+        if (err?.code === 11000) {
+          // Duplicate badge (already awarded) - treat as awarded
+          streakBadgeAwarded = true
+        } else {
+          console.error('Daily streak badge award failed:', err)
+        }
       }
     }
 
-    // Update last milestone
-    if (!state.badges) {
-      state.badges = {
-        lastDailyStreakMilestone: 0,
-        lastWeeklyStreakMilestone: 0,
-        dailyStreakMilestoneCount: 0,
-        weeklyStreakMilestoneCount: 0
-      }
+    if (streakBadgeAwarded) {
+      state.badges.lastDailyStreakMilestone = Math.max(
+        state.badges.lastDailyStreakMilestone || 0,
+        totalStreak
+      )
+      state.earnedStreaks.highestDaily = Math.max(
+        state.earnedStreaks.highestDaily || 0,
+        totalStreak
+      )
     }
-    state.badges.lastDailyStreakMilestone = totalStreak
   }
 
   // Award Set 2 milestone badge at 10, 20, 30, 40, 50
@@ -130,25 +189,6 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
       }
     }
 
-    // Award photocard for milestone
-    const roll = await rollRarityAndCardV2({ userId })
-    if (roll.card) {
-      await InventoryItem.create({
-        userId,
-        cardId: roll.card._id,
-        acquiredAt: new Date(),
-        source: { type: 'daily_milestone', totalStreak, milestoneNumber }
-      })
-      photocardAwarded = {
-        cardId: roll.card._id.toString(),
-        rarity: roll.rarity,
-        category: roll.card.categoryDisplay,
-        subcategory: roll.card.subcategoryPath || null,
-        imageUrl: roll.card.imageUrl,
-        sourceUrl: roll.card.sourceUrl || roll.card.pageUrl
-      }
-    }
-
     // Update milestone count
     state.badges.dailyStreakMilestoneCount = milestoneNumber
   }
@@ -165,8 +205,9 @@ export async function updateDailyStreakAndAwardBadges(userId: string): Promise<{
  * - Set 3: Weekly streak badges 1-10 (awarded for weeks 1-10 of each cycle)
  * - Set 4: Milestone badges (awarded at 10, 20, 30, 40, 50 total streaks)
  *
- * Flow: User completes streaks 1-10, then it loops back to 1-10 again
- * At every 10th streak (10, 20, 30, 40, 50), award milestone badge + photocard
+ * Flow: User completes streaks 1-10, then it loops back to 1-10 again for new highs.
+ * After a streak break, badges resume only when surpassing the previous high.
+ * Every completed week awards a photocard; milestones award the milestone badge.
  */
 export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<{
   newStreak: number
@@ -212,9 +253,6 @@ export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<
   } else {
     // Streak broken - reset to 1
     totalStreak = 1
-    if (state.badges) {
-      state.badges.lastWeeklyStreakMilestone = 0
-    }
   }
 
   // Update state
@@ -222,8 +260,30 @@ export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<
   state.streak.lastWeeklyQuestCompletionAt = new Date()
 
   const badgesAwarded: string[] = []
-  const lastMilestone = state.badges?.lastWeeklyStreakMilestone || 0
+  const lastMilestone = Math.max(
+    state.badges?.lastWeeklyStreakMilestone || 0,
+    state.earnedStreaks?.highestWeekly || 0
+  )
   let photocardAwarded: any = undefined
+
+  // Award photocard for completing all weekly quests (every week).
+  const weeklyRoll = await rollRarityAndCardV2({ userId })
+  if (weeklyRoll.card) {
+    await InventoryItem.create({
+      userId,
+      cardId: weeklyRoll.card._id,
+      acquiredAt: new Date(),
+      source: { type: 'weekly_completion', totalStreak }
+    })
+    photocardAwarded = {
+      cardId: weeklyRoll.card._id.toString(),
+      rarity: weeklyRoll.rarity,
+      category: weeklyRoll.card.categoryDisplay,
+      subcategory: weeklyRoll.card.subcategoryPath || null,
+      imageUrl: weeklyRoll.card.imageUrl,
+      sourceUrl: weeklyRoll.card.sourceUrl || weeklyRoll.card.pageUrl
+    }
+  }
 
   // Calculate which badge in the 1-10 cycle to award
   const cyclePosition = ((totalStreak - 1) % 10) + 1 // 1-10, 1-10, 1-10...
@@ -235,6 +295,7 @@ export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<
       active: true
     })
 
+    let streakBadgeAwarded = false
     if (badge) {
       try {
         await UserBadge.create({
@@ -244,21 +305,27 @@ export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<
           metadata: { streakCount: totalStreak, cyclePosition }
         })
         badgesAwarded.push(badge.code)
-      } catch (err) {
-        // Duplicate badge (already awarded) - ignore
+        streakBadgeAwarded = true
+      } catch (err: any) {
+        if (err?.code === 11000) {
+          // Duplicate badge (already awarded) - treat as awarded
+          streakBadgeAwarded = true
+        } else {
+          console.error('Weekly streak badge award failed:', err)
+        }
       }
     }
 
-    // Update last milestone
-    if (!state.badges) {
-      state.badges = {
-        lastDailyStreakMilestone: 0,
-        lastWeeklyStreakMilestone: 0,
-        dailyStreakMilestoneCount: 0,
-        weeklyStreakMilestoneCount: 0
-      }
+    if (streakBadgeAwarded) {
+      state.badges.lastWeeklyStreakMilestone = Math.max(
+        state.badges.lastWeeklyStreakMilestone || 0,
+        totalStreak
+      )
+      state.earnedStreaks.highestWeekly = Math.max(
+        state.earnedStreaks.highestWeekly || 0,
+        totalStreak
+      )
     }
-    state.badges.lastWeeklyStreakMilestone = totalStreak
   }
 
   // Award Set 4 milestone badge at 10, 20, 30, 40, 50
@@ -280,25 +347,6 @@ export async function updateWeeklyStreakAndAwardBadges(userId: string): Promise<
         badgesAwarded.push(milestoneBadge.code)
       } catch (err) {
         // Duplicate badge - ignore
-      }
-    }
-
-    // Award photocard for milestone
-    const roll = await rollRarityAndCardV2({ userId })
-    if (roll.card) {
-      await InventoryItem.create({
-        userId,
-        cardId: roll.card._id,
-        acquiredAt: new Date(),
-        source: { type: 'weekly_milestone', totalStreak, milestoneNumber }
-      })
-      photocardAwarded = {
-        cardId: roll.card._id.toString(),
-        rarity: roll.rarity,
-        category: roll.card.categoryDisplay,
-        subcategory: roll.card.subcategoryPath || null,
-        imageUrl: roll.card.imageUrl,
-        sourceUrl: roll.card.sourceUrl || roll.card.pageUrl
       }
     }
 

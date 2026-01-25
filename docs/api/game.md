@@ -157,7 +157,7 @@ Submit a completed BoraRush run and award XP based on turns.
   "runDuplicate": false,
   "runId": "run_1c3a8b9e",
   "turns": 37,
-  "xpAwarded": 140,
+  "xpAwarded": 80,
   "tier": "steady",
   "reward": {
     "cardId": "6960e7ce2d95902a438cace4",
@@ -217,6 +217,8 @@ Get user's photocard collection.
 - `subcategory` (string, optional): Filter by `subcategoryPath`
 - `source` (string, optional): Filter by `source.type`
 - `newOnly` (string, optional): `1` to return items from the last 7 days
+
+`source.type` values include `quiz`, `quest_streaming`, `quest_quiz`, `craft`, `event`, `mastery_level`, `daily_completion`, `weekly_completion`, `daily_milestone`, `weekly_milestone`, `borarush`.
 
 **Success Response (200):**
 
@@ -386,6 +388,7 @@ Claim mastery milestone rewards and earn badges.
     "description": "Mastery badge for reaching level 10",
     "isSpecial": false
   },
+  "extraBadges": [],
   "track": {
     "kind": "member",
     "key": "Jungkook",
@@ -405,7 +408,8 @@ Claim mastery milestone rewards and earn badges.
 - Level 100: +1500 XP, +1000 Dust + Legendary badge
 
 * OT7 uses 7× XP per level when computing milestones.
-* Level 100 for members earns special member-specific badge.
+* Each mastery **level-up** grants a random photocard (inventory source: `mastery_level`).
+* Level 100 for members earns the special member-specific badge **plus** the standard milestone-100 badge (`mastery_milestone_100`).
 
 ---
 
@@ -427,7 +431,8 @@ Get all mastery badges earned by the user.
       "milestone": 10,
       "rarity": "rare",
       "imagePath": "/badges/mastery/milestone-10.png",
-      "earnedAt": "2026-01-06T10:00:00.000Z"
+      "earnedAt": "2026-01-06T10:00:00.000Z",
+      "variant": "milestone"
     },
     {
       "code": "mastery_member_rm_100",
@@ -436,7 +441,8 @@ Get all mastery badges earned by the user.
       "milestone": 100,
       "rarity": "legendary",
       "imagePath": "/badges/mastery/special/rm-100.svg",
-      "earnedAt": "2026-01-05T14:30:00.000Z"
+      "earnedAt": "2026-01-05T14:30:00.000Z",
+      "variant": "special"
     }
   ],
   "milestones": [
@@ -564,8 +570,15 @@ Claim quest rewards.
   },
   "balances": { "dust": 1250, "xp": 320 },
   "streaks": { "daily": 6, "weekly": 2 },
-  "badgesAwarded": ["daily_completion"],
-  "photocardAwarded": null,
+  "badgesAwarded": ["daily_streak_6"],
+  "photocardAwarded": {
+    "cardId": "6960e7ce2d95902a438cace5",
+    "rarity": "random",
+    "category": "D-DAY",
+    "subcategory": "Concept Photos",
+    "imageUrl": "https://static.wikia.nocookie.net/...",
+    "sourceUrl": "https://bts.fandom.com/wiki/D-DAY/Gallery#Concept_Photos"
+  },
   "allQuestsCompleted": true
 }
 ```
@@ -586,13 +599,13 @@ Get user's earned badges.
 {
   "badges": [
     {
-      "code": "daily_completion",
-      "name": "Daily Dedication",
-      "description": "Complete all daily quests",
+      "code": "daily_streak_6",
+      "name": "Six Day Soldier",
+      "description": "Complete 6 daily streaks",
       "icon": "🎯",
       "rarity": "rare",
       "earnedAt": "2026-01-06T10:00:00.000Z",
-      "metadata": { "questCode": "daily_stream_songs_2026-01-06" }
+      "metadata": { "streakCount": 6, "cyclePosition": 6 }
     }
   ]
 }
@@ -766,15 +779,15 @@ Get complete user game state including level progress, quiz stats, streaks, and 
   },
   "latestBadges": [
     {
-      "code": "daily_completion",
-      "name": "Daily Dedication",
-      "icon": "🎯",
+      "code": "daily_streak_5",
+      "name": "Five Day Fire",
+      "icon": "🔥",
       "rarity": "rare",
-      "type": "completion",
+      "type": "streak",
       "earnedAt": "2026-01-06T10:00:00.000Z",
       "metadata": {
         "streakCount": 5,
-        "questCode": "daily_stream_songs_2026-01-06"
+        "cyclePosition": 5
       }
     }
   ]

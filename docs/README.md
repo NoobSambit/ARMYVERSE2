@@ -51,6 +51,7 @@ Step-by-step setup guides:
 - **[Track Seeding](./setup/track-seeding.md)** - Database seeding for BTS tracks
 - **[Fandom Gallery Scraper](./scripts/fandom-gallery-scraper.md)** - Image gallery ingestion
 - **[Inventory Seed Script](./scripts/seed-inventory-sample.md)** - Generate sample inventory data
+- **[Mastery Simulation Script](./scripts/simulate-mastery-progress.md)** - Test mastery level rewards
 - **[Spotify Owner Refresh Token](./setup/spotify-owner-refresh-token.md)** - OAuth setup
 
 ### 📡 API Reference

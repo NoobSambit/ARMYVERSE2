@@ -187,7 +187,7 @@ Earned every day/week of streak, cycling through 10 designs.
 - 🏅🏅 Steady Pace (2) - Common
 - ... up to 🏅🏅🏅🏅🏅🏅🏅🏅🏅🏅 Unstoppable Force (10) - Legendary
 
-**Cycling:** At 11 days, earns badge #1 again. At 12 days, badge #2, etc.
+**Cycling:** At 11 days, earns badge #1 again. At 12 days, badge #2, etc. After a streak break, badges resume only after surpassing the previous high.
 
 #### 2. Milestone Badges (10/20/30/40/50)
 
@@ -207,23 +207,16 @@ Earned once at specific streak milestones.
 - 💎💎💎💎 Supreme Leader (40) - Legendary
 - 💎💎💎💎💎 Transcendent Being (50) - Legendary
 
-#### 3. Completion Badges
+#### 3. Completion Badges (currently disabled)
 
-- 🎯 Quest Hunter - Complete first quest
-- 🏆 ARMY Achievement - 100 quests completed
-- 👑 ARMY Legend - 1000 quests completed
+- **daily_completion** - Complete all daily quests
+- **weekly_completion** - Complete all weekly quests
+
+Completion badges are defined but not awarded by default in the claim flow.
 
 ### Photocard Rewards
 
-Milestone badges also award photocards:
-
-| Streak | Daily Badge | Photocard | Weekly Badge | Photocard |
-|--------|-------------|-----------|--------------|-----------|
-| 10     | Rare        | Random    | Epic         | Random    |
-| 20     | Epic        | Random    | Epic         | Random    |
-| 30     | Epic        | Random    | Legendary    | Random    |
-| 40     | Legendary   | Random    | Legendary    | Random    |
-| 50     | Legendary   | Random    | Legendary    | Random    |
+Completing all daily or weekly quests awards a **random photocard** every time (including milestone days). Milestone badges are badge-only.
 
 ---
 

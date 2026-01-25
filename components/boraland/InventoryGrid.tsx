@@ -8,6 +8,9 @@ const SOURCE_LABELS: Record<string, string> = {
   quest_quiz: 'Quiz Quest',
   craft: 'Crafting',
   event: 'Event',
+  mastery_level: 'Mastery Level',
+  daily_completion: 'Daily Completion',
+  weekly_completion: 'Weekly Completion',
   daily_milestone: 'Daily Streak',
   weekly_milestone: 'Weekly Streak',
   borarush: 'BoraRush'

@@ -23,7 +23,7 @@ const MEMBER_KEYS = [
  * Handles special cases like "J-Hope" -> "jhope"
  */
 function normalizeMemberKey(key: string): string {
-  return key.toLowerCase().replace(/-/g, '')
+  return key.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
 /**

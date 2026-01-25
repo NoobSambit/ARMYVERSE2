@@ -38,6 +38,7 @@ type EarnedBadge = {
   rarity: 'common' | 'rare' | 'epic' | 'legendary'
   imagePath: string
   earnedAt: string
+  variant?: 'milestone' | 'special'
 }
 
 type MasteryBadgeRewardsModalProps = {
@@ -82,7 +83,8 @@ export default function MasteryBadgeRewardsModal({
 
   // Calculate totals
   const totalPossibleBadges =
-    (memberTracks.length + eraTracks.length) * milestones.length
+    (memberTracks.length + eraTracks.length) * milestones.length +
+    memberTracks.length
   const totalEarnedBadges = earnedBadges.length
 
   // Get earned badges grouped by type
@@ -326,7 +328,7 @@ function OverviewTab({
             Unique legendary badges for reaching Level 100 mastery with each
             member
           </p>
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8 gap-4">
             {[
               'RM',
               'Jin',
@@ -338,27 +340,27 @@ function OverviewTab({
               'OT7',
             ].map(member => {
               const earned = memberBadges.some(
-                b => b.key === member && b.milestone === 100
+                b => b.key === member && b.milestone === 100 && b.variant === 'special'
               )
               const imagePath = getMasteryBadgeImagePath('member', member, 100)
 
               return (
                 <div
                   key={member}
-                  className={`group relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-all ${earned
+                  className={`group relative flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all ${earned
                     ? 'bg-[#2d233b] border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
-                    : 'bg-[#231b2e]/50 border-[#302249] opacity-60'
+                    : 'bg-[#231b2e]/60 border-[#302249]'
                     }`}
                 >
                   <div
-                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center overflow-hidden p-1 ${earned ? 'bg-yellow-500/20' : 'bg-gray-800 grayscale'}`}
+                    className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center overflow-visible p-1 ${earned ? 'bg-yellow-500/20' : 'bg-[#1a1426]'}`}
                   >
                     <Image
                       src={imagePath}
                       alt={`${member} Level 100`}
-                      width={48}
-                      height={48}
-                      className={`w-full h-full object-contain ${earned ? '' : 'opacity-40'}`}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-contain"
                       onError={e => {
                         const target = e.target as HTMLImageElement
                         target.style.display = 'none'
@@ -370,7 +372,7 @@ function OverviewTab({
                     />
                   </div>
                   <p
-                    className={`text-[10px] font-bold ${earned ? 'text-white' : 'text-gray-500'}`}
+                    className={`text-xs font-bold ${earned ? 'text-white' : 'text-gray-400'}`}
                   >
                     {member}
                   </p>
@@ -527,14 +529,7 @@ function TrackBadgesTab({
               <div className="flex gap-2">
                 {milestones.map(ms => {
                   const status = getBadgeStatus(kind, track.track.key, ms.level)
-                  const imagePath =
-                    ms.level === 100 && kind === 'member'
-                      ? getMasteryBadgeImagePath(
-                        kind,
-                        track.track.key,
-                        ms.level
-                      )
-                      : `/badges/mastery/milestone-${ms.level}.png`
+                  const imagePath = `/badges/mastery/milestone-${ms.level}.png`
 
                   return (
                     <div
@@ -543,7 +538,7 @@ function TrackBadgesTab({
                         ? 'bg-purple-500/20 border border-purple-500/40'
                         : status === 'claimable'
                           ? 'bg-yellow-500/20 border border-yellow-500/40 animate-pulse'
-                          : 'bg-[#161022] border border-[#302249] opacity-50'
+                      : 'bg-[#161022] border border-[#302249]'
                         }`}
                       title={`Level ${ms.level} - ${status}`}
                     >
@@ -552,7 +547,7 @@ function TrackBadgesTab({
                         alt={`Level ${ms.level}`}
                         width={32}
                         height={32}
-                        className={`w-full h-full object-contain ${status === 'locked' ? 'grayscale opacity-40' : ''}`}
+                        className="w-full h-full object-contain"
                         onError={e => {
                           const target = e.target as HTMLImageElement
                           target.style.display = 'none'

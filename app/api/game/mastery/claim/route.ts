@@ -59,6 +59,9 @@ export async function POST(request: NextRequest) {
     // Generate badge code for this milestone
     const badgeCode = getMasteryBadgeCode(input.data.kind, input.data.key, milestone)
     const badgeRarity = reward.badge.rarity
+    const extraBadges = input.data.kind === 'member' && milestone === 100
+      ? [{ code: 'mastery_milestone_100', rarity: badgeRarity }]
+      : []
 
     // Ledger for audit (ignore duplicates) - now includes badge info
     try {
@@ -69,7 +72,8 @@ export async function POST(request: NextRequest) {
         milestone,
         rewards: reward.rewards,
         badgeCode,
-        badgeRarity
+        badgeRarity,
+        extraBadges
       })
     } catch (err) {
       // noop on duplicate
@@ -86,6 +90,7 @@ export async function POST(request: NextRequest) {
         description: reward.badge.description,
         isSpecial: milestone === 100 && input.data.kind === 'member' && reward.badge.isSpecialAtMax
       },
+      extraBadges,
       track: updated ? formatTrack(input.data.kind, input.data.key, updated.xp || 0, updated.claimedMilestones || [], updated.level || 0) : null
     })
   } catch (error) {

@@ -375,17 +375,17 @@ function StreakBadgeCard({
 
   // Locked badge
   return (
-    <div className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-[#231b2e]/50 border border-[#302249] opacity-60">
+    <div className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-[#231b2e]/50 border border-[#302249]">
       <div className="absolute top-2 right-2 text-gray-500">
         <span className="material-symbols-outlined text-[18px]">lock</span>
       </div>
-      <div className="w-16 h-16 rounded-full bg-[#1a1426] flex items-center justify-center mb-1 grayscale">
+      <div className="w-16 h-16 rounded-full bg-[#1a1426] flex items-center justify-center mb-1">
         <Image
           src={imagePath}
           alt={badge.name}
           width={64}
           height={64}
-          className="w-full h-full object-contain opacity-40 p-2"
+          className="w-full h-full object-contain p-2"
           onError={(e) => {
             const target = e.target as HTMLImageElement
             target.style.display = 'none'
@@ -438,7 +438,7 @@ function MilestoneBadgeCard({
           alt={milestone.name}
           width={80}
           height={80}
-          className={`w-full h-full object-contain ${isLocked ? 'grayscale opacity-40' : ''}`}
+          className="w-full h-full object-contain"
           onError={(e) => {
             const target = e.target as HTMLImageElement
             target.style.display = 'none'

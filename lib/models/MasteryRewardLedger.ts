@@ -12,6 +12,15 @@ const masteryRewardLedgerSchema = new mongoose.Schema({
   // Badge code awarded for this milestone (e.g., mastery_member_rm_5)
   badgeCode: { type: String, index: true },
   badgeRarity: { type: String, enum: ['common', 'rare', 'epic', 'legendary'] },
+  extraBadges: {
+    type: [
+      {
+        code: { type: String },
+        rarity: { type: String, enum: ['common', 'rare', 'epic', 'legendary'] }
+      }
+    ],
+    default: []
+  },
   source: { type: String, default: 'mastery_claim' },
   createdAt: { type: Date, default: Date.now }
 })
@@ -20,4 +29,3 @@ masteryRewardLedgerSchema.index({ userId: 1, kind: 1, key: 1, milestone: 1 }, { 
 masteryRewardLedgerSchema.index({ userId: 1, badgeCode: 1 }) // For querying user's mastery badges
 
 export const MasteryRewardLedger = mongoose.models.MasteryRewardLedger || mongoose.model('MasteryRewardLedger', masteryRewardLedgerSchema)
-

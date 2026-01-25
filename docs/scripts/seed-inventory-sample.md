@@ -43,7 +43,7 @@ Each inventory item is built from a real photocard in `fandom_gallery_images` an
 
 - `cardId`: ObjectId of the photocard document
 - `acquiredAt`: Randomized timestamps (recent + older dates)
-- `source.type`: Mixed sources (`quiz`, `quest_streaming`, `quest_quiz`, `craft`, `event`, `daily_milestone`, `weekly_milestone`)
+- `source.type`: Mixed sources (`quiz`, `quest_streaming`, `quest_quiz`, `craft`, `event`, `mastery_level`, `daily_completion`, `weekly_completion`, `daily_milestone`, `weekly_milestone`)
 
 This produces realistic data for:
 
@@ -58,4 +58,3 @@ This produces realistic data for:
 
 - The script **clears inventory for the chosen user** unless `--keep-inventory` is used.
 - By default it drops the **legacy `photocards`** collection only. It does **not** touch `fandom_gallery_images`.
-

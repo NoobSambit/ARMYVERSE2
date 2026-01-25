@@ -8,17 +8,17 @@ The Mastery Badge System rewards users with exclusive badges when they reach mil
 
 Users earn badges at the following milestone levels:
 
-| Level | Rarity    | XP Reward | Dust Reward | Badge Type                                  |
-| ----- | --------- | --------- | ----------- | ------------------------------------------- |
-| 5     | Common    | +50       | +25         | Standard milestone badge                    |
-| 10    | Rare      | +100      | +75         | Standard milestone badge                    |
-| 25    | Rare      | +250      | +200        | Standard milestone badge                    |
-| 50    | Epic      | +500      | +400        | Standard milestone badge                    |
-| 100   | Legendary | +1500     | +1000       | Special member-specific badge (for members) |
+| Level | Rarity    | XP Reward | Dust Reward | Badge Type |
+| ----- | --------- | --------- | ----------- | ---------- |
+| 5     | Common    | +50       | +25         | Standard milestone badge |
+| 10    | Rare      | +100      | +75         | Standard milestone badge |
+| 25    | Rare      | +250      | +200        | Standard milestone badge |
+| 50    | Epic      | +500      | +400        | Standard milestone badge |
+| 100   | Legendary | +1500     | +1000       | Standard milestone badge + special member badge (members only) |
 
 ## Badge Types
 
-### Standard Milestone Badges (Levels 5-50)
+### Standard Milestone Badges (Levels 5-100)
 
 - Same badge design for all members and eras
 - Member name or era name displayed in the middle of the badge
@@ -43,6 +43,11 @@ Users earn badges at the following milestone levels:
 - Use the standard legendary milestone badge
 - Era name displayed on the badge
 
+### Photocard Rewards
+
+- Every mastery **level-up** awards a random photocard (members + eras).
+- Milestone claims still award XP/Dust + badges.
+
 ## Technical Architecture
 
 ### Database Models
@@ -58,6 +63,12 @@ Users earn badges at the following milestone levels:
 - Fields added for badge tracking:
   - `badgeCode`: Unique badge identifier (e.g., `mastery_member_rm_5`)
   - `badgeRarity`: Badge rarity level
+  - `extraBadges`: Additional badge codes (e.g., `mastery_milestone_100`)
+
+#### MasteryLevelRewardLedger
+
+- Audit log for mastery level-up photocard rewards
+- Unique per user/kind/key/level to prevent duplicate level rewards
 
 ### API Endpoints
 
@@ -136,6 +147,10 @@ Examples:
 - `mastery_era_wings_25`
 - `mastery_era_love_yourself_her_50`
 
+**Extra milestone badge:**
+
+- `mastery_milestone_100` (awarded alongside member level-100 special badges)
+
 ## Image Assets
 
 ### Required Badge Images
@@ -173,15 +188,17 @@ Place your badge images in the following locations:
 
 1. User answers quiz questions correctly
 2. XP is awarded to relevant member/era mastery tracks
-3. When user crosses a milestone threshold:
+3. Each **level-up** awards a random photocard (tracked in inventory)
+4. When user crosses a milestone threshold:
    - Milestone becomes claimable
    - Claim button shows animation
-4. User clicks claim:
+5. User clicks claim:
    - XP and Dust are awarded
-   - Badge is recorded in ledger
-   - Toast notification shows rewards + badge
-5. User can view all earned badges in the modal
-6. Badges are displayed in user profile (future feature)
+   - Milestone badge is recorded in ledger
+   - For member level 100, an additional **special** badge is recorded
+   - Toast notification shows rewards + badge(s)
+6. User can view all earned badges in the modal
+7. Badges are displayed in user profile (future feature)
 
 ## Future Enhancements
 

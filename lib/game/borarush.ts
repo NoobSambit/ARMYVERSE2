@@ -27,13 +27,13 @@ export type BoraRushDailyCapsResult = {
 }
 
 const XP_TIERS: Array<{ maxTurns: number; xp: number; tier: BoraRushXpTier }> = [
-  { maxTurns: 20, xp: 200, tier: 'speedrun' },
-  { maxTurns: 30, xp: 170, tier: 'swift' },
-  { maxTurns: 40, xp: 140, tier: 'steady' },
-  { maxTurns: 50, xp: 115, tier: 'gritty' },
-  { maxTurns: 60, xp: 95, tier: 'survivor' },
-  { maxTurns: 80, xp: 80, tier: 'survivor' },
-  { maxTurns: Infinity, xp: 60, tier: 'finish' }
+  { maxTurns: 20, xp: 120, tier: 'speedrun' },
+  { maxTurns: 30, xp: 100, tier: 'swift' },
+  { maxTurns: 40, xp: 80, tier: 'steady' },
+  { maxTurns: 50, xp: 65, tier: 'gritty' },
+  { maxTurns: 60, xp: 50, tier: 'survivor' },
+  { maxTurns: 80, xp: 40, tier: 'survivor' },
+  { maxTurns: Infinity, xp: 30, tier: 'finish' }
 ]
 
 export function normalizeBoraRushTurns(turns: number): number {
@@ -49,7 +49,7 @@ export function calculateBoraRushXp(turns: number): BoraRushXpResult {
       return { turns: normalized, xp: tier.xp, tier: tier.tier }
     }
   }
-  return { turns: normalized, xp: 60, tier: 'finish' }
+  return { turns: normalized, xp: 30, tier: 'finish' }
 }
 
 export function applyBoraRushDailyCaps({

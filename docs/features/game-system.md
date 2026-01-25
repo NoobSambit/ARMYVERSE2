@@ -46,15 +46,15 @@ Boraverse is a comprehensive BTS quiz and photocard collection game featuring:
 - Users earn Armyverse XP when they finish the board
 - XP scales by how many turns the winning player takes to reach tile 100
 
-**XP Tiers (Generous Curve):**
+**XP Tiers (Balanced Curve):**
 
-- 1–20 turns: 200 XP (speedrun)
-- 21–30 turns: 170 XP (swift)
-- 31–40 turns: 140 XP (steady)
-- 41–50 turns: 115 XP (gritty)
-- 51–60 turns: 95 XP (survivor)
-- 61–80 turns: 80 XP (survivor)
-- 81+ turns: 60 XP (finish)
+- 1–20 turns: 120 XP (speedrun)
+- 21–30 turns: 100 XP (swift)
+- 31–40 turns: 80 XP (steady)
+- 41–50 turns: 65 XP (gritty)
+- 51–60 turns: 50 XP (survivor)
+- 61–80 turns: 40 XP (survivor)
+- 81+ turns: 30 XP (finish)
 
 **Security Model:**
 
@@ -105,12 +105,13 @@ Rarity tiers and pity tracking were part of the legacy photocard pipeline. The c
 - Level 25: +250 XP, +200 Dust + Rare badge
 - Level 50: +500 XP, +400 Dust + Epic badge
 - Level 100: +1500 XP, +1000 Dust + Legendary badge (member-specific for members, standard for eras)
+- Every mastery **level-up** grants a random photocard
 
 **Badge System:**
 
 - Unique badge codes: `mastery_{kind}_{key}_{milestone}`
 - Standard milestone badges for all levels (display level number)
-- Special member badges at level 100 (unique design per member + OT7)
+- Special member badges at level 100 (unique design per member + OT7), plus the standard milestone-100 badge
 - View all earned badges via `/api/game/mastery/badges`
 
 ### Quest System
@@ -120,11 +121,13 @@ Rarity tiers and pity tracking were part of the legacy photocard pipeline. The c
 - Mix of streaming and quiz goals
 - Rewards: dust + XP
 - Some quests include a photocard ticket (random drop)
+- Completing all daily quests grants a random photocard
 
 **Weekly Quests:**
 
 - Higher-volume streaming and quiz goals
 - Rewards: dust + XP + optional photocard ticket (random drop)
+- Completing all weekly quests grants a random photocard
 
 **Special Events:**
 

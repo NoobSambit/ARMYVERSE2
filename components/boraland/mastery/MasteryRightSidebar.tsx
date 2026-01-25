@@ -66,6 +66,7 @@ type EarnedBadge = {
   rarity: 'common' | 'rare' | 'epic' | 'legendary'
   imagePath: string
   earnedAt: string
+  variant?: 'milestone' | 'special'
 }
 
 export default function MasteryRightSidebar({
@@ -331,11 +332,11 @@ export default function MasteryRightSidebar({
                   <div
                     key={`${badge.code}-${i}`}
                     className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-help hover:scale-105 hover:brightness-125 ${colors}`}
-                    title={`${badge.key} - Level ${badge.milestone}`}
+                    title={`${badge.key} - Level ${badge.milestone}${badge.variant === 'special' ? ' (Special)' : ''}`}
                   >
                     <Image
                       src={badge.imagePath}
-                      alt={`${badge.key} Level ${badge.milestone}`}
+                      alt={`${badge.key} Level ${badge.milestone}${badge.variant === 'special' ? ' Special' : ''}`}
                       width={24}
                       height={24}
                       className="w-6 h-6 object-contain"

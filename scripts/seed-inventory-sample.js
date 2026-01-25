@@ -81,12 +81,15 @@ const User = mongoose.models.SeedUser || mongoose.model('SeedUser', userSchema, 
 
 const SOURCE_WEIGHTS = [
   { type: 'quiz', weight: 30 },
-  { type: 'quest_streaming', weight: 15 },
-  { type: 'quest_quiz', weight: 15 },
+  { type: 'quest_streaming', weight: 14 },
+  { type: 'quest_quiz', weight: 14 },
   { type: 'craft', weight: 10 },
   { type: 'event', weight: 10 },
-  { type: 'daily_milestone', weight: 10 },
-  { type: 'weekly_milestone', weight: 10 }
+  { type: 'mastery_level', weight: 6 },
+  { type: 'daily_completion', weight: 8 },
+  { type: 'weekly_completion', weight: 8 },
+  { type: 'daily_milestone', weight: 3 },
+  { type: 'weekly_milestone', weight: 3 }
 ]
 
 function shuffle(list) {
@@ -128,6 +131,20 @@ function buildSource() {
   }
   if (type === 'quest_streaming' || type === 'quest_quiz') {
     return { type, questCode: randomQuestCode(type) }
+  }
+  if (type === 'mastery_level') {
+    return {
+      type,
+      masteryKind: Math.random() < 0.5 ? 'member' : 'era',
+      masteryKey: Math.random() < 0.5 ? 'RM' : 'Wings',
+      masteryLevel: randomInt(1, 100)
+    }
+  }
+  if (type === 'daily_completion' || type === 'weekly_completion') {
+    return {
+      type,
+      totalStreak: randomInt(1, 50)
+    }
   }
   if (type === 'daily_milestone' || type === 'weekly_milestone') {
     const milestoneNumber = randomInt(1, 5)

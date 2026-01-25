@@ -1,4 +1,7 @@
 import { MasteryProgress } from '@/lib/models/MasteryProgress'
+import { MasteryLevelRewardLedger } from '@/lib/models/MasteryLevelRewardLedger'
+import { InventoryItem } from '@/lib/models/InventoryItem'
+import { rollRarityAndCardV2 } from '@/lib/game/dropTable'
 
 export type MasteryIncrement = {
   members: string[]
@@ -8,6 +11,13 @@ export type MasteryIncrement = {
 
 export type MasteryDefinition = { key: string; displayName?: string; coverImage?: string; order?: number }
 export type MasteryTrack = { kind: 'member' | 'era'; key: string; xp: number; level: number; claimedMilestones: number[]; xpToNext: number; nextMilestone: number | null; claimable: number[] }
+export type MasteryLevelAward = {
+  kind: 'member' | 'era'
+  key: string
+  level: number
+  cardId: string
+  rarity: 'random'
+}
 
 export const MASTERY_MILESTONES: {
   level: number
@@ -44,6 +54,19 @@ export const MASTERY_MILESTONES: {
       badge: { rarity: 'legendary', description: 'Ultimate mastery achieved - A true legend!', isSpecialAtMax: true }
     }
   ]
+
+export const MASTERY_XP_MULTIPLIER = 3
+export const OT7_MASTERY_XP_MULTIPLIER = 6
+
+export function masteryXpMultiplier(kind: 'member' | 'era', key: string) {
+  if (kind === 'member' && key.toUpperCase() === 'OT7') return OT7_MASTERY_XP_MULTIPLIER
+  return MASTERY_XP_MULTIPLIER
+}
+
+export function scaleMasteryXp(rawXp: number, kind: 'member' | 'era', key: string) {
+  if (!Number.isFinite(rawXp) || rawXp <= 0) return 0
+  return Math.floor(rawXp * masteryXpMultiplier(kind, key))
+}
 
 const MEMBER_DEFS: MasteryDefinition[] = [
   { key: 'RM', order: 1 },
@@ -89,24 +112,92 @@ export function getMasteryDefinitions() {
   return { members: MEMBER_DEFS, eras: ERA_DEFS }
 }
 
-export async function addMasteryXp(userId: string, inc: MasteryIncrement) {
+export async function addMasteryXp(userId: string, inc: MasteryIncrement): Promise<MasteryLevelAward[]> {
   const now = new Date()
-  const updates: Promise<any>[] = []
+  const awards: MasteryLevelAward[] = []
+
+  const awardLevels = async (kind: 'member' | 'era', key: string) => {
+    const increment = scaleMasteryXp(inc.xp, kind, key)
+    if (increment <= 0) return
+
+    const updated = await MasteryProgress.findOneAndUpdate(
+      { userId, kind, key },
+      {
+        $inc: { xp: increment },
+        $setOnInsert: { level: 0, claimedMilestones: [] },
+        $set: { lastUpdatedAt: now }
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    )
+
+    if (!updated) return
+
+    const divider = dividerFor(kind, key)
+    const previousXp = Math.max(0, (updated.xp || 0) - increment)
+    const previousLevel = levelForXp(previousXp, divider)
+    const currentLevel = levelForXp(updated.xp || 0, divider)
+
+    if (currentLevel <= previousLevel) return
+
+    for (let level = previousLevel + 1; level <= currentLevel; level += 1) {
+      let ledgerCreated = false
+      try {
+        await MasteryLevelRewardLedger.create({
+          userId,
+          kind,
+          key,
+          level,
+          awardedAt: new Date()
+        })
+        ledgerCreated = true
+      } catch (err: any) {
+        if (err?.code !== 11000) {
+          console.error('Mastery level reward ledger error:', err)
+        }
+      }
+
+      if (!ledgerCreated) continue
+
+      const roll = await rollRarityAndCardV2({ userId })
+      if (!roll.card) continue
+
+      await InventoryItem.create({
+        userId,
+        cardId: roll.card._id,
+        acquiredAt: new Date(),
+        source: {
+          type: 'mastery_level',
+          masteryKind: kind,
+          masteryKey: key,
+          masteryLevel: level
+        }
+      })
+
+      await MasteryLevelRewardLedger.updateOne(
+        { userId, kind, key, level },
+        { $set: { cardId: roll.card._id } }
+      )
+
+      awards.push({
+        kind,
+        key,
+        level,
+        cardId: roll.card._id.toString(),
+        rarity: roll.rarity
+      })
+    }
+  }
+
+  const updates: Promise<void>[] = []
   for (const m of inc.members) {
-    updates.push(MasteryProgress.findOneAndUpdate(
-      { userId, kind: 'member', key: m },
-      { $inc: { xp: inc.xp }, $setOnInsert: { level: 0, claimedMilestones: [] }, $set: { lastUpdatedAt: now } },
-      { upsert: true, new: true }
-    ))
+    updates.push(awardLevels('member', m))
   }
   for (const e of inc.eras) {
-    updates.push(MasteryProgress.findOneAndUpdate(
-      { userId, kind: 'era', key: e },
-      { $inc: { xp: inc.xp }, $setOnInsert: { level: 0, claimedMilestones: [] }, $set: { lastUpdatedAt: now } },
-      { upsert: true, new: true }
-    ))
+    updates.push(awardLevels('era', e))
   }
   await Promise.all(updates)
+
+  return awards
 }
 
 export function dividerFor(kind: 'member' | 'era', key: string) {
@@ -180,4 +271,3 @@ export function getMasteryBadgeInfo(kind: 'member' | 'era', key: string, milesto
     key
   }
 }
-

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch } from '@/lib/client/api'
@@ -103,6 +103,10 @@ type BadgeItem = {
     completionDate?: string
     completionStreakCount?: number
     completionType?: 'daily' | 'weekly'
+    masteryKind?: 'member' | 'era'
+    masteryKey?: string
+    masteryLevel?: number
+    masteryVariant?: 'milestone' | 'special'
   }
 }
 
@@ -112,6 +116,7 @@ export default function Page() {
   const { user } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
+  const searchParams = useSearchParams()
 
   // Tab State for Header
   const [activeTab, setActiveTab] = useState<
@@ -119,7 +124,14 @@ export default function Page() {
   >('home')
 
   // View State (Cards or Badges)
-  const [view, setView] = useState<'cards' | 'collection' | 'badges'>('cards')
+  const viewParam = searchParams.get('view')
+  const [view, setView] = useState<'cards' | 'collection' | 'badges'>(
+    viewParam === 'badges'
+      ? 'badges'
+      : viewParam === 'collection'
+        ? 'collection'
+        : 'cards'
+  )
 
   // Inventory State
   const [items, setItems] = useState<Item[]>([])

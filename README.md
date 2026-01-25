@@ -119,7 +119,7 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 **Rewards & Sources**:
 - Quiz drops are XP-gated (no card below 5 XP)
 - Drops are random across the catalog (rarity is stored as `random` for auditing)
-- Sources tracked: quiz, quests, crafting, events, streak milestones
+- Sources tracked: quiz, quest tickets, crafting, events, mastery levels, daily/weekly completions, streak milestones
 
 **Collection View**:
 - Dedicated collection tab with missing-card placeholders
@@ -144,7 +144,8 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 **XP System**:
 - **Level Formula**: `level = floor(xp / 100)` (OT7 uses 7× XP per level)
 - **XP Sources**: Quiz completions (members/eras derived from correctly answered questions)
-- **Milestone Rewards**: XP + Dust at levels 5/10/25/50/100
+- **Milestone Rewards**: XP + Dust at levels 5/10/25/50/100 (member level 100 also grants a special badge)
+- **Level Rewards**: Random photocard on every mastery level-up
 
 **Tracking**: MasteryProgress model (userId + kind + key), mastery rewards ledger for claims
 
@@ -180,14 +181,14 @@ A comprehensive platform for BTS fans to discover music, create playlists, explo
 **Badge System** (34 Collectible Badges):
 - **Cycling Badges (10)**: Daily streak badges 1-10
 - **Milestone Badges (5)**: 10/20/30/40/50 day streaks
-- **Quest Completion Badges**: First daily/weekly completions
+- **Completion Badges**: Defined but disabled by default in the claim flow
 - **Achievement Badges**: Special milestones
 - **Badge Criteria**: Defined in Badge model (streakDays, streakWeeks, questPeriod, threshold)
 
 **Rewards**:
 - **Dust**: 50-500 per quest (in-game currency)
 - **XP**: 10-100 per quest (leveling system)
-- **Photocards**: Rare+ tickets for weekly quests
+- **Photocards**: Quest tickets plus daily/weekly completion drops
 - **Badges**: Streak and achievement unlocks
 
 **UI Features**:

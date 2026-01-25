@@ -35,6 +35,10 @@ type BadgeItem = {
     completionDate?: string
     completionStreakCount?: number
     completionType?: 'daily' | 'weekly'
+    masteryKind?: 'member' | 'era'
+    masteryKey?: string
+    masteryLevel?: number
+    masteryVariant?: 'milestone' | 'special'
   }
 }
 
@@ -56,7 +60,25 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
   if (!badge) return null
 
   const colors = getBadgeRarityColors(badge.badge.rarity)
-  const category = getBadgeCategory(badge.badge.code)
+  const getMasteryInfo = () => {
+    const masteryKind = badge.metadata?.masteryKind
+    const masteryKey = badge.metadata?.masteryKey
+    const masteryLevel = badge.metadata?.masteryLevel
+    if (!masteryKind || !masteryKey || !masteryLevel) return null
+    return {
+      kind: masteryKind,
+      key: masteryKey,
+      level: masteryLevel,
+      variant: badge.metadata?.masteryVariant || 'milestone'
+    }
+  }
+
+  const masteryInfo = getMasteryInfo()
+  const category = masteryInfo
+    ? masteryInfo.kind === 'member'
+      ? 'Member Mastery'
+      : 'Era Mastery'
+    : getBadgeCategory(badge.badge.code)
 
   const isCompletionBadge = badge.badge.code.includes('completion')
   const hasStreakCount = !!(
@@ -73,6 +95,41 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
     isCompletionBadge && hasStreakCount
       ? `/badges/${completionType}-streak/streak-${cyclePosition}.png`
       : getBadgeImagePath(badge.badge.code)
+
+  const getStreakLabel = () => {
+    if (!streakCount) return null
+    const isDaily = badge.badge.code.includes('daily')
+    const isWeekly = badge.badge.code.includes('weekly')
+    const unit = isDaily ? 'Day' : isWeekly ? 'Week' : null
+    if (!unit) return null
+    return `${unit} ${streakCount}`
+  }
+
+  const displayName = (() => {
+    if (masteryInfo) {
+      const scope = masteryInfo.kind === 'member' ? 'Mastery' : 'Era Mastery'
+      const suffix = masteryInfo.variant === 'special' ? ' (Special)' : ''
+      return `${masteryInfo.key} ${scope} - Level ${masteryInfo.level}${suffix}`
+    }
+    const label = getStreakLabel()
+    if (!label) return badge.badge.name
+    if (badge.badge.code.includes('streak') || badge.badge.code.includes('completion')) {
+      return `${label} - ${badge.badge.name}`
+    }
+    return badge.badge.name
+  })()
+
+  const displayDescription = (() => {
+    if (masteryInfo) {
+      const scope = masteryInfo.kind === 'member' ? 'member' : 'era'
+      return `Reach level ${masteryInfo.level} in ${masteryInfo.key} ${scope} mastery`
+    }
+    if (badge.metadata?.streakCount) {
+      const unit = badge.badge.code.includes('weekly') ? 'weeks' : 'days'
+      return `Complete ${badge.metadata.streakCount} ${unit} in a row`
+    }
+    return badge.badge.description
+  })()
 
   const isNewBadge = (() => {
     const earnedDate = new Date(badge.earnedAt)
@@ -105,8 +162,8 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `I earned the ${badge.badge.name} badge!`,
-          text: `${badge.badge.description}\n\nRarity: ${badge.badge.rarity}\nCategory: ${category}\nEarned on: ${earnedDateFormatted}`,
+          title: `I earned the ${displayName} badge!`,
+          text: `${displayDescription}\n\nRarity: ${badge.badge.rarity}\nCategory: ${category}\nEarned on: ${earnedDateFormatted}`,
           url: window.location.href,
         })
       } catch (err) {
@@ -114,7 +171,7 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
       }
     } else {
       navigator.clipboard.writeText(
-        `I earned the ${badge.badge.name} badge!\n\n${badge.badge.description}\n\nRarity: ${badge.badge.rarity}\nCategory: ${category}\nEarned on: ${earnedDateFormatted}`
+        `I earned the ${displayName} badge!\n\n${displayDescription}\n\nRarity: ${badge.badge.rarity}\nCategory: ${category}\nEarned on: ${earnedDateFormatted}`
       )
       alert('Badge details copied to clipboard!')
     }
@@ -137,7 +194,7 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
               Badge Details
             </p>
             <h3 className="text-base md:text-lg font-semibold text-white truncate">
-              {badge.badge.name}
+              {displayName}
             </h3>
           </div>
           <button
@@ -186,7 +243,7 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
               <h2
                 className={`text-2xl font-display font-bold ${colors.text} mb-1`}
               >
-                {badge.badge.name}
+                {displayName}
               </h2>
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
                 {badge.badge.rarity} · {category}
@@ -202,7 +259,7 @@ export default function BadgeModal({ badge, onClose }: BadgeModalProps) {
             </div>
 
             <p className="text-sm text-gray-300 text-center leading-relaxed">
-              {badge.badge.description}
+              {displayDescription}
             </p>
           </div>
 

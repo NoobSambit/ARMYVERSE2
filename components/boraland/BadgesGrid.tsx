@@ -29,6 +29,10 @@ type BadgeItem = {
     completionDate?: string
     completionStreakCount?: number
     completionType?: 'daily' | 'weekly'
+    masteryKind?: 'member' | 'era'
+    masteryKey?: string
+    masteryLevel?: number
+    masteryVariant?: 'milestone' | 'special'
   }
 }
 
@@ -164,6 +168,67 @@ export default function BadgesGrid({
     return earnedDate > sevenDaysAgo
   }
 
+  const getStreakLabel = (item: BadgeItem) => {
+    const streakCount =
+      item.metadata?.streakCount || item.metadata?.completionStreakCount
+    if (!streakCount) return null
+    const isDaily = item.badge.code.includes('daily')
+    const isWeekly = item.badge.code.includes('weekly')
+    const unit = isDaily ? 'Day' : isWeekly ? 'Week' : null
+    if (!unit) return null
+    return `${unit} ${streakCount}`
+  }
+
+  const getMasteryInfo = (item: BadgeItem) => {
+    const masteryKind = item.metadata?.masteryKind
+    const masteryKey = item.metadata?.masteryKey
+    const masteryLevel = item.metadata?.masteryLevel
+    if (!masteryKind || !masteryKey || !masteryLevel) return null
+    return {
+      kind: masteryKind,
+      key: masteryKey,
+      level: masteryLevel,
+      variant: item.metadata?.masteryVariant || 'milestone'
+    }
+  }
+
+  const getCategoryForBadge = (item: BadgeItem) => {
+    const mastery = getMasteryInfo(item)
+    if (mastery) {
+      return mastery.kind === 'member' ? 'Member Mastery' : 'Era Mastery'
+    }
+    return getBadgeCategory(item.badge.code)
+  }
+
+  const getDisplayBadgeName = (item: BadgeItem) => {
+    const mastery = getMasteryInfo(item)
+    if (mastery) {
+      const scope = mastery.kind === 'member' ? 'Mastery' : 'Era Mastery'
+      const suffix = mastery.variant === 'special' ? ' (Special)' : ''
+      return `${mastery.key} ${scope} - Level ${mastery.level}${suffix}`
+    }
+    const streakLabel = getStreakLabel(item)
+    if (!streakLabel) return item.badge.name
+    if (item.badge.code.includes('streak') || item.badge.code.includes('completion')) {
+      return `${streakLabel} - ${item.badge.name}`
+    }
+    return item.badge.name
+  }
+
+  const getDisplayBadgeDescription = (item: BadgeItem) => {
+    const mastery = getMasteryInfo(item)
+    if (mastery) {
+      const scope = mastery.kind === 'member' ? 'member' : 'era'
+      return `Reach level ${mastery.level} in ${mastery.key} ${scope} mastery`
+    }
+    const streakCount = item.metadata?.streakCount
+    if (streakCount) {
+      const unit = item.badge.code.includes('weekly') ? 'weeks' : 'days'
+      return `Complete ${streakCount} ${unit} in a row`
+    }
+    return item.badge.description
+  }
+
   const filteredBadges = useMemo(() => {
     let result = [...badges]
 
@@ -175,7 +240,7 @@ export default function BadgesGrid({
 
     if (categoryFilter) {
       result = result.filter(
-        badge => getBadgeCategory(badge.badge.code) === categoryFilter
+        badge => getCategoryForBadge(badge) === categoryFilter
       )
     }
 
@@ -210,7 +275,7 @@ export default function BadgesGrid({
   const groupedBadges = useMemo(() => {
     const groups: Record<string, BadgeItem[]> = {}
     filteredBadges.forEach(badge => {
-      const category = getBadgeCategory(badge.badge.code)
+      const category = getCategoryForBadge(badge)
       if (!groups[category]) groups[category] = []
       groups[category].push(badge)
     })
@@ -459,7 +524,7 @@ export default function BadgesGrid({
                   </button>
                   {CATEGORY_OPTIONS.map(category => {
                     const count = badges.filter(
-                      b => getBadgeCategory(b.badge.code) === category
+                      b => getCategoryForBadge(b) === category
                     ).length
                     return (
                       <button
@@ -715,33 +780,35 @@ export default function BadgesGrid({
                       >
                         <div className="relative aspect-square">
                           <div
-                            className={`w-20 h-20 rounded-full mx-auto mt-4 ${colors.bg} p-2 flex items-center justify-center group-hover:scale-110 transition-transform`}
+                            className={`absolute inset-2 md:inset-3 rounded-full ${colors.bg} p-1 md:p-2 flex items-center justify-center transition-transform group-hover:scale-105`}
                           >
                             {isCompletionBadge && hasStreakCount ? (
-                              <StreakBadgeWithOverlay
-                                imagePath={imagePath}
-                                badgeName={item.badge.name}
-                                streakCount={streakCount}
-                                size="lg"
-                                fallbackIcon={item.badge.icon}
-                                type={completionType}
-                              />
+                                <StreakBadgeWithOverlay
+                                  imagePath={imagePath}
+                                  badgeName={item.badge.name}
+                                  streakCount={streakCount}
+                                  size="xl"
+                                  fallbackIcon={item.badge.icon}
+                                  type={completionType}
+                                />
                             ) : (
-                              <Image
-                                src={imagePath}
-                                alt={item.badge.name}
-                                width={80}
-                                height={80}
-                                className="w-full h-full object-contain"
-                                onError={e => {
-                                  const target = e.target as HTMLImageElement
-                                  target.style.display = 'none'
-                                  const parent = target.parentElement
-                                  if (parent) {
-                                    parent.innerHTML = `<span class="text-3xl">${item.badge.icon}</span>`
-                                  }
-                                }}
-                              />
+                              <div className="relative w-full h-full">
+                                <Image
+                                  src={imagePath}
+                                  alt={item.badge.name}
+                                  fill
+                                  sizes="(max-width: 768px) 40vw, (max-width: 1200px) 25vw, 15vw"
+                                  className="object-contain"
+                                  onError={e => {
+                                    const target = e.target as HTMLImageElement
+                                    target.style.display = 'none'
+                                    const parent = target.parentElement
+                                    if (parent) {
+                                      parent.innerHTML = `<span class="text-3xl">${item.badge.icon}</span>`
+                                    }
+                                  }}
+                                />
+                              </div>
                             )}
                           </div>
 
@@ -774,7 +841,7 @@ export default function BadgesGrid({
                               <h4
                                 className={`font-bold text-xs ${colors.text} mb-1 leading-tight text-center`}
                               >
-                                {item.badge.name}
+                                {getDisplayBadgeName(item)}
                               </h4>
                               <p className="text-[10px] text-gray-500 uppercase tracking-wider">
                                 {item.badge.rarity}
@@ -793,10 +860,10 @@ export default function BadgesGrid({
                           </button>
                         </div>
 
-                        <div className="absolute inset-0 bg-black/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                        <div className="absolute inset-0 bg-black/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3 pointer-events-none">
                           <div className="text-center">
                             <p className="text-xs text-gray-300 mb-1">
-                              {item.badge.description}
+                              {getDisplayBadgeDescription(item)}
                             </p>
                             <p className="text-[10px] text-gray-500">
                               Earned{' '}

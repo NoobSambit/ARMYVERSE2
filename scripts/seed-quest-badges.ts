@@ -1,5 +1,8 @@
+import * as dotenv from 'dotenv'
 import { connect } from '@/lib/db/mongoose'
 import { Badge } from '@/lib/models/Badge'
+
+dotenv.config({ path: '.env.local' })
 
 async function seedQuestBadges() {
   await connect()

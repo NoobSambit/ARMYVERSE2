@@ -31,10 +31,12 @@ const userBadgeSchema = new mongoose.Schema<IUserBadge>({
   }
 })
 
-// Compound index: prevent duplicate badge awards
-// Includes metadata.completionStreakCount to allow multiple completion badges (with different streak counts)
-// while getting unique constraint for standard badges (where streak count is null)
-userBadgeSchema.index({ userId: 1, badgeId: 1, 'metadata.completionStreakCount': 1 }, { unique: true })
+// Compound index: prevent duplicate badge awards.
+// Include streakCount/completionStreakCount so streak badges can repeat per streak count.
+userBadgeSchema.index(
+  { userId: 1, badgeId: 1, 'metadata.completionStreakCount': 1, 'metadata.streakCount': 1 },
+  { unique: true }
+)
 userBadgeSchema.index({ userId: 1, earnedAt: -1 })
 
 export const UserBadge = mongoose.models.UserBadge || mongoose.model<IUserBadge>('UserBadge', userBadgeSchema)

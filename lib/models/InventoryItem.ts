@@ -7,12 +7,29 @@ const inventoryItemSchema = new mongoose.Schema({
   source: {
     type: {
       type: String,
-      enum: ['quiz', 'quest_streaming', 'quest_quiz', 'craft', 'event', 'daily_milestone', 'weekly_milestone', 'borarush'],
+      enum: [
+        'quiz',
+        'quest_streaming',
+        'quest_quiz',
+        'craft',
+        'event',
+        'mastery_level',
+        'daily_completion',
+        'weekly_completion',
+        'daily_milestone',
+        'weekly_milestone',
+        'borarush'
+      ],
       required: true,
       default: 'quiz'
     },
     sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuizSession' },
-    questCode: { type: String }
+    questCode: { type: String },
+    totalStreak: { type: Number },
+    milestoneNumber: { type: Number },
+    masteryKind: { type: String },
+    masteryKey: { type: String },
+    masteryLevel: { type: Number }
   }
 })
 

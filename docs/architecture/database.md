@@ -23,6 +23,8 @@ Complete MongoDB database schema for ARMYVERSE.
 | **badges** | Badge definitions | code | → user badges |
 | **userbadges** | Earned badges | userId, badgeCode | → users, badges |
 | **masteryprogress** | Member/era XP | userId | → users |
+| **masteryrewardledgers** | Mastery milestone claims | userId, kind, key, milestone | → users |
+| **masterylevelrewardledgers** | Mastery level-up photocard awards | userId, kind, key, level | → users |
 | **leaderboardentries** | Weekly rankings | userId, weekStart | → users |
 | **droppools** | Legacy drop pools (unused) | active | → fandom_gallery_images |
 | **kworbsnapshots** | Spotify analytics | date | (none) |
@@ -346,9 +348,14 @@ Complete MongoDB database schema for ARMYVERSE.
   acquiredAt: Date
 
   source: {
-    type: 'quiz' | 'quest_streaming' | 'quest_quiz' | 'craft' | 'event' | 'daily_milestone' | 'weekly_milestone'
+    type: 'quiz' | 'quest_streaming' | 'quest_quiz' | 'craft' | 'event' | 'mastery_level' | 'daily_completion' | 'weekly_completion' | 'daily_milestone' | 'weekly_milestone' | 'borarush'
     sessionId?: ObjectId
     questCode?: string
+    totalStreak?: number
+    milestoneNumber?: number
+    masteryKind?: 'member' | 'era'
+    masteryKey?: string
+    masteryLevel?: number
   }
 }
 ```
@@ -614,6 +621,54 @@ Complete MongoDB database schema for ARMYVERSE.
 
 **Indexes:**
 - Compound: `[userId, kind, key]` (unique)
+
+---
+
+### MasteryRewardLedger
+
+**Purpose**: Audit log for mastery milestone claims and badges
+
+**Schema:**
+```typescript
+{
+  userId: string
+  kind: 'member' | 'era'
+  key: string
+  milestone: number
+  rewards: { xp: number; dust: number }
+  badgeCode: string
+  badgeRarity: 'common' | 'rare' | 'epic' | 'legendary'
+  extraBadges?: Array<{ code: string; rarity: 'common' | 'rare' | 'epic' | 'legendary' }>
+  source: string
+  createdAt: Date
+}
+```
+
+**Indexes:**
+- Compound: `[userId, kind, key, milestone]` (unique)
+- `[userId, badgeCode]`
+
+---
+
+### MasteryLevelRewardLedger
+
+**Purpose**: Audit log for mastery level-up photocard rewards
+
+**Schema:**
+```typescript
+{
+  userId: string
+  kind: 'member' | 'era'
+  key: string
+  level: number
+  cardId?: ObjectId
+  awardedAt: Date
+}
+```
+
+**Indexes:**
+- Compound: `[userId, kind, key, level]` (unique)
+- `[userId, awardedAt]`
 
 ---
 
