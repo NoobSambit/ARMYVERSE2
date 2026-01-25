@@ -356,10 +356,11 @@ export default function ProfileModal({ trigger, defaultTab = 'profile' }: Profil
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 sm:p-3 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl sm:rounded-2xl transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-red-600 text-white font-bold text-xs sm:text-sm hover:bg-red-700 transition-colors shadow-lg shadow-red-900/20"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span>LOGOUT</span>
                 </button>
 
                 <div className="hidden sm:block w-px h-8 bg-white/10 mx-1" />

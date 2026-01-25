@@ -2,9 +2,9 @@ import { Monitor, TrendingUp } from 'lucide-react'
 
 export default async function StatsWidget() {
   let stats = {
-    totalTracks: 350,
-    totalUsers: 2500000,
-    boralandPlayers: 120000
+    totalTracks: 0,
+    totalUsers: 0,
+    boralandPlayers: 0
   }
 
   try {
@@ -44,7 +44,7 @@ export default async function StatsWidget() {
       <div className="space-y-3 sm:space-y-4">
         <div className="p-3 sm:p-4 rounded-xl bg-secondary/50 border border-glass-border">
           <p className="text-[10px] sm:text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Total Tracks</p>
-          <p className="text-xl sm:text-2xl font-bold text-white">{stats.totalTracks}+</p>
+          <p className="text-xl sm:text-2xl font-bold text-white">{stats.totalTracks.toLocaleString()}</p>
           <div className="w-full bg-gray-700 h-1 mt-1.5 sm:mt-2 rounded-full overflow-hidden">
             <div className="bg-primary h-full w-[85%]"></div>
           </div>

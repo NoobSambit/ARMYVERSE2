@@ -1,19 +1,21 @@
 import Link from 'next/link'
 import { LogIn, Sparkles } from 'lucide-react'
+import { connect } from '@/lib/db/mongoose'
+import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
+import { getPeriodKeys } from '@/lib/game/leaderboard'
 
 export default async function BoralandTeaser() {
-  let topPlayer = '@Chimmy95'
+  let topPlayer = 'No weekly top yet'
 
   try {
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/game/leaderboard?limit=1`
-    const res = await fetch(url, { cache: 'no-store' })
-
-    if (res.ok) {
-      const data = await res.json()
-      if (data.entries && data.entries.length > 0) {
-        const top = data.entries[0]
-        topPlayer = top.displayName ? `@${top.displayName}` : 'Anonymous'
-      }
+    await connect()
+    const { periodKey } = getPeriodKeys('weekly')
+    const top = await LeaderboardEntry.findOne({ periodKey })
+      .sort({ score: -1, lastPlayedAt: -1, _id: 1 })
+      .lean<{ displayName?: string } | null>()
+    if (top) {
+      const name = (top.displayName || '').trim()
+      topPlayer = name ? (name.startsWith('@') ? name : `@${name}`) : 'Anonymous'
     }
   } catch (error) {
     console.error('Failed to fetch leaderboard:', error)

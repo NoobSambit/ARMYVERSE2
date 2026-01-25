@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     siteName: 'ARMYVERSE',
     images: [
       {
-        url: 'https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png',
+        url: 'https://res.cloudinary.com/dacgtjw7w/image/upload/v1769344088/armyland_poster_i9nkul.png',
         width: 1200,
         height: 630,
         alt: 'ARMYVERSE',
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ARMYVERSE — BTS Trends, AI Playlists & Spotify Stats',
     description: 'Explore live BTS trends across Spotify and YouTube, create AI-powered playlists, and track your Spotify listening stats. Made for ARMY.',
-    images: ['https://res.cloudinary.com/dacgtjw7w/image/upload/v1755014757/ChatGPT_Image_Aug_12_2025_09_28_26_PM_rewlxg.png'],
+    images: ['https://res.cloudinary.com/dacgtjw7w/image/upload/v1769344088/armyland_poster_i9nkul.png'],
   },
   robots: {
     index: true,
