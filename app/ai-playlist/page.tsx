@@ -27,13 +27,16 @@ import {
   X,
   ExternalLink,
   HelpCircle,
+  MapPin,
 } from 'lucide-react'
 import { ToastProvider, useToast } from '@/components/ui/Toast'
+import GuidedTour, { RestartTourButton } from '@/components/ui/GuidedTour'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
 import { useAuth } from '@/contexts/AuthContext'
 import SeedTracksModal from '@/components/ai-playlist/SeedTracksModal'
 import SharePlaylistModal from '@/components/ai-playlist/SharePlaylistModal'
 import SpotifyBYOGuideModal from '@/components/playlist/SpotifyBYOGuideModal'
+import { AI_PLAYLIST_TOUR_ID, aiPlaylistTourSteps } from '@/lib/tours/aiPlaylistTour'
 import dynamic from 'next/dynamic'
 
 // Lazy load heavy components
@@ -712,7 +715,7 @@ function AIPlaylistContent() {
         showToast(
           'warning',
           data.fallbackReason ||
-            'Playlist created in the Armyverse Spotify account. Connect Spotify to export to your own account.'
+          'Playlist created in the Armyverse Spotify account. Connect Spotify to export to your own account.'
         )
       } else {
         showToast('success', 'Playlist exported to Spotify!')
@@ -802,7 +805,7 @@ function AIPlaylistContent() {
 
       {/* Main Content */}
       <main className="relative z-10 pt-16 sm:pt-20 sm:pt-24 pb-12 sm:pb-16 pb-20 px-3 sm:px-4 md:px-6 lg:px-8 max-w-[1600px] mx-auto">
-        <header className="mb-4 sm:mb-6 md:mb-8 flex flex-col gap-3 sm:gap-4">
+        <header data-tour="ai-header" className="mb-4 sm:mb-6 md:mb-8 flex flex-col gap-3 sm:gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-1 sm:mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-gray-400">
               AI Playlist Architect
@@ -814,6 +817,7 @@ function AIPlaylistContent() {
           </div>
           <div className="flex gap-2 sm:gap-3 flex-wrap">
             <button
+              data-tour="personality-quiz-btn"
               onClick={() => setShowPersonalityQuiz(true)}
               className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl glass-panel text-xs sm:text-sm font-medium text-white hover:bg-white/10 transition-colors flex items-center gap-1.5 sm:gap-2"
             >
@@ -833,7 +837,7 @@ function AIPlaylistContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 items-start">
           <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-6 auto-rows-min gap-2 sm:gap-4">
             {/* Core Vibe & Atmosphere */}
-            <div className="bento-cell md:col-span-6 glass-panel rounded-3xl p-3 sm:p-4 md:p-6 relative overflow-hidden group">
+            <div data-tour="core-vibe" className="bento-cell md:col-span-6 glass-panel rounded-3xl p-3 sm:p-4 md:p-6 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Sparkles className="text-purple-500 w-16 sm:w-24 md:w-32 h-16 sm:h-24 md:h-32" />
               </div>
@@ -873,7 +877,7 @@ function AIPlaylistContent() {
                       <Wand2 className="text-xs sm:text-sm text-white w-3 sm:w-4 h-3 sm:h-4" />
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  <div data-tour="quick-starts" className="flex flex-wrap gap-1.5 sm:gap-2">
                     <span className="text-[10px] sm:text-xs text-gray-500 py-1">
                       Quick Starts:
                     </span>
@@ -887,7 +891,7 @@ function AIPlaylistContent() {
                       </button>
                     ))}
                   </div>
-                  <div className="pt-1.5 sm:pt-2">
+                  <div data-tour="mood-pills" className="pt-1.5 sm:pt-2">
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1 sm:gap-2">
                       {MOOD_OPTIONS.map(mood => {
                         const isSelected = selectedMoods.includes(mood.id)
@@ -904,11 +908,10 @@ function AIPlaylistContent() {
                           <button
                             key={mood.id}
                             onClick={() => toggleMood(mood.id)}
-                            className={`h-8 sm:h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-${mood.color}-600/20 hover:border-${mood.color}-500 text-[10px] sm:text-xs font-medium transition-all flex items-center justify-center gap-0.5 sm:gap-1 group/pill ${
-                              isSelected
-                                ? `bg-${mood.color}-900/40 border-${mood.color}-500/50 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]`
-                                : 'text-gray-300 hover:text-white'
-                            }`}
+                            className={`h-8 sm:h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-${mood.color}-600/20 hover:border-${mood.color}-500 text-[10px] sm:text-xs font-medium transition-all flex items-center justify-center gap-0.5 sm:gap-1 group/pill ${isSelected
+                              ? `bg-${mood.color}-900/40 border-${mood.color}-500/50 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]`
+                              : 'text-gray-300 hover:text-white'
+                              }`}
                           >
                             <span
                               className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full ${colorMap[mood.color]} group-hover/pill:animate-pulse`}
@@ -924,7 +927,7 @@ function AIPlaylistContent() {
             </div>
 
             {/* Members & Eras */}
-            <div className="bento-cell md:col-span-3 glass-panel rounded-3xl p-3 sm:p-5 flex flex-col gap-2 sm:gap-4">
+            <div data-tour="members-eras" className="bento-cell md:col-span-3 glass-panel rounded-3xl p-3 sm:p-5 flex flex-col gap-2 sm:gap-4">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] sm:text-xs font-bold tracking-widest text-gray-400 uppercase">
                   Members & Eras
@@ -979,7 +982,7 @@ function AIPlaylistContent() {
             </div>
 
             {/* Format */}
-            <div className="bento-cell md:col-span-3 glass-panel rounded-3xl p-3 sm:p-5 flex flex-col justify-between">
+            <div data-tour="format-section" className="bento-cell md:col-span-3 glass-panel rounded-3xl p-3 sm:p-5 flex flex-col justify-between">
               <div className="flex justify-between items-center mb-2 sm:mb-3">
                 <label className="text-[10px] sm:text-xs font-bold tracking-widest text-gray-400 uppercase">
                   Format
@@ -1008,11 +1011,10 @@ function AIPlaylistContent() {
                   <button
                     key={fmt.value}
                     onClick={() => setFormat(fmt.value)}
-                    className={`py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-medium border transition-all ${
-                      format === fmt.value
-                        ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20'
-                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border-transparent'
-                    }`}
+                    className={`py-1 sm:py-1.5 rounded-xl text-[10px] sm:text-xs font-medium border transition-all ${format === fmt.value
+                      ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20'
+                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border-transparent'
+                      }`}
                   >
                     {fmt.label}
                   </button>
@@ -1021,7 +1023,7 @@ function AIPlaylistContent() {
             </div>
 
             {/* Genre Mix - Updated with BTS genres */}
-            <div className="bento-cell md:col-span-2 glass-panel rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
+            <div data-tour="genre-mix" className="bento-cell md:col-span-2 glass-panel rounded-3xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none"></div>
               <label className="absolute top-4 left-4 text-xs font-bold tracking-widest text-gray-400 uppercase z-10">
                 Genre Mix
@@ -1092,7 +1094,7 @@ function AIPlaylistContent() {
             </div>
 
             {/* Seed Tracks */}
-            <div className="bento-cell md:col-span-4 glass-panel rounded-3xl p-5 relative">
+            <div data-tour="seed-tracks" className="bento-cell md:col-span-4 glass-panel rounded-3xl p-5 relative">
               <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">
                 Seed Tracks
               </label>
@@ -1150,7 +1152,7 @@ function AIPlaylistContent() {
             </div>
 
             {/* Smart Filters */}
-            <div className="bento-cell md:col-span-3 glass-panel rounded-3xl p-5">
+            <div data-tour="smart-filters" className="bento-cell md:col-span-3 glass-panel rounded-3xl p-5">
               <div
                 className="flex justify-between items-center mb-4 cursor-pointer"
                 onClick={() => setShowFilters(!showFilters)}
@@ -1206,7 +1208,7 @@ function AIPlaylistContent() {
             </div>
 
             {/* Flow */}
-            <div className="bento-cell md:col-span-3 grid grid-rows-2 gap-4">
+            <div data-tour="flow-section" className="bento-cell md:col-span-3 grid grid-rows-2 gap-4">
               <div className="glass-panel rounded-3xl p-4 flex items-center justify-between relative">
                 <div className="flex flex-col flex-1">
                   <label className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
@@ -1285,11 +1287,10 @@ function AIPlaylistContent() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => setLyricalMatch(!lyricalMatch)}
-                  className={`glass-panel rounded-3xl p-3 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
-                    lyricalMatch
-                      ? 'bg-purple-600/20 border border-purple-500/50'
-                      : 'hover:bg-white/5'
-                  }`}
+                  className={`glass-panel rounded-3xl p-3 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${lyricalMatch
+                    ? 'bg-purple-600/20 border border-purple-500/50'
+                    : 'hover:bg-white/5'
+                    }`}
                 >
                   <Mic2
                     className={`text-xl w-5 h-5 ${lyricalMatch ? 'text-purple-400' : 'text-gray-400'}`}
@@ -1317,11 +1318,10 @@ function AIPlaylistContent() {
                       <button
                         key={ctx.value}
                         onClick={() => setContext(ctx.value)}
-                        className={`w-full px-4 py-2 text-left hover:bg-white/10 transition-colors ${
-                          context === ctx.value
-                            ? 'bg-purple-600/20 text-purple-300'
-                            : 'text-gray-300'
-                        }`}
+                        className={`w-full px-4 py-2 text-left hover:bg-white/10 transition-colors ${context === ctx.value
+                          ? 'bg-purple-600/20 text-purple-300'
+                          : 'text-gray-300'
+                          }`}
                       >
                         <span className="text-xs font-medium">{ctx.label}</span>
                       </button>
@@ -1337,6 +1337,7 @@ function AIPlaylistContent() {
             <div className="glass-panel rounded-3xl p-3 sm:p-4 md:p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 -mt-6 sm:-mt-10 -mr-6 sm:-mr-10 w-20 sm:w-32 h-20 sm:h-32 bg-purple-500 blur-[40px sm:blur-[60px]] opacity-30"></div>
               <button
+                data-tour="generate-button"
                 className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-bold text-base sm:text-lg shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 group disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 onClick={generatePlaylist}
                 disabled={isGenerating || !prompt.trim()}
@@ -1353,7 +1354,7 @@ function AIPlaylistContent() {
                   </>
                 )}
               </button>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div data-tour="action-buttons" className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <button
                   onClick={surpriseMe}
                   className="py-2 sm:py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[10px] sm:text-xs font-medium border border-white/10 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-gray-300 hover:text-white"
@@ -1449,7 +1450,7 @@ function AIPlaylistContent() {
               </div>
             </div>
 
-            <div className="glass-panel rounded-3xl p-5 max-h-64 overflow-y-auto">
+            <div data-tour="history-panel" className="glass-panel rounded-3xl p-5 max-h-64 overflow-y-auto">
               <div className="flex gap-4 mb-4 border-b border-white/10 pb-2">
                 <button
                   onClick={() => setHistoryTab('recent')}
@@ -1476,11 +1477,10 @@ function AIPlaylistContent() {
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${
-                              hist.spotifyPlaylistUrl
-                                ? 'bg-gradient-to-br from-green-500 to-green-600'
-                                : 'bg-gradient-to-br from-indigo-500 to-purple-500'
-                            }`}
+                            className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${hist.spotifyPlaylistUrl
+                              ? 'bg-gradient-to-br from-green-500 to-green-600'
+                              : 'bg-gradient-to-br from-indigo-500 to-purple-500'
+                              }`}
                           >
                             {hist.spotifyPlaylistUrl
                               ? '✓'
@@ -1619,11 +1619,10 @@ function AIPlaylistContent() {
                       <button
                         onClick={exportToSpotify}
                         disabled={isExporting}
-                        className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 ${
-                          currentSpotifyUrl
-                            ? 'bg-[#1DB954] text-white hover:bg-[#1ed760]'
-                            : 'bg-white text-black hover:scale-105'
-                        } ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
+                        className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 ${currentSpotifyUrl
+                          ? 'bg-[#1DB954] text-white hover:bg-[#1ed760]'
+                          : 'bg-white text-black hover:scale-105'
+                          } ${isExporting ? 'opacity-70 cursor-wait' : ''}`}
                       >
                         {isExporting ? (
                           <>
@@ -1658,11 +1657,10 @@ function AIPlaylistContent() {
                       </button>
                       <button
                         onClick={() => setShowShareModal(true)}
-                        className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${
-                          currentSpotifyUrl
-                            ? 'border-green-500/50 bg-green-500/10 hover:bg-green-500/20'
-                            : 'border-white/20 hover:bg-white/10'
-                        }`}
+                        className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${currentSpotifyUrl
+                          ? 'border-green-500/50 bg-green-500/10 hover:bg-green-500/20'
+                          : 'border-white/20 hover:bg-white/10'
+                          }`}
                         title={
                           currentSpotifyUrl
                             ? 'Share playlist link'
@@ -1769,6 +1767,21 @@ function AIPlaylistContent() {
         isOpen={showBYOGuide}
         onClose={() => setShowBYOGuide(false)}
       />
+
+      {/* Guided Tour */}
+      <GuidedTour
+        tourId={AI_PLAYLIST_TOUR_ID}
+        steps={aiPlaylistTourSteps}
+        showOnFirstVisit={true}
+      />
+
+      {/* Floating Tour Restart Button */}
+      <div className="fixed bottom-4 left-4 z-40">
+        <RestartTourButton
+          tourId={AI_PLAYLIST_TOUR_ID}
+          className="px-3 py-2 rounded-xl bg-black/60 backdrop-blur border border-white/10 hover:bg-white/10 transition-all shadow-lg"
+        />
+      </div>
 
       {showTemplateGallery && (
         <TemplateGallery

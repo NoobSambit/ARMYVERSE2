@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
-import { Search, AlertCircle, CheckCircle, Music, GripVertical, Trash2, ChevronDown, Flag, Info, Loader2, Hash, Zap, Clock, Edit3, ExternalLink, Share2 } from 'lucide-react'
+import { Search, AlertCircle, CheckCircle, Music, GripVertical, Trash2, ChevronDown, Flag, Info, Loader2, Hash, Zap, Clock, Edit3, ExternalLink, Share2, SlidersHorizontal } from 'lucide-react'
 
 interface Props {
   focusResult: SongDoc[] | null
@@ -18,6 +18,7 @@ interface Props {
   onOpenShareModal: () => void
   handleSaveToSpotify: (songs?: SongDoc[]) => Promise<void>
   removeFromFocusResult: (index: number) => void
+  onFocusTrackChange?: (track: SongDoc | null) => void
   focusDraggedIndex: number | null
   focusDragOverIndex: number | null
   handleFocusDragStart: (index: number) => void
@@ -26,49 +27,23 @@ interface Props {
   handleFocusDragEnd: () => void
 }
 
-type FillMode = 'smartMix' | 'chronological' | 'random'
+type AlbumOption = {
+  name: string
+  artist: string
+  coverImage?: string | null
+  releaseDate?: string | null
+}
 
-const ERAS = [
-  // Group Albums
-  { label: 'Proof', value: 'proof', color: 'bg-purple-600', category: 'Group' },
-  { label: 'BE', value: 'be', color: 'bg-blue-500', category: 'Group' },
-  { label: 'Map of the Soul: 7', value: 'mots7', color: 'bg-purple-500', category: 'Group' },
-  { label: 'Map of the Soul: Persona', value: 'motspersona', color: 'bg-pink-400', category: 'Group' },
-  { label: 'Love Yourself: Answer', value: 'lyanswer', color: 'bg-rose-500', category: 'Group' },
-  { label: 'Love Yourself: Tear', value: 'lytear', color: 'bg-rose-600', category: 'Group' },
-  { label: 'Love Yourself: Her', value: 'lyher', color: 'bg-rose-400', category: 'Group' },
-  { label: 'Wings', value: 'wings', color: 'bg-pink-500', category: 'Group' },
-  { label: 'You Never Walk Alone', value: 'ynwa', color: 'bg-pink-600', category: 'Group' },
-  { label: 'The Most Beautiful Moment in Life: Young Forever', value: 'hyyh', color: 'bg-orange-400', category: 'Group' },
-  { label: 'Dark & Wild', value: 'darkwild', color: 'bg-gray-700', category: 'Group' },
-  { label: 'Skool Luv Affair', value: 'skoolluv', color: 'bg-red-500', category: 'Group' },
-  { label: '2 Cool 4 Skool', value: '2cool4skool', color: 'bg-red-600', category: 'Group' },
-
-  // Solo Albums - Jung Kook
-  { label: 'GOLDEN (JK)', value: 'golden', color: 'bg-yellow-500', category: 'Jung Kook' },
-
-  // Solo Albums - Jimin
-  { label: 'FACE (Jimin)', value: 'face', color: 'bg-blue-400', category: 'Jimin' },
-  { label: 'MUSE (Jimin)', value: 'muse', color: 'bg-cyan-400', category: 'Jimin' },
-
-  // Solo Albums - V
-  { label: 'Layover (V)', value: 'layover', color: 'bg-green-500', category: 'V' },
-
-  // Solo Albums - RM
-  { label: 'Indigo (RM)', value: 'indigo', color: 'bg-indigo-500', category: 'RM' },
-  { label: 'Right Place, Wrong Person (RM)', value: 'rpwp', color: 'bg-indigo-600', category: 'RM' },
-
-  // Solo Albums - j-hope
-  { label: 'Jack In The Box (j-hope)', value: 'jitb', color: 'bg-orange-500', category: 'j-hope' },
-  { label: 'Hope World (j-hope)', value: 'hopeworld', color: 'bg-orange-300', category: 'j-hope' },
-
-  // Solo Albums - Agust D / SUGA
-  { label: 'D-DAY (Agust D)', value: 'dday', color: 'bg-slate-700', category: 'SUGA' },
-  { label: 'D-2 (Agust D)', value: 'd2', color: 'bg-slate-600', category: 'SUGA' },
-  { label: 'Agust D', value: 'agustd', color: 'bg-slate-500', category: 'SUGA' },
-
-  // Solo Albums - Jin
-  { label: 'The Astronaut (Jin)', value: 'astronaut', color: 'bg-purple-400', category: 'Jin' }
+const ARTIST_ORDER = [
+  'BTS',
+  'Jung Kook',
+  'Jimin',
+  'V',
+  'RM',
+  'j-hope',
+  'SUGA',
+  'Agust D',
+  'Jin',
 ]
 
 export default function StreamingFocusMode(props: Props) {
@@ -80,15 +55,18 @@ export default function StreamingFocusMode(props: Props) {
   const [focusTrackId, setFocusTrackId] = useState('')
   const [focusSearch, setFocusSearch] = useState('')
   const [gapRange, setGapRange] = useState([2, 4])
-  const [fillMode, setFillMode] = useState<FillMode>('smartMix')
-  const [selectedEras, setSelectedEras] = useState<string[]>([])
-  const [autoModeOpen, setAutoModeOpen] = useState(true)
-  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [randomEnabled, setRandomEnabled] = useState(false)
+  const [selectedAlbums, setSelectedAlbums] = useState<string[]>([])
+  const [albums, setAlbums] = useState<AlbumOption[]>([])
+  const [albumSearch, setAlbumSearch] = useState('')
+  const [albumFilter, setAlbumFilter] = useState('All')
+  const [albumsExpanded, setAlbumsExpanded] = useState(true)
+  const [albumLoading, setAlbumLoading] = useState(true)
+  const [albumError, setAlbumError] = useState<string | null>(null)
+  const [advancedEnabled, setAdvancedEnabled] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [erasExpanded, setErasExpanded] = useState(false)
 
   // Manual mode state
-  const [gapMode, setGapMode] = useState<'auto' | 'manual'>('auto')
   const [manualGapCount, setManualGapCount] = useState(3)
   const [manualGapRange, setManualGapRange] = useState([2, 4])
   const [manualGapMode, setManualGapMode] = useState<'fixed' | 'dynamic'>('dynamic')
@@ -118,10 +96,66 @@ export default function StreamingFocusMode(props: Props) {
     ).slice(0, 30)
   }, [manualPoolSearch, songs])
 
-  const toggleEra = (value: string) => {
-    setSelectedEras(prev =>
+  useEffect(() => {
+    let isMounted = true
+    const loadAlbums = async () => {
+      setAlbumLoading(true)
+      setAlbumError(null)
+      try {
+        const res = await fetch('/api/albums?btsFamily=true')
+        if (!res.ok) throw new Error('Failed to load albums')
+        const data = await res.json()
+        if (!isMounted) return
+        const normalized: AlbumOption[] = (data?.albums || []).map((album: any) => ({
+          name: album.name,
+          artist: album.artist,
+          coverImage: album.coverImage ?? null,
+          releaseDate: album.releaseDate ?? null,
+        }))
+        setAlbums(normalized)
+      } catch (error) {
+        if (!isMounted) return
+        setAlbumError('Unable to load albums right now.')
+      } finally {
+        if (isMounted) setAlbumLoading(false)
+      }
+    }
+
+    loadAlbums()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const artistOptions = useMemo(() => {
+    const orderMap = new Map(ARTIST_ORDER.map((name, index) => [name, index]))
+    const uniqueArtists = Array.from(
+      new Set(albums.map(album => album.artist).filter(Boolean))
+    )
+    uniqueArtists.sort((a, b) => {
+      const aOrder = orderMap.get(a)
+      const bOrder = orderMap.get(b)
+      if (aOrder !== undefined || bOrder !== undefined) {
+        return (aOrder ?? 999) - (bOrder ?? 999)
+      }
+      return a.localeCompare(b)
+    })
+    return ['All', ...uniqueArtists]
+  }, [albums])
+
+  const filteredAlbums = useMemo(() => {
+    const q = albumSearch.trim().toLowerCase()
+    return albums.filter(album => {
+      if (albumFilter !== 'All' && album.artist !== albumFilter) return false
+      if (!q) return true
+      return `${album.name} ${album.artist}`.toLowerCase().includes(q)
+    })
+  }, [albums, albumFilter, albumSearch])
+
+  const toggleAlbum = (value: string) => {
+    setSelectedAlbums(prev =>
       prev.includes(value)
-        ? prev.filter(e => e !== value)
+        ? prev.filter(album => album !== value)
         : [...prev, value]
     )
   }
@@ -147,6 +181,7 @@ export default function StreamingFocusMode(props: Props) {
 
     const parsedLength = Number.parseInt(targetLengthInput, 10)
     const totalLength = Number.isFinite(parsedLength) ? Math.max(1, parsedLength) : 60
+    const gapMode = advancedEnabled ? 'manual' : 'auto'
     const payload: any = {
       mode: gapMode,
       primaryTrackId: focusTrackId,
@@ -154,12 +189,15 @@ export default function StreamingFocusMode(props: Props) {
     }
 
     if (gapMode === 'auto') {
-      payload.auto = {
+      const autoPayload: any = {
         minGap: gapRange[0],
         maxGap: gapRange[1],
-        fillMode: fillMode === 'smartMix' ? 'random' : fillMode,
-        selectedEras
+        fillMode: randomEnabled ? 'random' : 'album',
       }
+      if (!randomEnabled && selectedAlbums.length > 0) {
+        autoPayload.albums = selectedAlbums
+      }
+      payload.auto = autoPayload
     } else {
       payload.manual = {
         gapMode: manualGapMode,
@@ -207,7 +245,7 @@ export default function StreamingFocusMode(props: Props) {
       <section className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3 sm:gap-4">
         <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border rounded-2xl p-3 sm:p-5 flex flex-col gap-3 sm:gap-5 shadow-xl shadow-black/20">
           {/* Streaming Goals Widget */}
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div data-tour="streaming-goals" className="flex flex-col gap-3 sm:gap-4">
             <div className="flex items-center justify-between">
               <h3 className="text-white text-base sm:text-lg font-bold flex items-center gap-2">
                 <Flag className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
@@ -228,8 +266,6 @@ export default function StreamingFocusMode(props: Props) {
                     className="w-full bg-background-dark border border-border-dark text-white text-xs sm:text-sm rounded-xl h-9 sm:h-10 px-2 sm:px-3 focus:ring-1 focus:ring-primary focus:border-primary appearance-none cursor-pointer"
                   >
                     <option value="spotify">Spotify</option>
-                    <option value="apple">Apple Music</option>
-                    <option value="youtube">YouTube Music</option>
                   </select>
                   <ChevronDown className="absolute right-2.5 sm:right-3 top-2.5 text-text-muted pointer-events-none w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 </div>
@@ -277,7 +313,7 @@ export default function StreamingFocusMode(props: Props) {
           <hr className="border-border-dark" />
 
           {/* Focus Track Section */}
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div data-tour="focus-track" className="flex flex-col gap-3 sm:gap-4">
             <h3 className="text-white text-base sm:text-lg font-bold">Focus Track</h3>
 
             {/* Selected Track Display */}
@@ -306,7 +342,10 @@ export default function StreamingFocusMode(props: Props) {
                   </div>
                 </div>
                 <button
-                  onClick={() => setFocusTrackId('')}
+                  onClick={() => {
+                    setFocusTrackId('')
+                    props.onFocusTrackChange?.(null)
+                  }}
                   className="text-text-muted hover:text-white z-10"
                 >
                   <svg className="w-4 sm:w-5 h-4 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,6 +377,7 @@ export default function StreamingFocusMode(props: Props) {
                     onClick={() => {
                       setFocusTrackId(track.spotifyId)
                       setFocusSearch('')
+                      props.onFocusTrackChange?.(track)
                     }}
                     className="flex items-center w-full p-2 rounded-xl hover:bg-white/10 transition-colors"
                   >
@@ -362,380 +402,440 @@ export default function StreamingFocusMode(props: Props) {
             )}
           </div>
 
-          {/* Accordions for Configuration */}
-          <div className="flex flex-col gap-2 sm:gap-3">
-            {/* Auto Mode Settings */}
-            <details
-              className="group bg-surface-dark rounded-xl border border-border-dark open:border-primary/30 open:ring-1 open:ring-primary/20 transition-all duration-300"
-              open={autoModeOpen}
-              onToggle={(e) => setAutoModeOpen((e.target as HTMLDetailsElement).open)}
-            >
-              <summary className="flex cursor-pointer items-center justify-between px-3 sm:px-4 py-2 sm:py-3 select-none">
-                <div className="flex items-center gap-2 text-white font-medium text-sm">
-                  <Zap className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
-                  <span className="text-xs sm:text-sm">Auto Mode Settings</span>
-                </div>
-                <ChevronDown className="text-text-muted group-open:rotate-180 transition-transform w-4 sm:w-5 h-4 sm:h-5" />
-              </summary>
-              <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-1 flex flex-col gap-3 sm:gap-5">
-                {/* Range Slider */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between text-[10px] sm:text-xs text-text-muted">
-                    <span>Gap Range</span>
-                    <span className="text-white font-mono">{gapRange[0]} - {gapRange[1]} songs</span>
-                  </div>
-                  <div className="flex gap-1.5 sm:gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={gapRange[0]}
-                      onChange={(e) => setGapRange([parseInt(e.target.value), gapRange[1]])}
-                      className="w-12 sm:w-16 bg-background-dark border border-border-dark text-white text-[10px] sm:text-xs rounded-xl px-1.5 sm:px-2 py-1"
-                    />
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      value={gapRange[1]}
-                      onChange={(e) => setGapRange([gapRange[0], parseInt(e.target.value)])}
-                      className="flex-1 h-1.5 bg-border-dark rounded-xl appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 sm:[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-3.5 sm:[&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
-                    />
-                    <input
-                      type="number"
-                      min={gapRange[0]}
-                      max={10}
-                      value={gapRange[1]}
-                      onChange={(e) => setGapRange([gapRange[0], parseInt(e.target.value)])}
-                      className="w-12 sm:w-16 bg-background-dark border border-border-dark text-white text-[10px] sm:text-xs rounded-xl px-1.5 sm:px-2 py-1"
-                    />
-                  </div>
-                </div>
-
-                {/* Fill Mode */}
-                <label className="flex flex-col gap-1 sm:gap-1.5">
-                  <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">Fill Mode</span>
-                  <select
-                    value={fillMode}
-                    onChange={(e) => setFillMode(e.target.value as FillMode)}
-                    className="w-full bg-background-dark border border-border-dark text-white text-xs sm:text-sm rounded-xl h-8 sm:h-9 px-2 sm:px-3"
-                  >
-                    <option value="smartMix">Smart Mix (Era + Mood)</option>
-                    <option value="chronological">Chronological</option>
-                    <option value="random">Random Shuffle</option>
-                  </select>
-                </label>
-
-                {/* Era Chips - Compact Collapsible */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-                      Include Albums/Eras {selectedEras.length > 0 && `(${selectedEras.length})`}
+          {/* Mix Builder */}
+          <div className="flex flex-col gap-2 sm:gap-3 min-w-0">
+            <div data-tour="mix-builder" className="bg-surface-dark rounded-xl border border-border-dark p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 w-full min-w-0 overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-white min-w-0 flex-1">
+                  <SlidersHorizontal className="w-4 sm:w-5 h-4 sm:h-5 text-primary shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm sm:text-base font-semibold truncate">Mix Builder</span>
+                    <span className="text-[10px] sm:text-xs text-text-muted truncate">
+                      Tune auto gaps or enable manual gap songs without leaving this view.
                     </span>
-                    <div className="flex items-center gap-2">
-                      {selectedEras.length > 0 && (
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] sm:text-xs text-text-muted">Manual gaps</span>
+                  <button
+                    type="button"
+                    onClick={() => setAdvancedEnabled(prev => !prev)}
+                    role="switch"
+                    aria-checked={advancedEnabled}
+                    aria-label={
+                      advancedEnabled
+                        ? 'Disable manual gap songs'
+                        : 'Enable manual gap songs'
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${advancedEnabled ? 'bg-primary' : 'bg-border-dark'
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${advancedEnabled ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                    />
+                  </button>
+                  <span
+                    className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full border ${advancedEnabled
+                      ? 'bg-primary/20 text-primary border-primary/30'
+                      : 'bg-white/5 text-text-muted border-border-dark'
+                      }`}
+                  >
+                    {advancedEnabled ? 'Manual' : 'Auto'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:gap-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">
+                    Auto Mix Rules
+                  </span>
+                  <span
+                    className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full border ${advancedEnabled
+                      ? 'bg-yellow-500/10 text-yellow-200 border-yellow-500/30'
+                      : 'bg-green-500/10 text-green-300 border-green-500/30'
+                      }`}
+                  >
+                    {advancedEnabled ? 'Locked' : 'Active'}
+                  </span>
+                </div>
+
+                {advancedEnabled && (
+                  <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 px-2.5 sm:px-3 py-2 rounded-xl text-[10px] sm:text-xs text-yellow-100/90">
+                    <AlertCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-yellow-300 shrink-0" />
+                    <span className="flex-1">Auto mix settings are locked while Manual Gap Songs is on.</span>
+                  </div>
+                )}
+
+                <fieldset
+                  disabled={advancedEnabled}
+                  className={`flex flex-col gap-3 sm:gap-5 w-full min-w-0 ${advancedEnabled ? 'opacity-60' : ''}`}
+                >
+                  {/* Range Slider */}
+                  <div data-tour="gap-range" className="flex flex-col gap-2">
+                    <div className="flex justify-between text-[10px] sm:text-xs text-text-muted">
+                      <span>Gap Range</span>
+                      <span className="text-white font-mono">{gapRange[0]} - {gapRange[1]} songs</span>
+                    </div>
+                    <div className="flex gap-1.5 sm:gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={gapRange[0]}
+                        onChange={(e) => setGapRange([parseInt(e.target.value), gapRange[1]])}
+                        className="w-12 sm:w-16 bg-background-dark border border-border-dark text-white text-[10px] sm:text-xs rounded-xl px-1.5 sm:px-2 py-1"
+                      />
+                      <input
+                        type="range"
+                        min={1}
+                        max={10}
+                        value={gapRange[1]}
+                        onChange={(e) => setGapRange([gapRange[0], parseInt(e.target.value)])}
+                        className="flex-1 h-1.5 bg-border-dark rounded-xl appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 sm:[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-3.5 sm:[&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                      />
+                      <input
+                        type="number"
+                        min={gapRange[0]}
+                        max={10}
+                        value={gapRange[1]}
+                        onChange={(e) => setGapRange([gapRange[0], parseInt(e.target.value)])}
+                        className="w-12 sm:w-16 bg-background-dark border border-border-dark text-white text-[10px] sm:text-xs rounded-xl px-1.5 sm:px-2 py-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 bg-background-dark/50 border border-border-dark rounded-xl px-3 py-2">
+                    <div className="flex flex-col">
+                      <span className="text-xs sm:text-sm font-semibold text-white">Random songs</span>
+                      <span className="text-[10px] sm:text-xs text-text-muted">
+                        Turn on to ignore album filters.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRandomEnabled(prev => !prev)}
+                      role="switch"
+                      aria-checked={randomEnabled}
+                      aria-label={
+                        randomEnabled
+                          ? 'Disable random songs'
+                          : 'Enable random songs'
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${randomEnabled ? 'bg-primary' : 'bg-border-dark'
+                        }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${randomEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Album Selection */}
+                  <div
+                    data-tour="album-select"
+                    className={`flex flex-col gap-2 ${randomEnabled ? 'opacity-60 pointer-events-none' : ''
+                      }`}
+                  >
+                    {randomEnabled && (
+                      <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 px-2.5 sm:px-3 py-2 rounded-xl text-[10px] sm:text-xs text-yellow-100/90">
+                        <AlertCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-yellow-300" />
+                        <span>Album filters are paused while Random songs is on.</span>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                        Include Albums {selectedAlbums.length > 0 && `(${selectedAlbums.length})`}
+                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {selectedAlbums.length > 0 && (
+                          <button
+                            onClick={() => setSelectedAlbums([])}
+                            className="text-[10px] text-red-400 hover:text-red-300 font-medium whitespace-nowrap"
+                          >
+                            Clear All
+                          </button>
+                        )}
                         <button
-                          onClick={() => setSelectedEras([])}
-                          className="text-[10px] text-red-400 hover:text-red-300 font-medium"
+                          onClick={() => setAlbumsExpanded(!albumsExpanded)}
+                          className="text-[10px] text-primary hover:text-primary-dark font-medium flex items-center gap-1 whitespace-nowrap"
                         >
-                          Clear All
+                          {albumsExpanded ? 'Hide' : 'Select'}
+                          <ChevronDown className={`w-3 h-3 transition-transform ${albumsExpanded ? 'rotate-180' : ''}`} />
                         </button>
-                      )}
+                      </div>
+                    </div>
+
+                    {/* Selected Albums Display - Compact */}
+                    {selectedAlbums.length > 0 && !albumsExpanded && (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedAlbums.slice(0, 6).map(albumName => {
+                          const album = albums.find(a => a.name === albumName)
+                          return (
+                            <div
+                              key={albumName}
+                              className="bg-surface-dark text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 border border-border-dark max-w-full"
+                            >
+                              <div className="size-4 rounded-full overflow-hidden bg-background-dark shrink-0 relative">
+                                {album?.coverImage ? (
+                                  <Image src={album.coverImage} alt={albumName} fill className="object-cover" />
+                                ) : null}
+                              </div>
+                              <span className="truncate max-w-[110px]">{albumName}</span>
+                              <button
+                                onClick={() => toggleAlbum(albumName)}
+                                className="hover:opacity-70 shrink-0"
+                              >
+                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          )
+                        })}
+                        {selectedAlbums.length > 6 && (
+                          <span className="text-[10px] text-text-muted px-2 py-0.5">
+                            +{selectedAlbums.length - 6}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Expanded Album Selection */}
+                    {albumsExpanded && (
+                      <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto custom-scrollbar bg-background-dark/50 rounded-xl p-2 border border-border-dark w-full min-w-0">
+                        <div className="flex flex-col gap-2 sticky top-0 bg-background-dark/95 backdrop-blur pb-2 z-10 w-full min-w-0">
+                          <div className="flex items-center gap-2 w-full min-w-0">
+                            <div className="relative flex-1 min-w-0">
+                              <Search className="absolute left-2.5 top-2 text-text-muted w-3.5 h-3.5" />
+                              <input
+                                value={albumSearch}
+                                onChange={e => setAlbumSearch(e.target.value)}
+                                placeholder="Search albums..."
+                                className="w-full bg-background-dark border border-border-dark text-white rounded-lg h-8 pl-8 pr-2 text-[11px] focus:outline-none focus:border-primary"
+                              />
+                            </div>
+                            <button
+                              onClick={() => {
+                                const allNames = Array.from(new Set(filteredAlbums.map(a => a.name)))
+                                setSelectedAlbums(allNames)
+                              }}
+                              className="text-[10px] text-primary hover:text-primary-dark font-medium shrink-0"
+                            >
+                              Select All
+                            </button>
+                          </div>
+
+                          {artistOptions.length > 1 && (
+                            <div className="flex gap-1.5 overflow-x-auto pb-1 w-full no-scrollbar">
+                              {artistOptions.map(artist => (
+                                <button
+                                  key={artist}
+                                  onClick={() => setAlbumFilter(artist)}
+                                  className={`px-2 py-1 rounded-full text-[10px] whitespace-nowrap border transition-all shrink-0 ${albumFilter === artist
+                                    ? 'bg-primary text-white border-transparent'
+                                    : 'bg-surface-dark text-text-muted border-border-dark hover:border-text-muted'
+                                    }`}
+                                >
+                                  {artist}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {albumLoading && (
+                          <div className="text-text-muted text-xs py-3 text-center">Loading albums...</div>
+                        )}
+                        {!albumLoading && albumError && (
+                          <div className="text-red-300 text-xs py-3 text-center">{albumError}</div>
+                        )}
+                        {!albumLoading && !albumError && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {filteredAlbums.map(album => {
+                              const isSelected = selectedAlbums.includes(album.name)
+                              return (
+                                <button
+                                  key={`${album.name}-${album.artist}`}
+                                  onClick={() => toggleAlbum(album.name)}
+                                  className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium border transition-all max-w-full ${isSelected
+                                    ? 'bg-primary text-white border-transparent shadow-sm'
+                                    : 'bg-surface-dark text-text-muted border-border-dark hover:border-text-muted'
+                                    }`}
+                                >
+                                  <div className="size-4 rounded-full overflow-hidden bg-background-dark shrink-0 relative">
+                                    {album.coverImage ? (
+                                      <Image src={album.coverImage} alt={album.name} fill className="object-cover" />
+                                    ) : null}
+                                  </div>
+                                  <span className="truncate max-w-[140px] flex-1 min-w-0">{album.name}</span>
+                                  <span className="text-[9px] text-white/60 truncate max-w-[60px] shrink-0">
+                                    {album.artist}
+                                  </span>
+                                </button>
+                              )
+                            })}
+                            {filteredAlbums.length === 0 && (
+                              <div className="text-text-muted text-xs py-3 text-center w-full">
+                                No albums match your search.
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </fieldset>
+
+                <div className="h-px bg-border-dark/70"></div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">
+                    Manual Gap Songs
+                  </span>
+                  <span
+                    className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full border ${advancedEnabled
+                      ? 'bg-green-500/10 text-green-300 border-green-500/30'
+                      : 'bg-white/5 text-text-muted border-border-dark'
+                      }`}
+                  >
+                    {advancedEnabled ? 'Active' : 'Off'}
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-xs text-text-muted">
+                  Add a custom gap pool and spacing rules.
+                </p>
+
+                {!advancedEnabled && (
+                  <div className="flex gap-2 bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl items-start">
+                    <Info className="text-blue-400 w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-blue-100/80 leading-relaxed">
+                      Turn on Manual Gap Songs to customize spacing and pick gap fillers.
+                    </p>
+                  </div>
+                )}
+
+                <fieldset
+                  disabled={!advancedEnabled}
+                  className={`flex flex-col gap-4 ${!advancedEnabled ? 'opacity-50' : ''}`}
+                >
+                  {/* Manual Mode Settings */}
+                  {/* Gap Mode Toggle - Fixed vs Dynamic */}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Gapping System</span>
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => setErasExpanded(!erasExpanded)}
-                        className="text-[10px] text-primary hover:text-primary-dark font-medium flex items-center gap-1"
+                        onClick={() => setManualGapMode('dynamic')}
+                        className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${manualGapMode === 'dynamic'
+                          ? 'bg-primary text-white'
+                          : 'bg-background-dark text-text-muted hover:bg-surface-light'
+                          }`}
                       >
-                        {erasExpanded ? 'Hide' : 'Select'}
-                        <ChevronDown className={`w-3 h-3 transition-transform ${erasExpanded ? 'rotate-180' : ''}`} />
+                        Dynamic
+                      </button>
+                      <button
+                        onClick={() => setManualGapMode('fixed')}
+                        className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${manualGapMode === 'fixed'
+                          ? 'bg-primary text-white'
+                          : 'bg-background-dark text-text-muted hover:bg-surface-light'
+                          }`}
+                      >
+                        Fixed
                       </button>
                     </div>
                   </div>
 
-                  {/* Selected Eras Display - Compact */}
-                  {selectedEras.length > 0 && !erasExpanded && (
-                    <div className="flex flex-wrap gap-1">
-                      {selectedEras.slice(0, 8).map(eraValue => {
-                        const era = ERAS.find(e => e.value === eraValue)
-                        if (!era) return null
-                        return (
-                          <div
-                            key={era.value}
-                            className={`${era.color} text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1`}
-                          >
-                            <span className="truncate max-w-[80px]">{era.label}</span>
-                            <button
-                              onClick={() => toggleEra(era.value)}
-                              className="hover:opacity-70"
-                            >
-                              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        )
-                      })}
-                      {selectedEras.length > 8 && (
-                        <span className="text-[10px] text-text-muted px-2 py-0.5">
-                          +{selectedEras.length - 8}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Expanded Eras Selection */}
-                  {erasExpanded && (
-                    <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto custom-scrollbar bg-background-dark/50 rounded-xl p-2 border border-border-dark">
-                      <div className="flex justify-end sticky top-0 bg-background-dark/90 backdrop-blur pb-1 z-10">
-                        <button
-                          onClick={() => setSelectedEras(ERAS.map(e => e.value))}
-                          className="text-[10px] text-primary hover:text-primary-dark font-medium"
-                        >
-                          Select All
-                        </button>
-                      </div>
-
-                      {/* Group Albums */}
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-bold text-white/60 uppercase tracking-wider">Group</span>
-                        <div className="flex flex-wrap gap-1">
-                          {ERAS.filter(e => e.category === 'Group').map((era) => (
-                            <button
-                              key={era.value}
-                              onClick={() => toggleEra(era.value)}
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all ${
-                                selectedEras.includes(era.value)
-                                  ? `${era.color} text-white border-transparent shadow-sm`
-                                  : 'bg-surface-dark text-text-muted border-border-dark hover:border-text-muted'
-                              }`}
-                            >
-                              {era.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Solo Albums by Member */}
-                      {['Jung Kook', 'Jimin', 'V', 'RM', 'j-hope', 'SUGA', 'Jin'].map(member => {
-                        const memberAlbums = ERAS.filter(e => e.category === member)
-                        if (memberAlbums.length === 0) return null
-                        return (
-                          <div key={member} className="flex flex-col gap-1">
-                            <span className="text-[9px] font-bold text-white/60 uppercase tracking-wider">{member}</span>
-                            <div className="flex flex-wrap gap-1">
-                              {memberAlbums.map((era) => (
-                                <button
-                                  key={era.value}
-                                  onClick={() => toggleEra(era.value)}
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all ${
-                                    selectedEras.includes(era.value)
-                                      ? `${era.color} text-white border-transparent shadow-sm`
-                                      : 'bg-surface-dark text-text-muted border-border-dark hover:border-text-muted'
-                                  }`}
-                                >
-                                  {era.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </details>
-
-            {/* Advanced - Manual Gap Mode */}
-            <details
-              className="group bg-surface-dark rounded-xl border border-border-dark open:border-primary/30 transition-all duration-300"
-              open={advancedOpen}
-              onToggle={(e) => setAdvancedOpen((e.target as HTMLDetailsElement).open)}
-            >
-              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 select-none">
-                <div className="flex items-center gap-2 text-white font-medium">
-                  <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                  Advanced
-                </div>
-                <ChevronDown className="text-text-muted group-open:rotate-180 transition-transform w-5 h-5" />
-              </summary>
-              <div className="px-4 pb-4 pt-1 flex flex-col gap-4">
-                {/* Gap Mode Toggle */}
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Gap Mode</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setGapMode('auto')}
-                      className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                        gapMode === 'auto'
-                          ? 'bg-primary text-white'
-                          : 'bg-background-dark text-text-muted hover:bg-surface-light'
-                      }`}
-                    >
-                      Auto
-                    </button>
-                    <button
-                      onClick={() => setGapMode('manual')}
-                      className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                        gapMode === 'manual'
-                          ? 'bg-primary text-white'
-                          : 'bg-background-dark text-text-muted hover:bg-surface-light'
-                      }`}
-                    >
-                      Manual
-                    </button>
-                  </div>
-                </div>
-
-                {/* Manual Mode Settings */}
-                {gapMode === 'manual' && (
-                  <>
-                    {/* Gap Mode Toggle - Fixed vs Dynamic */}
+                  {/* Dynamic Gap Range */}
+                  {manualGapMode === 'dynamic' ? (
                     <div className="flex flex-col gap-2">
-                      <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Gapping System</span>
+                      <div className="flex justify-between text-xs text-text-muted">
+                        <span>Gap Range</span>
+                        <span className="text-white font-mono">{manualGapRange[0]} - {manualGapRange[1]} songs</span>
+                      </div>
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => setManualGapMode('dynamic')}
-                          className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                            manualGapMode === 'dynamic'
-                              ? 'bg-primary text-white'
-                              : 'bg-background-dark text-text-muted hover:bg-surface-light'
-                          }`}
-                        >
-                          Dynamic
-                        </button>
-                        <button
-                          onClick={() => setManualGapMode('fixed')}
-                          className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                            manualGapMode === 'fixed'
-                              ? 'bg-primary text-white'
-                              : 'bg-background-dark text-text-muted hover:bg-surface-light'
-                          }`}
-                        >
-                          Fixed
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Dynamic Gap Range */}
-                    {manualGapMode === 'dynamic' ? (
-                      <div className="flex flex-col gap-2">
-                        <div className="flex justify-between text-xs text-text-muted">
-                          <span>Gap Range</span>
-                          <span className="text-white font-mono">{manualGapRange[0]} - {manualGapRange[1]} songs</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            min={1}
-                            max={20}
-                            value={manualGapRange[0]}
-                            onChange={(e) => setManualGapRange([parseInt(e.target.value), manualGapRange[1]])}
-                            className="w-16 bg-background-dark border border-border-dark text-white text-xs rounded-xl px-2 py-1"
-                          />
-                          <input
-                            type="range"
-                            min={1}
-                            max={20}
-                            value={manualGapRange[1]}
-                            onChange={(e) => setManualGapRange([manualGapRange[0], parseInt(e.target.value)])}
-                            className="flex-1 h-1.5 bg-border-dark rounded-xl appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
-                          />
-                          <input
-                            type="number"
-                            min={manualGapRange[0]}
-                            max={20}
-                            value={manualGapRange[1]}
-                            onChange={(e) => setManualGapRange([manualGapRange[0], parseInt(e.target.value)])}
-                            className="w-16 bg-background-dark border border-border-dark text-white text-xs rounded-xl px-2 py-1"
-                          />
-                        </div>
-                        <span className="text-xs text-text-muted">
-                          Random number of gap songs (between min and max) will be inserted between each focus track
-                        </span>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col gap-1.5">
-                        <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-                          Gap Between Focus Tracks
-                        </span>
                         <input
                           type="number"
                           min={1}
                           max={20}
-                          value={manualGapCount}
-                          onChange={(e) => setManualGapCount(parseInt(e.target.value))}
-                          className="w-full bg-background-dark border border-border-dark text-white text-sm rounded-xl h-10 px-3 focus:ring-1 focus:ring-primary focus:border-primary"
+                          value={manualGapRange[0]}
+                          onChange={(e) => setManualGapRange([parseInt(e.target.value), manualGapRange[1]])}
+                          className="w-16 bg-background-dark border border-border-dark text-white text-xs rounded-xl px-2 py-1"
                         />
-                        <span className="text-xs text-text-muted">
-                          Fixed number of songs between each focus track appearance
-                        </span>
-                      </label>
-                    )}
-
-                    {/* Manual Pool Search */}
-                    <div className="flex flex-col gap-2">
-                      <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-                        Select Gap Songs ({manualGapPool.length} selected)
-                      </span>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 text-text-muted w-4 h-4" />
                         <input
-                          type="text"
-                          value={manualPoolSearch}
-                          onChange={(e) => setManualPoolSearch(e.target.value)}
-                          className="w-full bg-background-dark border border-border-dark text-white rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:border-primary transition-colors placeholder:text-text-muted/50 text-sm"
-                          placeholder="Search songs for gaps..."
+                          type="range"
+                          min={1}
+                          max={20}
+                          value={manualGapRange[1]}
+                          onChange={(e) => setManualGapRange([manualGapRange[0], parseInt(e.target.value)])}
+                          className="flex-1 h-1.5 bg-border-dark rounded-xl appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                        />
+                        <input
+                          type="number"
+                          min={manualGapRange[0]}
+                          max={20}
+                          value={manualGapRange[1]}
+                          onChange={(e) => setManualGapRange([manualGapRange[0], parseInt(e.target.value)])}
+                          className="w-16 bg-background-dark border border-border-dark text-white text-xs rounded-xl px-2 py-1"
                         />
                       </div>
+                      <span className="text-xs text-text-muted">
+                        Random number of gap songs (between min and max) will be inserted between each focus track
+                      </span>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                        Gap Between Focus Tracks
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={manualGapCount}
+                        onChange={(e) => setManualGapCount(parseInt(e.target.value))}
+                        className="w-full bg-background-dark border border-border-dark text-white text-sm rounded-xl h-10 px-3 focus:ring-1 focus:ring-primary focus:border-primary"
+                      />
+                      <span className="text-xs text-text-muted">
+                        Fixed number of songs between each focus track appearance
+                      </span>
+                    </label>
+                  )}
 
-                      {/* Manual Pool Results */}
-                      {manualPoolSearch && (
-                        <div className="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
-                          {loading && <p className="text-text-muted text-xs p-2">Loading...</p>}
-                          {manualPoolOptions.map((song) => {
-                            const isSelected = manualGapPool.some(s => s.spotifyId === song.spotifyId)
-                            return (
-                              <label
-                                key={song.spotifyId}
-                                className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => toggleManualSong(song, true)}
-                                  className="flex-shrink-0 w-4 h-4 rounded border-border-dark bg-background-dark text-primary focus:ring-primary focus:ring-offset-0"
-                                />
-                                <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 relative">
-                                  <Image
-                                    src={song.thumbnails?.small || '/images/placeholder.jpg'}
-                                    alt={song.name}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-white text-xs font-medium truncate">{song.name}</p>
-                                  <p className="text-text-muted text-[10px] truncate">{song.artist}</p>
-                                </div>
-                              </label>
-                            )
-                          })}
-                          {!loading && manualPoolOptions.length === 0 && (
-                            <p className="text-text-muted text-xs p-2">No songs found</p>
-                          )}
-                        </div>
-                      )}
+                  {/* Manual Pool Search */}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                      Select Gap Songs ({manualGapPool.length} selected)
+                    </span>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 text-text-muted w-4 h-4" />
+                      <input
+                        type="text"
+                        value={manualPoolSearch}
+                        onChange={(e) => setManualPoolSearch(e.target.value)}
+                        className="w-full bg-background-dark border border-border-dark text-white rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:border-primary transition-colors placeholder:text-text-muted/50 text-sm"
+                        placeholder="Search songs for gaps..."
+                      />
+                    </div>
 
-                      {/* Selected Pool Display */}
-                      {manualGapPool.length > 0 && !manualPoolSearch && (
-                        <div className="max-h-64 overflow-y-auto space-y-1 custom-scrollbar bg-surface-dark/50 rounded-xl p-2 border border-border-dark">
-                          {manualGapPool.map((song) => (
-                            <div
+                    {/* Manual Pool Results */}
+                    {manualPoolSearch && (
+                      <div className="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+                        {loading && <p className="text-text-muted text-xs p-2">Loading...</p>}
+                        {manualPoolOptions.map((song) => {
+                          const isSelected = manualGapPool.some(s => s.spotifyId === song.spotifyId)
+                          return (
+                            <label
                               key={song.spotifyId}
-                              className="flex items-center gap-2 bg-background-dark/50 hover:bg-white/5 border border-border-dark rounded-xl p-2 transition-colors group"
+                              className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
                             >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleManualSong(song, true)}
+                                className="flex-shrink-0 w-4 h-4 rounded border-border-dark bg-background-dark text-primary focus:ring-primary focus:ring-offset-0"
+                              />
                               <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 relative">
                                 <Image
                                   src={song.thumbnails?.small || '/images/placeholder.jpg'}
@@ -748,47 +848,66 @@ export default function StreamingFocusMode(props: Props) {
                                 <p className="text-white text-xs font-medium truncate">{song.name}</p>
                                 <p className="text-text-muted text-[10px] truncate">{song.artist}</p>
                               </div>
-                              <button
-                                onClick={() => toggleManualSong(song, false)}
-                                className="text-text-muted hover:text-red-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
+                            </label>
+                          )
+                        })}
+                        {!loading && manualPoolOptions.length === 0 && (
+                          <p className="text-text-muted text-xs p-2">No songs found</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Selected Pool Display */}
+                    {manualGapPool.length > 0 && !manualPoolSearch && (
+                      <div className="max-h-64 overflow-y-auto space-y-1 custom-scrollbar bg-surface-dark/50 rounded-xl p-2 border border-border-dark">
+                        {manualGapPool.map((song) => (
+                          <div
+                            key={song.spotifyId}
+                            className="flex items-center gap-2 bg-background-dark/50 hover:bg-white/5 border border-border-dark rounded-xl p-2 transition-colors group"
+                          >
+                            <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 relative">
+                              <Image
+                                src={song.thumbnails?.small || '/images/placeholder.jpg'}
+                                alt={song.name}
+                                fill
+                                className="object-cover"
+                              />
                             </div>
-                          ))}
-                        </div>
-                      )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-white text-xs font-medium truncate">{song.name}</p>
+                              <p className="text-text-muted text-[10px] truncate">{song.artist}</p>
+                            </div>
+                            <button
+                              onClick={() => toggleManualSong(song, false)}
+                              className="text-text-muted hover:text-red-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                      {manualGapPool.length === 0 && !manualPoolSearch && (
-                        <div className="text-center py-6 border-2 border-dashed border-border-dark rounded-xl">
-                          <Music className="w-8 h-8 text-text-muted mx-auto mb-2" />
-                          <p className="text-text-muted text-xs">
-                            Search and select songs to use as gap fillers
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {/* Auto Mode Note */}
-                {gapMode === 'auto' && (
-                  <div className="flex gap-2 bg-blue-500/10 border border-blue-500/20 p-3 rounded-xl items-start">
-                    <Info className="text-blue-400 w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-blue-100/80 leading-relaxed">
-                      Auto mode uses the settings above to automatically select gap songs based on your chosen eras and fill mode.
-                    </p>
+                    {manualGapPool.length === 0 && !manualPoolSearch && (
+                      <div className="text-center py-6 border-2 border-dashed border-border-dark rounded-xl">
+                        <Music className="w-8 h-8 text-text-muted mx-auto mb-2" />
+                        <p className="text-text-muted text-xs">
+                          Search and select songs to use as gap fillers
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </fieldset>
               </div>
-            </details>
+            </div>
           </div>
 
           {/* Footer Actions */}
           <div className="mt-auto flex flex-col gap-2 sm:gap-3 pt-2">
             <button
+              data-tour="generate-streaming-btn"
               onClick={handleGenerate}
               disabled={!focusTrackId || generating}
               className="w-full bg-primary hover:bg-primary-dark text-white h-10 sm:h-12 rounded-xl font-bold text-sm sm:text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
@@ -810,7 +929,7 @@ export default function StreamingFocusMode(props: Props) {
       </section>
 
       {/* RIGHT PANEL: Generated Playlist */}
-      <aside className="lg:col-span-5 xl:col-span-4 sticky top-4 sm:top-6 self-start z-10">
+      <aside data-tour="streaming-result" className="lg:col-span-5 xl:col-span-4 sticky top-4 sm:top-6 self-start z-10">
         <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-6rem)] min-h-[400px] sm:min-h-[500px] rounded-2xl overflow-hidden shadow-2xl shadow-black/50 relative">
           {props.focusResult && props.focusResult.length > 0 ? (
             <>
@@ -910,15 +1029,14 @@ export default function StreamingFocusMode(props: Props) {
                       onDragOver={(e) => props.handleFocusDragOver(e, index)}
                       onDrop={(e) => props.handleFocusDrop(e, index)}
                       onDragEnd={props.handleFocusDragEnd}
-                      className={`group flex items-center gap-1.5 sm:gap-3 p-1.5 sm:p-2 rounded-xl transition-colors border cursor-grab active:cursor-grabbing ${
-                        props.focusDraggedIndex === index
-                          ? 'opacity-50 bg-white/10 border-primary/30'
-                          : props.focusDragOverIndex === index
+                      className={`group flex items-center gap-1.5 sm:gap-3 p-1.5 sm:p-2 rounded-xl transition-colors border cursor-grab active:cursor-grabbing ${props.focusDraggedIndex === index
+                        ? 'opacity-50 bg-white/10 border-primary/30'
+                        : props.focusDragOverIndex === index
                           ? 'bg-primary/10 border-primary/30'
                           : isFocusTrack
-                          ? 'bg-white/[0.02] border-transparent hover:bg-white/5 hover:border-white/5'
-                          : 'border-transparent hover:bg-white/5 hover:border-white/5'
-                      }`}
+                            ? 'bg-white/[0.02] border-transparent hover:bg-white/5 hover:border-white/5'
+                            : 'border-transparent hover:bg-white/5 hover:border-white/5'
+                        }`}
                     >
                       <div className={`w-5 sm:w-8 text-center font-bold text-[10px] sm:text-xs ${isFocusTrack ? 'text-primary' : 'text-text-muted'}`}>
                         {index + 1}
@@ -968,7 +1086,7 @@ export default function StreamingFocusMode(props: Props) {
               </div>
 
               {/* Bottom Action Bar */}
-              <div className="p-2.5 sm:p-4 bg-[#171023] border-t border-border-dark shrink-0">
+              <div data-tour="streaming-export" className="p-2.5 sm:p-4 bg-[#171023] border-t border-border-dark shrink-0">
                 {props.savedPlaylistUrl && (
                   <div className="mb-2 sm:mb-3 flex items-center justify-between gap-2">
                     <span className="text-[10px] sm:text-xs text-text-muted">Playlist link ready</span>
@@ -999,7 +1117,7 @@ export default function StreamingFocusMode(props: Props) {
                     ) : (
                       <>
                         <svg className="w-4 sm:w-5 h-4 sm:h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                          <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
                         </svg>
                         <span>Create</span>
                       </>

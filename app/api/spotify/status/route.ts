@@ -52,7 +52,7 @@ const buildAuthHeader = () => {
   return 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
 }
 
-async function refreshSpotifyToken(firebaseUid: string, integration: SpotifyIntegration): Promise<{ integration: SpotifyIntegration | null, error?: string }> {
+async function refreshSpotifyToken(userId: string, integration: SpotifyIntegration): Promise<{ integration: SpotifyIntegration | null, error?: string }> {
   if (!integration.refreshToken) {
     return { integration: null, error: 'no_refresh_token' }
   }
@@ -105,14 +105,11 @@ async function refreshSpotifyToken(firebaseUid: string, integration: SpotifyInte
       updatedAt: new Date()
     }
 
-    await User.findOneAndUpdate(
-      { firebaseUid },
-      {
-        $set: {
-          'integrations.spotify': updatedIntegration
-        }
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        'integrations.spotify': updatedIntegration
       }
-    )
+    })
 
     return { integration: updatedIntegration }
   } catch (error) {
@@ -213,7 +210,7 @@ export async function GET(request: NextRequest) {
     let refreshError: string | undefined
 
     if (needsRefresh || !integration.accessToken) {
-      const { integration: refreshed, error } = await refreshSpotifyToken(authUser.uid, integration)
+      const { integration: refreshed, error } = await refreshSpotifyToken(userDoc._id.toString(), integration)
       if (refreshed) {
         integration = refreshed
       } else {

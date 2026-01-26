@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
+import { Types } from 'mongoose'
 import { User } from '@/lib/models/User'
 import { getPublicProfile, isFieldVisible } from '@/lib/utils/profile'
 import { LeaderboardEntry } from '@/lib/models/LeaderboardEntry'
@@ -24,17 +25,20 @@ export async function GET(
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    console.log('[Profile API] Looking for user with firebaseUid:', userId)
+    console.log('[Profile API] Looking for user with firebaseUid/_id/username:', userId)
 
     await connect()
 
-    // Find user by firebaseUid or username only (no email lookup for privacy/security)
-    let userDoc = await User.findOne({
-      $or: [
-        { firebaseUid: userId },
-        { username: userId.toLowerCase() }
-      ]
-    }).lean()
+    const idFilters: Array<{ [key: string]: string }> = [
+      { firebaseUid: userId },
+      { username: userId.toLowerCase() }
+    ]
+    if (Types.ObjectId.isValid(userId)) {
+      idFilters.push({ _id: userId })
+    }
+
+    // Find user by firebaseUid, _id, or username only (no email lookup for privacy/security)
+    let userDoc = await User.findOne({ $or: idFilters }).lean()
 
     console.log('[Profile API] User found:', !!userDoc)
 
@@ -62,9 +66,10 @@ export async function GET(
 
     // For private profiles, only show basic info (avatar, banner, displayName)
     if (privacy?.visibility === 'private') {
+      const resolvedUserId = user.firebaseUid || user._id.toString()
       return NextResponse.json({
         profile: {
-          userId: user.firebaseUid,
+          userId: resolvedUserId,
           displayName: (user.profile && user.profile.displayName) || user.name || 'User',
           avatarUrl: (user.profile && user.profile.avatarUrl) || user.image || '',
           bannerUrl: (user.profile && user.profile.bannerUrl) || '',
@@ -108,10 +113,11 @@ export async function GET(
       ...gameStats
     } : undefined;
 
+    const resolvedUserId = user.firebaseUid || user._id.toString()
     return NextResponse.json({
       profile: {
         ...publicProfile,
-        userId: user.firebaseUid,
+        userId: resolvedUserId,
         // Always include these basic fields
         displayName: (user.profile && user.profile.displayName) || user.name || 'User',
         avatarUrl: (user.profile && user.profile.avatarUrl) || user.image || '',

@@ -18,26 +18,36 @@ import {
   Edit3,
   Share2,
   HelpCircle,
+  MapPin,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import StreamingFocusMode from '@/components/streaming/StreamingFocusMode'
 import SharePlaylistModal from '@/components/ai-playlist/SharePlaylistModal'
 import SpotifyBYOGuideModal from '@/components/playlist/SpotifyBYOGuideModal'
+import GuidedTour, { RestartTourButton } from '@/components/ui/GuidedTour'
 import { SongDoc, useAllSongs } from '@/hooks/useAllSongs'
 import { useSpotifyAuth } from '@/hooks/useSpotifyAuth'
+import {
+  CREATE_PLAYLIST_TOUR_ID,
+  streamingModeTourSteps,
+  manualModeTourSteps
+} from '@/lib/tours/createPlaylistTour'
 
 // Track with appearance count for manual curator
 interface TrackWithCount extends SongDoc {
   appearances: number
 }
 
+const DEFAULT_PLAYLIST_NAME = 'armyverse.vercel.app playlist'
+
 export default function CreatePlaylist() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [playlistName, setPlaylistName] = useState('My Gym Playlist')
+  const [playlistName, setPlaylistName] = useState(DEFAULT_PLAYLIST_NAME)
+  const [lastAutoName, setLastAutoName] = useState(DEFAULT_PLAYLIST_NAME)
   const [selectedTracks, setSelectedTracks] = useState<TrackWithCount[]>([])
   const [playlistTracks, setPlaylistTracks] = useState<SongDoc[]>([])
-  const [mode, setMode] = useState<'manual' | 'streaming'>('manual')
+  const [mode, setMode] = useState<'manual' | 'streaming'>('streaming')
   const [focusResult, setFocusResult] = useState<SongDoc[] | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -56,6 +66,27 @@ export default function CreatePlaylist() {
   const [showBYOGuide, setShowBYOGuide] = useState(false)
   const { songs: allSongs } = useAllSongs()
   const { status, refreshStatus } = useSpotifyAuth()
+
+  const handlePlaylistNameChange = (value: string) => {
+    setPlaylistName(value)
+  }
+
+  const handleFocusTrackChange = useCallback(
+    (track: SongDoc | null) => {
+      if (!track) return
+      const nextName = `${track.name} Focused Playlist`
+      const trimmed = playlistName.trim()
+      const shouldAutoUpdate =
+        !trimmed ||
+        trimmed === DEFAULT_PLAYLIST_NAME ||
+        trimmed === lastAutoName
+      if (shouldAutoUpdate) {
+        setLastAutoName(nextName)
+        setPlaylistName(nextName)
+      }
+    },
+    [lastAutoName, playlistName]
+  )
 
   const filteredTracks = allSongs.filter(
     track =>
@@ -389,6 +420,7 @@ export default function CreatePlaylist() {
           </div>
           <button
             onClick={() => setShowBYOGuide(true)}
+            data-tour="spotify-guide-btn"
             className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-text-muted hover:text-white transition-all border border-white/10 text-xs sm:text-sm font-medium"
           >
             <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -397,25 +429,23 @@ export default function CreatePlaylist() {
         </div>
         <div className="flex flex-col sm:flex-row items-stretch gap-2 sm:gap-4 w-full">
           {/* Mode Toggle */}
-          <div className="flex h-10 sm:h-12 items-center bg-surface-light p-1 rounded-xl w-full sm:w-auto">
+          <div data-tour="mode-toggle" className="flex h-10 sm:h-12 items-center bg-surface-light p-1 rounded-xl w-full sm:w-auto">
             <button
               onClick={() => setMode('manual')}
-              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${
-                mode === 'manual'
-                  ? 'bg-background-dark text-white shadow-sm'
-                  : 'text-text-muted hover:text-white'
-              }`}
+              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all ${mode === 'manual'
+                ? 'bg-background-dark text-white shadow-sm'
+                : 'text-text-muted hover:text-white'
+                }`}
             >
               <Edit3 className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />
               <span className="text-xs sm:text-sm font-semibold">Manual</span>
             </button>
             <button
               onClick={() => setMode('streaming')}
-              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-colors ${
-                mode === 'streaming'
-                  ? 'bg-background-dark text-white shadow-sm'
-                  : 'text-text-muted hover:text-white'
-              }`}
+              className={`flex-1 h-full px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-colors ${mode === 'streaming'
+                ? 'bg-background-dark text-white shadow-sm'
+                : 'text-text-muted hover:text-white'
+                }`}
             >
               <TrendingUp className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" />
               <span className="text-xs sm:text-sm font-medium">Streaming</span>
@@ -424,6 +454,7 @@ export default function CreatePlaylist() {
           {/* AI Button */}
           <Link
             href="/ai-playlist"
+            data-tour="ai-generator-btn"
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-purple-500 hover:from-primary-dark hover:to-purple-600 text-white px-4 sm:px-6 h-10 sm:h-12 rounded-xl font-bold text-xs sm:text-sm shadow-lg shadow-primary/20 transition-all transform hover:scale-[1.02]"
           >
             <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -438,7 +469,7 @@ export default function CreatePlaylist() {
           {/* LEFT PANEL: Track Selection */}
           <section className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3 sm:gap-4">
             {/* Quick Stats Widget */}
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
+            <div data-tour="quick-stats" className="grid grid-cols-4 gap-1.5 sm:gap-3">
               <div className="bg-surface-light/50 border border-border-dark p-2 sm:p-3 rounded-xl flex flex-col items-center justify-center text-center">
                 <span className="text-[9px] sm:text-xs font-semibold text-text-muted uppercase tracking-wider">
                   Tracks
@@ -468,13 +499,12 @@ export default function CreatePlaylist() {
                   Diversity
                 </span>
                 <span
-                  className={`text-base sm:text-xl font-bold ${
-                    playlistStats.diversity === 'High'
-                      ? 'text-emerald-400'
-                      : playlistStats.diversity === 'Medium'
-                        ? 'text-yellow-400'
-                        : 'text-red-400'
-                  }`}
+                  className={`text-base sm:text-xl font-bold ${playlistStats.diversity === 'High'
+                    ? 'text-emerald-400'
+                    : playlistStats.diversity === 'Medium'
+                      ? 'text-yellow-400'
+                      : 'text-red-400'
+                    }`}
                 >
                   {playlistStats.diversity}
                 </span>
@@ -485,7 +515,7 @@ export default function CreatePlaylist() {
             <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border rounded-2xl p-3 sm:p-5 flex flex-col gap-3 sm:gap-5 min-h-[400px] sm:min-h-[600px]">
               {/* Search & Header Section */}
               <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex gap-2 sm:gap-4">
+                <div data-tour="search-box" className="flex gap-2 sm:gap-4">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-text-muted w-3.5 sm:w-4 h-3.5 sm:h-4" />
                     <input
@@ -496,49 +526,11 @@ export default function CreatePlaylist() {
                       onChange={e => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <button className="hidden sm:flex items-center gap-2 px-3 sm:px-4 h-9 sm:h-12 rounded-xl bg-surface-light border border-border-dark text-text-muted hover:text-white hover:border-primary/50 transition-all">
-                    <SlidersHorizontal className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                    <span className="font-medium text-xs sm:text-sm">
-                      Filters
-                    </span>
-                  </button>
-                </div>
-
-                {/* Quick Filters - Collapsible Advanced Filters */}
-                <div className="hidden sm:flex flex-wrap items-center gap-2 pb-2 border-b border-white/5">
-                  <span className="text-xs font-bold text-text-muted uppercase mr-2">
-                    Quick Filter:
-                  </span>
-                  <button className="px-3 py-1.5 rounded-xl bg-surface-light hover:bg-primary/20 hover:text-primary text-xs font-medium text-text-muted transition-colors border border-transparent hover:border-primary/30">
-                    Album: Proof
-                  </button>
-                  <button className="px-3 py-1.5 rounded-xl bg-surface-light hover:bg-primary/20 hover:text-primary text-xs font-medium text-text-muted transition-colors border border-transparent hover:border-primary/30">
-                    Member: SUGA
-                  </button>
-                  <button className="px-3 py-1.5 rounded-xl bg-surface-light hover:bg-primary/20 hover:text-primary text-xs font-medium text-text-muted transition-colors border border-transparent hover:border-primary/30">
-                    Era: Love Yourself
-                  </button>
-                  <button className="px-3 py-1.5 rounded-xl bg-primary/20 text-primary border border-primary/30 text-xs font-medium transition-colors ml-auto flex items-center gap-1">
-                    Sort: Popularity
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
                 </div>
               </div>
 
               {/* Track List - Scrollable Area */}
-              <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-2 sm:space-y-3 max-h-[400px] sm:max-h-[600px] custom-scrollbar">
+              <div data-tour="track-list" className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-2 sm:space-y-3 max-h-[400px] sm:max-h-[600px] custom-scrollbar">
                 {searchQuery ? (
                   // Search results
                   <>
@@ -577,11 +569,10 @@ export default function CreatePlaylist() {
                           <button
                             onClick={() => addToSelected(track)}
                             disabled={!!isSelected}
-                            className={`size-7 sm:size-9 rounded-full flex items-center justify-center transition-colors ${
-                              isSelected
-                                ? 'bg-primary/20 text-primary cursor-not-allowed'
-                                : 'hover:bg-primary/20 text-text-muted hover:text-primary'
-                            }`}
+                            className={`size-7 sm:size-9 rounded-full flex items-center justify-center transition-colors ${isSelected
+                              ? 'bg-primary/20 text-primary cursor-not-allowed'
+                              : 'hover:bg-primary/20 text-text-muted hover:text-primary'
+                              }`}
                           >
                             {isSelected ? (
                               <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -677,108 +668,29 @@ export default function CreatePlaylist() {
                   </>
                 )}
               </div>
+            </div>
 
-              {/* Bulk Actions Toolbar */}
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 sm:pt-4 border-t border-white/5">
-                <button
-                  onClick={setAllAppearances}
-                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors"
-                >
-                  <svg
-                    className="w-3 sm:w-4 h-3 sm:h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                  Set All
-                </button>
-                <button
-                  onClick={equalizeAppearances}
-                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors"
-                >
-                  <svg
-                    className="w-3 sm:w-4 h-3 sm:h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
-                    />
-                  </svg>
-                  Equalize
-                </button>
-                <button
-                  onClick={reversePlaylist}
-                  disabled={playlistTracks.length === 0}
-                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg
-                    className="w-3 sm:w-4 h-3 sm:h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                    />
-                  </svg>
-                  Reverse
-                </button>
-                <div className="flex-1"></div>
-                <button className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-semibold text-text-muted hover:bg-surface-light hover:text-white transition-colors">
-                  <svg
-                    className="w-3 sm:w-4 h-3 sm:h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                  Import
-                </button>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <button
-                  onClick={generatePlaylist}
-                  disabled={selectedTracks.length === 0}
-                  className="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-2.5 sm:py-3.5 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                >
-                  <RotateCw className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                  Update Preview
-                </button>
-                <button
-                  onClick={clearAll}
-                  className="px-4 sm:px-6 bg-surface-light hover:bg-surface-light/80 text-white font-medium py-2.5 sm:py-3.5 rounded-xl border border-border-dark transition-all text-sm"
-                >
-                  Clear All
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div data-tour="generate-btn" className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <button
+                onClick={generatePlaylist}
+                disabled={selectedTracks.length === 0}
+                className="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-2.5 sm:py-3.5 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                <RotateCw className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                Update Preview
+              </button>
+              <button
+                onClick={clearAll}
+                className="px-4 sm:px-6 bg-surface-light hover:bg-surface-light/80 text-white font-medium py-2.5 sm:py-3.5 rounded-xl border border-border-dark transition-all text-sm"
+              >
+                Clear All
+              </button>
             </div>
           </section>
 
           {/* RIGHT PANEL: Generated Playlist */}
-          <aside className="lg:col-span-5 xl:col-span-4 sticky top-4 sm:top-6 self-start z-10">
+          <aside data-tour="playlist-preview" className="lg:col-span-5 xl:col-span-4 sticky top-4 sm:top-6 self-start z-10">
             <div className="bg-surface-dark/70 backdrop-blur-xl border border-glass-border rounded-2xl p-3 sm:p-5 flex flex-col gap-3 sm:gap-5 h-[calc(100vh-4rem)] sm:h-[calc(100vh-6rem)] min-h-[400px] sm:min-h-[500px]">
               {/* Header with Stats */}
               <div className="flex flex-col gap-2 sm:gap-3 pb-3 sm:pb-4 border-b border-white/5">
@@ -787,11 +699,10 @@ export default function CreatePlaylist() {
                     Playlist Preview
                   </h3>
                   <span
-                    className={`text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
-                      playlistTracks.length > 0
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-gray-500/20 text-gray-400'
-                    }`}
+                    className={`text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${playlistTracks.length > 0
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-gray-500/20 text-gray-400'
+                      }`}
                   >
                     {playlistTracks.length > 0 ? 'Ready' : 'Empty'}
                   </span>
@@ -817,13 +728,12 @@ export default function CreatePlaylist() {
                     </span>
                     <div className="w-full bg-surface-light rounded-full h-1.5 sm:h-2 overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ${
-                          playlistQuality.skipRisk === 'Low'
-                            ? 'bg-gradient-to-r from-green-400 to-emerald-500 w-[15%]'
-                            : playlistQuality.skipRisk === 'Medium'
-                              ? 'bg-gradient-to-r from-yellow-400 to-orange-500 w-[50%]'
-                              : 'bg-gradient-to-r from-red-400 to-red-600 w-[85%]'
-                        }`}
+                        className={`h-full transition-all duration-500 ${playlistQuality.skipRisk === 'Low'
+                          ? 'bg-gradient-to-r from-green-400 to-emerald-500 w-[15%]'
+                          : playlistQuality.skipRisk === 'Medium'
+                            ? 'bg-gradient-to-r from-yellow-400 to-orange-500 w-[50%]'
+                            : 'bg-gradient-to-r from-red-400 to-red-600 w-[85%]'
+                          }`}
                       ></div>
                     </div>
                     <span className="text-[10px] sm:text-xs font-bold text-white text-right">
@@ -843,7 +753,7 @@ export default function CreatePlaylist() {
                     className="w-full bg-background-dark/50 border border-border-dark rounded-xl px-3 sm:px-4 h-9 sm:h-12 text-white text-sm sm:text-base font-medium focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
                     type="text"
                     value={playlistName}
-                    onChange={e => setPlaylistName(e.target.value)}
+                    onChange={e => handlePlaylistNameChange(e.target.value)}
                   />
                   <Edit3 className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-text-muted cursor-pointer hover:text-white w-3.5 sm:w-4 h-3.5 sm:h-4" />
                 </div>
@@ -870,13 +780,12 @@ export default function CreatePlaylist() {
                       onDragOver={e => handleDragOver(e, index)}
                       onDrop={e => handleDrop(e, index)}
                       onDragEnd={handleDragEnd}
-                      className={`group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 pr-2 sm:pr-3 rounded-xl transition-colors border cursor-move ${
-                        draggedIndex === index
-                          ? 'opacity-50 bg-surface-light/50 border-primary/30'
-                          : dragOverIndex === index
-                            ? 'bg-primary/10 border-primary/30'
-                            : 'border-transparent hover:border-white/5 hover:bg-surface-light/50'
-                      }`}
+                      className={`group flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 pr-2 sm:pr-3 rounded-xl transition-colors border cursor-move ${draggedIndex === index
+                        ? 'opacity-50 bg-surface-light/50 border-primary/30'
+                        : dragOverIndex === index
+                          ? 'bg-primary/10 border-primary/30'
+                          : 'border-transparent hover:border-white/5 hover:bg-surface-light/50'
+                        }`}
                     >
                       <GripVertical className="text-text-muted group-hover:text-white w-3.5 sm:w-4 h-3.5 sm:h-4 flex-shrink-0" />
                       <span className="text-text-muted text-[10px] sm:text-xs font-mono w-3 sm:w-4">
@@ -925,7 +834,7 @@ export default function CreatePlaylist() {
 
               {/* Export Section */}
               {playlistTracks.length > 0 && (
-                <div className="pt-3 sm:pt-4 mt-auto border-t border-white/5 flex flex-col gap-2 sm:gap-3">
+                <div data-tour="export-section" className="pt-3 sm:pt-4 mt-auto border-t border-white/5 flex flex-col gap-2 sm:gap-3">
                   {/* Error/Success Messages */}
                   {saveError && (
                     <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-2 sm:p-3 flex items-center gap-2 sm:gap-3 text-red-300 text-[10px] sm:text-xs">
@@ -991,13 +900,13 @@ export default function CreatePlaylist() {
         </div>
       )}
 
-      {/* STREAMING FOCUS MODE */}
       {mode === 'streaming' && (
         <StreamingFocusMode
           focusResult={focusResult}
           setFocusResult={setFocusResult}
           playlistName={playlistName}
-          setPlaylistName={setPlaylistName}
+          setPlaylistName={handlePlaylistNameChange}
+          onFocusTrackChange={handleFocusTrackChange}
           focusDuration={focusDuration}
           isSaving={isSaving}
           saveError={saveError}
@@ -1032,6 +941,31 @@ export default function CreatePlaylist() {
         isOpen={showBYOGuide}
         onClose={() => setShowBYOGuide(false)}
       />
+
+      {/* Guided Tour - Shows appropriate tour based on current mode */}
+      {mode === 'streaming' && (
+        <GuidedTour
+          tourId={CREATE_PLAYLIST_TOUR_ID}
+          steps={streamingModeTourSteps}
+          showOnFirstVisit={true}
+        />
+      )}
+      {mode === 'manual' && (
+        <GuidedTour
+          tourId={`${CREATE_PLAYLIST_TOUR_ID}-manual`}
+          steps={manualModeTourSteps}
+          showOnFirstVisit={true}
+        />
+      )}
+
+      {/* Floating Tour Restart Button - Mode aware */}
+      <div className="fixed bottom-4 left-4 z-40">
+        <RestartTourButton
+          tourId={mode === 'streaming' ? CREATE_PLAYLIST_TOUR_ID : `${CREATE_PLAYLIST_TOUR_ID}-manual`}
+          label={mode === 'streaming' ? 'Streaming Tour' : 'Manual Tour'}
+          className="px-3 py-2 rounded-xl bg-surface-dark/80 backdrop-blur border border-white/10 hover:bg-surface-light transition-all shadow-lg"
+        />
+      </div>
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {

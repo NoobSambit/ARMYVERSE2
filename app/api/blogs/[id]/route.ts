@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
+import { Types } from 'mongoose'
 import { Blog } from '@/lib/models/Blog'
 
 export async function GET(
@@ -24,7 +25,11 @@ export async function GET(
       const { User } = await import('@/lib/models/User')
       // Author enrichment
       if (enriched?.author?.id) {
-        const criteria = enriched.author.id.includes('@') ? { email: enriched.author.id } : { firebaseUid: enriched.author.id }
+        const criteria = enriched.author.id.includes('@')
+          ? { email: enriched.author.id }
+          : Types.ObjectId.isValid(enriched.author.id)
+            ? { $or: [{ _id: enriched.author.id }, { firebaseUid: enriched.author.id }] }
+            : { firebaseUid: enriched.author.id }
         const u = await User.findOne(criteria, { profile: 1, name: 1, image: 1 }).lean()
         if (u) {
           enriched.author = {
@@ -45,12 +50,20 @@ export async function GET(
         )
         const emailIds: string[] = commenterIds.filter((id) => id.includes('@'))
         const uidIds: string[] = commenterIds.filter((id) => !id.includes('@'))
+        const objectIds = uidIds.filter((id) => Types.ObjectId.isValid(id))
+        const uidFilters: any[] = []
+        if (uidIds.length) uidFilters.push({ firebaseUid: { $in: uidIds } })
+        if (objectIds.length) uidFilters.push({ _id: { $in: objectIds } })
+
         const [usersByUid, usersByEmail] = await Promise.all([
-          uidIds.length ? User.find({ firebaseUid: { $in: uidIds } }, { profile: 1, name: 1, firebaseUid: 1 }).lean() : [],
+          uidFilters.length ? User.find({ $or: uidFilters }, { profile: 1, name: 1, firebaseUid: 1 }).lean() : [],
           emailIds.length ? User.find({ email: { $in: emailIds } }, { profile: 1, name: 1, email: 1 }).lean() : []
         ])
         const map: Record<string, any> = {}
-        for (const u of usersByUid as any[]) if (u.firebaseUid) map[u.firebaseUid] = u
+        for (const u of usersByUid as any[]) {
+          if (u.firebaseUid) map[u.firebaseUid] = u
+          if (u._id) map[String(u._id)] = u
+        }
         for (const u of usersByEmail as any[]) if (u.email) map[u.email] = u
         enriched.comments = enriched.comments.map((c: any) => {
           const u = map[c.userId]

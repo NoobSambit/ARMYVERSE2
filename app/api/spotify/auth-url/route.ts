@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     const nonce = crypto.randomBytes(16).toString('hex')
     const statePayload = {
       uid: authUser.uid,
-      email: authUser.email || authUser.username,
-      username: authUser.username,
+      email: authUser.email || undefined,
+      username: authUser.username || undefined,
       nonce,
       ts: Date.now()
     }

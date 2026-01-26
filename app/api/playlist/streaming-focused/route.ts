@@ -60,13 +60,14 @@ export async function POST(request: Request) {
       maxGap = Math.max(minGap, Number(auto!.maxGap ?? 3))
       const fillMode = auto!.fillMode ?? 'random'
       const selectedEras = auto.selectedEras || []
+      const selectedAlbums = Array.isArray(auto.albums) ? auto.albums : []
 
       const query: any = { isBTSFamily: true, spotifyId: { $ne: primaryTrackId } }
 
       // If specific eras are selected, filter by album names
-      if (selectedEras.length > 0) {
+      if (selectedEras.length > 0 || selectedAlbums.length > 0) {
         // Map era values to album name patterns
-        const albumPatterns = selectedEras.map(era => {
+        const eraPatterns = selectedEras.map(era => {
           switch(era) {
             case 'proof': return 'Proof'
             case 'be': return 'BE'
@@ -97,14 +98,15 @@ export async function POST(request: Request) {
           }
         })
 
+        const albumPatterns = [
+          ...eraPatterns,
+          ...selectedAlbums.filter(Boolean)
+        ]
+
         // Use regex for flexible matching
         query.$or = albumPatterns.map(pattern => ({
           album: { $regex: pattern, $options: 'i' }
         }))
-      }
-
-      if (fillMode === 'album' && Array.isArray(auto.albums) && auto.albums.length) {
-        query.album = { $in: auto.albums }
       }
 
       if (fillMode === 'era' && typeof auto.era === 'string') {

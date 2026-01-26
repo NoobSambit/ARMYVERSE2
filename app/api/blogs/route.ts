@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connect } from '@/lib/db/mongoose'
+import { Types } from 'mongoose'
 import { Blog } from '@/lib/models/Blog'
 
 // Force dynamic rendering for this route
@@ -158,12 +159,18 @@ export async function GET(request: NextRequest) {
 
     let usersByKey: Record<string, any> = {}
     if (authorIds.length > 0) {
+      const objectIds = uidIds.filter((id: string) => Types.ObjectId.isValid(id))
+      const uidFilters: any[] = []
+      if (uidIds.length) uidFilters.push({ firebaseUid: { $in: uidIds } })
+      if (objectIds.length) uidFilters.push({ _id: { $in: objectIds } })
+
       const [usersByUid, usersByEmail] = await Promise.all([
-        uidIds.length ? (await import('@/lib/models/User')).User.find({ firebaseUid: { $in: uidIds } }, { profile: 1, name: 1, image: 1, firebaseUid: 1, email: 1 }).lean() : [],
+        uidFilters.length ? (await import('@/lib/models/User')).User.find({ $or: uidFilters }, { profile: 1, name: 1, image: 1, firebaseUid: 1, email: 1 }).lean() : [],
         emailIds.length ? (await import('@/lib/models/User')).User.find({ email: { $in: emailIds } }, { profile: 1, name: 1, image: 1, firebaseUid: 1, email: 1 }).lean() : []
       ])
       for (const u of usersByUid as any[]) {
         if (u.firebaseUid) usersByKey[u.firebaseUid] = u
+        if (u._id) usersByKey[String(u._id)] = u
       }
       for (const u of usersByEmail as any[]) {
         if (u.email) usersByKey[u.email] = u
@@ -227,7 +234,11 @@ export async function POST(request: NextRequest) {
     try {
       if (author?.id) {
         const { User } = await import('@/lib/models/User')
-        const criteria = author.id.includes('@') ? { email: author.id } : { firebaseUid: author.id }
+        const criteria = author.id.includes('@')
+          ? { email: author.id }
+          : Types.ObjectId.isValid(author.id)
+            ? { $or: [{ _id: author.id }, { firebaseUid: author.id }] }
+            : { firebaseUid: author.id }
         const u = await User.findOne(criteria, { profile: 1, name: 1, image: 1 }).lean()
         if (u) {
           resolvedAuthor = {

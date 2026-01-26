@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAuth } from '@/lib/auth/verify'
+import { verifyAuth, getUserFromAuth } from '@/lib/auth/verify'
 import { connect } from '@/lib/db/mongoose'
 import { User } from '@/lib/models/User'
 
@@ -14,8 +14,13 @@ export async function POST(request: NextRequest) {
 
     await connect()
 
-    const updateResult = await User.findOneAndUpdate(
-      { email: authUser.email },
+    const user = await getUserFromAuth(authUser)
+    if (!user) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+    }
+
+    const updateResult = await User.findByIdAndUpdate(
+      user._id,
       {
         $unset: {
           'integrations.spotifyByo': '',

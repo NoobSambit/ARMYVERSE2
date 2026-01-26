@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { connect } from '@/lib/db/mongoose'
+import { Types } from 'mongoose'
 import { User } from '@/lib/models/User'
 import { decryptSecret, encryptSecret } from '@/lib/utils/secrets'
 
@@ -142,7 +143,9 @@ export async function GET(request: NextRequest) {
     }
     
     // Must have either email or username
-    if (!statePayload.email && !statePayload.username) {
+    const payloadEmail = statePayload.email && statePayload.email.includes('@') ? statePayload.email : undefined
+    const payloadUsername = statePayload.username || undefined
+    if (!payloadEmail && !payloadUsername) {
       return NextResponse.redirect(new URL('/stats?error=invalid_state', process.env.NEXTAUTH_URL || 'https://armyverse.vercel.app'))
     }
 
@@ -199,17 +202,24 @@ export async function GET(request: NextRequest) {
     const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000)
     const scope = tokenData.scope ? tokenData.scope.split(' ') : []
 
-    // Find user by email or username depending on what's in the state
-    const query = statePayload.email 
-      ? { $or: [{ firebaseUid: statePayload.uid }, { email: statePayload.email }] }
-      : { $or: [{ firebaseUid: statePayload.uid }, { username: statePayload.username }] }
+    const userFilters: Array<Record<string, string>> = [{ firebaseUid: statePayload.uid }]
+    if (Types.ObjectId.isValid(statePayload.uid)) {
+      userFilters.push({ _id: statePayload.uid })
+    }
+    if (payloadEmail) {
+      userFilters.push({ email: payloadEmail })
+    }
+    if (payloadUsername) {
+      userFilters.push({ username: payloadUsername })
+    }
+    const query = { $or: userFilters }
 
     const updateResult = await User.findOneAndUpdate(
       query,
       {
         $set: {
-          ...(statePayload.email && { email: statePayload.email }),
-          ...(statePayload.username && !statePayload.email && { username: statePayload.username }),
+          ...(payloadEmail && { email: payloadEmail }),
+          ...(payloadUsername && !payloadEmail && { username: payloadUsername }),
           firebaseUid: statePayload.uid,
           'integrations.spotify': {
             accessToken: tokenData.access_token,

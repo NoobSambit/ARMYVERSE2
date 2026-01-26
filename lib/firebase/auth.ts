@@ -124,11 +124,13 @@ export const signOut = async (): Promise<void> => {
   try {
     await firebaseSignOut(auth)
   } catch (error: any) {
+    clearStoredAuth()
     throw {
       code: error.code,
       message: getAuthErrorMessage(error.code)
     } as AuthError
   }
+  clearStoredAuth()
 }
 
 // Get current user

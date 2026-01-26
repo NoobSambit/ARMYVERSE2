@@ -134,14 +134,22 @@ export async function verifyAuth(request: NextRequest): Promise<AuthUser | null>
 export async function getUserFromAuth(authUser: AuthUser) {
   await connect()
   
-  if (authUser.authType === 'firebase' && authUser.email) {
-    return await User.findOne({ 
-      $or: [
-        { firebaseUid: authUser.uid },
-        { email: authUser.email }
-      ]
-    })
-  } else {
-    return await User.findOne({ username: authUser.username })
+  if (authUser.authType === 'firebase') {
+    if (authUser.email) {
+      return await User.findOne({
+        $or: [
+          { firebaseUid: authUser.uid },
+          { email: authUser.email }
+        ]
+      })
+    }
+    return await User.findOne({ firebaseUid: authUser.uid })
   }
+
+  if (authUser.uid) {
+    const byId = await User.findById(authUser.uid)
+    if (byId) return byId
+  }
+
+  return await User.findOne({ username: authUser.username })
 }
