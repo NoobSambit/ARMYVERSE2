@@ -41,7 +41,7 @@ function normalizeArtistName(name: string): string {
     .replace(/\s*\(.*?\)\s*/g, ' ')
     .replace(/\s*\[.*?\]\s*/g, ' ')
     .replace(/\s*(feat\.|ft\.|featuring|with)\s+/gi, ' ')
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/[!"#$%&'()*+,./:;<=>?@[\\\]^_`{|}~-]/g, ' ')
     .trim()
     .replace(/\s+/g, ' ')
 }
