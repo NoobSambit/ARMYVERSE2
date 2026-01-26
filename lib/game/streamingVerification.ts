@@ -30,6 +30,23 @@ export function normalizeTrackName(name: string): string {
 }
 
 /**
+ * Normalize artist name for fuzzy matching
+ * - Lowercase
+ * - Remove feat./ft./featuring/with tokens and bracketed text
+ * - Strip punctuation while keeping unicode letters/numbers
+ */
+function normalizeArtistName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s*\(.*?\)\s*/g, ' ')
+    .replace(/\s*\[.*?\]\s*/g, ' ')
+    .replace(/\s*(feat\.|ft\.|featuring|with)\s+/gi, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
+/**
  * Match track against quest target
  */
 function matchesTarget(track: any, target: { trackName: string; artistName: string }): boolean {
@@ -39,10 +56,13 @@ function matchesTarget(track: any, target: { trackName: string; artistName: stri
   const trackNorm = normalizeTrackName(track.trackName)
   const targetNorm = normalizeTrackName(target.trackName)
 
-  const artistNorm = track.artistName.toLowerCase().trim()
-  const targetArtistNorm = target.artistName.toLowerCase().trim()
+  const artistNorm = normalizeArtistName(track.artistName)
+  const targetArtistNorm = normalizeArtistName(target.artistName)
 
-  const matches = trackNorm === targetNorm && artistNorm.includes(targetArtistNorm)
+  const artistMatches = !!artistNorm && !!targetArtistNorm &&
+    (artistNorm.includes(targetArtistNorm) || targetArtistNorm.includes(artistNorm))
+
+  const matches = trackNorm === targetNorm && artistMatches
 
   // Debug logging
   if (matches) {
