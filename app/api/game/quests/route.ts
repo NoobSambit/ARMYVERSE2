@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
 
     // Preload tracks/albums for enrichment (for thumbnails + spotify links)
     const trackMap = new Map<string, any>()
+    let allTracks: Array<any> = []
     const albumMap = new Map<string, any>()
     try {
       const trackTargets: Array<{ trackName: string; artistName: string }> = []
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (trackTargets.length) {
-        const allTracks = await Track.find({ isBTSFamily: true }).select({ name: 1, artist: 1, thumbnails: 1, spotifyId: 1, album: 1 }).lean()
+        allTracks = await Track.find({ isBTSFamily: true }).select({ name: 1, artist: 1, thumbnails: 1, spotifyId: 1, album: 1 }).lean()
         allTracks.forEach(t => {
           const key = `${normalizeName(t.name)}:${(t.artist || '').toLowerCase()}`
           if (!trackMap.has(key)) trackMap.set(key, t)
@@ -66,6 +67,61 @@ export async function GET(request: NextRequest) {
       }
     } catch (err) {
       console.error('Quest enrichment error (media lookup):', err)
+    }
+
+    // Patch invalid daily song targets on the fly (e.g., covers) to avoid cron refresh
+    if (defs.length && allTracks.length && trackMap.size) {
+      const normalizeTargetKey = (name: string, artist: string) =>
+        `${normalizeName(name)}:${(artist || '').toLowerCase()}`
+      const hasCoverMarker = (value?: string) =>
+        typeof value === 'string' && /cover/i.test(value)
+
+      for (const def of defs) {
+        if (def.period !== 'daily' || def.goalType !== 'stream:songs') continue
+        if (!def.streamingMeta?.trackTargets?.length) continue
+
+        const existingKeys = new Set(
+          def.streamingMeta.trackTargets.map((t: { trackName: string; artistName: string }) =>
+            normalizeTargetKey(t.trackName, t.artistName)
+          )
+        )
+        let replaced = false
+        const updatedTargets = def.streamingMeta.trackTargets.map((target: { trackName: string; artistName: string; count: number }) => {
+          const targetKey = normalizeTargetKey(target.trackName, target.artistName)
+          const hasMatch = trackMap.has(targetKey)
+          const invalid =
+            !hasMatch || hasCoverMarker(target.trackName) || hasCoverMarker(target.artistName)
+
+          if (!invalid) return target
+
+          const candidates = allTracks.filter(track => {
+            const key = normalizeTargetKey(track.name, track.artist)
+            return !existingKeys.has(key)
+          })
+
+          if (!candidates.length) return target
+
+          const replacement = candidates[Math.floor(Math.random() * candidates.length)]
+          const replacementKey = normalizeTargetKey(replacement.name, replacement.artist)
+          existingKeys.add(replacementKey)
+          replaced = true
+
+          return {
+            trackName: replacement.name,
+            artistName: replacement.artist,
+            count: target.count
+          }
+        })
+
+        if (replaced) {
+          def.streamingMeta.trackTargets = updatedTargets as any
+          await QuestDefinition.updateOne(
+            { code: def.code },
+            { $set: { 'streamingMeta.trackTargets': updatedTargets } }
+          )
+          console.warn('Patched daily quest track targets for', def.code)
+        }
+      }
     }
 
     const enriched = quests.map(q => {

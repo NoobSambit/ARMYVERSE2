@@ -211,10 +211,10 @@ async function claimQuestForUser(userId: string, def: IQuestDefinition, periodKe
 }
 
 async function resolveUserIdForRewards(
-  user: { _id: mongoose.Types.ObjectId; firebaseUid?: string | null },
+  user: { _id: unknown; firebaseUid?: string | null },
   periodKey: string
 ): Promise<{ userId: string; source: string; conflict?: string }> {
-  const dbId = user._id.toString()
+  const dbId = String(user._id)
   const firebaseUid = user.firebaseUid || null
   const candidates = firebaseUid ? [dbId, firebaseUid] : [dbId]
 
@@ -222,7 +222,7 @@ async function resolveUserIdForRewards(
     const existingProgress = await UserQuestProgress.findOne({
       userId: { $in: candidates },
       periodKey
-    }).lean()
+    }).lean<{ userId?: string }>()
     if (existingProgress?.userId) {
       return { userId: existingProgress.userId, source: 'progress' }
     }
@@ -296,7 +296,7 @@ async function main() {
     processedUsers += 1
 
     if (args.verbose) {
-      const label = user.username || user.email || user._id.toString()
+      const label = user.username || user.email || String(user._id)
       console.log(`\nUser: ${label} (${userId})`)
       console.log(`UserId source: ${resolved.source}`)
       if (resolved.conflict) {
