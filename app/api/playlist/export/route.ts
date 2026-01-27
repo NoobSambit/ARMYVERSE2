@@ -263,31 +263,35 @@ export async function POST(req: Request) {
 
     console.log('Tracks to add:', trackUris.length, 'out of', songs.length)
 
-    // 4. Add tracks to playlist
+    // 4. Add tracks to playlist (Spotify limits to 100 URIs per request)
     if (trackUris.length > 0) {
-      const addTracksResponse = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlist.id}/tracks`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${actingAccessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ uris: trackUris })
-      })
+      const batchSize = 100
+      for (let i = 0; i < trackUris.length; i += batchSize) {
+        const batch = trackUris.slice(i, i + batchSize)
+        const addTracksResponse = await fetch(`${SPOTIFY_API_BASE}/playlists/${playlist.id}/tracks`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${actingAccessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ uris: batch })
+        })
 
-      console.log('Add tracks response:', addTracksResponse.status, addTracksResponse.statusText)
+        console.log('Add tracks response:', addTracksResponse.status, addTracksResponse.statusText, `batch ${i + 1}-${Math.min(i + batchSize, trackUris.length)}`)
 
-      if (!addTracksResponse.ok) {
-        const errorText = await addTracksResponse.text()
-        console.error('Failed to add tracks to playlist:', addTracksResponse.status, errorText)
+        if (!addTracksResponse.ok) {
+          const errorText = await addTracksResponse.text()
+          console.error('Failed to add tracks to playlist:', addTracksResponse.status, errorText)
 
-        if (addTracksResponse.status === 403) {
-          return NextResponse.json({
-            error: 'Insufficient permissions to add tracks to playlist. Please check your Spotify account permissions.',
-            details: 'Track addition permission denied'
-          }, { status: 403 })
+          if (addTracksResponse.status === 403) {
+            return NextResponse.json({
+              error: 'Insufficient permissions to add tracks to playlist. Please check your Spotify account permissions.',
+              details: 'Track addition permission denied'
+            }, { status: 403 })
+          }
+
+          throw new Error(`Failed to add tracks to playlist: ${addTracksResponse.status} ${errorText}`)
         }
-
-        throw new Error(`Failed to add tracks to playlist: ${addTracksResponse.status} ${errorText}`)
       }
     }
 
