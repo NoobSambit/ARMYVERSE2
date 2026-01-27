@@ -149,14 +149,14 @@ export default function LeaderboardList({ timeFrame, onTimeFrameChange, onMeChan
   return (
     <div className="w-full">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+      <div data-tour="leaderboard-header" className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-bold dark:text-white mb-2 flex items-center gap-2">
             Global Rankings <PiGlobeHemisphereWestFill className="text-primary" />
           </h2>
           <p className="text-gray-500 dark:text-gray-400">Compete with ARMYs worldwide and earn exclusive rewards.</p>
         </div>
-        <div className="bg-white dark:bg-[#1e1b2e] p-1 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 inline-flex">
+        <div data-tour="leaderboard-tabs" className="bg-white dark:bg-[#1e1b2e] p-1 rounded-xl shadow-sm border border-gray-200 dark:border-white/10 inline-flex">
           <button
             onClick={() => onTimeFrameChange('daily')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${timeFrame === 'daily' ? 'bg-primary text-white shadow-md' : 'hover:text-primary dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5'}`}
@@ -182,7 +182,7 @@ export default function LeaderboardList({ timeFrame, onTimeFrameChange, onMeChan
 
       {/* Podium Section */}
       {top3.length > 0 && (
-        <div className="flex items-end justify-center gap-4 mb-12 min-h-[300px] px-4">
+        <div data-tour="leaderboard-list" className="flex items-end justify-center gap-4 mb-12 min-h-[300px] px-4">
           {/* 2nd Place */}
           {top3[1] && (
             <div

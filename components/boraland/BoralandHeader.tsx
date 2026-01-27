@@ -14,7 +14,7 @@ export default function BoralandHeader({
 
   return (
     <header className="z-40 h-14 md:h-16 shrink-0 flex items-center justify-center px-3">
-      <nav className="flex items-center gap-0.5 md:gap-1 bg-white/5 rounded-full p-0.5 md:p-1 border border-white/5 backdrop-blur-md">
+      <nav data-tour="bora-header" className="flex items-center gap-0.5 md:gap-1 bg-white/5 rounded-full p-0.5 md:p-1 border border-white/5 backdrop-blur-md">
         <button
           className={`px-3 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm ${activeTab === 'home' ? activeStyle : inactiveStyle}`}
           onClick={() => onTabChange('home')}

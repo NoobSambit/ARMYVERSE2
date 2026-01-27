@@ -85,8 +85,16 @@ export default function GuidedTour({
         const rect = target.getBoundingClientRect()
         setTargetRect(rect)
 
-        // MOBILE LOGIC: Sticky Bottom Sheet
+        // MOBILE LOGIC: Sticky Bottom Sheet (or Top)
         if (window.innerWidth < 640) {
+            // Check if element is fixed position
+            const style = window.getComputedStyle(target)
+            if (style.position === 'fixed') {
+                // Don't try to scroll fixed elements
+                setTargetRect(rect)
+                return
+            }
+
             // For mobile, we just maintain the targetRect for the spotlight. 
             // The tooltip itself will be fixed via CSS at the bottom.
             // We only need to ensure the element is scrolled into view properly.
@@ -299,6 +307,7 @@ export default function GuidedTour({
 
     // Check if we are in mobile mode for rendering purposes
     const isMobileRender = typeof window !== 'undefined' && window.innerWidth < 640
+    const isMobileTop = isMobileRender && step?.placement === 'top'
 
     return (
         <div className="fixed inset-0 z-[9999] pointer-events-none">
@@ -350,7 +359,9 @@ export default function GuidedTour({
             <div
                 ref={tooltipRef}
                 className={`absolute pointer-events-auto transition-all duration-300 ease-out 
-                    ${isMobileRender ? 'fixed bottom-4 left-4 right-4 w-[auto] max-w-none' : 'w-[320px] max-w-[calc(100vw-32px)]'}
+                    ${isMobileRender
+                        ? (isMobileTop ? 'fixed top-4 left-4 right-4 w-[auto] max-w-none' : 'fixed bottom-4 left-4 right-4 w-[auto] max-w-none')
+                        : 'w-[320px] max-w-[calc(100vw-32px)]'}
                 `}
                 style={isMobileRender ? {} : {
                     top: tooltipPosition.top,

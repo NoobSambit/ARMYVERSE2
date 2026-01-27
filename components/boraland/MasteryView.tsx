@@ -192,7 +192,7 @@ export default function MasteryView({ data, loading, onRefresh }: MasteryViewPro
 
   return (
     <div className="max-w-7xl w-full mx-auto px-3 md:px-6 py-6 md:py-8">
-      <div className="mb-6">
+      <div data-tour="mastery-header" className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-white">Mastery</h2>
@@ -242,8 +242,8 @@ export default function MasteryView({ data, loading, onRefresh }: MasteryViewPro
       {(loading) && !data && <div className="text-gray-400 text-sm">Loading mastery...</div>}
 
       {data && (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div data-tour="mastery-tree" className="space-y-8">
+          <div data-tour="mastery-progress" className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <section className={`space-y-3 ${activePane === 'members' ? '' : 'hidden md:block'}`}>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -255,7 +255,11 @@ export default function MasteryView({ data, loading, onRefresh }: MasteryViewPro
                 {data.members.length === 0 ? (
                   <div className="text-gray-500 text-sm text-center py-6 border border-dashed border-white/10 rounded-xl">No member mastery data yet</div>
                 ) : (
-                  data.members.map((m) => renderTrackCard(m))
+                  data.members.map((m, idx) => (
+                    <div key={m.track.key} data-tour={idx === 0 ? 'first-mastery-card' : undefined}>
+                      {renderTrackCard(m)}
+                    </div>
+                  ))
                 )}
               </div>
             </section>

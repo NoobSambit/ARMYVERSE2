@@ -21,9 +21,9 @@ type Quest = {
 }
 
 type StreakInfo = {
-    current: number
-    nextMilestone: number
-    daysRemaining?: number
+  current: number
+  nextMilestone: number
+  daysRemaining?: number
 }
 
 export default function QuestsView({ dailyStreak, onStateRefresh }: { dailyStreak?: StreakInfo; onStateRefresh?: () => Promise<void> }) {
@@ -52,7 +52,7 @@ export default function QuestsView({ dailyStreak, onStateRefresh }: { dailyStrea
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load')
     } finally {
-        setLoading(false)
+      setLoading(false)
     }
   }
 
@@ -69,7 +69,7 @@ export default function QuestsView({ dailyStreak, onStateRefresh }: { dailyStrea
       if (onStateRefresh) {
         await onStateRefresh()
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const verifyStreaming = async () => {
@@ -110,46 +110,45 @@ export default function QuestsView({ dailyStreak, onStateRefresh }: { dailyStrea
 
   return (
     <section className="flex flex-col gap-4 md:gap-6 h-full">
-      <QuestBoardHeader dailyStreak={dailyStreak} />
+      <div data-tour="quests-header">
+        <QuestBoardHeader dailyStreak={dailyStreak} />
+      </div>
 
       {/* Tabs and Verify Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 border-b border-white/10 pb-1">
         <div className="flex items-center gap-1 md:gap-2 overflow-x-auto w-full sm:w-auto scrollbar-hide">
           <button
-              onClick={() => setFilter('daily')}
-              className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${
-                  filter === 'daily'
-                  ? 'text-white border-bora-primary'
-                  : 'text-gray-500 border-transparent hover:text-gray-300'
+            onClick={() => setFilter('daily')}
+            className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${filter === 'daily'
+                ? 'text-white border-bora-primary'
+                : 'text-gray-500 border-transparent hover:text-gray-300'
               }`}
           >
-              <span className="hidden sm:inline">Daily Quests</span>
-              <span className="sm:hidden">Daily</span>
-              {quests.some(q => q.period === 'daily' && q.completed && !q.claimed) && (
-                  <span className="absolute top-1 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              )}
+            <span className="hidden sm:inline">Daily Quests</span>
+            <span className="sm:hidden">Daily</span>
+            {quests.some(q => q.period === 'daily' && q.completed && !q.claimed) && (
+              <span className="absolute top-1 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            )}
           </button>
           <button
-              onClick={() => setFilter('weekly')}
-              className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${
-                  filter === 'weekly'
-                  ? 'text-white border-bora-primary'
-                  : 'text-gray-500 border-transparent hover:text-gray-300'
+            onClick={() => setFilter('weekly')}
+            className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${filter === 'weekly'
+                ? 'text-white border-bora-primary'
+                : 'text-gray-500 border-transparent hover:text-gray-300'
               }`}
           >
-              <span className="hidden sm:inline">Weekly Quests</span>
-              <span className="sm:hidden">Weekly</span>
+            <span className="hidden sm:inline">Weekly Quests</span>
+            <span className="sm:hidden">Weekly</span>
           </button>
           <button
-              onClick={() => setFilter('special')}
-              className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${
-                  filter === 'special'
-                  ? 'text-white border-bora-primary'
-                  : 'text-gray-500 border-transparent hover:text-gray-300'
+            onClick={() => setFilter('special')}
+            className={`px-3 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 relative transition-colors whitespace-nowrap ${filter === 'special'
+                ? 'text-white border-bora-primary'
+                : 'text-gray-500 border-transparent hover:text-gray-300'
               }`}
           >
-              <span className="hidden sm:inline">Special Events</span>
-              <span className="sm:hidden">Special</span>
+            <span className="hidden sm:inline">Special Events</span>
+            <span className="sm:hidden">Special</span>
           </button>
         </div>
 
@@ -158,11 +157,10 @@ export default function QuestsView({ dailyStreak, onStateRefresh }: { dailyStrea
           <button
             onClick={verifyStreaming}
             disabled={isVerifying}
-            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-bold border transition-all flex items-center gap-1.5 md:gap-2 shrink-0 ${
-              isVerifying
+            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[10px] md:text-xs font-bold border transition-all flex items-center gap-1.5 md:gap-2 shrink-0 ${isVerifying
                 ? 'bg-green-600/10 text-green-400/50 border-green-600/20 cursor-wait'
                 : 'bg-green-600/20 text-green-400 border-green-600/30 hover:bg-green-600/30'
-            }`}
+              }`}
           >
             <span className={`material-symbols-outlined text-xs md:text-sm ${isVerifying ? 'animate-spin' : ''}`}>
               {isVerifying ? 'refresh' : 'verified'}
@@ -187,39 +185,39 @@ export default function QuestsView({ dailyStreak, onStateRefresh }: { dailyStrea
         </div>
       )}
 
-      <div className="space-y-3 md:space-y-4">
+      <div data-tour="quest-cards" className="space-y-3 md:space-y-4">
         {loading ? (
-             <div className="animate-pulse space-y-4">
-                <div className="h-48 bg-white/5 rounded-2xl"></div>
-                <div className="h-24 bg-white/5 rounded-2xl"></div>
-             </div>
+          <div className="animate-pulse space-y-4">
+            <div className="h-48 bg-white/5 rounded-2xl"></div>
+            <div className="h-24 bg-white/5 rounded-2xl"></div>
+          </div>
         ) : filtered.length === 0 ? (
-             <div className="text-center py-10 text-gray-500">
-                No quests available for this period.
-             </div>
+          <div className="text-center py-10 text-gray-500">
+            No quests available for this period.
+          </div>
         ) : (
-            filtered.map(q => {
-                if (q.goalType.startsWith('stream:')) {
-                    return (
-                        <StreamingQuestCard
-                            key={q.code}
-                            quest={q}
-                            onClaim={claim}
-                            onVerify={verifyStreaming}
-                            isConnected={isStreamingConnected}
-                        />
-                    )
-                } else {
-                    return (
-                        <QuizQuestCard
-                            key={q.code}
-                            quest={q}
-                            onClaim={claim}
-                            onAction={startQuiz}
-                        />
-                    )
-                }
-            })
+          filtered.map(q => {
+            if (q.goalType.startsWith('stream:')) {
+              return (
+                <StreamingQuestCard
+                  key={q.code}
+                  quest={q}
+                  onClaim={claim}
+                  onVerify={verifyStreaming}
+                  isConnected={isStreamingConnected}
+                />
+              )
+            } else {
+              return (
+                <QuizQuestCard
+                  key={q.code}
+                  quest={q}
+                  onClaim={claim}
+                  onAction={startQuiz}
+                />
+              )
+            }
+          })
         )}
       </div>
     </section>

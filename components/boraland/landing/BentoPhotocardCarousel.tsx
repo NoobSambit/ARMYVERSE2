@@ -89,7 +89,7 @@ export default function BentoPhotocardCarousel() {
 
   if (loading) {
     return (
-      <div className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-[28px] p-4 md:p-5 flex items-center justify-center relative overflow-hidden min-h-[140px] sm:min-h-[160px] md:min-h-[180px]">
+      <div data-tour="landing-photocards" className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-[28px] p-4 md:p-5 flex items-center justify-center relative overflow-hidden min-h-[140px] sm:min-h-[160px] md:min-h-[180px]">
         <div className="animate-pulse flex flex-col items-center gap-3">
           <div className="w-16 h-16 rounded-full bg-white/10"></div>
           <div className="w-24 h-4 rounded bg-white/10"></div>
@@ -100,14 +100,14 @@ export default function BentoPhotocardCarousel() {
 
   if (photocards.length === 0) {
     return (
-      <div className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-[28px] p-4 md:p-5 flex items-center justify-center relative overflow-hidden min-h-[140px] sm:min-h-[160px] md:min-h-[180px]">
+      <div data-tour="landing-photocards" className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-[28px] p-4 md:p-5 flex items-center justify-center relative overflow-hidden min-h-[140px] sm:min-h-[160px] md:min-h-[180px]">
         <p className="text-gray-400 text-sm">No photocards available</p>
       </div>
     )
   }
 
   return (
-    <div className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-[28px] p-2.5 sm:p-3 md:p-4 flex items-center gap-2 md:gap-3 overflow-hidden relative min-h-[140px] sm:min-h-[160px] md:min-h-[180px] h-full">
+    <div data-tour="landing-photocards" className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-[28px] p-2.5 sm:p-3 md:p-4 flex items-center gap-2 md:gap-3 overflow-hidden relative min-h-[140px] sm:min-h-[160px] md:min-h-[180px] h-full">
       <div className="flex items-stretch gap-2 md:gap-3 w-full h-full">
         {visibleCards.map((card, index) => renderCard(card, index))}
       </div>
@@ -115,9 +115,8 @@ export default function BentoPhotocardCarousel() {
         {Array.from({ length: Math.ceil(photocards.length / 3) }).map((_, i) => (
           <div
             key={i}
-            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-              Math.floor(currentIndex / 3) === i ? 'bg-primary' : 'bg-white/20'
-            }`}
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${Math.floor(currentIndex / 3) === i ? 'bg-primary' : 'bg-white/20'
+              }`}
           />
         ))}
       </div>

@@ -11,6 +11,12 @@ import QuestsView from '@/components/boraland/QuestsView'
 import QuestRightSidebar from '@/components/boraland/quests/QuestRightSidebar'
 import MobileNav from '@/components/boraland/MobileNav'
 import MobileWalletDrawer from '@/components/boraland/MobileWalletDrawer'
+import GuidedTour, { RestartTourButton } from '@/components/ui/GuidedTour'
+import {
+  BORALAND_QUESTS_TOUR_ID,
+  boralandQuestsTourSteps,
+  boralandQuestsTourStepsMobile
+} from '@/lib/tours/boralandTour'
 
 // Type definition for state
 type GameState = {
@@ -38,6 +44,14 @@ export default function Page() {
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard' | 'borarush'>('home')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (!authLoading && user === null && !warnedRef.current) {
@@ -83,37 +97,53 @@ export default function Page() {
 
   return (
     <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
-        {/* Background Effects */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-            <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
-            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-bora-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-bora-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
+      </div>
+
+      <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
+        setActiveTab(tab)
+        if (tab === 'home') router.push('/boraland')
+        else if (tab === 'fangate') router.push('/boraland')
+        else if (tab === 'armybattles') router.push('/boraland')
+        else if (tab === 'borarush') router.push('/boraland?tab=borarush')
+      }} />
+
+      <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
+        <div className="hidden lg:block w-64 shrink-0 overflow-y-auto scrollbar-hide">
+          <CommandCenter />
         </div>
 
-        <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
-          setActiveTab(tab)
-          if (tab === 'home') router.push('/boraland')
-          else if (tab === 'fangate') router.push('/boraland')
-          else if (tab === 'armybattles') router.push('/boraland')
-          else if (tab === 'borarush') router.push('/boraland?tab=borarush')
-        }} />
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <QuestsView dailyStreak={gameState?.streaks.daily} onStateRefresh={fetchState} />
+        </div>
 
-        <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
-            <div className="hidden lg:block w-64 shrink-0 overflow-y-auto scrollbar-hide">
-                <CommandCenter />
-            </div>
-            
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <QuestsView dailyStreak={gameState?.streaks.daily} onStateRefresh={fetchState} />
-            </div>
-            
-            <div className="hidden lg:block w-80 shrink-0 overflow-y-auto scrollbar-hide">
-                <QuestRightSidebar state={gameState} />
-            </div>
-        </main>
-        
-        <MobileWalletDrawer state={gameState} />
-        <MobileNav />
+        <div className="hidden lg:block w-80 shrink-0 overflow-y-auto scrollbar-hide">
+          <QuestRightSidebar state={gameState} />
+        </div>
+      </main>
+
+      <MobileWalletDrawer state={gameState} variant="quest" />
+      <MobileNav />
+
+      {/* Guided Tour */}
+      <GuidedTour
+        tourId={BORALAND_QUESTS_TOUR_ID}
+        steps={isMobile ? boralandQuestsTourStepsMobile : boralandQuestsTourSteps}
+        showOnFirstVisit={true}
+      />
+
+      {/* Floating Tour Restart Button */}
+      <div className="fixed bottom-20 lg:bottom-4 left-4 z-40">
+        <RestartTourButton
+          tourId={BORALAND_QUESTS_TOUR_ID}
+          label="Quests Tour"
+          className="px-3 py-2 rounded-xl bg-black/60 backdrop-blur border border-white/10 hover:bg-white/10 transition-all shadow-lg"
+        />
+      </div>
     </div>
   )
 }

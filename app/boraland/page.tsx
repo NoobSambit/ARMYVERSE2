@@ -14,6 +14,12 @@ import ArmyBattlesContent from '@/components/boraland/ArmyBattlesContent'
 import BoraRushContent from '@/components/boraland/BoraRushContent'
 import MobileNav from '@/components/boraland/MobileNav'
 import MobileStatsDrawer from '@/components/boraland/MobileStatsDrawer'
+import GuidedTour, { RestartTourButton } from '@/components/ui/GuidedTour'
+import {
+  BORALAND_TOUR_ID,
+  boralandDashboardTourSteps,
+  boralandDashboardTourStepsMobile
+} from '@/lib/tours/boralandTour'
 
 export type InventoryItem = {
   id?: string
@@ -57,6 +63,14 @@ export default function Page() {
   const [stats, setStats] = useState<GameStats | null>(null)
   const [pool, setPool] = useState<PoolInfo | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('home')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -162,6 +176,24 @@ export default function Page() {
 
         <MobileStatsDrawer stats={stats} />
         <MobileNav />
+
+        {/* Guided Tour - Only on Home tab for clean UX */}
+        {activeTab === 'home' && (
+          <GuidedTour
+            tourId={BORALAND_TOUR_ID}
+            steps={isMobile ? boralandDashboardTourStepsMobile : boralandDashboardTourSteps}
+            showOnFirstVisit={true}
+          />
+        )}
+
+        {/* Floating Tour Restart Button */}
+        <div className="fixed bottom-20 lg:bottom-4 left-4 z-40">
+          <RestartTourButton
+            tourId={BORALAND_TOUR_ID}
+            label="Dashboard Tour"
+            className="px-3 py-2 rounded-xl bg-black/60 backdrop-blur border border-white/10 hover:bg-white/10 transition-all shadow-lg"
+          />
+        </div>
       </div>
     )
   }

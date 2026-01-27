@@ -12,6 +12,7 @@ export default function MobileStatsDrawer({ stats }: { stats: GameStats | null }
     <>
       {/* Floating Stats Button - Only visible on mobile */}
       <button
+        data-tour="mobile-stats-button"
         onClick={() => setIsOpen(true)}
         className="fixed bottom-20 right-4 z-[55] lg:hidden w-14 h-14 rounded-full bg-gradient-to-r from-bora-primary to-purple-600 shadow-lg shadow-purple-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform group"
         aria-label="View Stats"
@@ -23,11 +24,11 @@ export default function MobileStatsDrawer({ stats }: { stats: GameStats | null }
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] lg:hidden"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Drawer */}
           <div className="fixed bottom-0 left-0 right-0 z-[75] lg:hidden animate-slide-up">
             <div className="bg-[#0F0B1E] rounded-t-3xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">

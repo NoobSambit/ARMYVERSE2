@@ -10,6 +10,7 @@ export default function BentoDailyStreaks() {
   return (
     <Link
       href="/auth/signin"
+      data-tour="landing-streaks"
       className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col justify-between bg-gradient-to-br from-surface-dark/40 to-primary/10"
     >
       <div className="flex justify-between items-start">
@@ -38,9 +39,8 @@ export default function BentoDailyStreaks() {
           {streakDays.map((completed, i) => (
             <div
               key={i}
-              className={`h-2 flex-1 rounded-full transition-all duration-300 ${
-                completed ? 'bg-accent-green shadow-[0_0_8px_rgba(57,255,20,0.5)]' : 'bg-white/10'
-              }`}
+              className={`h-2 flex-1 rounded-full transition-all duration-300 ${completed ? 'bg-accent-green shadow-[0_0_8px_rgba(57,255,20,0.5)]' : 'bg-white/10'
+                }`}
             />
           ))}
         </div>

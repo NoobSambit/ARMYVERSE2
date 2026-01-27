@@ -11,6 +11,12 @@ import InventoryGrid from '@/components/boraland/InventoryGrid'
 import CollectionGrid from '@/components/boraland/CollectionGrid'
 import BadgesGrid from '@/components/boraland/BadgesGrid'
 import MobileNav from '@/components/boraland/MobileNav'
+import GuidedTour, { RestartTourButton } from '@/components/ui/GuidedTour'
+import {
+  BORALAND_INVENTORY_TOUR_ID,
+  boralandInventoryTourSteps,
+  boralandInventoryTourStepsMobile
+} from '@/lib/tours/boralandTour'
 
 // Types aligned with API responses
 type ItemCard = {
@@ -118,10 +124,17 @@ export default function Page() {
   const { showToast } = useToast()
   const searchParams = useSearchParams()
 
-  // Tab State for Header
   const [activeTab, setActiveTab] = useState<
     'home' | 'fangate' | 'armybattles' | 'leaderboard' | 'borarush'
   >('home')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // View State (Cards or Badges)
   const viewParam = searchParams.get('view')
@@ -262,7 +275,7 @@ export default function Page() {
       // Get total count separately to keep overall totals stable
       const inventoryRes = await apiFetch('/api/game/inventory?limit=1')
       setTotalCount(inventoryRes?.total || 0)
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const loadCatalog = async () => {
@@ -408,14 +421,13 @@ export default function Page() {
 
         <div className="flex-grow flex flex-col gap-3 md:gap-4 overflow-hidden">
           {/* View Toggle */}
-          <div className="flex items-center gap-1 md:gap-2 bora-glass-panel rounded-lg md:rounded-xl p-0.5 md:p-1 w-fit shrink-0">
+          <div data-tour="inventory-filters" className="flex items-center gap-1 md:gap-2 bora-glass-panel rounded-lg md:rounded-xl p-0.5 md:p-1 w-fit shrink-0">
             <button
               onClick={() => setView('cards')}
-              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
-                view === 'cards'
-                  ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${view === 'cards'
+                ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                : 'text-gray-400 hover:text-white'
+                }`}
             >
               <span className="flex items-center gap-1 md:gap-2">
                 <span className="material-symbols-outlined text-sm md:text-base">
@@ -427,11 +439,10 @@ export default function Page() {
             </button>
             <button
               onClick={() => setView('collection')}
-              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
-                view === 'collection'
-                  ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${view === 'collection'
+                ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                : 'text-gray-400 hover:text-white'
+                }`}
             >
               <span className="flex items-center gap-1 md:gap-2">
                 <span className="material-symbols-outlined text-sm md:text-base">
@@ -443,11 +454,10 @@ export default function Page() {
             </button>
             <button
               onClick={() => setView('badges')}
-              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${
-                view === 'badges'
-                  ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              className={`px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-medium transition-all ${view === 'badges'
+                ? 'bg-bora-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                : 'text-gray-400 hover:text-white'
+                }`}
             >
               <span className="flex items-center gap-1 md:gap-2">
                 <span className="material-symbols-outlined text-sm md:text-base">
@@ -459,82 +469,100 @@ export default function Page() {
           </div>
 
           {/* Conditional Rendering */}
-          {view === 'cards' ? (
-            <InventoryGrid
-              items={items}
-              loading={loading}
-              error={error}
-              cursor={cursor}
-              loadMore={load}
-              totalCount={totalCount || items.length}
-              filteredCount={filteredCount || 0}
-              uniqueCount={uniqueCount}
-              categoryCount={categoryCount}
-              catalog={catalog}
-              catalogLoading={catalogLoading}
-              catalogError={catalogError}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              filterMode={filterMode}
-              onFilterModeChange={setFilterMode}
-              selectedCategory={categoryFilter}
-              selectedSubcategory={subcategoryFilter}
-              sourceFilter={sourceFilter}
-              onSelectSource={setSourceFilter}
-              onSelectCategory={value => {
-                setCategoryFilter(value)
-                setSubcategoryFilter(null)
-              }}
-              onSelectSubcategory={(value, category) => {
-                if (category) setCategoryFilter(category)
-                setSubcategoryFilter(value)
-              }}
-            />
-          ) : view === 'collection' ? (
-            <CollectionGrid
-              groups={collectionGroups}
-              totalCards={collectionTotal}
-              collectedCards={collectionCollected}
-              loading={collectionLoading}
-              error={collectionError}
-              catalog={catalog}
-              catalogLoading={catalogLoading}
-              catalogError={catalogError}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              selectedCategory={categoryFilter}
-              selectedSubcategory={subcategoryFilter}
-              onSelectCategory={value => {
-                setCategoryFilter(value)
-                setSubcategoryFilter(null)
-              }}
-              onSelectSubcategory={(value, category) => {
-                if (category) setCategoryFilter(category)
-                setSubcategoryFilter(value)
-              }}
-            />
-          ) : (
-            <BadgesGrid
-              badges={badges}
-              loading={badgesLoading}
-              error={badgesError}
-              totalCount={badgesTotalCount}
-              searchQuery={badgeSearchQuery}
-              onSearchChange={setBadgeSearchQuery}
-              filterMode={badgeFilterMode}
-              onFilterModeChange={setBadgeFilterMode}
-              categoryFilter={badgeCategoryFilter}
-              onCategoryFilterChange={setBadgeCategoryFilter}
-              rarityFilter={badgeRarityFilter}
-              onRarityFilterChange={setBadgeRarityFilter}
-              typeFilter={badgeTypeFilter}
-              onTypeFilterChange={setBadgeTypeFilter}
-            />
-          )}
+          <div data-tour="inventory-grid" className="flex-1 overflow-hidden">
+            {view === 'cards' ? (
+              <InventoryGrid
+                items={items}
+                loading={loading}
+                error={error}
+                cursor={cursor}
+                loadMore={load}
+                totalCount={totalCount || items.length}
+                filteredCount={filteredCount || 0}
+                uniqueCount={uniqueCount}
+                categoryCount={categoryCount}
+                catalog={catalog}
+                catalogLoading={catalogLoading}
+                catalogError={catalogError}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                filterMode={filterMode}
+                onFilterModeChange={setFilterMode}
+                selectedCategory={categoryFilter}
+                selectedSubcategory={subcategoryFilter}
+                sourceFilter={sourceFilter}
+                onSelectSource={setSourceFilter}
+                onSelectCategory={value => {
+                  setCategoryFilter(value)
+                  setSubcategoryFilter(null)
+                }}
+                onSelectSubcategory={(value, category) => {
+                  if (category) setCategoryFilter(category)
+                  setSubcategoryFilter(value)
+                }}
+              />
+            ) : view === 'collection' ? (
+              <CollectionGrid
+                groups={collectionGroups}
+                totalCards={collectionTotal}
+                collectedCards={collectionCollected}
+                loading={collectionLoading}
+                error={collectionError}
+                catalog={catalog}
+                catalogLoading={catalogLoading}
+                catalogError={catalogError}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedCategory={categoryFilter}
+                selectedSubcategory={subcategoryFilter}
+                onSelectCategory={value => {
+                  setCategoryFilter(value)
+                  setSubcategoryFilter(null)
+                }}
+                onSelectSubcategory={(value, category) => {
+                  if (category) setCategoryFilter(category)
+                  setSubcategoryFilter(value)
+                }}
+              />
+            ) : (
+              <BadgesGrid
+                badges={badges}
+                loading={badgesLoading}
+                error={badgesError}
+                totalCount={badgesTotalCount}
+                searchQuery={badgeSearchQuery}
+                onSearchChange={setBadgeSearchQuery}
+                filterMode={badgeFilterMode}
+                onFilterModeChange={setBadgeFilterMode}
+                categoryFilter={badgeCategoryFilter}
+                onCategoryFilterChange={setBadgeCategoryFilter}
+                rarityFilter={badgeRarityFilter}
+                onRarityFilterChange={setBadgeRarityFilter}
+                typeFilter={badgeTypeFilter}
+                onTypeFilterChange={setBadgeTypeFilter}
+              />
+            )}
+          </div>
         </div>
       </main>
 
       <MobileNav />
+
+      {/* Guided Tour */}
+      <GuidedTour
+        tourId={BORALAND_INVENTORY_TOUR_ID}
+        steps={isMobile ? boralandInventoryTourStepsMobile : boralandInventoryTourSteps}
+        showOnFirstVisit={true}
+      />
+
+      {/* Floating Tour Restart Button */}
+      <div className="fixed bottom-20 lg:bottom-4 left-4 z-40">
+        <RestartTourButton
+          tourId={BORALAND_INVENTORY_TOUR_ID}
+          label="Inventory Tour"
+          className="px-3 py-2 rounded-xl bg-black/60 backdrop-blur border border-white/10 hover:bg-white/10 transition-all shadow-lg"
+        />
+      </div>
     </div>
   )
 }

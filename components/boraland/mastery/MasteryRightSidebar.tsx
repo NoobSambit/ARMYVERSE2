@@ -292,6 +292,7 @@ export default function MasteryRightSidebar({
 
           {/* View All Rewards Button */}
           <button
+            data-tour="badge-rewards-button"
             onClick={() => setShowBadgeModal(true)}
             className="w-full mt-4 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-500 rounded-xl hover:from-purple-500 hover:to-pink-400 transition-all shadow-lg hover:shadow-purple-500/25 flex items-center justify-center gap-2"
           >
@@ -326,57 +327,57 @@ export default function MasteryRightSidebar({
         <div className="grid grid-cols-4 gap-2 relative z-10">
           {recentBadges.length > 0
             ? recentBadges.map((badge, i) => {
-                const colors = rarityColors[badge.rarity] || rarityColors.common
+              const colors = rarityColors[badge.rarity] || rarityColors.common
 
-                return (
-                  <div
-                    key={`${badge.code}-${i}`}
-                    className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-help hover:scale-105 hover:brightness-125 ${colors}`}
-                    title={`${badge.key} - Level ${badge.milestone}${badge.variant === 'special' ? ' (Special)' : ''}`}
-                  >
-                    <Image
-                      src={badge.imagePath}
-                      alt={`${badge.key} Level ${badge.milestone}${badge.variant === 'special' ? ' Special' : ''}`}
-                      width={24}
-                      height={24}
-                      className="w-6 h-6 object-contain"
-                      onError={e => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        const parent = target.parentElement
-                        if (parent) {
-                          parent.innerHTML = `<span class="material-symbols-outlined text-[16px] opacity-70">workspace_premium</span><span class="text-[9px] font-bold">L${badge.milestone}</span>`
-                        }
-                      }}
-                    />
-                    <span className="text-[8px] font-bold truncate max-w-full px-1">
-                      {badge.key.slice(0, 4)}
-                    </span>
-                  </div>
-                )
-              })
+              return (
+                <div
+                  key={`${badge.code}-${i}`}
+                  className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-help hover:scale-105 hover:brightness-125 ${colors}`}
+                  title={`${badge.key} - Level ${badge.milestone}${badge.variant === 'special' ? ' (Special)' : ''}`}
+                >
+                  <Image
+                    src={badge.imagePath}
+                    alt={`${badge.key} Level ${badge.milestone}${badge.variant === 'special' ? ' Special' : ''}`}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 object-contain"
+                    onError={e => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        parent.innerHTML = `<span class="material-symbols-outlined text-[16px] opacity-70">workspace_premium</span><span class="text-[9px] font-bold">L${badge.milestone}</span>`
+                      }
+                    }}
+                  />
+                  <span className="text-[8px] font-bold truncate max-w-full px-1">
+                    {badge.key.slice(0, 4)}
+                  </span>
+                </div>
+              )
+            })
             : // Placeholder badges when no badges earned
-              masteryData?.milestones.slice(0, 4).map((ms, i) => {
-                const colors = [
-                  'border-gray-500/30 bg-gray-500/10 text-gray-500',
-                  'border-gray-500/30 bg-gray-500/10 text-gray-500',
-                  'border-gray-500/30 bg-gray-500/10 text-gray-500',
-                  'border-gray-500/30 bg-gray-500/10 text-gray-500',
-                ]
+            masteryData?.milestones.slice(0, 4).map((ms, i) => {
+              const colors = [
+                'border-gray-500/30 bg-gray-500/10 text-gray-500',
+                'border-gray-500/30 bg-gray-500/10 text-gray-500',
+                'border-gray-500/30 bg-gray-500/10 text-gray-500',
+                'border-gray-500/30 bg-gray-500/10 text-gray-500',
+              ]
 
-                return (
-                  <div
-                    key={`placeholder-${ms.level}`}
-                    className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all opacity-50 ${colors[i]}`}
-                    title={`Level ${ms.level} Badge - Locked`}
-                  >
-                    <span className="material-symbols-outlined text-[16px] opacity-70">
-                      lock
-                    </span>
-                    <span className="text-[9px] font-bold">L{ms.level}</span>
-                  </div>
-                )
-              })}
+              return (
+                <div
+                  key={`placeholder-${ms.level}`}
+                  className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all opacity-50 ${colors[i]}`}
+                  title={`Level ${ms.level} Badge - Locked`}
+                >
+                  <span className="material-symbols-outlined text-[16px] opacity-70">
+                    lock
+                  </span>
+                  <span className="text-[9px] font-bold">L{ms.level}</span>
+                </div>
+              )
+            })}
         </div>
 
         <p className="text-[10px] text-gray-500 mt-3 leading-tight relative z-10">

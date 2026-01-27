@@ -118,7 +118,7 @@ export class LastFmClient {
   async getRecentTracks(
     username: string,
     options: LastFmRecentTracksOptions = {}
-  ): Promise<{ tracks: LastFmTrack[]; total: number }> {
+  ): Promise<{ tracks: LastFmTrack[]; total: number; totalPages: number }> {
     const params: Record<string, string | number> = {
       method: 'user.getrecenttracks',
       user: username,
@@ -136,9 +136,14 @@ export class LastFmClient {
     const tracksRaw = response.recenttracks.track
     const tracks = !tracksRaw ? [] : Array.isArray(tracksRaw) ? tracksRaw : [tracksRaw]
 
+    const total = parseInt(response.recenttracks['@attr']?.total || '0')
+    const totalPagesRaw = parseInt(response.recenttracks['@attr']?.totalPages || '1')
+    const totalPages = Number.isFinite(totalPagesRaw) && totalPagesRaw > 0 ? totalPagesRaw : 1
+
     return {
       tracks,
-      total: parseInt(response.recenttracks['@attr']?.total || '0'),
+      total,
+      totalPages,
     }
   }
 

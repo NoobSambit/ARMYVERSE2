@@ -5,7 +5,7 @@ import { Trophy } from 'lucide-react'
 
 export default function BentoLeaderboard() {
   return (
-    <Link href="/auth/signin" className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col justify-center relative overflow-hidden group">
+    <Link href="/auth/signin" data-tour="landing-leaderboard" className="bento-card col-span-1 md:col-span-2 lg:col-span-2 row-span-1 rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col justify-center relative overflow-hidden group">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-background-dark to-transparent z-0" />
 

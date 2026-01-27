@@ -6,7 +6,7 @@ import React from 'react'
 export default function BentoHero() {
 
   return (
-    <div className="bento-card col-span-1 md:col-span-4 lg:col-span-4 row-span-2 rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden group min-h-[320px] sm:min-h-[360px] md:min-h-[400px]">
+    <div data-tour="landing-hero" className="bento-card col-span-1 md:col-span-4 lg:col-span-4 row-span-2 rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden group min-h-[320px] sm:min-h-[360px] md:min-h-[400px]">
       {/* Background Image with Gradient Overlay */}
       <div className="absolute inset-0 z-0 opacity-30 bg-gradient-to-br from-purple-900/50 via-fuchsia-900/50 to-background-dark transition-transform duration-700 group-hover:scale-105" />
       <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/80 to-transparent z-10" />

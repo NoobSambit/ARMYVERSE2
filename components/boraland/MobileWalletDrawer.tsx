@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X, Wallet } from 'lucide-react'
 import MasteryRightSidebar from './mastery/MasteryRightSidebar'
+import QuestRightSidebar from './quests/QuestRightSidebar'
 
 type GameState = {
   dust: number
@@ -21,13 +22,29 @@ type GameState = {
   latestBadges: any[]
 }
 
-export default function MobileWalletDrawer({ state }: { state: GameState | null }) {
+type MasteryData = {
+  members: any[]
+  eras: any[]
+  milestones: any[]
+  summary: { totalTracks: number; claimableCount: number; dust: number; totalXp: number }
+}
+
+type Props = {
+  state: GameState | null
+  variant?: 'mastery' | 'quest'
+  masteryData?: MasteryData | null
+}
+
+export default function MobileWalletDrawer({ state, variant = 'mastery', masteryData = null }: Props) {
   const [isOpen, setIsOpen] = useState(false)
+
+  const title = variant === 'mastery' ? 'Wallet & Rewards' : 'Quest Rewards'
 
   return (
     <>
       {/* Floating Wallet Button - Only visible on mobile */}
       <button
+        data-tour="mobile-wallet-button"
         onClick={() => setIsOpen(true)}
         className="fixed bottom-20 right-4 z-[55] lg:hidden w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-pink-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform group"
         aria-label="View Wallet"
@@ -39,11 +56,11 @@ export default function MobileWalletDrawer({ state }: { state: GameState | null 
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] lg:hidden"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Drawer */}
           <div className="fixed bottom-0 left-0 right-0 z-[75] lg:hidden animate-slide-up">
             <div className="bg-[#0F0B1E] rounded-t-3xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -51,7 +68,7 @@ export default function MobileWalletDrawer({ state }: { state: GameState | null 
               <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-6 bg-gradient-to-b from-purple-600 to-pink-600 rounded-full" />
-                  <h2 className="text-lg font-bold text-white">Wallet & Rewards</h2>
+                  <h2 className="text-lg font-bold text-white">{title}</h2>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -62,9 +79,13 @@ export default function MobileWalletDrawer({ state }: { state: GameState | null 
                 </button>
               </div>
 
-              {/* Content */}
+              {/* Content - Render appropriate sidebar based on variant */}
               <div className="overflow-y-auto p-4 pb-8">
-                <MasteryRightSidebar state={state as any} masteryData={null} />
+                {variant === 'mastery' ? (
+                  <MasteryRightSidebar state={state as any} masteryData={masteryData} />
+                ) : (
+                  <QuestRightSidebar state={state} />
+                )}
               </div>
 
               {/* Pull indicator */}

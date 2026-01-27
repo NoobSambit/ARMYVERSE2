@@ -70,7 +70,7 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
 
   return (
     <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-4 md:gap-6">
-      <div className="bora-glass-panel rounded-2xl p-4 md:p-6">
+      <div data-tour="performance-stats" className="bora-glass-panel rounded-2xl p-4 md:p-6">
         <h3 className="font-display text-base md:text-lg font-bold text-white mb-4 md:mb-6 flex items-center gap-2">
           <span className="material-symbols-outlined text-accent-cyan text-lg md:text-xl">
             bar_chart
@@ -157,7 +157,7 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
           </div>
         </div>
       </div>
-      <div className="bora-glass-panel rounded-2xl p-4 md:p-6 relative overflow-hidden flex-grow flex flex-col">
+      <div data-tour="card-showcase" className="bora-glass-panel rounded-2xl p-4 md:p-6 relative overflow-hidden flex-grow flex flex-col">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bora-primary/10"></div>
         <div className="flex justify-between items-center mb-3 md:mb-4 z-10">
           <h3 className="font-display text-xs md:text-sm font-bold text-white uppercase tracking-wider">
@@ -218,11 +218,10 @@ export default function RightSidebar({ stats }: { stats: GameStats | null }) {
               setShowcaseIndex(prev => (prev + 1) % showcaseItems.length)
             }}
             disabled={!canRotate}
-            className={`text-xs transition-colors flex items-center justify-center gap-1 w-full ${
-              canRotate
+            className={`text-xs transition-colors flex items-center justify-center gap-1 w-full ${canRotate
                 ? 'text-gray-400 hover:text-white'
                 : 'text-gray-600 cursor-not-allowed'
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-sm">autorenew</span>{' '}
             Rotate Showcase

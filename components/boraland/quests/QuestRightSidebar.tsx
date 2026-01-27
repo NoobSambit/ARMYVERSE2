@@ -156,6 +156,7 @@ export default function QuestRightSidebar({
           </div>
         </div>
         <button
+          data-tour="quest-rewards-button"
           onClick={() => setShowBadgeModal(true)}
           className="w-full mt-4 py-2 text-xs font-medium text-gray-400 bg-surface-lighter rounded-xl hover:text-white hover:bg-white/10 transition-colors"
         >
@@ -197,15 +198,14 @@ export default function QuestRightSidebar({
               return (
                 <div
                   key={i}
-                  className={`flex-shrink-0 w-12 h-12 rounded-full p-0.5 ${
-                    badge.rarity === 'legendary'
+                  className={`flex-shrink-0 w-12 h-12 rounded-full p-0.5 ${badge.rarity === 'legendary'
                       ? 'bg-gradient-to-tr from-yellow-500 to-orange-600'
                       : badge.rarity === 'epic'
                         ? 'bg-gradient-to-tr from-purple-600 to-blue-500'
                         : badge.rarity === 'rare'
                           ? 'bg-gradient-to-tr from-blue-500 to-cyan-500'
                           : 'bg-gray-700'
-                  }`}
+                    }`}
                   title={`${badge.name}${streakCount > 0 ? ` (Streak ${streakCount})` : ''}`}
                 >
                   <div className="w-full h-full rounded-full bg-surface-dark flex items-center justify-center relative overflow-hidden group cursor-help p-1">

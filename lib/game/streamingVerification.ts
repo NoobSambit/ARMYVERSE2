@@ -11,6 +11,16 @@ type TrackMatch = {
   count: number
 }
 
+type RecentTracksOptions = {
+  maxPages?: number
+  label?: string
+}
+
+const DEFAULT_MAX_LASTFM_PAGES = {
+  daily: 10,
+  weekly: 50
+}
+
 /**
  * Normalize track name for fuzzy matching
  * - Lowercase
@@ -72,10 +82,31 @@ function matchesTarget(track: any, target: { trackName: string; artistName: stri
   return matches
 }
 
+function getQuestStartTime(period: 'daily' | 'weekly', now = new Date()): Date {
+  if (period === 'daily') {
+    const start = new Date(now)
+    start.setUTCHours(0, 0, 0, 0)
+    return start
+  }
+
+  // Weekly - get Monday of current week
+  const start = new Date(now)
+  const day = start.getUTCDay()
+  const diff = start.getUTCDate() - day + (day === 0 ? -6 : 1) // adjust when day is Sunday
+  start.setUTCDate(diff)
+  start.setUTCHours(0, 0, 0, 0)
+  return start
+}
+
 /**
  * Fetch recent BTS tracks from Last.fm with caching
  */
-export async function getRecentBTSTracks(userId: string, lastfmUsername: string, since?: Date): Promise<TrackMatch[]> {
+export async function getRecentBTSTracks(
+  userId: string,
+  lastfmUsername: string,
+  since?: Date,
+  options: RecentTracksOptions = {}
+): Promise<TrackMatch[]> {
   // Check cache first (but ignore cache, always fetch fresh for now to ensure we get latest data)
   // TODO: Re-enable caching after debugging
   const useCache = false
@@ -95,49 +126,81 @@ export async function getRecentBTSTracks(userId: string, lastfmUsername: string,
     return aggregateTracks(tracks)
   }
 
-  // Cache miss: fetch from Last.fm
+  // Cache miss: fetch from Last.fm (with pagination)
   const client = getLastFmClient()
   const sinceTs = since ? Math.floor(since.getTime() / 1000) : undefined
+  const limit = 200
+  const maxPages = options.maxPages ?? Number.POSITIVE_INFINITY
+  const label = options.label ? ` (${options.label})` : ''
+  const btsTracks: Array<{ trackName: string; artistName: string; albumName: string; timestamp: Date }> = []
 
-  const { tracks } = await client.getRecentTracks(lastfmUsername, {
-    limit: 200, // max tracks to check
-    from: sinceTs,
-    extended: 0
-  })
+  let page = 1
+  let totalPages = 1
+  let pagesFetched = 0
+  let totalFetched = 0
 
-  // Filter BTS tracks only
-  const allTracks = tracks.filter(t => !t['@attr']?.nowplaying) // exclude currently playing
-
-  const btsTracks = allTracks
-    .filter(t => isBTSTrack(t))
-    .map(t => {
-      // Extract artist name safely
-      let artistName = 'Unknown Artist'
-      if (typeof t.artist === 'string') {
-        artistName = t.artist
-      } else if (t.artist && typeof t.artist === 'object') {
-        artistName = t.artist.name || (t.artist as any)['#text'] || 'Unknown Artist'
-      }
-
-      return {
-        trackName: t.name,
-        artistName,
-        albumName: t.album && typeof t.album === 'object' ? t.album['#text'] : '',
-        timestamp: t.date ? new Date(parseInt(t.date.uts) * 1000) : new Date()
-      }
+  while (page <= totalPages && page <= maxPages) {
+    const { tracks, totalPages: apiPages } = await client.getRecentTracks(lastfmUsername, {
+      limit,
+      page,
+      from: sinceTs,
+      extended: 0
     })
 
-  console.log(`✓ Last.fm: ${tracks.length} tracks → ${btsTracks.length} BTS tracks since ${since?.toISOString() || 'beginning'}`)
+    if (page === 1 && apiPages) {
+      totalPages = apiPages
+    }
 
-  // Cache for 15 minutes
-  await StreamingCache.create({
-    userId,
-    lastfmUsername,
-    recentTracks: btsTracks,
-    topTracks: [],
-    cachedAt: now,
-    expiresAt: new Date(now.getTime() + 15 * 60 * 1000)
-  })
+    if (!tracks.length) break
+
+    pagesFetched += 1
+    totalFetched += tracks.length
+
+    const allTracks = tracks.filter(t => !t['@attr']?.nowplaying) // exclude currently playing
+
+    const pageBtsTracks = allTracks
+      .filter(t => isBTSTrack(t))
+      .map(t => {
+        // Extract artist name safely
+        let artistName = 'Unknown Artist'
+        if (typeof t.artist === 'string') {
+          artistName = t.artist
+        } else if (t.artist && typeof t.artist === 'object') {
+          artistName = t.artist.name || (t.artist as any)['#text'] || 'Unknown Artist'
+        }
+
+        return {
+          trackName: t.name,
+          artistName,
+          albumName: t.album && typeof t.album === 'object' ? t.album['#text'] : '',
+          timestamp: t.date ? new Date(parseInt(t.date.uts) * 1000) : new Date()
+        }
+      })
+
+    btsTracks.push(...pageBtsTracks)
+
+    if (tracks.length < limit) break
+    page += 1
+  }
+
+  if (page > maxPages && totalPages > maxPages) {
+    console.warn(`⚠️ Last.fm${label}: capped at ${maxPages} pages out of ${totalPages} (data may be incomplete)`)
+  }
+
+  const capInfo = Number.isFinite(maxPages) ? `, cap ${maxPages}` : ''
+  console.log(`✓ Last.fm${label}: ${totalFetched} tracks → ${btsTracks.length} BTS tracks since ${since?.toISOString() || 'beginning'} (pages ${pagesFetched}/${totalPages}${capInfo})`)
+
+  if (useCache) {
+    // Cache for 15 minutes
+    await StreamingCache.create({
+      userId,
+      lastfmUsername,
+      recentTracks: btsTracks,
+      topTracks: [],
+      cachedAt: now,
+      expiresAt: new Date(now.getTime() + 15 * 60 * 1000)
+    })
+  }
 
   return aggregateTracks(btsTracks)
 }
@@ -149,7 +212,7 @@ function aggregateTracks(tracks: Array<{ trackName: string; artistName: string; 
   const map = new Map<string, TrackMatch>()
 
   for (const t of tracks) {
-    const key = `${normalizeTrackName(t.trackName)}:${t.artistName.toLowerCase()}`
+    const key = `${normalizeTrackName(t.trackName)}:${normalizeArtistName(t.artistName)}`
     if (map.has(key)) {
       map.get(key)!.count++
     } else {
@@ -168,27 +231,15 @@ export async function verifyStreamingQuest(
   userId: string,
   lastfmUsername: string,
   questDef: IQuestDefinition,
-  periodKey: string
+  periodKey: string,
+  recentTracksOverride?: TrackMatch[]
 ): Promise<number> {
   if (!questDef.streamingMeta) return 0
 
   // Calculate the quest start time based on period
   // Daily quests: midnight UTC of current day
   // Weekly quests: midnight UTC of current Monday
-  const now = new Date()
-  let questStartTime: Date
-
-  if (questDef.period === 'daily') {
-    questStartTime = new Date(now)
-    questStartTime.setUTCHours(0, 0, 0, 0)
-  } else {
-    // Weekly - get Monday of current week
-    questStartTime = new Date(now)
-    const day = questStartTime.getUTCDay()
-    const diff = questStartTime.getUTCDate() - day + (day === 0 ? -6 : 1) // adjust when day is Sunday
-    questStartTime.setUTCDate(diff)
-    questStartTime.setUTCHours(0, 0, 0, 0)
-  }
+  const questStartTime = getQuestStartTime(questDef.period === 'daily' ? 'daily' : 'weekly')
 
   // Get or create progress record
   let progress = await UserQuestProgress.findOne({ userId, code: questDef.code, periodKey })
@@ -208,11 +259,23 @@ export async function verifyStreamingQuest(
     })
   }
 
+  const previousTrackProgress = progress.trackProgress
+    ? (progress.trackProgress instanceof Map ? Object.fromEntries(progress.trackProgress) : progress.trackProgress)
+    : {}
+
   // Use quest start time as baseline (not when user first viewed it)
   const baselineTime = questStartTime
 
   // Fetch recent BTS tracks since baseline
-  const recentTracks = await getRecentBTSTracks(userId, lastfmUsername, baselineTime)
+  const recentTracks = recentTracksOverride ?? await getRecentBTSTracks(
+    userId,
+    lastfmUsername,
+    baselineTime,
+    {
+      maxPages: questDef.period === 'daily' ? DEFAULT_MAX_LASTFM_PAGES.daily : DEFAULT_MAX_LASTFM_PAGES.weekly,
+      label: questDef.period
+    }
+  )
 
   let totalProgress = 0
   const trackProgressMap: Record<string, number> = {}
@@ -224,9 +287,11 @@ export async function verifyStreamingQuest(
       const trackKey = `track:${normalizeTrackName(target.trackName)}:${target.artistName.toLowerCase()}`.replace(/\./g, '_')
       const match = recentTracks.find(t => matchesTarget(t, target))
       const matchCount = match?.count || 0
-      const progressAdded = Math.min(matchCount, target.count)
+      const previousCount = Number((previousTrackProgress as Record<string, number>)[trackKey] || 0)
+      const mergedCount = Math.max(previousCount, matchCount)
+      const progressAdded = Math.min(mergedCount, target.count)
 
-      trackProgressMap[trackKey] = matchCount
+      trackProgressMap[trackKey] = mergedCount
       totalProgress += progressAdded
     }
   }
@@ -249,11 +314,12 @@ export async function verifyStreamingQuest(
           })
         )
 
-        if (wasStreamed) {
+        const previousCount = Number((previousTrackProgress as Record<string, number>)[trackKey] || 0)
+        const mergedCount = Math.max(previousCount, wasStreamed ? 1 : 0)
+        trackProgressMap[trackKey] = mergedCount
+
+        if (mergedCount > 0) {
           tracksStreamedFromAlbum++
-          trackProgressMap[trackKey] = 1
-        } else {
-          trackProgressMap[trackKey] = 0
         }
       }
 
@@ -288,8 +354,31 @@ export async function verifyAllStreamingQuests(userId: string, lastfmUsername: s
 
   const streamingQuests = (await getActiveQuests()).filter(q => q.goalType?.startsWith('stream:'))
 
+  const needsDaily = streamingQuests.some(q => q.period === 'daily')
+  const needsWeekly = streamingQuests.some(q => q.period !== 'daily')
+
+  const now = new Date()
+  const dailyStart = getQuestStartTime('daily', now)
+  const weeklyStart = getQuestStartTime('weekly', now)
+
+  const [dailyTracks, weeklyTracks] = await Promise.all([
+    needsDaily
+      ? getRecentBTSTracks(userId, lastfmUsername, dailyStart, {
+        maxPages: DEFAULT_MAX_LASTFM_PAGES.daily,
+        label: 'daily'
+      })
+      : Promise.resolve([]),
+    needsWeekly
+      ? getRecentBTSTracks(userId, lastfmUsername, weeklyStart, {
+        maxPages: DEFAULT_MAX_LASTFM_PAGES.weekly,
+        label: 'weekly'
+      })
+      : Promise.resolve([])
+  ])
+
   for (const quest of streamingQuests) {
     const key = quest.period === 'daily' ? dKey : wKey
-    await verifyStreamingQuest(userId, lastfmUsername, quest as unknown as IQuestDefinition, key)
+    const recentTracks = quest.period === 'daily' ? dailyTracks : weeklyTracks
+    await verifyStreamingQuest(userId, lastfmUsername, quest as unknown as IQuestDefinition, key, recentTracks)
   }
 }

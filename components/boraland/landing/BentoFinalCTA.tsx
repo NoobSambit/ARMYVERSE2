@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export default function BentoFinalCTA() {
   return (
-    <div className="bento-card col-span-1 md:col-span-4 lg:col-span-6 row-span-2 rounded-3xl p-5 sm:p-6 md:p-8 lg:p-12 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 relative overflow-hidden group">
+    <div data-tour="landing-cta" className="bento-card col-span-1 md:col-span-4 lg:col-span-6 row-span-2 rounded-3xl p-5 sm:p-6 md:p-8 lg:p-12 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 relative overflow-hidden group">
       {/* Gradient Background - matches original design */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-background-dark to-accent-green/10 z-0" />
       <div className="absolute -right-20 -bottom-40 w-60 md:w-80 h-60 md:h-80 bg-primary/40 rounded-full blur-[60px] md:blur-[80px] group-hover:bg-primary/50 transition-colors duration-500" />

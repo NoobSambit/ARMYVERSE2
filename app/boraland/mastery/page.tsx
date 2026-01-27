@@ -11,6 +11,12 @@ import MasteryView from '@/components/boraland/MasteryView'
 import MasteryRightSidebar from '@/components/boraland/mastery/MasteryRightSidebar'
 import MobileNav from '@/components/boraland/MobileNav'
 import MobileWalletDrawer from '@/components/boraland/MobileWalletDrawer'
+import GuidedTour, { RestartTourButton } from '@/components/ui/GuidedTour'
+import {
+  BORALAND_MASTERY_TOUR_ID,
+  boralandMasteryTourSteps,
+  boralandMasteryTourStepsMobile
+} from '@/lib/tours/boralandTour'
 
 // Type definition for state
 type GameState = {
@@ -63,6 +69,14 @@ export default function Page() {
   const [masteryData, setMasteryData] = useState<MasteryResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'home' | 'fangate' | 'armybattles' | 'leaderboard' | 'borarush'>('home')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (!authLoading && user === null && !warnedRef.current) {
@@ -76,33 +90,33 @@ export default function Page() {
     if (!user) return
 
     const fetchData = async () => {
-        try {
-            const [stateRes, masteryRes] = await Promise.all([
-                apiFetch('/api/game/state'),
-                apiFetch('/api/game/mastery')
-            ])
-            setGameState(stateRes)
-            setMasteryData(masteryRes)
-        } catch (e) {
-            console.error("Failed to fetch game data", e)
-        } finally {
-            setLoading(false)
-        }
+      try {
+        const [stateRes, masteryRes] = await Promise.all([
+          apiFetch('/api/game/state'),
+          apiFetch('/api/game/mastery')
+        ])
+        setGameState(stateRes)
+        setMasteryData(masteryRes)
+      } catch (e) {
+        console.error("Failed to fetch game data", e)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
   }, [user])
 
   const refreshMastery = async () => {
-      try {
-          const res = await apiFetch('/api/game/mastery')
-          setMasteryData(res)
-          // Also refresh game state to update dust/xp
-          const stateRes = await apiFetch('/api/game/state')
-          setGameState(stateRes)
-      } catch (e) {
-          console.error("Failed to refresh mastery", e)
-      }
+    try {
+      const res = await apiFetch('/api/game/mastery')
+      setMasteryData(res)
+      // Also refresh game state to update dust/xp
+      const stateRes = await apiFetch('/api/game/state')
+      setGameState(stateRes)
+    } catch (e) {
+      console.error("Failed to refresh mastery", e)
+    }
   }
 
   if (authLoading) {
@@ -125,41 +139,57 @@ export default function Page() {
 
   return (
     <div className="h-[100dvh] bg-background-deep text-gray-200 flex flex-col overflow-hidden relative">
-        {/* Background Effects */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-            <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
-            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-bora-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
+      {/* Background Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-[0.05]"></div>
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-bora-primary/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent-cyan/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3"></div>
+      </div>
+
+      <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
+        setActiveTab(tab)
+        if (tab === 'home') router.push('/boraland')
+        else if (tab === 'fangate') router.push('/boraland')
+        else if (tab === 'armybattles') router.push('/boraland')
+        else if (tab === 'borarush') router.push('/boraland?tab=borarush')
+      }} />
+
+      <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
+        <div className="hidden lg:block w-64 shrink-0 overflow-y-auto scrollbar-hide">
+          <CommandCenter />
         </div>
 
-        <BoralandHeader activeTab={activeTab} onTabChange={(tab) => {
-          setActiveTab(tab)
-          if (tab === 'home') router.push('/boraland')
-          else if (tab === 'fangate') router.push('/boraland')
-          else if (tab === 'armybattles') router.push('/boraland')
-          else if (tab === 'borarush') router.push('/boraland?tab=borarush')
-        }} />
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <MasteryView
+            data={masteryData}
+            loading={loading}
+            onRefresh={refreshMastery}
+          />
+        </div>
 
-        <main className="flex-1 z-10 p-3 md:p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-6 overflow-hidden pb-20 lg:pb-0">
-            <div className="hidden lg:block w-64 shrink-0 overflow-y-auto scrollbar-hide">
-                <CommandCenter />
-            </div>
-            
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <MasteryView 
-                    data={masteryData} 
-                    loading={loading} 
-                    onRefresh={refreshMastery}
-                />
-            </div>
-            
-            <div className="hidden lg:block w-80 shrink-0 overflow-y-auto scrollbar-hide">
-                <MasteryRightSidebar state={gameState} masteryData={masteryData} />
-            </div>
-        </main>
-        
-        <MobileWalletDrawer state={gameState} />
-        <MobileNav />
+        <div className="hidden lg:block w-80 shrink-0 overflow-y-auto scrollbar-hide">
+          <MasteryRightSidebar state={gameState} masteryData={masteryData} />
+        </div>
+      </main>
+
+      <MobileWalletDrawer state={gameState} variant="mastery" masteryData={masteryData} />
+      <MobileNav />
+
+      {/* Guided Tour */}
+      <GuidedTour
+        tourId={BORALAND_MASTERY_TOUR_ID}
+        steps={isMobile ? boralandMasteryTourStepsMobile : boralandMasteryTourSteps}
+        showOnFirstVisit={true}
+      />
+
+      {/* Floating Tour Restart Button */}
+      <div className="fixed bottom-20 lg:bottom-4 left-4 z-40">
+        <RestartTourButton
+          tourId={BORALAND_MASTERY_TOUR_ID}
+          label="Mastery Tour"
+          className="px-3 py-2 rounded-xl bg-black/60 backdrop-blur border border-white/10 hover:bg-white/10 transition-all shadow-lg"
+        />
+      </div>
     </div>
   )
 }
