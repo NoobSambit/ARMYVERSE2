@@ -67,6 +67,35 @@ describe('streamingVerification', () => {
     expect(results.length).toBe(400)
   })
 
+  it('includes non-BTS tracks that match quest targets', async () => {
+    ;(isBTSTrack as jest.Mock).mockReturnValue(null)
+
+    const track = {
+      name: "SUGA's Interlude",
+      artist: { name: 'Halsey', url: '' },
+      url: 'https://example.com',
+      date: { uts: '1700000000', '#text': '' }
+    }
+
+    const mockGetRecentTracks = jest.fn(async () => ({
+      tracks: [track],
+      total: 1,
+      totalPages: 1
+    }))
+
+    ;(getLastFmClient as jest.Mock).mockReturnValue({
+      getRecentTracks: mockGetRecentTracks
+    })
+
+    const results = await getRecentBTSTracks('user-1', 'tester', new Date('2024-01-01T00:00:00Z'), {
+      maxPages: 1,
+      label: 'weekly',
+      includeTargets: [{ trackName: "SUGA's Interlude", artistName: 'Halsey' }]
+    })
+
+    expect(results).toEqual([{ trackName: "SUGA's Interlude", artistName: 'Halsey', count: 1 }])
+  })
+
   it('does not regress track progress when new data is lower', async () => {
     const questDef: any = {
       code: 'stream_daily_songs_2024-01-01',

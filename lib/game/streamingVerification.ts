@@ -11,9 +11,15 @@ type TrackMatch = {
   count: number
 }
 
+type TrackTarget = {
+  trackName: string
+  artistName: string
+}
+
 type RecentTracksOptions = {
   maxPages?: number
   label?: string
+  includeTargets?: TrackTarget[]
 }
 
 const DEFAULT_MAX_LASTFM_PAGES = {
@@ -82,6 +88,54 @@ function matchesTarget(track: any, target: { trackName: string; artistName: stri
   return matches
 }
 
+function dedupeTargets(targets: TrackTarget[] = []): TrackTarget[] {
+  const map = new Map<string, TrackTarget>()
+  for (const target of targets) {
+    if (!target?.trackName || !target?.artistName) continue
+    const key = `${normalizeTrackName(target.trackName)}:${normalizeArtistName(target.artistName)}`
+    if (!map.has(key)) {
+      map.set(key, { trackName: target.trackName, artistName: target.artistName })
+    }
+  }
+  return Array.from(map.values())
+}
+
+function shouldIncludeTrack(
+  track: { trackName: string; artistName: string },
+  includeTargets: TrackTarget[]
+): boolean {
+  if (!track?.trackName || !track?.artistName) return false
+  const btsType = isBTSTrack({ name: track.trackName, artist: { name: track.artistName } })
+  if (btsType) return true
+  if (!includeTargets.length) return false
+  return includeTargets.some(target => matchesTarget(track, target))
+}
+
+function collectQuestTargets(quests: Array<{ streamingMeta?: any }>): TrackTarget[] {
+  const targets: TrackTarget[] = []
+
+  for (const quest of quests) {
+    const trackTargets = quest?.streamingMeta?.trackTargets ?? []
+    for (const target of trackTargets) {
+      if (target?.trackName && target?.artistName) {
+        targets.push({ trackName: target.trackName, artistName: target.artistName })
+      }
+    }
+
+    const albumTargets = quest?.streamingMeta?.albumTargets ?? []
+    for (const album of albumTargets) {
+      const tracks = Array.isArray(album?.tracks) ? album.tracks : []
+      for (const track of tracks) {
+        if (track?.name && track?.artist) {
+          targets.push({ trackName: track.name, artistName: track.artist })
+        }
+      }
+    }
+  }
+
+  return dedupeTargets(targets)
+}
+
 function getQuestStartTime(period: 'daily' | 'weekly', now = new Date()): Date {
   if (period === 'daily') {
     const start = new Date(now)
@@ -99,7 +153,8 @@ function getQuestStartTime(period: 'daily' | 'weekly', now = new Date()): Date {
 }
 
 /**
- * Fetch recent BTS tracks from Last.fm with caching
+ * Fetch recent BTS tracks from Last.fm with caching.
+ * Includes explicit quest targets even if they aren't detected as BTS.
  */
 export async function getRecentBTSTracks(
   userId: string,
@@ -107,6 +162,7 @@ export async function getRecentBTSTracks(
   since?: Date,
   options: RecentTracksOptions = {}
 ): Promise<TrackMatch[]> {
+  const includeTargets = dedupeTargets(options.includeTargets)
   // Check cache first (but ignore cache, always fetch fresh for now to ensure we get latest data)
   // TODO: Re-enable caching after debugging
   const useCache = false
@@ -121,7 +177,7 @@ export async function getRecentBTSTracks(
     // Use cached data (even if empty - that means we checked and found nothing)
     const tracks = cache.recentTracks
       .filter((t: any) => !since || t.timestamp >= since)
-      .filter((t: any) => isBTSTrack({ name: t.trackName, artist: { name: t.artistName } }))
+      .filter((t: any) => shouldIncludeTrack({ trackName: t.trackName, artistName: t.artistName }, includeTargets))
 
     return aggregateTracks(tracks)
   }
@@ -159,7 +215,6 @@ export async function getRecentBTSTracks(
     const allTracks = tracks.filter(t => !t['@attr']?.nowplaying) // exclude currently playing
 
     const pageBtsTracks = allTracks
-      .filter(t => isBTSTrack(t))
       .map(t => {
         // Extract artist name safely
         let artistName = 'Unknown Artist'
@@ -176,6 +231,7 @@ export async function getRecentBTSTracks(
           timestamp: t.date ? new Date(parseInt(t.date.uts) * 1000) : new Date()
         }
       })
+      .filter(t => shouldIncludeTrack(t, includeTargets))
 
     btsTracks.push(...pageBtsTracks)
 
@@ -188,7 +244,7 @@ export async function getRecentBTSTracks(
   }
 
   const capInfo = Number.isFinite(maxPages) ? `, cap ${maxPages}` : ''
-  console.log(`✓ Last.fm${label}: ${totalFetched} tracks → ${btsTracks.length} BTS tracks since ${since?.toISOString() || 'beginning'} (pages ${pagesFetched}/${totalPages}${capInfo})`)
+  console.log(`✓ Last.fm${label}: ${totalFetched} tracks → ${btsTracks.length} eligible tracks since ${since?.toISOString() || 'beginning'} (pages ${pagesFetched}/${totalPages}${capInfo})`)
 
   if (useCache) {
     // Cache for 15 minutes
@@ -265,15 +321,17 @@ export async function verifyStreamingQuest(
 
   // Use quest start time as baseline (not when user first viewed it)
   const baselineTime = questStartTime
+  const includeTargets = collectQuestTargets([questDef])
 
-  // Fetch recent BTS tracks since baseline
+  // Fetch recent tracks since baseline (BTS + explicit quest targets)
   const recentTracks = recentTracksOverride ?? await getRecentBTSTracks(
     userId,
     lastfmUsername,
     baselineTime,
     {
       maxPages: questDef.period === 'daily' ? DEFAULT_MAX_LASTFM_PAGES.daily : DEFAULT_MAX_LASTFM_PAGES.weekly,
-      label: questDef.period
+      label: questDef.period,
+      includeTargets
     }
   )
 
@@ -360,18 +418,22 @@ export async function verifyAllStreamingQuests(userId: string, lastfmUsername: s
   const now = new Date()
   const dailyStart = getQuestStartTime('daily', now)
   const weeklyStart = getQuestStartTime('weekly', now)
+  const dailyTargets = collectQuestTargets(streamingQuests.filter(q => q.period === 'daily'))
+  const weeklyTargets = collectQuestTargets(streamingQuests.filter(q => q.period !== 'daily'))
 
   const [dailyTracks, weeklyTracks] = await Promise.all([
     needsDaily
       ? getRecentBTSTracks(userId, lastfmUsername, dailyStart, {
         maxPages: DEFAULT_MAX_LASTFM_PAGES.daily,
-        label: 'daily'
+        label: 'daily',
+        includeTargets: dailyTargets
       })
       : Promise.resolve([]),
     needsWeekly
       ? getRecentBTSTracks(userId, lastfmUsername, weeklyStart, {
         maxPages: DEFAULT_MAX_LASTFM_PAGES.weekly,
-        label: 'weekly'
+        label: 'weekly',
+        includeTargets: weeklyTargets
       })
       : Promise.resolve([])
   ])
